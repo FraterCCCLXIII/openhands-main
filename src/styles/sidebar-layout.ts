@@ -101,6 +101,10 @@ export const SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS = cn(
   "text-[var(--oh-muted)] hover:text-white hover:bg-[var(--oh-surface-raised)]",
 );
 
+/** Hit area between collapsed nav groups — reveals logo→expand affordance on hover. */
+export const SIDEBAR_COLLAPSED_EXPAND_GAP_CLASS =
+  "w-full shrink-0 cursor-pointer";
+
 export const SIDEBAR_SHELL_BASE_CLASS =
   "max-md:hidden flex bg-base flex-col min-h-0 md:border-r md:border-[var(--oh-border)] md:h-full transition-[width,min-width] duration-200";
 
@@ -148,7 +152,9 @@ export function sidebarMainNavClassName(options: {
   const { collapsed, awaitingStats, slideMargin } = options;
   return cn(
     sidebarNavListClassName(collapsed),
-    awaitingStats ? SIDEBAR_NAV_EXPANDED_OFFSET_CLASS : "mt-3",
+    awaitingStats
+      ? SIDEBAR_NAV_EXPANDED_OFFSET_CLASS
+      : !collapsed && "mt-3",
     slideMargin &&
       "transition-[margin-top] motion-reduce:transition-none duration-[120ms]",
   );
@@ -160,7 +166,7 @@ export function sidebarBelowStatsBodyClassName(options: {
 }): string {
   const { shiftUp, animateShift } = options;
   return cn(
-    "flex min-h-0 min-w-0 flex-1 flex-col",
+    "flex min-h-0 min-w-0 shrink-0 flex-col",
     animateShift &&
       "transition-transform motion-reduce:transition-none duration-200",
     shiftUp && SIDEBAR_STATS_BLOCK_SHIFT_CLASS,

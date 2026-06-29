@@ -17,6 +17,7 @@ import { useSidebarStore } from "@/src/stores/sidebar-store";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
   SIDEBAR_COLLAPSED_LOGO_WRAPPER_CLASS,
+  SIDEBAR_COLLAPSED_EXPAND_GAP_CLASS,
   SIDEBAR_ICON_BUTTON_CLASS,
   SIDEBAR_ICON_SLOT_CLASS,
   SIDEBAR_MOBILE_DRAWER_CLASS,
@@ -80,11 +81,14 @@ interface DashboardSidebarRailBodyProps {
   onCollapse: () => void;
   onExpand: () => void;
   showCollapsedExpandButton: boolean;
+  onCollapsedExpandZoneEnter: () => void;
+  onCollapsedExpandZoneLeave: () => void;
   statsLayoutVisible: boolean;
   statsFadeVisible: boolean;
   navAwaitingStats: boolean;
   navSlideMargin: boolean;
   navCollapseShift: boolean;
+  userMenuCollapsed: boolean;
 }
 
 function isNavItemActive(
@@ -250,6 +254,26 @@ function DashboardSidebarStatsRow({
   );
 }
 
+function CollapsedSidebarExpandGap({
+  className,
+  onEnter,
+  onLeave,
+}: {
+  className?: string;
+  onEnter: () => void;
+  onLeave: () => void;
+}) {
+  return (
+    <div
+      aria-hidden
+      data-testid="dashboard-sidebar-expand-gap"
+      className={cn(SIDEBAR_COLLAPSED_EXPAND_GAP_CLASS, className)}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+    />
+  );
+}
+
 function DashboardSidebarRailBody({
   activeItem,
   stats,
@@ -266,12 +290,17 @@ function DashboardSidebarRailBody({
   onCollapse,
   onExpand,
   showCollapsedExpandButton,
+  onCollapsedExpandZoneEnter,
+  onCollapsedExpandZoneLeave,
   statsLayoutVisible,
   statsFadeVisible,
   navAwaitingStats,
   navSlideMargin,
   navCollapseShift,
+  userMenuCollapsed,
 }: DashboardSidebarRailBodyProps) {
+  const showCollapsedExpandZones = collapsed && showCollapseToggle;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className={sidebarHeaderRowClassName(collapsed)}>
@@ -282,6 +311,12 @@ function DashboardSidebarRailBody({
                 ? SIDEBAR_COLLAPSED_LOGO_WRAPPER_CLASS
                 : "flex min-w-0 shrink-0 items-center",
             )}
+            onMouseEnter={
+              showCollapsedExpandZones ? onCollapsedExpandZoneEnter : undefined
+            }
+            onMouseLeave={
+              showCollapsedExpandZones ? onCollapsedExpandZoneLeave : undefined
+            }
           >
             <div
               className={cn(
@@ -360,6 +395,13 @@ function DashboardSidebarRailBody({
           animateShift: navSlideMargin,
         })}
       >
+        {showCollapsedExpandZones ? (
+          <CollapsedSidebarExpandGap
+            className="h-3"
+            onEnter={onCollapsedExpandZoneEnter}
+            onLeave={onCollapsedExpandZoneLeave}
+          />
+        ) : null}
         <nav
           className={sidebarMainNavClassName({
             collapsed,
@@ -401,7 +443,20 @@ function DashboardSidebarRailBody({
       </nav>
 
       {showAdminOverviewLink || showAdminIntegrationsLink ? (
-        <div className={cn(sidebarNavDividerClassName(collapsed), "mt-3 pt-3")}>
+        <>
+          {showCollapsedExpandZones ? (
+            <CollapsedSidebarExpandGap
+              className="h-3"
+              onEnter={onCollapsedExpandZoneEnter}
+              onLeave={onCollapsedExpandZoneLeave}
+            />
+          ) : null}
+          <div
+            className={cn(
+              sidebarNavDividerClassName(collapsed),
+              collapsed ? "pt-3" : "mt-3 pt-3",
+            )}
+          >
           <nav
             className={sidebarNavDividerContentClassName(collapsed)}
             aria-label="Administration"
@@ -426,13 +481,24 @@ function DashboardSidebarRailBody({
               />
             ) : null}
           </nav>
-        </div>
+          </div>
+        </>
+      ) : null}
+      </div>
+
+      {showCollapsedExpandZones ? (
+        <CollapsedSidebarExpandGap
+          className="min-h-3 flex-1"
+          onEnter={onCollapsedExpandZoneEnter}
+          onLeave={onCollapsedExpandZoneLeave}
+        />
       ) : null}
 
       <div
         className={cn(
           sidebarNavDividerClassName(collapsed),
-          "mt-auto pt-3",
+          !showCollapsedExpandZones && "mt-auto",
+          "shrink-0 pt-3",
           collapsed && "border-t-0",
         )}
       >
@@ -440,10 +506,9 @@ function DashboardSidebarRailBody({
           <DashboardUserMenu
             displayName={userDisplayName}
             email={userEmail}
-            collapsed={collapsed}
+            collapsed={userMenuCollapsed}
           />
         </div>
-      </div>
       </div>
     </div>
   );
@@ -473,9 +538,24 @@ export function DashboardSidebar({
   const { isOpen: isMobileNavOpen, close: closeMobileNav } = useDashboardMobileNav();
   const [mobileDrawerMounted, setMobileDrawerMounted] = React.useState(false);
   const [mobileDrawerVisible, setMobileDrawerVisible] = React.useState(false);
-  const [collapsedRailHovered, setCollapsedRailHovered] = React.useState(false);
+  const [collapsedExpandHoverDepth, setCollapsedExpandHoverDepth] =
+    React.useState(0);
   const suppressCollapsedExpandRef = React.useRef(false);
   const [, refreshCollapsedExpandGate] = React.useReducer((n) => n + 1, 0);
+
+  const handleCollapsedExpandZoneEnter = React.useCallback(() => {
+    setCollapsedExpandHoverDepth((depth) => depth + 1);
+  }, []);
+
+  const handleCollapsedExpandZoneLeave = React.useCallback(() => {
+    setCollapsedExpandHoverDepth((depth) => Math.max(0, depth - 1));
+  }, []);
+
+  React.useEffect(() => {
+    if (!collapsed) {
+      setCollapsedExpandHoverDepth(0);
+    }
+  }, [collapsed]);
 
   React.useEffect(() => {
     closeMobileNav();
@@ -550,7 +630,7 @@ export function DashboardSidebar({
   );
 
   const handleCollapse = React.useCallback(() => {
-    setCollapsedRailHovered(false);
+    setCollapsedExpandHoverDepth(0);
     suppressCollapsedExpandRef.current = true;
     refreshCollapsedExpandGate();
     setCollapsed(true);
@@ -561,7 +641,14 @@ export function DashboardSidebar({
   }, [setCollapsed]);
 
   const showCollapsedExpandButton =
-    collapsed && collapsedRailHovered && !suppressCollapsedExpandRef.current;
+    collapsed &&
+    collapsedExpandHoverDepth > 0 &&
+    !suppressCollapsedExpandRef.current;
+
+  const collapsedExpandZoneProps = {
+    onCollapsedExpandZoneEnter: handleCollapsedExpandZoneEnter,
+    onCollapsedExpandZoneLeave: handleCollapsedExpandZoneLeave,
+  };
 
   const desktopExpandSequence = useSidebarExpandSequence(
     !collapsed,
@@ -586,6 +673,7 @@ export function DashboardSidebar({
     onCollapse: handleCollapse,
     onExpand: () => setCollapsed(false),
     showCollapsedExpandButton,
+    ...collapsedExpandZoneProps,
   };
 
   return (
@@ -596,14 +684,6 @@ export function DashboardSidebar({
         data-collapsed={collapsed ? "true" : "false"}
         aria-label={SIDEBAR_LABELS.navigationAriaLabel}
         onClick={handleCollapsedRailClick}
-        onMouseEnter={() => {
-          if (collapsed) {
-            setCollapsedRailHovered(true);
-          }
-        }}
-        onMouseLeave={() => {
-          setCollapsedRailHovered(false);
-        }}
         className={cn(
           SIDEBAR_SHELL_BASE_CLASS,
           desktopExpandSequence.shellExpanded
@@ -620,6 +700,9 @@ export function DashboardSidebar({
           navAwaitingStats={desktopExpandSequence.navAwaitingStats}
           navSlideMargin={desktopExpandSequence.navSlideMargin}
           navCollapseShift={desktopExpandSequence.navCollapseShift}
+          userMenuCollapsed={
+            collapsed && !desktopExpandSequence.shellExpanded
+          }
         />
       </aside>
 
@@ -662,6 +745,7 @@ export function DashboardSidebar({
               navAwaitingStats={mobileExpandSequence.navAwaitingStats}
               navSlideMargin={mobileExpandSequence.navSlideMargin}
               navCollapseShift={mobileExpandSequence.navCollapseShift}
+              userMenuCollapsed={false}
             />
           </aside>
         </>
