@@ -7,7 +7,7 @@ export const CATALOG_AUTH_STATUS_LABELS = {
 } as const;
 
 export const ADMIN_INTEGRATIONS_PAGE_COPY = {
-  title: "Admin integrations",
+  title: "Admin Integrations",
   subtitle:
     "Register, edit, and remove managed connectors for this deployment. Regular users can request missing providers through the integrations wizard.",
   userGuidanceTitle: "For users",

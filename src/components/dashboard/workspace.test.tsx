@@ -190,9 +190,9 @@ describe("DashboardWorkspace", () => {
     const adminIntegrationsLink = container.querySelector('a[href="/admin-integrations"]');
 
     expect(adminOverviewLink).toBeTruthy();
-    expect(adminOverviewLink?.textContent).toContain("Operational overview");
+    expect(adminOverviewLink?.textContent).toContain("Operational Overview");
     expect(adminIntegrationsLink).toBeTruthy();
-    expect(adminIntegrationsLink?.textContent).toContain("Admin integrations");
+    expect(adminIntegrationsLink?.textContent).toContain("Admin Integrations");
   });
 
 
@@ -257,7 +257,7 @@ describe("DashboardWorkspace", () => {
     );
     expect(container.querySelector('a[href="/admin-overview"]')).toBeFalsy();
     expect(
-      adminIntegrationLinks.some((link) => link.textContent?.includes("Admin integrations")),
+      adminIntegrationLinks.some((link) => link.textContent?.includes("Admin Integrations")),
     ).toBe(false);
     expect(
       adminIntegrationLinks.some((link) => link.textContent?.includes("Click here")),

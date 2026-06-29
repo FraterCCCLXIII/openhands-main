@@ -45,7 +45,7 @@ export const HUB_PAGE_COPY = {
     },
   },
   adminOverview: {
-    title: "Operational overview",
+    title: "Operational Overview",
     subtitle:
       "Deployment-wide snapshot of /api/admin/overview, presented as a concise expandable user browser.",
     browseUsersTitle: "Browse users",
@@ -67,7 +67,7 @@ export const HUB_PAGE_COPY = {
     adminAccessGateFollowUpSuffix:
       "to request the necessary setup from an administrator.",
     adminOpenApiSchemaLink: "Admin OpenAPI schema",
-    adminAccessGateAdminIntegrationsLink: "Admin integrations",
+    adminAccessGateAdminIntegrationsLink: "Admin Integrations",
     connectedIdentitiesPill: (count: number) => `${count} connected identities`,
     pendingApprovalsPill: (count: number) => `${count} pending approvals`,
     adminAccessRequiredPill: "Admin access required",
@@ -103,7 +103,7 @@ export const HUB_PAGE_COPY = {
     duplicateOwnersLabel: "Owners",
   },
   adminIntegrations: {
-    title: "Admin integrations",
+    title: "Admin Integrations",
     subtitle:
       "Manage the managed connector catalog, provider guidance, and deployment-wide integration settings.",
     userGuidanceTitle: "For users",

@@ -67,4 +67,59 @@ describe("DashboardNavLink collapsed tooltips", () => {
     expect(tooltip?.textContent).toBe("Integrations");
     expect(tooltip?.className).toContain("bg-white");
   });
+
+  it("renders a trailing count bubble on the right when expanded", () => {
+    act(() => {
+      root.render(
+        <DashboardNavLink
+          href="/case-by-case-approvals"
+          icon={PlugZap}
+          label="Case-by-case Approvals"
+          trailingCount={4}
+        />,
+      );
+    });
+
+    const badge = container.querySelector('[data-testid="dashboard-nav-trailing-count"]');
+    expect(badge?.textContent).toBe("4");
+    expect(badge?.className).toContain("rounded-full");
+    expect(badge?.className).toContain("ml-auto");
+  });
+
+  it("renders a compact collapsed count badge on the icon slot", () => {
+    act(() => {
+      root.render(
+        <DashboardNavLink
+          href="/case-by-case-approvals"
+          icon={PlugZap}
+          label="Case-by-case Approvals"
+          collapsed
+          trailingCount={4}
+        />,
+      );
+    });
+
+    const badge = container.querySelector('[data-testid="dashboard-nav-trailing-count"]');
+    expect(badge?.textContent).toBe("4");
+    expect(badge?.className).toContain("-top-1");
+    expect(badge?.className).toContain("right-0");
+    expect(badge?.className).toContain("rounded-full");
+  });
+
+  it("hides the trailing count bubble when the count is zero", () => {
+    act(() => {
+      root.render(
+        <DashboardNavLink
+          href="/case-by-case-approvals"
+          icon={PlugZap}
+          label="Case-by-case Approvals"
+          trailingCount={0}
+        />,
+      );
+    });
+
+    expect(
+      container.querySelector('[data-testid="dashboard-nav-trailing-count"]'),
+    ).toBeNull();
+  });
 });

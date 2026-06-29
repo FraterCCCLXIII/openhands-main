@@ -10,12 +10,17 @@ import { DashboardMobileNavProvider } from "@/src/components/layout/dashboard-mo
 import { useSidebarStore } from "@/src/stores/sidebar-store";
 import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
-const { usePathnameMock } = vi.hoisted(() => ({
+const { usePathnameMock, usePendingApprovalsCountMock } = vi.hoisted(() => ({
   usePathnameMock: vi.fn(() => "/integrations"),
+  usePendingApprovalsCountMock: vi.fn(() => 4),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: usePathnameMock,
+}));
+
+vi.mock("@/src/hooks/use-pending-approvals-count", () => ({
+  usePendingApprovalsCount: usePendingApprovalsCountMock,
 }));
 
 vi.mock("next-auth/react", () => ({
@@ -50,7 +55,6 @@ describe("DashboardSidebar", () => {
             activeItem="integrations"
             stats={{
               liveIntegrations: 4,
-              pendingUserApprovals: 4,
               toolCount: 9,
             }}
             userDisplayName="Local Dev User"
@@ -94,6 +98,23 @@ describe("DashboardSidebar", () => {
     });
 
     expect(sidebar?.getAttribute("data-collapsed")).toBe("false");
+  });
+
+  it("shows pending approvals on the nav item instead of the stats row", () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1280,
+    });
+
+    renderSidebar();
+
+    expect(container.textContent).not.toContain("4 Pending");
+    expect(
+      container.querySelector(
+        'a[href="/case-by-case-approvals"] [data-testid="dashboard-nav-trailing-count"]',
+      )?.textContent,
+    ).toBe("4");
   });
 
   it("uses the compact rail width on tablet-sized viewports", async () => {

@@ -7,8 +7,7 @@ export const AGENT_CONNECTION_PAGE_COPY = {
     "Endpoints, OpenAPI schemas, and starter prompts for MCP and REST integrations.",
   connectionDetailsLink: "View connection details",
   connectionDetailsModalAriaLabel: "Connection details",
-  profilesCount: (count: number) =>
-    `${count} profile${count === 1 ? "" : "s"}`,
+  profilesCountLabel: "Profiles",
   permissionProfileLabel: "Permission profile",
   profileAgentKeyTitle: (profileName: string) => `${profileName} agent key`,
   profileAgentKeyDescription:
@@ -48,3 +47,7 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   adminRestApiDescription:
     "Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA.",
 } as const;
+
+export function permissionProfilesCountAriaLabel(count: number): string {
+  return `${count} profile${count === 1 ? "" : "s"}`;
+}

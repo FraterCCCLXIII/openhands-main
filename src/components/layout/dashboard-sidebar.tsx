@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, CircleCheck, KeyRound, ListChecks, PlugZap, ShieldCheck, Activity } from "lucide-react";
+import { Blocks, ChevronLeft, ChevronRight, CircleCheck, KeyRound, LayoutDashboard, ListChecks, PlugZap } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 
@@ -12,6 +12,7 @@ import { OpenHandsLogoLink } from "@/src/components/layout/openhands-logo-link";
 import { StatusPill } from "@/src/components/ui/status-pill";
 import { getAdminSectionPath, type AdminSection } from "@/src/lib/admin-routes";
 import { useEffectiveSidebarCollapsed } from "@/src/hooks/use-effective-sidebar-collapsed";
+import { usePendingApprovalsCount } from "@/src/hooks/use-pending-approvals-count";
 import { cn } from "@/src/lib/utils";
 import { useSidebarStore } from "@/src/stores/sidebar-store";
 import {
@@ -46,7 +47,6 @@ export type DashboardSidebarItemId =
 
 export interface DashboardSidebarStats {
   liveIntegrations: number;
-  pendingUserApprovals: number;
   toolCount: number;
 }
 
@@ -238,12 +238,9 @@ function DashboardSidebarStatsRow({
         style={sidebarStatsRowStyle()}
         aria-hidden={!fadeVisible}
       >
-        <div className="grid w-full grid-cols-3 gap-2 pr-2.5">
+        <div className="grid w-full grid-cols-2 gap-2 pr-2.5">
           <StatusPill className="w-full justify-center">
             {stats.liveIntegrations} Live
-          </StatusPill>
-          <StatusPill className="w-full justify-center">
-            {stats.pendingUserApprovals} Pending
           </StatusPill>
           <StatusPill className="w-full justify-center">
             {stats.toolCount} Tools
@@ -300,6 +297,9 @@ function DashboardSidebarRailBody({
   userMenuCollapsed,
 }: DashboardSidebarRailBodyProps) {
   const showCollapsedExpandZones = collapsed && showCollapseToggle;
+  const pendingApprovalsCount = usePendingApprovalsCount({
+    enabled: showApprovalsLink,
+  });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -424,6 +424,7 @@ function DashboardSidebarRailBody({
             label="Case-by-case Approvals"
             active={isNavItemActive(activeItem, "caseByCaseApprovals")}
             collapsed={collapsed}
+            trailingCount={pendingApprovalsCount}
           />
         ) : null}
         <DashboardNavLink
@@ -464,8 +465,8 @@ function DashboardSidebarRailBody({
             {showAdminOverviewLink ? (
               <DashboardNavLink
                 href="/admin-overview"
-                icon={Activity}
-                label="Operational overview"
+                icon={LayoutDashboard}
+                label="Operational Overview"
                 active={isNavItemActive(activeItem, "adminOverview")}
                 collapsed={collapsed}
               />
@@ -473,8 +474,8 @@ function DashboardSidebarRailBody({
             {showAdminIntegrationsLink ? (
               <DashboardNavLink
                 href="/admin-integrations"
-                icon={ShieldCheck}
-                label="Admin integrations"
+                icon={Blocks}
+                label="Admin Integrations"
                 active={isNavItemActive(activeItem, "adminIntegrations")}
                 accentWhenActive
                 collapsed={collapsed}

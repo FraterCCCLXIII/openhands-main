@@ -8,7 +8,7 @@ import { ADMIN_INTEGRATIONS_PAGE_COPY } from "@/src/constants/admin-integrations
 import { cn } from "@/src/lib/utils";
 
 const INFO_TRIGGER_CLASSNAME =
-  "inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-[var(--oh-border)] bg-[var(--oh-surface-subtle)] text-text-dim transition-colors hover:border-[var(--oh-accent)] hover:text-white";
+  "inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-text-dim transition-colors hover:bg-[var(--oh-interactive-active)] hover:text-white";
 
 const POPOVER_PANEL_CLASSNAME =
   "m-0 max-w-md rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-subtle)] p-5 shadow-lg";
@@ -114,9 +114,7 @@ function GuidanceInfoPopover({
           >
             <div data-testid={cardTestId}>
               <div className="mb-4 flex items-center gap-3">
-                <span className="rounded-md border border-[var(--oh-border)] bg-base-secondary p-2">
-                  <HeaderIcon className="h-4 w-4 text-primary" aria-hidden />
-                </span>
+                <HeaderIcon className="h-6 w-6 shrink-0 text-primary" aria-hidden />
                 <div>
                   <p className="text-base font-semibold text-white">{title}</p>
                   <p className="text-sm text-text-secondary">{subtitle}</p>
