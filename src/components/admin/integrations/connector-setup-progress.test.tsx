@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ConnectorSetupProgress } from "@/src/components/admin/integrations/connector-setup-progress";
+import { ConnectorSetupProgress, type ConfigFormState, createConfigForm } from "@/src/components/admin/integrations/connector-setup-progress";
 import type {
   IntegrationConnectionStatus,
   ManagedConnectorDefinition,
@@ -73,41 +73,49 @@ describe("ConnectorSetupProgress", () => {
       root.render(element);
     });
 
+  const defaultProps = (connector: ManagedConnectorDefinition, connection: IntegrationConnectionStatus | null, overrides?: Partial<{ onIndex: () => void }>) => {
+    const form: ConfigFormState = createConfigForm(connector);
+    return {
+      connector,
+      connection,
+      configForm: form,
+      oauthCallbackBaseUrl: "https://example.com/api/oauth",
+      isRegistered: true,
+      onConfigFormChange: () => {},
+      onSaveConfig: () => {},
+      onDelete: () => {},
+      onIndex: overrides?.onIndex ?? (() => {}),
+      onToolAccessModeChange: () => {},
+    };
+  };
+
   it("gates the Index tools button for an OAuth2 MCP connector without a connection", async () => {
     const onIndex = vi.fn();
     await render(
       <ConnectorSetupProgress
-        connector={baseSlackConnector}
-        connection={null}
-        indexing={false}
-        onIndex={onIndex}
+        {...defaultProps(baseSlackConnector, null, { onIndex })}
       />,
     );
 
-    const indexButton = container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Index Slack tools"]',
-    );
+    // Step 3 (Index tools) button should be disabled
+    const indexStep = container.querySelector('[data-setup-step="index-tools"]');
+    expect(indexStep).toBeTruthy();
+    const indexButton = indexStep?.querySelector<HTMLButtonElement>("button");
     expect(indexButton).toBeTruthy();
     expect(indexButton?.disabled).toBe(true);
-    expect(container.textContent).toContain(
-      "Connect your own account above first",
-    );
+    expect(indexStep?.textContent).toContain("Connect your account above first");
   });
 
   it("enables the Index tools button once the admin has connected their account", async () => {
     const onIndex = vi.fn();
     await render(
       <ConnectorSetupProgress
-        connector={baseSlackConnector}
-        connection={slackConnection}
-        indexing={false}
-        onIndex={onIndex}
+        {...defaultProps(baseSlackConnector, slackConnection, { onIndex })}
       />,
     );
 
-    const indexButton = container.querySelector<HTMLButtonElement>(
-      'button[aria-label="Index Slack tools"]',
-    );
+    const indexStep = container.querySelector('[data-setup-step="index-tools"]');
+    const indexButton = indexStep?.querySelector<HTMLButtonElement>("button");
     expect(indexButton).toBeTruthy();
     expect(indexButton?.disabled).toBe(false);
 
@@ -120,28 +128,28 @@ describe("ConnectorSetupProgress", () => {
   it("marks all steps complete and shows the ready banner after indexing tools", async () => {
     await render(
       <ConnectorSetupProgress
-        connector={{
-          ...baseSlackConnector,
-          tools: [
-            {
-              name: "search_messages",
-              description: "Search messages",
-              defaultScopes: [],
-              accessMode: "enabled",
-              config: {},
-            },
-          ],
-        }}
-        connection={slackConnection}
-        indexing={false}
-        onIndex={() => {}}
+        {...defaultProps(
+          {
+            ...baseSlackConnector,
+            tools: [
+              {
+                name: "search_messages",
+                description: "Search messages",
+                defaultScopes: [],
+                accessMode: "enabled",
+                config: {},
+              },
+            ],
+          },
+          slackConnection,
+        )}
       />,
     );
 
     const completedSteps = container.querySelectorAll(
       '[data-setup-step-completed="true"]',
     );
-    expect(completedSteps.length).toBe(4);
+    expect(completedSteps.length).toBe(3);
     expect(container.textContent).toContain("ready for users");
   });
 
@@ -156,16 +164,13 @@ describe("ConnectorSetupProgress", () => {
 
     await render(
       <ConnectorSetupProgress
-        connector={baseSlackConnector}
-        connection={null}
-        indexing={false}
-        onIndex={() => {}}
+        {...defaultProps(baseSlackConnector, null)}
       />,
     );
 
     const connectButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>("button"),
-    ).find((b) => b.textContent?.includes("Connect Slack"));
+    ).find((b) => b.textContent?.includes("Connect"));
     expect(connectButton).toBeTruthy();
 
     await act(async () => {

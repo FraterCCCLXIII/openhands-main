@@ -55,23 +55,7 @@ def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
         "apiBaseUrl": defaults.get("apiBaseUrl"),
         "openApiUrl": defaults.get("openApiUrl"),
         "serverUrl": defaults.get("serverUrl"),
-        "oauthConfig": {
-            key: defaults.get(key)
-            for key in [
-                "authorizationUrl",
-                "tokenUrl",
-                "scopes",
-                "optionalScopes",
-                "scopeSeparator",
-                "pkce",
-                "clientAuthentication",
-                "registrationUrl",
-                "additionalAuthorizationParams",
-                "additionalTokenParams",
-            ]
-            if defaults.get(key) is not None
-        }
-        or None,
+        "oauthConfig": defaults.get("oauthConfig"),
         # Default connectors ship with no tools; tools are discovered (MCP) or
         # generated from openApiUrl (HTTP) on connect/save/index.
         "tools": [],
@@ -105,6 +89,23 @@ def get_managed_connector(slug: str) -> ManagedConnector | None:
 
 def list_managed_connectors(include_defaults: bool = True) -> list[ManagedConnector]:
     connectors = repository.list_managed_connectors()
+    # OAuth2 connectors may have a stale oauthConfigured flag (the DB
+    # encrypted_oauth_client column can be NULL even when OAuth works —
+    # e.g. credentials were stored then a subsequent save cleared them).
+    # If any connection exists for an OAuth2 connector, the client was
+    # necessarily configured, so infer oauthConfigured=True.
+    if connectors:
+        connected_slugs = {
+            str(conn.get("integrationKey") or conn.get("provider") or "")
+            for conn in repository.list_connections()
+        }
+        for connector in connectors:
+            if (
+                connector.authStrategy == "oauth2"
+                and not connector.oauthConfigured
+                and connector.slug in connected_slugs
+            ):
+                connector.oauthConfigured = True
     if include_defaults:
         registered = {connector.slug for connector in connectors}
         connectors = [

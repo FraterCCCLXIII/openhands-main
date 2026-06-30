@@ -173,17 +173,23 @@ describe("listIntegrationCatalogOptions — connection-defaults derivation", () 
       provider: "mcp",
       authStrategy: "oauth2",
       serverUrl: "https://mcp.example.com/mcp",
-      authorizationUrl: "https://example.com/oauth/authorize",
-      tokenUrl: "https://example.com/oauth/token",
-      scopes: ["read", "write"],
-      optionalScopes: ["admin"],
-      scopeSeparator: "space",
-      pkce: true,
-      clientAuthentication: "body",
-      registrationUrl: "https://example.com/oauth/register",
-      additionalAuthorizationParams: { prompt: "consent" },
-      additionalTokenParams: { grant_type: "authorization_code" },
+      oauthConfig: {
+        authorizationUrl: "https://example.com/oauth/authorize",
+        tokenUrl: "https://example.com/oauth/token",
+        scopes: ["read", "write"],
+        optionalScopes: ["admin"],
+        scopeSeparator: "space",
+        pkce: true,
+        clientAuthentication: "body",
+        registrationUrl: "https://example.com/oauth/register",
+        additionalAuthorizationParams: { prompt: "consent" },
+        additionalTokenParams: { grant_type: "authorization_code" },
+      },
     });
+    // OAuth fields should be nested inside oauthConfig, not at the top level
+    expect("authorizationUrl" in (result[0]?.connectionDefaults ?? {})).toBe(false);
+    expect("tokenUrl" in (result[0]?.connectionDefaults ?? {})).toBe(false);
+    expect("clientAuthentication" in (result[0]?.connectionDefaults ?? {})).toBe(false);
   });
 
   it("maps top-level catalog entry metadata to catalog option fields", () => {

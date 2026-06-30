@@ -122,16 +122,7 @@ export interface IntegrationConnectionDefaults {
   apiBaseUrl?: string;
   serverUrl?: string;
   openApiUrl?: string;
-  authorizationUrl?: string;
-  tokenUrl?: string;
-  scopes?: string[];
-  optionalScopes?: string[];
-  scopeSeparator?: "space" | "comma";
-  pkce?: boolean;
-  clientAuthentication?: OAuthClientAuthentication;
-  registrationUrl?: string;
-  additionalAuthorizationParams?: Record<string, string>;
-  additionalTokenParams?: Record<string, string>;
+  oauthConfig?: GenericOAuthConfig;
 }
 
 export interface IntegrationCatalogOption {

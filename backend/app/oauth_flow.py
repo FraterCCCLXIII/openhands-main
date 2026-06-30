@@ -257,6 +257,15 @@ def ensure_managed_oauth_client(connector: ManagedConnector) -> ManagedConnector
         "clientAuthentication"
     ) == "none" and connector.oauthConfig.get("registrationUrl"):
         return register_dynamic_oauth_client(connector)
+    if existing_connector:
+        # The connector already exists in the database (e.g. its OAuth client
+        # credentials were stored previously or it was registered via a path
+        # that did not encrypt them). Allow saving other changes (tool access
+        # modes, server URL, etc.) without forcing the admin to re-enter OAuth
+        # client credentials on every save.
+        return connector.model_copy(
+            update={"oauthConfigured": existing_connector.oauthConfigured}
+        )
     raise HTTPException(
         status_code=400,
         detail="New OAuth-managed connectors require OAuth client credentials.",

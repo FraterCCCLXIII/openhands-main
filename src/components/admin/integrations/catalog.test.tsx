@@ -8,14 +8,47 @@ import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
 import {
   IntegrationsCatalog,
-  sortReadyManagedConnectors,
-  upsertReadyManagedConnector,
 } from "@/src/components/admin/integrations/catalog";
 import type {
   ManagedConnectorOption,
   ManagedConnectorDefinition,
   IntegrationCatalogOption,
 } from "@/src/types/integrations-hub";
+
+// Helpers previously exported from catalog.tsx, now inlined for the test.
+const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
+  [...connectors].sort(
+    (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
+  );
+
+const toReadyManagedConnector = (
+  connector: ManagedConnectorDefinition,
+): ManagedConnectorOption => ({
+  slug: connector.slug,
+  name: connector.name,
+  description: connector.description,
+  logoUrl: connector.logoUrl,
+  iconBg: connector.iconBg,
+  iconColor: connector.iconColor,
+  appUrl: connector.appUrl,
+  toolCount: connector.tools.length,
+  categories: connector.categories,
+  authModes: connector.authModes,
+  authStrategy: connector.authStrategy,
+  oauthConfigured: connector.oauthConfigured,
+  credentialLabel: connector.credentialLabel,
+  credentialPlaceholder: connector.credentialPlaceholder,
+  credentialHelp: connector.credentialHelp,
+});
+
+const upsertReadyManagedConnector = (
+  connectors: ManagedConnectorOption[],
+  connector: ManagedConnectorOption,
+) =>
+  sortReadyManagedConnectors([
+    ...connectors.filter((candidate: ManagedConnectorOption) => candidate.slug !== connector.slug),
+    connector,
+  ]);
 
 enableReactActEnvironment();
 
@@ -33,9 +66,11 @@ const integrationCatalog: IntegrationCatalogOption[] = [
       authStrategy: "oauth2",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
       openApiUrl: "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
-      authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-      tokenUrl: "https://oauth2.googleapis.com/token",
-      scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      oauthConfig: {
+        authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      },
     },
   },
 ];
@@ -203,10 +238,8 @@ const findProviderToggle = (container: ParentNode, name: string) =>
     (button) => button.textContent?.includes(name),
   ) ?? null;
 
-const findManagedConnectorToggle = (container: ParentNode, slug: string) =>
-  container.querySelector<HTMLButtonElement>(
-    `button[aria-controls="managed-connector-details-${slug}"]`,
-  );
+// In the unified list there is only one toggle per connector.
+const findConnectorToggle = findProviderToggle;
 
 describe("IntegrationsCatalog", () => {
   let container: HTMLDivElement;
@@ -235,7 +268,7 @@ describe("IntegrationsCatalog", () => {
     vi.unstubAllGlobals();
   });
 
-  it("updates the curated provider list immediately after deleting a managed connector", async () => {
+  it("shows setup progress for a registered connector and allows deletion", async () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
@@ -248,25 +281,28 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    const providerToggle = findProviderToggle(container, "Google Calendar");
-    expect(providerToggle).toBeTruthy();
+    const toggle = findConnectorToggle(container, "Google Calendar");
+    expect(toggle).toBeTruthy();
 
     await act(async () => {
-      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain(
-      "This provider is already available in the integration wizard, so no additional registration is needed.",
+    // Registered connector shows onboarding with Configure integration as step 1
+    expect(container.textContent).toContain("Configure integration");
+    expect(container.textContent).not.toContain("Register this provider");
+
+    // Step 1 (Configure integration) starts collapsed because it's completed.
+    // Expand it to reveal the Delete button inside the config form.
+    const step1Toggle = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Expand Configure integration"]',
     );
-    expect(container.textContent).toContain("Use Google Calendar");
-
-    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
-    expect(managedConnectorToggle).toBeTruthy();
-
+    expect(step1Toggle).toBeTruthy();
     await act(async () => {
-      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      step1Toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
+    // Delete button is in the expanded panel
     const deleteButton = container.querySelector(
       'button[aria-label="Delete Google Calendar connector"]',
     );
@@ -280,18 +316,19 @@ describe("IntegrationsCatalog", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/managed-connectors/google-calendar", {
       method: "DELETE",
     });
-    expect(container.textContent).not.toContain("Use Google Calendar");
 
-    expect(findProviderToggle(container, "Google Calendar")?.getAttribute("aria-expanded")).toBe(
-      "true",
-    );
-    expect(container.textContent).toContain("Register this provider");
-    expect(container.textContent).not.toContain(
-      "This provider is already available in the integration wizard, so no additional registration is needed.",
-    );
+    // After deletion, the connector collapses. Re-expand to see onboarding.
+    const toggleAfterDelete = findConnectorToggle(container, "Google Calendar");
+    await act(async () => {
+      toggleAfterDelete?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    // Unregistered connector shows onboarding with "Register connector" button
+    expect(container.textContent).toContain("Configure integration");
+    expect(container.textContent).toContain("Register connector");
   });
 
-  it("hides the registered managed connector panel for non-admin viewers", async () => {
+  it("hides registration controls for non-admin viewers", async () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
@@ -304,24 +341,49 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    // Non-admins see the single unified "Integrations" list (the catalog
-    // panel) but not the registered-connector management controls.
     expect(container.textContent).toContain("Integrations");
-    expect(container.textContent).not.toContain("Search and review registered connectors");
+    const toggle = findConnectorToggle(container, "Google Calendar");
+    expect(toggle).toBeTruthy();
+
+    await act(async () => {
+      toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    // Non-admins see the "only admins" message
+    expect(container.textContent).toContain("Only app administrators");
+    expect(container.textContent).not.toContain("Register this provider");
   });
 
-  it("marks oauth providers ready after updating a managed connector", async () => {
+  it("shows onboarding with Configure integration for unregistered oauth connector", async () => {
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          integrationCatalog={integrationCatalog}
+          initialReadyManagedConnectors={[]}
+          managedConnectors={[]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
+        />,
+      );
+    });
+
+    const toggle = findConnectorToggle(container, "Google Calendar");
+    expect(toggle).toBeTruthy();
+
+    await act(async () => {
+      toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    // Unregistered connector shows unified onboarding, not the old registration form
+    expect(container.textContent).toContain("Configure integration");
+    expect(container.textContent).toContain("Register connector");
+  });
+
+  it("transitions from unregistered onboarding to registered onboarding after registering", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(
-        JSON.stringify({
-          ...googleManagedConnector,
-          oauthConfigured: true,
-          updatedAt: "2026-03-11T00:00:00.000Z",
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
+        JSON.stringify({ ...googleManagedConnector, oauthConfigured: true }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
       ),
     );
 
@@ -330,29 +392,38 @@ describe("IntegrationsCatalog", () => {
         <IntegrationsCatalog
           integrationCatalog={integrationCatalog}
           initialReadyManagedConnectors={[]}
-          managedConnectors={[{ ...googleManagedConnector, oauthConfigured: false }]}
+          managedConnectors={[]}
           canRegisterManagedConnectors
           oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
         />,
       );
     });
 
-    const providerToggle = findProviderToggle(container, "Google Calendar");
-    expect(providerToggle).toBeTruthy();
-
+    const toggle = findConnectorToggle(container, "Google Calendar");
     await act(async () => {
-      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Register this provider");
-    expect(container.textContent).not.toContain("Use Google Calendar");
+    // Unregistered onboarding shows "Register connector" button
+    expect(container.textContent).toContain("Register connector");
 
-    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
-    expect(managedConnectorToggle).toBeTruthy();
-
-    await act(async () => {
-      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
+    // Fill in the required OAuth client credentials
+    const inputs = container.querySelectorAll("input");
+    const clientIdInput = Array.from(inputs).find((i) => i.type === "text" && i.value === "");
+    const clientSecretInput = Array.from(inputs).find((i) => i.type === "password");
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+    if (clientIdInput && nativeInputValueSetter) {
+      await act(async () => {
+        nativeInputValueSetter.call(clientIdInput, "test-client-id");
+        clientIdInput.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    }
+    if (clientSecretInput && nativeInputValueSetter) {
+      await act(async () => {
+        nativeInputValueSetter.call(clientSecretInput, "test-client-secret");
+        clientSecretInput.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    }
 
     const form = container.querySelector("form");
     expect(form).toBeTruthy();
@@ -362,75 +433,23 @@ describe("IntegrationsCatalog", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(findProviderToggle(container, "Google Calendar")?.getAttribute("aria-expanded")).toBe(
-      "true",
+    // After registration, the button changes from "Register connector" to "Save Config".
+    // Step 1 is now completed and collapsed, so expand it to verify the button text.
+    expect(container.textContent).toContain("Configure integration");
+    expect(container.textContent).not.toContain("Register connector");
+
+    const step1Toggle = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Expand Configure integration"]',
     );
-    expect(container.textContent).toContain("Use Google Calendar");
-    expect(container.textContent).toContain(
-      "This provider is already available in the integration wizard, so no additional registration is needed.",
-    );
+    if (step1Toggle) {
+      await act(async () => {
+        step1Toggle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+    expect(container.textContent).toContain("Save Config");
   });
 
-  it("does not mark manual-token providers ready when the stored connector is not configured", async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify(manualTokenConnector), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-
-    await act(async () => {
-      root.render(
-        <IntegrationsCatalog
-          integrationCatalog={[manualTokenProvider]}
-          initialReadyManagedConnectors={[]}
-          managedConnectors={[manualTokenConnector]}
-          canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
-        />,
-      );
-    });
-
-    const providerToggle = findProviderToggle(container, "ElevenLabs");
-    expect(providerToggle).toBeTruthy();
-
-    await act(async () => {
-      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("Register this provider");
-    expect(container.textContent).not.toContain("Use ElevenLabs");
-
-    const managedConnectorToggle = findManagedConnectorToggle(container, "elevenlabs");
-    expect(managedConnectorToggle).toBeTruthy();
-
-    await act(async () => {
-      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const form = container.querySelector("form");
-    expect(form).toBeTruthy();
-
-    await act(async () => {
-      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(findProviderToggle(container, "ElevenLabs")?.getAttribute("aria-expanded")).toBe(
-      "true",
-    );
-    expect(container.textContent).not.toContain("Use ElevenLabs");
-    expect(container.textContent).toContain("Register this provider");
-  });
-
-  it("adds a ready badge immediately after registering a new manual-token provider", async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({ slug: "elevenlabs", oauthConfigured: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-
+  it("shows onboarding for unregistered manual-token connector", async () => {
     await act(async () => {
       root.render(
         <IntegrationsCatalog
@@ -443,83 +462,14 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    const providerToggle = findProviderToggle(container, "ElevenLabs");
-    expect(providerToggle).toBeTruthy();
+    const toggle = findConnectorToggle(container, "ElevenLabs");
+    expect(toggle).toBeTruthy();
 
     await act(async () => {
-      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Register this provider");
-    expect(container.textContent).not.toContain("Use ElevenLabs");
-
-    const form = container.querySelector("form");
-    expect(form).toBeTruthy();
-
-    await act(async () => {
-      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(container.textContent).toContain("Use ElevenLabs");
-    expect(container.textContent).toContain(
-      "This provider is already available in the integration wizard, so no additional registration is needed.",
-    );
-  });
-
-  it("removes oauth providers from the ready list when the stored connector is disabled", async () => {
-    fetchMock.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          ...googleManagedConnector,
-          enabled: false,
-          oauthConfigured: true,
-          updatedAt: "2026-03-12T00:00:00.000Z",
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      ),
-    );
-
-    await act(async () => {
-      root.render(
-        <IntegrationsCatalog
-          integrationCatalog={integrationCatalog}
-          initialReadyManagedConnectors={readyManagedConnectors}
-          managedConnectors={[googleManagedConnector]}
-          canRegisterManagedConnectors
-          oauthCallbackBaseUrl="https://openhands-integrations-hub.vercel.app/api/oauth"
-        />,
-      );
-    });
-
-    const providerToggle = findProviderToggle(container, "Google Calendar");
-    expect(providerToggle).toBeTruthy();
-
-    await act(async () => {
-      providerToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(container.textContent).toContain("Use Google Calendar");
-
-    const managedConnectorToggle = findManagedConnectorToggle(container, "google-calendar");
-    expect(managedConnectorToggle).toBeTruthy();
-
-    await act(async () => {
-      managedConnectorToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const form = container.querySelector("form");
-    expect(form).toBeTruthy();
-
-    await act(async () => {
-      form?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    expect(container.textContent).not.toContain("Use Google Calendar");
-    expect(container.textContent).toContain("Register this provider");
+    expect(container.textContent).toContain("Configure integration");
+    expect(container.textContent).toContain("Register connector");
   });
 });

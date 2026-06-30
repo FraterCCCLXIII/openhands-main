@@ -780,7 +780,7 @@ class Repository:
                     server_url = EXCLUDED.server_url,
                     open_api_url = EXCLUDED.open_api_url,
                     oauth_config = EXCLUDED.oauth_config,
-                    encrypted_oauth_client = EXCLUDED.encrypted_oauth_client,
+                    encrypted_oauth_client = COALESCE(EXCLUDED.encrypted_oauth_client, managed_connectors.encrypted_oauth_client),
                     functions = EXCLUDED.functions,
                     enabled = EXCLUDED.enabled,
                     updated_at = NOW()
@@ -832,6 +832,18 @@ class Repository:
             )
             return bool(rows)
         return self.managed_connectors.pop(slug, None) is not None
+
+    def delete_connections_by_integration_key(self, integration_key: str) -> bool:
+        if self.database_url:
+            rows = self.db_rows(
+                "DELETE FROM integration_connections WHERE integration_key = %s RETURNING integration_key",
+                (integration_key,),
+            )
+            return bool(rows)
+        return any(
+            key == integration_key and self.connections.pop((owner, key), None) is not None
+            for (owner, key) in list(self.connections)
+        )
 
     def get_managed_connector(self, slug: str) -> ManagedConnector | None:
         if self.database_url:

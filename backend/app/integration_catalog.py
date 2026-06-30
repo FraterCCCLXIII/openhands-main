@@ -12,6 +12,20 @@ def connection_defaults_from_option(option: dict[str, Any]) -> dict[str, Any]:
     oauth = auth.get("oauth", {})
     http = option.get("http", {})
     transport = option.get("transport", {})
+    oauth_config = defined_values(
+        {
+            "authorizationUrl": oauth.get("authorizationUrl"),
+            "tokenUrl": oauth.get("tokenUrl"),
+            "scopes": oauth.get("scopes"),
+            "optionalScopes": oauth.get("optionalScopes"),
+            "scopeSeparator": oauth.get("scopeSeparator"),
+            "pkce": oauth.get("pkce"),
+            "clientAuthentication": oauth.get("clientAuthentication"),
+            "registrationUrl": oauth.get("registrationUrl"),
+            "additionalAuthorizationParams": oauth.get("additionalAuthorizationParams"),
+            "additionalTokenParams": oauth.get("additionalTokenParams"),
+        }
+    )
     return defined_values(
         {
             "provider": option.get("provider"),
@@ -25,16 +39,7 @@ def connection_defaults_from_option(option: dict[str, Any]) -> dict[str, Any]:
             "apiBaseUrl": http.get("apiBaseUrl"),
             "serverUrl": transport.get("url"),
             "openApiUrl": http.get("openApiUrl"),
-            "authorizationUrl": oauth.get("authorizationUrl"),
-            "tokenUrl": oauth.get("tokenUrl"),
-            "scopes": oauth.get("scopes"),
-            "optionalScopes": oauth.get("optionalScopes"),
-            "scopeSeparator": oauth.get("scopeSeparator"),
-            "pkce": oauth.get("pkce"),
-            "clientAuthentication": oauth.get("clientAuthentication"),
-            "registrationUrl": oauth.get("registrationUrl"),
-            "additionalAuthorizationParams": oauth.get("additionalAuthorizationParams"),
-            "additionalTokenParams": oauth.get("additionalTokenParams"),
+            "oauthConfig": oauth_config if oauth_config else None,
         }
     )
 

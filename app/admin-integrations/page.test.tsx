@@ -199,14 +199,33 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    // Admins see both the added and available lists. The managed-connector
-    // management controls (Delete) render for admins.
-    expect(container.textContent).toContain("available");
-    expect(container.textContent).toContain("Delete");
-    // Both the registered OAuth connector and the non-OAuth catalog provider
-    // appear — the page no longer filters to OAuth-only.
+    // Admins see the unified connector list. The registered connector
+    // (GitHub) shows "steps done" in its header. Expanding it reveals
+    // the management controls (Delete).
     expect(container.textContent).toContain("GitHub");
     expect(container.textContent).toContain("ElevenLabs");
+
+    // Expand the registered GitHub connector to see the Delete button.
+    const githubToggle = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]'),
+    ).find((btn) => btn.textContent?.includes("GitHub"));
+    expect(githubToggle).toBeTruthy();
+
+    await act(async () => {
+      githubToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    // Step 1 (Configure integration) starts collapsed because it's completed.
+    // Expand it to reveal the Delete button inside the config form.
+    const step1Toggle = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Expand Configure integration"]',
+    );
+    expect(step1Toggle).toBeTruthy();
+    await act(async () => {
+      step1Toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Delete");
     expect(container.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
     expect(container.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
   });

@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
@@ -35,6 +35,7 @@ const isReadyConnector = (connector: ManagedConnectorOption) =>
   connector.oauthConfigured !== false;
 
 export function ClientAdminIntegrationsPage() {
+  const queryClient = useQueryClient();
   const { user, isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data, isLoading: dataLoading, error } = useQuery({
@@ -212,6 +213,8 @@ export function ClientAdminIntegrationsPage() {
             oauthCallbackBaseUrl={oauthCallbackBaseUrl}
             connections={connectionsQuery.data ?? []}
             onConnectionsStale={() => void connectionsQuery.refetch()}
+            onManagedConnectorsStale={() => void queryClient.invalidateQueries({ queryKey: ["admin-integrations-init"] })}
+            initialExpandedSlug={searchParams?.get("managedConnector") ?? null}
           />
         </div>
       </div>

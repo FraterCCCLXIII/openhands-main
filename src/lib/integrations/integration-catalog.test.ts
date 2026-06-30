@@ -65,10 +65,12 @@ describe("listIntegrationCatalogOptions", () => {
     expect(slack?.connectionDefaults).toMatchObject({
       provider: "mcp",
       serverUrl: "https://mcp.slack.com/mcp",
-      authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
-      tokenUrl: "https://slack.com/api/oauth.v2.user.access",
-      clientAuthentication: "body",
-      pkce: true,
+      oauthConfig: {
+        authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+        tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+        clientAuthentication: "body",
+        pkce: true,
+      },
     });
     expect(webflow).toMatchObject({
       docsUrl: "https://developers.webflow.com/mcp/reference/getting-started",
@@ -76,12 +78,14 @@ describe("listIntegrationCatalogOptions", () => {
     expect(webflow?.connectionDefaults).toMatchObject({
       provider: "mcp",
       serverUrl: "https://mcp.webflow.com/mcp",
-      authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
-      tokenUrl: "https://mcp.webflow.com/oauth/token",
-      registrationUrl: "https://mcp.webflow.com/oauth/register",
-      clientAuthentication: "none",
-      pkce: true,
-      scopes: [],
+      oauthConfig: {
+        authorizationUrl: "https://mcp.webflow.com/oauth/authorize",
+        tokenUrl: "https://mcp.webflow.com/oauth/token",
+        registrationUrl: "https://mcp.webflow.com/oauth/register",
+        clientAuthentication: "none",
+        pkce: true,
+        scopes: [],
+      },
     });
     expect(datadog).toMatchObject({
       docsUrl: "https://docs.datadoghq.com/bits_ai/mcp_server/setup/",
@@ -89,9 +93,11 @@ describe("listIntegrationCatalogOptions", () => {
     expect(datadog?.connectionDefaults).toMatchObject({
       provider: "mcp",
       serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
-      authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
-      tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
-      scopes: ["dashboards_read", "monitors_read"],
+      oauthConfig: {
+        authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
+        tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
+        scopes: ["dashboards_read", "monitors_read"],
+      },
     });
     expect(hubspot).toMatchObject({
       docsUrl:
@@ -100,26 +106,28 @@ describe("listIntegrationCatalogOptions", () => {
     expect(hubspot?.connectionDefaults).toMatchObject({
       provider: "mcp",
       serverUrl: "https://mcp.hubspot.com",
-      authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
-      tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
-      clientAuthentication: "body",
-      pkce: true,
-      scopes: [],
+      oauthConfig: {
+        authorizationUrl: "https://mcp.hubspot.com/oauth/authorize/user",
+        tokenUrl: "https://mcp.hubspot.com/oauth/v3/token",
+        clientAuthentication: "body",
+        pkce: true,
+        scopes: [],
+      },
       credentialHelp: expect.stringContaining("HubSpot MCP auth app"),
     });
-    // In 0.7.0 the catalog is MCP-first: notion's first option is a stdio MCP
-    // server, so its connectionDefaults reflect the MCP option (no HTTP/openApi
-    // defaults). The notion HTTP/oauth option is still present as the second
-    // connection option.
+    // In 0.8.0 notion's first connection option is HTTP/oauth, so its
+    // connectionDefaults reflect the HTTP option.
     expect(notion?.connectionDefaults).toMatchObject({
-      provider: "mcp",
+      provider: "http",
     });
     expect(googleCalendar?.connectionDefaults).toMatchObject({
       provider: "http",
       apiBaseUrl: "https://www.googleapis.com/calendar/v3",
-      authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-      tokenUrl: "https://oauth2.googleapis.com/token",
-      scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      oauthConfig: {
+        authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl: "https://oauth2.googleapis.com/token",
+        scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+      },
     });
     // The catalog's defaultTool field is no longer mapped into connectionDefaults;
     // tools are generated from the OpenAPI URL server-side, never hardcoded.

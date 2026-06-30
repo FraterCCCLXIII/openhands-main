@@ -24,6 +24,34 @@ The repository supports deployment to both Vercel and self-hosted K8s environmen
 - All `/api/*` routes, including `/api/auth/config` and `/api/auth/session`, rewrite to the FastAPI backend at `api/index.py`
 - The dashboard uses OpenHands Cloud OAuth device flow; do not reintroduce legacy dashboard auth providers or Next.js auth routes
 
+### Local Docker Run (CI image from GHCR)
+
+The `ghcr-build.yml` workflow publishes images to `ghcr.io/openhands/integrations-hub` with tags `pr-<num>`, `sha-<short>`, `sha-<full>`, `<branch>`, and semver. Pulling requires `read:packages` scope (`gh auth refresh -h github.com -s read:packages` then `docker login ghcr.io`).
+
+```bash
+# 1. Postgres
+docker run -d --name integrations-hub-postgres \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=integrationshub -p 5432:5432 postgres:17
+
+# 2. Migrations (run from the app image)
+docker run --rm --network host \
+  -e INTHUB_POSTGRES_URL="postgresql://postgres:postgres@localhost:5432/integrationshub" \
+  --entrypoint bash ghcr.io/openhands/integrations-hub:pr-340 \
+  -c "cd /app/backend && alembic upgrade head"
+
+# 3. App (use a free host port; 8000/8001 are often taken in dev boxes)
+docker run -d --name integrations-hub -p 8080:8000 \
+  --add-host=host.docker.internal:host-gateway \
+  -e INTHUB_POSTGRES_URL="postgresql://postgres:postgres@host.docker.internal:5432/integrationshub" \
+  -e INTHUB_OPENHANDS_BASE_URL="https://staging.all-hands.dev" \
+  -e INTHUB_CREDENTIAL_ENCRYPTION_KEY="$(openssl rand -base64 32)" \
+  -e INTHUB_CRON_SECRET="change-me" \
+  ghcr.io/openhands/integrations-hub:pr-340
+```
+
+Verify: `curl http://127.0.0.1:8080/api/health` → `{"status":"ok","backend":"fastapi"}`.
+
 ### K8s/Docker Deployment (SPA Mode)
 - `npm run build:spa` builds a static export to `out/` for K8s deployments
 - Set `STATIC_DIR` (or `INTHUB_STATIC_DIR`) to the path containing the pre-built `out/` directory

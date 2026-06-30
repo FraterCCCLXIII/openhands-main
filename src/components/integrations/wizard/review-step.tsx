@@ -4,6 +4,7 @@ import {
   AccessModeSlider,
   accessModeButtonClassName,
   getToolAccessMode,
+  ToolRow,
 } from "@/src/components/integrations/tool-access-controls";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -163,79 +164,25 @@ export const ReviewStep = ({
               {filteredReviewedTools.map(([name, toolSpec]) => {
                 const accessMode =
                   toolModes[name] ?? getToolAccessMode(toolSpec);
-                const isExpanded = expandedTools[name] ?? false;
                 const isSelected = selectedTools[name] ?? false;
 
                 return (
-                  <div
+                  <ToolRow
                     key={name}
-                    className="px-3.5 py-3"
-                    data-tool-name={name}
-                  >
-                    <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            className="mt-1 h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-accent)]"
-                            checked={isSelected}
-                            aria-label={`Select ${name}`}
-                            onChange={(event) =>
-                              onSetSelectedTools((current) => ({
-                                ...current,
-                                [name]: event.target.checked,
-                              }))
-                            }
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-white">{name}</p>
-                            <p className="mt-1 truncate text-xs leading-5 text-[var(--color-text-base)]">
-                              {toolSpec.description || "No description provided."}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                        <AccessModeSlider
-                          toolName={name}
-                          mode={accessMode}
-                          maxMode={toolSpec.maxAccessMode}
-                          onChange={(nextMode) => onSetToolMode(name, nextMode)}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-8 rounded-md px-3 text-xs"
-                          aria-expanded={isExpanded}
-                          aria-controls={`tool-details-${name}`}
-                          onClick={() => onToggleToolExpanded(name)}
-                        >
-                          {isExpanded ? "Hide details" : "Show details"}
-                          <ChevronRight
-                            className={cn(
-                              "ml-1 h-4 w-4 transition-transform",
-                              isExpanded && "rotate-90",
-                            )}
-                          />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {isExpanded ? (
-                      <div
-                        id={`tool-details-${name}`}
-                        className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] p-3.5"
-                      >
-                        <p className="text-sm leading-6 text-[var(--color-text-base)]">
-                          {toolSpec.description || "No description provided."}
-                        </p>
-                        <p className="mt-2 text-xs leading-5 text-[var(--color-text-base)]">
-                          Default scopes: {toolSpec.defaultScopes.join(", ") || "none"}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
+                    name={name}
+                    toolSpec={toolSpec}
+                    accessMode={accessMode}
+                    onAccessModeChange={(nextMode) => onSetToolMode(name, nextMode)}
+                    selected={isSelected}
+                    onToggleSelected={(checked) =>
+                      onSetSelectedTools((current) => ({
+                        ...current,
+                        [name]: checked,
+                      }))
+                    }
+                    defaultExpanded={expandedTools[name] ?? false}
+                    onToggleExpanded={onToggleToolExpanded}
+                  />
                 );
               })}
             </div>

@@ -7,6 +7,7 @@ import {
 import type {
   IntegrationCatalogOption,
   IntegrationConnectionDefaults,
+  GenericOAuthConfig,
 } from "@/src/types/integrations-hub";
 
 const definedEntries = <T extends Record<string, unknown>>(values: T) =>
@@ -20,6 +21,19 @@ const connectionDefaultsFromOption = (
   const http = option.http ?? {};
   const transportUrl = option.transport && "url" in option.transport ? option.transport.url : undefined;
 
+  const oauthConfig = definedEntries({
+    authorizationUrl: oauth.authorizationUrl,
+    tokenUrl: oauth.tokenUrl,
+    scopes: oauth.scopes,
+    optionalScopes: oauth.optionalScopes,
+    scopeSeparator: oauth.scopeSeparator,
+    pkce: oauth.pkce,
+    clientAuthentication: oauth.clientAuthentication,
+    registrationUrl: oauth.registrationUrl,
+    additionalAuthorizationParams: oauth.additionalAuthorizationParams,
+    additionalTokenParams: oauth.additionalTokenParams,
+  }) as GenericOAuthConfig | undefined;
+
   return definedEntries({
     provider: option.provider,
     authModes: auth.authModes,
@@ -32,16 +46,7 @@ const connectionDefaultsFromOption = (
     apiBaseUrl: http.apiBaseUrl,
     serverUrl: transportUrl,
     openApiUrl: http.openApiUrl,
-    authorizationUrl: oauth.authorizationUrl,
-    tokenUrl: oauth.tokenUrl,
-    scopes: oauth.scopes,
-    optionalScopes: oauth.optionalScopes,
-    scopeSeparator: oauth.scopeSeparator,
-    pkce: oauth.pkce,
-    clientAuthentication: oauth.clientAuthentication,
-    registrationUrl: oauth.registrationUrl,
-    additionalAuthorizationParams: oauth.additionalAuthorizationParams,
-    additionalTokenParams: oauth.additionalTokenParams,
+    oauthConfig,
   }) as IntegrationConnectionDefaults;
 };
 

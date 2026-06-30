@@ -2726,6 +2726,7 @@ async def fastapi_handler(request: Request):
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         if not repository.delete_managed_connector(params["slug"]):
             raise HTTPException(status_code=404, detail="Managed connector not found.")
+        repository.delete_connections_by_integration_key(params["slug"])
         return {"deleted": True, "slug": params["slug"]}
 
     if (
