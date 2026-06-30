@@ -109,7 +109,9 @@ export const DashboardWorkspace = ({
     queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
     enabled: activeSection === "caseByCaseApprovals",
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
   });
 
   const integrations = integrationsQuery.data ?? [];

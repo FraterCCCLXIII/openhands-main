@@ -45,7 +45,9 @@ export const useApprovalsSection = ({
     queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
     enabled,
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: 5_000,
+    refetchIntervalInBackground: false,
   });
 
   const invalidateAll = async () => {
