@@ -1048,7 +1048,7 @@ wheels = [
 
 [[package]]
 name = "integrations-hub-backend"
-version = "0.3.0"
+version = "0.4.3"
 source = { virtual = "." }
 dependencies = [
     { name = "alembic" },
@@ -1082,7 +1082,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "openhands-agent-server", specifier = ">=1.0.0,<2" },
-    { name = "openhands-extensions", specifier = "==0.7.2" },
+    { name = "openhands-extensions", specifier = "==0.8.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pydantic", specifier = ">=2.10,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<9" },
@@ -1784,11 +1784,11 @@ wheels = [
 
 [[package]]
 name = "openhands-extensions"
-version = "0.7.2"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/05/fe/711028aed157ba43ad94873ae9caf02002d5e07d296b5812d7b8ecc1379c/openhands_extensions-0.7.2.tar.gz", hash = "sha256:29cfe64b65975048f4ccfedda32fe692ee5c22075f7c7305cd1806c4481fc82e", size = 693208, upload-time = "2026-06-29T01:51:12.149Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a6/6a/b4a6331436a7e6b3d5c9e7d373b580d9f0469f4abc2e4db7ebbbc84e9106/openhands_extensions-0.8.0.tar.gz", hash = "sha256:33406f13bc06c7cc96accf455659152d061fe741441be533405144934e5c8636", size = 698959, upload-time = "2026-06-30T04:05:18.916Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/4b/9858d80c3e883da6ee97f155b354c9635b4602106b4862b3c20243055fc8/openhands_extensions-0.7.2-py3-none-any.whl", hash = "sha256:1e8282c1a90808b0e414e7ccfbba303c31bffd6c83a9d04f27bf671e58265d72", size = 52917, upload-time = "2026-06-29T01:51:10.848Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/5e/3af1892b7e6eea11e3beb52e01a563afa62ce7799fb822288d3d5b3eb9c5/openhands_extensions-0.8.0-py3-none-any.whl", hash = "sha256:b81c411afa904c6e7647b9e797e35c305d04efd08f4a9a7ad3dc8a714dafaf5e", size = 52914, upload-time = "2026-06-30T04:05:17.753Z" },
 ]
 
 [[package]]

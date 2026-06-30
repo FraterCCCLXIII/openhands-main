@@ -656,11 +656,12 @@ def test_save_http_oauth_connector_preserves_existing_access_modes(
 def test_default_http_oauth_connector_with_openapi_has_no_default_tool() -> None:
     """Default managed connectors come from the first connection option.
 
-    In 0.7.0 the catalog is MCP-first:
+    In 0.8.0 the Notion catalog was reordered to be OAuth-first (extensions
+    PR #379), so its first option is now HTTP/OAuth:
     - Linear's first option is a hosted shttp MCP server, so it qualifies as a
       default managed MCP connector (tools discovered via tools/list).
-    - Notion's first option is a stdio MCP server (local npx), which has no
-      serverUrl and so is not a default managed connector.
+    - Notion's first option is HTTP/OAuth with an openApiUrl, so it qualifies
+      as a default managed HTTP connector (tools generated from OpenAPI).
     - ElevenLabs is HTTP-only with an openApiUrl, so it stays and ships 0 tools.
     """
     from backend.app.managed_connectors import (
@@ -678,10 +679,16 @@ def test_default_http_oauth_connector_with_openapi_has_no_default_tool() -> None
     assert linear.tools == []
     assert "linear" in default_slugs
 
-    # Notion's first option is stdio MCP (no serverUrl), so it is not surfaced
-    # as a default managed connector.
-    assert default_managed_connector("notion") is None
-    assert "notion" not in default_slugs
+    # Notion's first option is HTTP/OAuth with an openApiUrl, so it is surfaced
+    # as a default managed HTTP connector.
+    notion = default_managed_connector("notion")
+    assert notion is not None
+    assert notion.provider == "http"
+    assert notion.apiBaseUrl == "https://api.notion.com"
+    assert notion.openApiUrl == "https://developers.notion.com/openapi.json"
+    assert notion.authStrategy == "oauth2"
+    assert notion.tools == []
+    assert "notion" in default_slugs
 
     # ElevenLabs is http with an openApiUrl, so it stays and ships 0 tools.
     elevenlabs = default_managed_connector("elevenlabs")
