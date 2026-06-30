@@ -243,6 +243,11 @@ export const ConnectorSetupProgress = ({
   const callbackUrl = `${oauthCallbackBaseUrl}/${connector.slug}/callback`;
 
   const isOAuth = connector.authStrategy === "oauth2";
+  const usesDynamicRegistration =
+    isOAuth &&
+    connector.oauthConfig?.clientAuthentication === "none" &&
+    Boolean(connector.oauthConfig?.registrationUrl);
+  const needsManualOAuthClient = isOAuth && !usesDynamicRegistration;
   const isHttp = configForm.provider === "http";
 
   const handleConnect = () => {
@@ -335,7 +340,7 @@ export const ConnectorSetupProgress = ({
             ) : null}
           </div>
 
-          {isOAuth ? (
+          {needsManualOAuthClient ? (
             <>
               <label className="flex flex-col gap-1 text-xs text-[var(--color-text-base)]">
                 OAuth client ID {clientConfigured ? "(replace)" : ""}
@@ -349,7 +354,7 @@ export const ConnectorSetupProgress = ({
           ) : null}
 
           {/* Callback URL hint */}
-          {isOAuth ? (
+          {needsManualOAuthClient ? (
             <div className="md:col-span-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[11px] leading-5 text-[var(--color-text-base)]">
               Set the redirect URI to <code className="mx-1 text-white">{callbackUrl}</code> for this deployment.
             </div>
