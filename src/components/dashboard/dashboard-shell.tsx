@@ -1,15 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Badge } from "@/src/components/ui/badge";
-import {
-  DashboardSidebar,
-  DashboardSidebarUserPanel,
-  getDashboardSections,
-} from "@/src/components/layout/dashboard-sidebar";
-import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
-import type { AdminSection } from "@/src/lib/admin-routes";
+import { HubAppShell } from "@/src/components/layout/hub-app-shell";
+import { PageHeader } from "@/src/components/layout/page-header";
+import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
+import { hubPageShellClassName } from "@/src/styles/neo-layout";
 
 interface DashboardShellProps {
   activeSection: AdminSection;
@@ -27,6 +24,41 @@ interface DashboardShellProps {
   children: ReactNode;
 }
 
+const sectionCopy: Record<AdminSection, { title: string; description: ReactNode }> = {
+  profile: {
+    title: "Profile",
+    description: "Review the account and runtime state used by this Integrations Hub session.",
+  },
+  integrations: {
+    title: "Integrations",
+    description: (
+      <>
+        Connect tools, tune per-tool access, and manage your active agent integrations. Can&apos;t find an integration?{" "}
+        <Link
+          href="/admin-integrations"
+          data-testid="integrations-admin-catalog-link"
+          className="text-white transition-opacity hover:opacity-80"
+        >
+          Open the admin catalog
+        </Link>
+        .
+      </>
+    ),
+  },
+  permissionProfiles: {
+    title: "Permission Profiles",
+    description: "Save and reapply integration permission snapshots without storing provider credentials.",
+  },
+  apiKeys: {
+    title: "Agent Connection",
+    description: "Copy API keys, schemas, and prompts for connecting OpenHands agents to this hub.",
+  },
+  caseByCaseApprovals: {
+    title: "Case-by-case Approvals",
+    description: "Review temporary tool-access requests and approve only the work you trust.",
+  },
+};
+
 export const DashboardShell = ({
   activeSection,
   isAdmin,
@@ -42,66 +74,60 @@ export const DashboardShell = ({
   agentApiReady,
   children,
 }: DashboardShellProps) => {
-  const sections = getDashboardSections();
-  const activeSectionMeta =
-    sections.find((section) => section.id === activeSection) ?? {
-      id: activeSection,
-      label: "Dashboard",
-      icon: sections[0]?.icon ?? null,
-    };
+  const copy = sectionCopy[activeSection];
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8">
-      <DashboardSidebar
-        badge={<Badge>{enabledIntegrationCount} live</Badge>}
-        activeItem={activeSection}
-        showAdminOverviewLink={isAdmin}
-        showAdminIntegrationsLink={isAdmin}
-        footer={
-          <DashboardSidebarUserPanel
-            userName={userName}
-            userEmail={userEmail}
-            badges={[
-              <Badge key="pending">{pendingAccessRequestCount} pending</Badge>,
-              <Badge key="tools">{discoveredToolCount} tools</Badge>,
-            ]}
-            action={<DashboardSignOutButton />}
-          />
-        }
-      />
+    <HubAppShell
+      activeItem={activeSection}
+      stats={{
+        liveIntegrations: enabledIntegrationCount,
+        toolCount: discoveredToolCount,
+      }}
+      userDisplayName={userName}
+      userEmail={userEmail}
+      showAdminOverviewLink={isAdmin}
+      showAdminIntegrationsLink={isAdmin}
+    >
+      <div className={hubPageShellClassName}>
+        <PageHeader
+          title={copy.title}
+          description={copy.description}
+          pills={[
+            `${integrationCount} integrations`,
+            `${enabledIntegrationCount} enabled`,
+            `${pendingAccessRequestCount} pending approvals`,
+          ]}
+          actions={
+            activeSection === "integrations" && isAdmin ? (
+              <Link
+                href={buildAdminSectionHref("integrations", {
+                  showIntegrationWizard: "1",
+                })}
+                className="inline-flex h-9 items-center rounded-lg border border-[var(--oh-border)] bg-base-secondary px-3 text-xs font-medium text-white transition-colors hover:bg-surface-raised"
+              >
+                Request integration
+              </Link>
+            ) : null
+          }
+        />
 
-      <div className="space-y-4">
-        <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-              OpenHands Integrations Hub
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-white">
-              {activeSectionMeta.label}
-            </h1>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge>{integrationCount} integrations</Badge>
-            <Badge>{enabledIntegrationCount} enabled</Badge>
-            <Badge>{pendingAccessRequestCount} pending approvals</Badge>
-          </div>
-        </header>
+        <div className="mt-5 space-y-4">
+          {statusMessage || (oauthStatusMessage && showOAuthStatus) ? (
+            <div className="rounded-xl border border-[var(--oh-border)] bg-base-secondary px-3 py-2 text-sm text-white">
+              {statusMessage || oauthStatusMessage}
+            </div>
+          ) : null}
 
-        {statusMessage || (oauthStatusMessage && showOAuthStatus) ? (
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-2 text-sm text-[var(--color-text-active)]">
-            {statusMessage || oauthStatusMessage}
-          </div>
-        ) : null}
+          {!agentApiReady ? (
+            <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--oh-warning)]">
+              Open <code className="text-white">/integrations</code> once to provision
+              the agent key before agents call <code className="text-white">/api/agent/*</code>.
+            </div>
+          ) : null}
 
-        {!agentApiReady ? (
-          <div className="rounded-xl border border-[color:rgba(217,181,90,0.25)] bg-[color:rgba(217,181,90,0.12)] px-3 py-2 text-sm text-[var(--color-warning)]">
-            Open <code className="text-white">/integrations</code> once to provision
-            the agent key before agents call <code className="text-white">/api/agent/*</code>.
-          </div>
-        ) : null}
-
-        {children}
+          {children}
+        </div>
       </div>
-    </div>
+    </HubAppShell>
   );
 };

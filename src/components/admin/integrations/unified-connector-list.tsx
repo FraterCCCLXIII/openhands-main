@@ -7,9 +7,7 @@ import { useMemo, useState } from "react";
 import { isOAuthMcpConnector } from "@/src/components/admin/integrations/connector-predicates";
 import { ConnectorSetupProgress, type ConfigFormState, createConfigForm, buildConfigPayload } from "@/src/components/admin/integrations/connector-setup-progress";
 import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { apiFetch, fetchJson } from "@/src/lib/fetch-json";
-import { buildAdminSectionHref } from "@/src/lib/admin-routes";
+import { apiFetch } from "@/src/lib/fetch-json";
 import { cn } from "@/src/lib/utils";
 import type {
   IntegrationCatalogOption,
@@ -377,8 +375,6 @@ export function UnifiedConnectorList({
     }
   };
 
-  const inputClassName = "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-accent)]";
-
   // ── render ────────────────────────────────────────────────────────────
 
   if (unifiedList.length === 0) {
@@ -390,7 +386,7 @@ export function UnifiedConnectorList({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
+    <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
       {unifiedList.map(({ catalog, managed }) => {
         const isExpanded = expandedSlug === catalog.slug;
         const isRegistered = managed !== null;
@@ -413,7 +409,7 @@ export function UnifiedConnectorList({
               type="button"
               onClick={() => setExpandedSlug(isExpanded ? null : catalog.slug)}
               aria-expanded={isExpanded}
-              className="flex w-full cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-3 text-left text-sm"
+              className="flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-3 text-left text-sm"
             >
               <ConnectorAvatar name={catalog.name} logoUrl={catalog.logoUrl} iconBg={catalog.iconBg} iconColor={catalog.iconColor} />
               <span className="shrink-0 font-medium text-white">{catalog.name}</span>

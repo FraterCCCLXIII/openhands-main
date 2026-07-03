@@ -39,24 +39,24 @@ export const DashboardApiKeyCard = ({
   <div
     className={
       variant === "card"
-        ? "rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
+        ? "rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-subtle)] p-4"
         : undefined
     }
   >
     <div className="flex items-start justify-between gap-3">
       <div>
         <h3 className="text-sm font-semibold text-white">{label}</h3>
-        <p className="mt-1 text-sm text-[var(--color-text-base)]">{description}</p>
+        <p className="mt-1 text-sm text-[var(--oh-text-secondary)]">{description}</p>
       </div>
       <Badge tone={badgeTone}>{badgeLabel}</Badge>
     </div>
-    <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-3 py-3">
+    <div className="mt-4 rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-muted)] px-3 py-3">
       <code className="block break-all text-sm text-white">{maskedValue}</code>
     </div>
     <div className="mt-4 flex flex-wrap gap-2">
       <Button
         variant="secondary"
-        className="h-8 gap-2 rounded-md px-3 text-xs"
+        className="gap-2"
         onClick={onRevealToggle}
         disabled={revealDisabled}
       >
@@ -65,7 +65,7 @@ export const DashboardApiKeyCard = ({
       </Button>
       <Button
         variant="secondary"
-        className="h-8 gap-2 rounded-md px-3 text-xs"
+        className="gap-2"
         onClick={onCopy}
         disabled={revealDisabled}
         aria-label={`Copy ${label.toLowerCase()}`}
@@ -76,7 +76,7 @@ export const DashboardApiKeyCard = ({
       {onRotate ? (
         <Button
           variant="secondary"
-          className="h-8 gap-2 rounded-md px-3 text-xs"
+          className="gap-2"
           onClick={onRotate}
           disabled={rotateDisabled ?? revealDisabled}
           aria-label={`${rotateLabel} ${label.toLowerCase()}`}

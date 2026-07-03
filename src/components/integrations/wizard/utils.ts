@@ -14,6 +14,26 @@ import type {
 } from "@/src/types/integrations-hub";
 
 export type IntegrationKind = "managed" | "mcp";
+export type WizardFlow = "add" | "catalog";
+export type WizardStep = 1 | 2 | 3;
+
+export function getWizardFlow(searchParams: Pick<URLSearchParams, "get"> | null): WizardFlow {
+  return searchParams?.get("managedConnector") ? "catalog" : "add";
+}
+
+export function getWizardTotalSteps(flow: WizardFlow): number {
+  return flow === "catalog" ? 2 : 3;
+}
+
+export function getWizardProgressIndex(flow: WizardFlow, step: WizardStep): number {
+  if (flow === "catalog") {
+    return step <= 2 ? 0 : 1;
+  }
+
+  return Math.max(0, step - 1);
+}
+
+
 type DiscoverFeedbackTone = "info" | "success" | "error";
 export type ApiDebugDetails = Record<string, unknown>;
 

@@ -21,26 +21,6 @@ const sortReadyManagedConnectors = (connectors: ManagedConnectorOption[]) =>
     (left, right) => left.name.localeCompare(right.name) || left.slug.localeCompare(right.slug),
   );
 
-const toReadyManagedConnector = (
-  connector: ManagedConnectorDefinition,
-): ManagedConnectorOption => ({
-  slug: connector.slug,
-  name: connector.name,
-  description: connector.description,
-  logoUrl: connector.logoUrl,
-  iconBg: connector.iconBg,
-  iconColor: connector.iconColor,
-  appUrl: connector.appUrl,
-  toolCount: connector.tools.length,
-  categories: connector.categories,
-  authModes: connector.authModes,
-  authStrategy: connector.authStrategy,
-  oauthConfigured: connector.oauthConfigured,
-  credentialLabel: connector.credentialLabel,
-  credentialPlaceholder: connector.credentialPlaceholder,
-  credentialHelp: connector.credentialHelp,
-});
-
 const upsertReadyManagedConnector = (
   connectors: ManagedConnectorOption[],
   connector: ManagedConnectorOption,
@@ -153,26 +133,6 @@ const manualTokenProvider: IntegrationCatalogOption = {
     openApiUrl: "https://api.elevenlabs.io/openapi.json",
     apiKeyHeaderName: "xi-api-key",
   },
-};
-
-const manualTokenConnector: ManagedConnectorDefinition = {
-  slug: "elevenlabs",
-  name: "ElevenLabs",
-  description: "Internal ElevenLabs proxy connector",
-  categories: ["Audio"],
-  authModes: ["api_key"],
-  authStrategy: "api_key",
-  provider: "http",
-  oauthConfigured: false,
-  credentialLabel: "ElevenLabs API key",
-  credentialPlaceholder: "Paste your ElevenLabs API key",
-  credentialHelp: "Workspace API key",
-  apiBaseUrl: "https://internal.example.com/elevenlabs",
-  openApiUrl: "https://internal.example.com/elevenlabs/openapi.json",
-  tools: [],
-  enabled: true,
-  createdAt: "2026-03-10T00:00:00.000Z",
-  updatedAt: "2026-03-10T00:00:00.000Z",
 };
 
 const createManagedConnectorOption = (

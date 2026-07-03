@@ -1,7 +1,6 @@
 import { ChevronRight } from "lucide-react";
 
 import {
-  AccessModeSlider,
   accessModeButtonClassName,
   getToolAccessMode,
   ToolRow,

@@ -1,0 +1,189 @@
+"use client";
+
+import { Info, ShieldCheck, UserRound, type LucideIcon } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+
+import { ADMIN_INTEGRATIONS_PAGE_COPY } from "@/src/constants/admin-integrations-page";
+import { BorderedIconBadge } from "@/src/components/ui/bordered-icon-badge";
+import { cn } from "@/src/lib/utils";
+import { infoPopoverTriggerClassName } from "@/src/styles/info-popover-classes";
+
+const POPOVER_PANEL_CLASSNAME =
+  "m-0 max-w-md rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-subtle)] p-5 shadow-lg";
+
+interface GuidanceInfoPopoverProps {
+  triggerTestId: string;
+  sectionTestId: string;
+  cardTestId: string;
+  ariaLabel: string;
+  headerIcon: LucideIcon;
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}
+
+function GuidanceInfoPopover({
+  triggerTestId,
+  sectionTestId,
+  cardTestId,
+  ariaLabel,
+  headerIcon: HeaderIcon,
+  title,
+  subtitle,
+  children,
+}: GuidanceInfoPopoverProps) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<React.CSSProperties>();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPosition(undefined);
+      return undefined;
+    }
+
+    const trigger = triggerRef.current;
+    if (!trigger) {
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const rect = trigger.getBoundingClientRect();
+      setPosition({
+        position: "fixed",
+        top: rect.bottom + 8,
+        left: rect.right,
+        transform: "translateX(-100%)",
+        width: "min(100vw - 2rem, 28rem)",
+        zIndex: 60,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const onMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        panelRef.current?.contains(target) ||
+        triggerRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const panel =
+    open && position && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-label={ariaLabel}
+            data-testid={sectionTestId}
+            style={position}
+            className={cn(POPOVER_PANEL_CLASSNAME, "w-[min(100vw-2rem,28rem)]")}
+          >
+            <div data-testid={cardTestId}>
+              <div className="mb-4 flex items-center gap-3">
+                <BorderedIconBadge icon={HeaderIcon} />
+                <div>
+                  <p className="text-base font-semibold text-white">{title}</p>
+                  <p className="text-sm text-text-secondary">{subtitle}</p>
+                </div>
+              </div>
+              <div className="space-y-4 text-sm leading-5 text-text-secondary">
+                {children}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        data-testid={triggerTestId}
+        aria-label={ariaLabel}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        className={infoPopoverTriggerClassName}
+      >
+        <Info className="h-4 w-4" aria-hidden />
+      </button>
+      {panel}
+    </>
+  );
+}
+
+export function UserGuidanceInfoPopover() {
+  const copy = ADMIN_INTEGRATIONS_PAGE_COPY;
+
+  return (
+    <GuidanceInfoPopover
+      triggerTestId="user-guidance-info-trigger"
+      sectionTestId="user-guidance-section"
+      cardTestId="user-guidance-card"
+      ariaLabel={copy.userGuidanceInfoAriaLabel}
+      headerIcon={UserRound}
+      title={copy.userGuidanceTitle}
+      subtitle={copy.userGuidanceSubtitle}
+    >
+      <p>{copy.userGuidanceBody}</p>
+    </GuidanceInfoPopover>
+  );
+}
+
+export function AdminGuidanceInfoPopover() {
+  const copy = ADMIN_INTEGRATIONS_PAGE_COPY;
+
+  return (
+    <GuidanceInfoPopover
+      triggerTestId="admin-guidance-info-trigger"
+      sectionTestId="admin-guidance-section"
+      cardTestId="admin-guidance-card"
+      ariaLabel={copy.adminGuidanceInfoAriaLabel}
+      headerIcon={ShieldCheck}
+      title={copy.adminGuidanceTitle}
+      subtitle={copy.adminGuidanceSubtitle}
+    >
+      <p>{copy.adminGuidanceLead}</p>
+      <p>
+        {copy.adminGuidanceAccessNotePrefix}{" "}
+        <code className="text-white">{copy.adminGuidanceAccessNoteEnvVar}</code>{" "}
+        {copy.adminGuidanceAccessNoteSuffix}
+      </p>
+    </GuidanceInfoPopover>
+  );
+}

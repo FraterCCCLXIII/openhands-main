@@ -259,7 +259,7 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - Stored provider credentials require a dedicated `INTHUB_CREDENTIAL_ENCRYPTION_KEY` in every environment; there is no baked-in local-development encryption fallback.
 - FastAPI `/api/cron/expire-grants` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `INTHUB_CRON_SECRET` is configured and presented as a bearer token.
 - `.github/workflows/` now includes the OpenHands PR review pair (`pr-review.yml`, `pr-review-evaluation.yml`) plus the vulnerability remediation wrapper (`vulnerability-scan.yml`) copied from `OpenHands/extensions` plugins.
-- The app favicon now mirrors the OpenHands frontend assets: `public/favicon.ico`, `public/favicon-16x16.png`, and `public/favicon-32x32.png`, referenced explicitly via `app/layout.tsx` metadata.
+- The app favicon mirrors agent-canvas: `public/favicon.svg`, referenced via `app/layout.tsx` metadata.
 
 - `app/globals.css` plus `src/components/ui/{button,badge,card}.tsx` now mirror the OpenHands frontend palette more closely: gold primary accents (`#c9b974`/`#cfb755`), flatter dark surfaces, system sans body text, and IBM Plex Mono for code; admin/dashboard styling should stay aligned with those shared primitives.
 - Enabled dashboard/admin `<button>` controls should include pointer-cursor affordances. The shared `Button` primitive now carries `cursor-pointer`, but raw `<button>` wrappers (marketplace cards, kind selectors, segmented controls, disclosure rows) still need explicit `cursor-pointer` classes when added outside that primitive.

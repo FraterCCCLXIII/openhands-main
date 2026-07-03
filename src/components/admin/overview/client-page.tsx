@@ -58,8 +58,8 @@ export function ClientAdminOverviewPage() {
   const userEmail = user?.email?.trim() || "Not provided";
 
   return (
-    <main className="min-h-screen px-6 py-8">
-      <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8">
+    <main className="min-h-screen overflow-x-hidden px-6 py-8">
+      <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-8">
         <DashboardSidebar
           badge={<Badge>{overview ? `${overview.users.length} users` : "Admin only"}</Badge>}
           activeItem={isAdmin ? "adminOverview" : "integrations"}
@@ -84,7 +84,7 @@ export function ClientAdminOverviewPage() {
           }
         />
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
@@ -101,9 +101,10 @@ export function ClientAdminOverviewPage() {
               {overview ? (
                 <>
                   <Badge>{overview.totalConnections} connected identities</Badge>
-                  <Badge>{overview.pendingAccessRequests} pending approvals</Badge>
+                  <Badge>{overview.connectedOwners} Connected owners</Badge>
+                  <Badge>{overview.pendingAccessRequests} Pending approvals</Badge>
                   <Badge>
-                    {overview.duplicateExternalAccounts.length} duplicate {pluralize(overview.duplicateExternalAccounts.length, "group")}
+                    {overview.duplicateExternalAccounts.length} Duplicate external accounts
                   </Badge>
                 </>
               ) : (
@@ -128,12 +129,26 @@ export function ClientAdminOverviewPage() {
             </Link>
           </div>
 
+          {overview?.duplicateExternalAccounts.length ? (
+            <div className="mb-4" data-testid="admin-overview-duplicates-card">
+              <CompactPanel
+                title="Duplicate external accounts"
+                icon={ShieldAlert}
+                action={<Badge>{overview.duplicateExternalAccounts.length} groups</Badge>}
+              >
+                <p className="text-sm leading-6 text-[var(--color-text-base)]">
+                  Review duplicate external-account groups before granting broad access.
+                </p>
+              </CompactPanel>
+            </div>
+          ) : null}
+
           {overview ? (
             <div data-testid="admin-overview-users-card">
               <CompactPanel
                 title="Browse users"
                 icon={UserRound}
-                action={<Badge>{overview.users.length} shown</Badge>}
+                action={<Badge>{overview.users.length} Shown</Badge>}
               >
                 <div className="space-y-4">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -148,10 +163,10 @@ export function ClientAdminOverviewPage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge>{overview.connectedOwners} connected owners</Badge>
-                      <Badge>{overview.managedConnectors} managed connectors</Badge>
-                      <Badge>{overview.notifications} notifications</Badge>
-                      <Badge>{overview.totalAccessRequests} access requests</Badge>
+                      <Badge>{overview.connectedOwners} Connected owners</Badge>
+                      <Badge>{overview.managedConnectors} Managed connectors</Badge>
+                      <Badge>{overview.notifications} Notifications</Badge>
+                      <Badge>{overview.totalAccessRequests} Access requests</Badge>
                     </div>
                   </div>
 
@@ -165,6 +180,7 @@ export function ClientAdminOverviewPage() {
                       {overview.users.map((overviewUser) => (
                         <details key={overviewUser.ownerId} data-testid="admin-overview-user-row">
                           <summary className="flex w-full cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap list-none px-4 py-3 text-left text-sm [&::-webkit-details-marker]:hidden">
+                            <span data-testid="admin-overview-user-row-caret" aria-hidden className="shrink-0 text-[var(--color-text-base)]">▸</span>
                             <span className="shrink-0 font-medium text-white">{overviewUser.ownerId}</span>
                             <span className="shrink-0 text-[var(--color-text-muted)]">—</span>
                             <span className="shrink-0 text-[var(--color-text-base)]">

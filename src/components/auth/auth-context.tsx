@@ -1,8 +1,14 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 
 import { useClientAuth, type ClientAuthState } from "@/src/lib/client-auth";
+
+declare global {
+  interface Window {
+    __INTEGRATIONS_HUB_OWNER_ID__?: string;
+  }
+}
 
 interface AuthContextValue extends ClientAuthState {
   authDisabled: boolean;
@@ -25,6 +31,19 @@ export function AuthProvider({ children, authDisabled = false }: AuthProviderPro
     }),
     [authState, authDisabled],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (value.ownerId) {
+      window.__INTEGRATIONS_HUB_OWNER_ID__ = value.ownerId;
+      return;
+    }
+
+    delete window.__INTEGRATIONS_HUB_OWNER_ID__;
+  }, [value.ownerId]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

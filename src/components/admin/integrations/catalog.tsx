@@ -49,8 +49,8 @@ export function IntegrationsCatalog({
   };
 
   return (
-    <Card className="p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className="min-w-0 p-6">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Integrations</h2>
           <p className="mt-2 text-sm leading-7 text-[var(--color-text-base)]">

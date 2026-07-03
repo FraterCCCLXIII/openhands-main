@@ -29,7 +29,7 @@ describe("theme primitives", () => {
     container.remove();
   });
 
-  it("uses OpenHands-inspired classes for core UI primitives", async () => {
+  it("uses OpenHands-Neo classes for core UI primitives", async () => {
     await act(async () => {
       root.render(
         <div>
@@ -47,15 +47,14 @@ describe("theme primitives", () => {
     const badge = container.querySelector("span");
     const card = container.querySelector("section");
 
-    expect(primaryButton?.className).toContain("bg-[var(--color-accent)]");
-    expect(primaryButton?.className).toContain(
-      "text-[var(--color-accent-foreground)]",
-    );
-    expect(secondaryButton?.className).toContain("border-[var(--color-accent)]");
-    expect(secondaryButton?.className).toContain("bg-transparent");
-    expect(badge?.className).toContain("bg-[var(--color-surface-subtle)]");
+    expect(primaryButton?.className).toContain("bg-primary");
+    expect(primaryButton?.className).toContain("text-[var(--oh-color-base)]");
+    expect(primaryButton?.className).toContain("text-sm");
+    expect(secondaryButton?.className).toContain("border-[var(--oh-border)]");
+    expect(secondaryButton?.className).toContain("bg-base-secondary");
+    expect(badge?.className).toContain("bg-[var(--oh-surface-subtle)]");
     expect(badge?.className).toContain("rounded-md");
-    expect(card?.className).toContain("bg-[var(--color-bg-workspace)]");
+    expect(card?.className).toContain("bg-base-secondary");
     expect(card?.className).toContain("rounded-xl");
   });
 });

@@ -121,6 +121,7 @@ export const useApprovalsSection = ({
   const handleAccessRequestDecision = async (
     requestIds: string[],
     action: "approve" | "deny",
+    durationHoursOverride?: number,
   ) => {
     if (requestIds.length === 0) {
       return;
@@ -129,6 +130,11 @@ export const useApprovalsSection = ({
     setRequestActionPending(true);
 
     try {
+      const decisionDurationHours =
+        durationHoursOverride === undefined
+          ? normalizedApprovalDurationHours
+          : normalizeApprovalDurationHours(durationHoursOverride);
+
       for (const requestId of requestIds) {
         await fetchJson(
           `/api/case-by-case-approvals/${requestId}/${action === "approve" ? "approve" : "reject"}`,
@@ -139,7 +145,7 @@ export const useApprovalsSection = ({
               action === "approve"
                 ? JSON.stringify({
                     durationMinutes: approvalHoursToMinutes(
-                      normalizedApprovalDurationHours,
+                      decisionDurationHours,
                     ),
                   })
                 : JSON.stringify({}),

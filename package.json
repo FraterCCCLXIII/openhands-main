@@ -41,7 +41,8 @@
     "postcss": "^8.5.10",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.2.3",

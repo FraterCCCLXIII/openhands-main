@@ -58,6 +58,23 @@ export const subtractUnusedWindow = (
   return next;
 };
 
+export const formatTimestampParts = (value?: string) => {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return {
+    date: date.toLocaleDateString(),
+    time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  };
+};
+
+
 export const formatTrackedUsage = (toolSpec: ToolSpec) => {
   if (!toolSpec.lastInvokedAt) {
     return "No tracked usage yet";

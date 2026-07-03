@@ -91,7 +91,7 @@ export const PermissionProfileAgentKeyCard = ({
 
   return (
     <DashboardApiKeyCard
-      badgeLabel={profile.name ? "named" : "default"}
+      badgeLabel={profile.name ? "Named" : "Default"}
       badgeTone={profile.name ? "default" : "success"}
       copied={copied}
       description={description}

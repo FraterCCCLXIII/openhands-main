@@ -191,6 +191,12 @@ export const DashboardWorkspace = ({
     );
   };
 
+  const closeIntegrationWizard = () => {
+    setShowIntegrationWizard(false);
+    setActiveSection("integrations");
+    router.push(buildAdminSectionHref("integrations"));
+  };
+
   const invalidateAll = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["integrations"] }),
@@ -247,6 +253,7 @@ export const DashboardWorkspace = ({
           integrations={integrations}
           isAdmin={isAdmin}
           oauthStatus={oauthStatus}
+          onCloseIntegrationWizard={closeIntegrationWizard}
           onCreated={handleIntegrationCreated}
           onOpenIntegrationWizard={openIntegrationWizard}
           onStatus={setStatusMessage}

@@ -72,3 +72,33 @@ export const setInputValue = (
 
   throw new Error("Expected input, select, or textarea element");
 };
+
+/**
+ * Opens a {@link SelectDropdown} and chooses an option by value. Works with
+ * the shared `data-testid` conventions (`${testId}-trigger`, `${testId}-${value}`).
+ */
+export const selectDropdownOption = async (
+  container: ParentNode,
+  testId: string,
+  optionValue: string,
+): Promise<void> => {
+  const trigger = container.querySelector(
+    `[data-testid="${testId}-trigger"]`,
+  ) as HTMLButtonElement | null;
+  if (!trigger) {
+    throw new Error(`Expected select dropdown trigger for ${testId}`);
+  }
+
+  trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  await Promise.resolve();
+  await Promise.resolve();
+
+  const option = document.querySelector(
+    `[data-testid="${testId}-${optionValue}"]`,
+  ) as HTMLButtonElement | null;
+  if (!option) {
+    throw new Error(`Expected select dropdown option ${testId}-${optionValue}`);
+  }
+
+  option.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+};

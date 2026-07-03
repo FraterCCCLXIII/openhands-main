@@ -9,7 +9,7 @@ export const Card = ({
 }) => (
   <section
     className={cn(
-      "rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-workspace)]",
+      "rounded-xl border border-[var(--oh-border)] bg-base-secondary",
       className,
     )}
   >

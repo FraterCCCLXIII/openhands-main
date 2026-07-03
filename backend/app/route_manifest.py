@@ -58,6 +58,7 @@ ROUTES = [
     ("POST", "/api/permission-profiles/{profileId}/agent-key"),
     ("POST", "/api/permission-profiles/{profileId}/load"),
     ("POST", "/api/permission-profiles/{profileId}/update"),
+    ("DELETE", "/api/permission-profiles/{profileId}"),
     ("GET", "/api/oauth/{provider}/start"),
     ("POST", "/api/user/access-requests/{requestId}/approve"),
     ("POST", "/api/user/access-requests/{requestId}/reject"),

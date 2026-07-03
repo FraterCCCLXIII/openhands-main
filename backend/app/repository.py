@@ -530,6 +530,35 @@ class Repository:
         self.permission_profiles.setdefault(owner_id, {})[profile.id] = profile
         return profile
 
+    def delete_permission_profile(self, owner_id: str, profile_id: str) -> bool:
+        profile = self.get_permission_profile(owner_id, profile_id)
+        if profile is None:
+            return False
+        if profile.name is None:
+            return False
+
+        if self.database_url:
+            self.execute_db(
+                "DELETE FROM agent_api_keys WHERE profile_id = %s",
+                (profile_id,),
+            )
+            rows = self.db_rows(
+                """
+                DELETE FROM permission_profiles
+                WHERE id = %s AND owner_id = %s
+                RETURNING id
+                """,
+                (profile_id, owner_id),
+            )
+            return bool(rows)
+
+        profiles = self.permission_profiles.get(owner_id, {})
+        if profile_id not in profiles:
+            return False
+        del profiles[profile_id]
+        self.profile_agent_keys.pop(profile_id, None)
+        return True
+
     def row_to_access_request(self, row: dict[str, Any]) -> AccessRequest:
         return AccessRequest(
             id=str(row["id"]),

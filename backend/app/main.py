@@ -1772,6 +1772,20 @@ def update_permission_profile(owner: str, profile_id: str) -> PermissionProfile:
     return repository.save_permission_profile(owner, updated)
 
 
+def delete_permission_profile(owner: str, profile_id: str) -> dict[str, bool]:
+    profile = repository.get_permission_profile(owner, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Permission profile not found.")
+    if profile.name is None:
+        raise HTTPException(
+            status_code=400,
+            detail="The default permission profile cannot be deleted.",
+        )
+    if not repository.delete_permission_profile(owner, profile_id):
+        raise HTTPException(status_code=404, detail="Permission profile not found.")
+    return {"deleted": True}
+
+
 def apply_permission_profile(
     owner: str, profile_id: str
 ) -> PermissionProfileApplyResult:
@@ -2476,6 +2490,11 @@ async def fastapi_handler(request: Request):
 
     if path == "/api/permission-profiles/{profileId}/update":
         return update_permission_profile(owner, params["profileId"])
+
+    if path == "/api/permission-profiles/{profileId}":
+        if method == "DELETE":
+            return delete_permission_profile(owner, params["profileId"])
+        raise HTTPException(status_code=405, detail="Method not allowed.")
 
     if path == "/api/permission-profiles/{profileId}/agent-key":
         return rotate_permission_profile_agent_key(owner, params["profileId"])

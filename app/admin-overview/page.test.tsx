@@ -64,9 +64,39 @@ describe("app/admin-overview/page (ClientAdminOverviewPage)", () => {
           totalAccessRequests: 1,
           pendingAccessRequests: 1,
           users: [
-            { ownerId: "owner-a@example.com", totalConnections: 1, pendingAccessRequests: 1, notifications: 1 },
-            { ownerId: "owner-b@example.com", totalConnections: 1, pendingAccessRequests: 0, notifications: 0 },
-            { ownerId: "owner-c@example.com", totalConnections: 1, pendingAccessRequests: 0, notifications: 0 },
+            {
+              ownerId: "owner-a@example.com",
+              totalConnections: 1,
+              pendingAccessRequests: 1,
+              notifications: 1,
+              integrations: [],
+              providers: [],
+              totalAccessRequests: 0,
+              duplicateExternalAccounts: [],
+              connections: [],
+            },
+            {
+              ownerId: "owner-b@example.com",
+              totalConnections: 1,
+              pendingAccessRequests: 0,
+              notifications: 0,
+              integrations: [],
+              providers: [],
+              totalAccessRequests: 0,
+              duplicateExternalAccounts: [],
+              connections: [],
+            },
+            {
+              ownerId: "owner-c@example.com",
+              totalConnections: 1,
+              pendingAccessRequests: 0,
+              notifications: 0,
+              integrations: [],
+              providers: [],
+              totalAccessRequests: 0,
+              duplicateExternalAccounts: [],
+              connections: [],
+            },
           ],
           duplicateExternalAccounts: [
             { provider: "github", externalAccountId: "xingyaoww", ownerIds: ["owner-a@example.com", "owner-b@example.com"] },
@@ -126,10 +156,14 @@ describe("app/admin-overview/page (ClientAdminOverviewPage)", () => {
 
     expect(container.querySelector('[data-testid="admin-overview-users-card"]')).toBeTruthy();
     expect(container.textContent).toContain("Browse users");
-    expect(container.textContent).toContain("3 shown");
+    expect(container.textContent).toContain("Shown");
+    expect(container.textContent).toContain("Connected owners");
     expect(container.textContent).toContain("owner-a@example.com");
     expect(container.textContent).toContain("owner-b@example.com");
     expect(container.textContent).toContain("owner-c@example.com");
+    expect(
+      container.querySelectorAll('[data-testid="admin-overview-user-row-caret"]'),
+    ).toHaveLength(3);
   });
 
   it("shows duplicate group count in badges for admins", async () => {
@@ -154,8 +188,8 @@ describe("app/admin-overview/page (ClientAdminOverviewPage)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    // The badge shows "1 duplicate group" and the description mentions "duplicate external-account groups"
-    expect(container.textContent).toContain("1 duplicate group");
+    // The duplicates section shows a count badge and description for duplicate external-account groups
+    expect(container.textContent).toContain("Duplicate external accounts");
     expect(container.textContent).toContain("duplicate external-account groups");
   });
 });

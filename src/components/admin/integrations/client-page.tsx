@@ -100,7 +100,6 @@ export function ClientAdminIntegrationsPage() {
         message: oauthError || "OAuth connection failed.",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const oauthCallbackBaseUrl =
@@ -132,8 +131,8 @@ export function ClientAdminIntegrationsPage() {
   const userEmail = user?.email?.trim() || "Not provided";
 
   return (
-    <main className="min-h-screen px-6 py-8">
-      <div className="mx-auto grid max-w-7xl gap-5 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-8">
+    <main className="min-h-screen overflow-x-hidden px-6 py-8">
+      <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-8">
         <DashboardSidebar
           badge={
             <Badge>
@@ -160,7 +159,7 @@ export function ClientAdminIntegrationsPage() {
           }
         />
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {oauthStatusMessage ? (
             <div
               className={`rounded-lg border p-3 text-sm ${

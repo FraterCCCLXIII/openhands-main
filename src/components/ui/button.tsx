@@ -2,27 +2,25 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "@/src/lib/utils";
+import { formControlButtonClassName } from "@/src/styles/form-control-classes";
 
-const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
-  {
-    variants: {
-      variant: {
-        primary:
-          "border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-accent-foreground)] hover:bg-[var(--color-accent-hover)]",
-        secondary:
-          "border-[var(--color-accent)] bg-transparent text-[var(--color-accent)] hover:bg-[color:rgba(201,185,116,0.08)]",
-        ghost:
-          "border-[var(--color-border)] bg-transparent text-[var(--color-text-active)] hover:bg-[var(--color-bg-active)]",
-        danger:
-          "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.12)] text-[var(--color-danger)] hover:bg-[color:rgba(231,106,94,0.18)]",
-      },
-    },
-    defaultVariants: {
-      variant: "primary",
+const buttonVariants = cva(cn(formControlButtonClassName, "border"), {
+  variants: {
+    variant: {
+      primary:
+        "border-primary bg-primary text-[var(--oh-color-base)] hover:opacity-80",
+      secondary:
+        "border-[var(--oh-border)] bg-base-secondary text-white hover:bg-surface-raised",
+      ghost:
+        "border-[var(--oh-border)] bg-transparent text-foreground hover:bg-[var(--oh-interactive-active)]",
+      danger:
+        "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.12)] text-[var(--oh-color-danger)] hover:bg-[color:rgba(231,106,94,0.18)]",
     },
   },
-);
+  defaultVariants: {
+    variant: "primary",
+  },
+});
 
 interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,

@@ -2,13 +2,19 @@ import type { LucideIcon } from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
+import { formControlFieldClassName } from "@/src/styles/form-control-classes";
+import { fieldLabelClassName } from "@/src/styles/typography-classes";
+import {
+  EXTENSION_MODULE_CARD_INTERACTIVE_CLASS,
+  extensionModuleCardSurfaceClassName,
+} from "@/src/styles/extension-module-card-classes";
 import type { ManagedConnectorOption } from "@/src/types/integrations-hub";
 
-export const dashboardInputClassName =
-  "rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--color-accent)]";
+export const dashboardInputClassName = formControlFieldClassName;
 
 interface CompactPanelProps {
   title: string;
@@ -24,9 +30,9 @@ export const CompactPanel = ({
   action,
 }: CompactPanelProps) => (
   <Card className="overflow-hidden p-0">
-    <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
+    <div className="flex items-center justify-between border-b border-[var(--oh-border)] px-5 py-4">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] text-[var(--color-accent)]">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--oh-border)] bg-[var(--oh-surface-subtle)] text-primary">
           <Icon className="h-5 w-5" />
         </span>
         <div>
@@ -46,7 +52,7 @@ interface KeyValueRowProps {
 
 export const KeyValueRow = ({ label, value }: KeyValueRowProps) => (
   <div className="grid gap-1 py-3 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4">
-    <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
+    <p className={fieldLabelClassName}>
       {label}
     </p>
     <div className="text-sm text-white">{value}</div>
@@ -54,8 +60,8 @@ export const KeyValueRow = ({ label, value }: KeyValueRowProps) => (
 );
 
 export const getConnectorLogoUrl = (connector: {
-  logoUrl?: string;
-  appUrl?: string;
+  logoUrl?: string | null;
+  appUrl?: string | null;
 }): string | null => {
   const logoUrl = connector.logoUrl?.trim();
   if (logoUrl) {
@@ -95,7 +101,7 @@ export const ConnectorLogo = ({
   return (
     <div
       className={cn(
-        "flex items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] text-sm font-semibold text-white",
+        "flex items-center justify-center overflow-hidden rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-muted)] text-sm font-semibold text-white",
         className,
       )}
       style={{
@@ -129,37 +135,37 @@ export const IntegrationMarketplaceCard = ({
   connector,
   onClick,
 }: IntegrationMarketplaceCardProps) => {
-  const logoUrl = getConnectorLogoUrl(connector);
-
   return (
     <button
       type="button"
       onClick={onClick}
       data-managed-connector-slug={connector.slug}
-      className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-active)]"
+      className={cn(
+        "flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left",
+        extensionModuleCardSurfaceClassName,
+        EXTENSION_MODULE_CARD_INTERACTIVE_CLASS,
+      )}
     >
       <div className="flex min-w-0 items-center gap-3">
-        <ConnectorLogo
+        <IntegrationLogoBadge
+          slug={connector.slug}
           name={connector.name}
-          logoUrl={logoUrl}
-          iconBg={connector.iconBg}
-          iconColor={connector.iconColor}
-          className="h-10 w-10"
+          logoUrl={connector.logoUrl}
         />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold text-white">{connector.name}</p>
             <Badge>{connector.slug}</Badge>
           </div>
-          <p className="mt-1 line-clamp-2 text-xs leading-6 text-[var(--color-text-base)]">
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-text-secondary">
             {connector.description}
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2 text-xs text-[var(--color-text-base)]">
+      <div className="flex shrink-0 items-center gap-2 text-xs text-text-secondary">
         <Badge>{connector.authStrategy}</Badge>
         <Badge>{connector.toolCount} tools</Badge>
-        <span className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] px-3 py-2 text-xs text-white">
+        <span className="inline-flex items-center gap-2 rounded-md border border-[var(--oh-border)] px-3 py-2 text-xs text-white">
           Connect
           <ArrowRight className="h-4 w-4" />
         </span>

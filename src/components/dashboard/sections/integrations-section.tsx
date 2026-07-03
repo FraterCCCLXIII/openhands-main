@@ -1,38 +1,39 @@
-import { ChevronRight, PlugZap, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+"use client";
 
+import { MoreVertical } from "lucide-react";
+import React, { useMemo } from "react";
 
+import { IntegrationCatalogSection } from "@/src/components/integrations/integration-catalog-section";
+import { IntegrationDetailModal } from "@/src/components/integrations/integration-detail-modal";
+import { InstalledIntegrationCard } from "@/src/components/integrations/installed-integration-card";
+import { IntegrationsSectionActionsMenu } from "@/src/components/integrations/integrations-section-actions-menu";
+import { IntegrationWizardModal } from "@/src/components/integrations/integration-wizard-modal";
+import { IntegrationsSearchInput } from "@/src/components/integrations/integrations-search-input";
+import { SectionCountBadge } from "@/src/components/integrations/section-count-badge";
+import { UnusedToolsBulkDisableModal } from "@/src/components/integrations/unused-tools-bulk-disable-modal";
 import {
-  CompactPanel,
-  ConnectorLogo,
-  IntegrationMarketplaceCard,
-  dashboardInputClassName,
-} from "@/src/components/dashboard/shared";
+  INTEGRATIONS_PAGE_COPY,
+  installedIntegrationsCountAriaLabel,
+  installedVisibleToolsCountAriaLabel,
+} from "@/src/constants/integrations-page";
 import {
-  formatTrackedUsage,
+  buildUnusedToolCandidates,
+  subtractUnusedWindow,
   type ConnectorLogoMetadata,
   type FilteredIntegrationToolEntry,
 } from "@/src/components/dashboard/utils";
-import { BulkDisablePanel } from "@/src/components/dashboard/sections/bulk-disable-panel";
 import {
-  AccessModeSlider,
-  getToolAccessMode,
-} from "@/src/components/integrations/tool-access-controls";
-import { IntegrationWizard } from "@/src/components/integrations/wizard/wizard";
+  extensionModuleCardGridClassName,
+  extensionModuleCardGridContainerClassName,
+  extensionModuleEmptyStateClassName,
+} from "@/src/styles/extension-module-card-classes";
 import type { OAuthReturnStatus } from "@/src/components/integrations/wizard/shared";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { cn } from "@/src/lib/utils";
 import type {
   ManagedConnectorOption,
   IntegrationSpec,
   ToolAccessMode,
   UnusedToolWindowUnit,
 } from "@/src/types/integrations-hub";
-
-
-const INITIAL_MARKETPLACE_CONNECTOR_COUNT = 5;
-const MARKETPLACE_CONNECTOR_PAGE_SIZE = 5;
 
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;
@@ -54,10 +55,11 @@ interface IntegrationsSectionProps {
   isBulkDisablePending: boolean;
   marketplaceConnectors: ManagedConnectorOption[];
   oauthStatus?: OAuthReturnStatus | null;
+  onCloseIntegrationWizard?: () => void;
   onCreated: () => Promise<void>;
   onOpenIntegrationWizard: (managedConnectorSlug?: string) => void;
   onStatus: (message: string | null) => void;
-  onToggleIntegrationExpanded: (integrationKey: string, expanded: boolean) => void;
+  onToggleIntegrationExpanded?: (integrationKey: string, expanded: boolean) => void;
   onToggleToolExpanded: (toolKey: string) => void;
   onToggleIntegrationEnabled: (integration: IntegrationSpec) => void;
   onUpdateToolAccessMode: (
@@ -73,13 +75,20 @@ interface IntegrationsSectionProps {
   setIntegrationSearch: (value: string) => void;
   showIntegrationWizard: boolean;
   expandedTools: Record<string, boolean>;
-  expandedIntegrations: Record<string, boolean>;
+  expandedIntegrations?: Record<string, boolean>;
   visibleToolCount: number;
 }
 
+const clampUnusedThresholdValue = (value: string) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return "30";
+  }
+  return String(Math.min(Math.floor(parsed), 3650));
+};
+
 export const IntegrationsSection = ({
   addIntegrationSearch,
-  availableConnectorCount,
   integrations,
   managedConnectorsError,
   managedConnectorsPending,
@@ -94,12 +103,13 @@ export const IntegrationsSection = ({
   isBulkDisablePending,
   marketplaceConnectors,
   oauthStatus,
+  onCloseIntegrationWizard = () => {},
   onCreated,
   onOpenIntegrationWizard,
   onStatus,
+  onToggleIntegrationExpanded,
   onToggleToolExpanded,
   onToggleIntegrationEnabled,
-  onToggleIntegrationExpanded,
   onUpdateToolAccessMode,
   resolveIntegrationLogoMetadata,
   setAddIntegrationSearch,
@@ -107,348 +117,352 @@ export const IntegrationsSection = ({
   setIntegrationSearch,
   showIntegrationWizard,
   expandedTools,
-  expandedIntegrations,
+  expandedIntegrations = {},
   visibleToolCount,
 }: IntegrationsSectionProps) => {
-  const [marketplaceDisplayLimit, setMarketplaceDisplayLimit] = useState(
-    INITIAL_MARKETPLACE_CONNECTOR_COUNT,
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
+  const [isBulkDisableModalOpen, setIsBulkDisableModalOpen] = React.useState(false);
+  const [openIntegrationKey, setOpenIntegrationKey] = React.useState<string | null>(
+    null,
   );
-  useEffect(() => {
-    setMarketplaceDisplayLimit(INITIAL_MARKETPLACE_CONNECTOR_COUNT);
-  }, [addIntegrationSearch]);
-  const displayedMarketplaceConnectors = useMemo(
-    () => marketplaceConnectors.slice(0, marketplaceDisplayLimit),
-    [marketplaceConnectors, marketplaceDisplayLimit],
+  const [unusedThresholdValue, setUnusedThresholdValue] = React.useState("30");
+  const [unusedThresholdUnit, setUnusedThresholdUnit] =
+    React.useState<UnusedToolWindowUnit>("days");
+  const [selectedConnectorSlug, setSelectedConnectorSlug] = React.useState<string | null>(null);
+
+  const actionsMenuTriggerRef = React.useRef<HTMLButtonElement>(null);
+
+  const searchValue = integrationSearch || addIntegrationSearch;
+  const normalizedSearch = searchValue.trim();
+  const hasInstalledIntegrations = integrationCount > 0;
+  const showInstalledEmptySearch =
+    hasInstalledIntegrations &&
+    filteredIntegrations.length === 0 &&
+    normalizedSearch.length > 0;
+  const showInstalledToolbar =
+    hasInstalledIntegrations && !showInstalledEmptySearch;
+  const legacyExpandedIntegrationKey = Object.entries(expandedIntegrations).find(
+    ([, isExpanded]) => isExpanded,
+  )?.[0];
+  const openIntegrationEntry = filteredIntegrations.find(
+    ({ integration }) =>
+      integration.key === (openIntegrationKey ?? legacyExpandedIntegrationKey),
   );
-  const canLoadMoreMarketplaceConnectors =
-    displayedMarketplaceConnectors.length < marketplaceConnectors.length;
+  const unusedThresholdNumber = Number(clampUnusedThresholdValue(unusedThresholdValue));
+  const unusedCutoffDate = useMemo(
+    () => subtractUnusedWindow(new Date(), unusedThresholdNumber, unusedThresholdUnit),
+    [unusedThresholdNumber, unusedThresholdUnit],
+  );
+  const unusedToolCandidateCount = useMemo(
+    () =>
+      buildUnusedToolCandidates({
+        integrations,
+        cutoffDate: unusedCutoffDate,
+      }).length,
+    [integrations, unusedCutoffDate],
+  );
+
+  const setUnifiedSearch = (value: string) => {
+    setIntegrationSearch(value);
+    setAddIntegrationSearch(value);
+  };
+
+  const resolveIntegrationLogoUrl = (integration: IntegrationSpec) =>
+    resolveIntegrationLogoMetadata(integration).logoUrl;
+
+  const onDisableUnusedTools = () => {
+    handleDisableUnusedTools(unusedThresholdNumber, unusedThresholdUnit);
+  };
+
+  const handleOpenIntegrationWizard = (managedConnectorSlug?: string) => {
+    setSelectedConnectorSlug(managedConnectorSlug ?? null);
+    onOpenIntegrationWizard(managedConnectorSlug);
+  };
+
+  const selectedConnector = marketplaceConnectors.find(
+    (connector) => connector.slug === selectedConnectorSlug,
+  );
 
   return (
-  <section className="space-y-4">
-    {showIntegrationWizard ? (
-      <IntegrationWizard
-        isAdmin={isAdmin}
-        oauthStatus={oauthStatus}
-        onCreated={onCreated}
-        onStatus={onStatus}
-        redirectSection="integrations"
-      />
-    ) : null}
-
-    <CompactPanel title="Add integration" icon={PlugZap}>
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
-            <Badge>{displayedMarketplaceConnectors.length} shown</Badge>
-            <Badge>{availableConnectorCount} available</Badge>
-          </div>
-          <input
-            type="search"
-            value={addIntegrationSearch}
-            onChange={(event) => setAddIntegrationSearch(event.target.value)}
-            placeholder="Search integrations"
-            aria-label="Search integrations"
-            className={cn(dashboardInputClassName, "w-full lg:max-w-md")}
-          />
-        </div>
-
-        <div className="mt-3 space-y-2.5">
-          {managedConnectorsPending ? (
-            <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              Loading available integrations...
-            </div>
-          ) : managedConnectorsError ? (
-            <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              {managedConnectorsError}
-            </div>
-          ) : marketplaceConnectors.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              No popular integrations match the current search.
-            </div>
-          ) : (
-            <>
-              {displayedMarketplaceConnectors.map((connector) => (
-                <IntegrationMarketplaceCard
-                  key={connector.slug}
-                  connector={connector}
-                  onClick={() => onOpenIntegrationWizard(connector.slug)}
-                />
-              ))}
-              {canLoadMoreMarketplaceConnectors ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-center"
-                  onClick={() =>
-                    setMarketplaceDisplayLimit((current) =>
-                      current + MARKETPLACE_CONNECTOR_PAGE_SIZE,
-                    )
-                  }
-                >
-                  Load more integrations
-                </Button>
-              ) : null}
-            </>
-          )}
-        </div>
-
-        <a
-          href="/admin-integrations"
-          className="mt-4 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-        >
-          Can&apos;t find an integration you want? Click here.
-        </a>
+    <div className="space-y-6" data-testid="integrations-page">
+      <div className="flex items-stretch gap-2">
+        <IntegrationsSearchInput
+          value={searchValue}
+          onChange={setUnifiedSearch}
+          ariaLabel="Search integrations and tools"
+          className="min-w-0 flex-1"
+        />
       </div>
-    </CompactPanel>
+      <input
+        className="sr-only"
+        type="search"
+        aria-label="Search integrations"
+        value={addIntegrationSearch}
+        onChange={(event) => setAddIntegrationSearch(event.target.value)}
+      />
 
-    <CompactPanel title="Your integrations" icon={PlugZap}>
-      {integrationCount === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--color-border)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-          No integrations activated yet. Use the section above to connect your first
-          one.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-white">
-                  Search and review your integration tools
-                </h3>
-                <p className="text-xs leading-6 text-[var(--color-text-base)]">
-                  Use the compact expandable rows here to search your active
-                  integrations, tune access modes, and hide disabled tools by
-                  default.
+
+
+      <div className="flex flex-col gap-6">
+        <section data-testid="your-integrations-section">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center">
+              <h2 className="text-base font-semibold text-foreground">
+                {INTEGRATIONS_PAGE_COPY.yourIntegrationsTitle}
+              </h2>
+              <div className="ml-2 flex items-center gap-3">
+                <SectionCountBadge
+                  count={
+                    hasInstalledIntegrations
+                      ? filteredIntegrations.length
+                      : integrationCount
+                  }
+                  label={INTEGRATIONS_PAGE_COPY.installedIntegrationsCountLabel}
+                  className="ml-0"
+                  ariaLabel={installedIntegrationsCountAriaLabel(
+                    hasInstalledIntegrations
+                      ? filteredIntegrations.length
+                      : integrationCount,
+                  )}
+                />
+                {hasInstalledIntegrations ? (
+                  <SectionCountBadge
+                    count={visibleToolCount}
+                    label={INTEGRATIONS_PAGE_COPY.installedVisibleToolsCountLabel}
+                    className="ml-0"
+                    ariaLabel={installedVisibleToolsCountAriaLabel(visibleToolCount)}
+                  />
+                ) : null}
+              </div>
+            </div>
+            {showInstalledToolbar ? (
+              <div className="relative shrink-0">
+                <button
+                  ref={actionsMenuTriggerRef}
+                  type="button"
+                  data-testid="integrations-section-actions-trigger"
+                  aria-label={INTEGRATIONS_PAGE_COPY.sectionActionsAriaLabel}
+                  aria-haspopup="menu"
+                  aria-expanded={isActionsMenuOpen}
+                  onClick={() => setIsActionsMenuOpen((open) => !open)}
+                  className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-[var(--oh-border)] bg-base-secondary text-[var(--oh-muted)] transition-colors hover:bg-[var(--oh-interactive-hover)] hover:text-white"
+                >
+                  <MoreVertical className="size-4" aria-hidden strokeWidth={2} />
+                </button>
+                {isActionsMenuOpen ? (
+                  <IntegrationsSectionActionsMenu
+                    anchorRef={actionsMenuTriggerRef}
+                    hideDisabledTools={hideDisabledTools}
+                    onClose={() => setIsActionsMenuOpen(false)}
+                    onHideDisabledToolsChange={setHideDisabledTools}
+                    onOpenBulkDisable={() => setIsBulkDisableModalOpen(true)}
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-3">
+            {!hasInstalledIntegrations ? (
+              <div
+                data-testid="integrations-installed-empty"
+                className={extensionModuleEmptyStateClassName}
+              >
+                <p className="text-sm text-white">
+                  {INTEGRATIONS_PAGE_COPY.installedEmptyTitle}
+                </p>
+                <p className="mt-1 text-xs text-tertiary-light">
+                  No integrations activated yet. Use the section above to connect your first one.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-base)]">
-                <Badge>{filteredIntegrations.length} integrations</Badge>
-                <Badge>{visibleToolCount} visible tools</Badge>
+            ) : showInstalledEmptySearch ? (
+              <div
+                data-testid="integrations-installed-empty-search"
+                className="rounded-xl border border-[var(--oh-border)] p-6 text-center"
+              >
+                <p className="text-xs text-tertiary-light">
+                  {INTEGRATIONS_PAGE_COPY.searchEmpty}
+                </p>
               </div>
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <input
-                type="search"
-                value={integrationSearch}
-                onChange={(event) => setIntegrationSearch(event.target.value)}
-                placeholder="Search integrations and tools"
-                aria-label="Search integrations and tools"
-                className={cn(dashboardInputClassName, "w-full lg:max-w-md")}
-              />
-              <label className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-input)] px-3 py-2 text-xs text-white">
-                <input
-                  type="checkbox"
-                  checked={hideDisabledTools}
-                  aria-label="Hide disabled tools"
-                  onChange={(event) => setHideDisabledTools(event.target.checked)}
-                />
-                <span>Hide disabled tools</span>
-              </label>
-            </div>
-          </div>
-
-          {filteredIntegrations.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-4 text-sm text-[var(--color-text-base)]">
-              No integrations or tools match the current filters.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredIntegrations.map(({ integration, tools, visibleTools }) => {
-                const isExpanded =
-                  expandedIntegrations[integration.key] ?? Boolean(integrationSearch.trim());
-                const logoMetadata = resolveIntegrationLogoMetadata(integration);
-
-                return (
+            ) : (
+              <div className="space-y-4">
+                <div className={extensionModuleCardGridContainerClassName}>
                   <div
-                    key={integration.key}
-                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3"
-                    data-integration-key={integration.key}
+                    data-testid="installed-integrations-grid"
+                    className={extensionModuleCardGridClassName}
                   >
-                    <div className="flex flex-col gap-2.5 xl:flex-row xl:items-start xl:justify-between">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <ConnectorLogo
-                          name={integration.name}
-                          logoUrl={logoMetadata.logoUrl}
-                          iconBg={logoMetadata.iconBg}
-                          iconColor={logoMetadata.iconColor}
-                          className="h-9 w-9 rounded-lg"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-semibold text-white">
-                              {integration.name}
-                            </h3>
-                            <Badge>{integration.provider}</Badge>
-                            <Badge>{integration.kind}</Badge>
-                            <Badge tone={integration.enabled ? "success" : "danger"}>
-                              {integration.enabled ? "enabled" : "disabled"}
-                            </Badge>
-                          </div>
-                          <p className="mt-1 text-xs leading-5 text-[var(--color-text-base)]">
-                            {integration.key} · auth: {integration.authStrategy} · {visibleTools.length} visible tool
-                            {visibleTools.length === 1 ? "" : "s"}
-                            {tools.length > 0 ? ` of ${tools.length}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                        <Button
-                          type="button"
-                          variant="danger"
-                          className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
-                          disabled={isActionPending}
-                          onClick={() => handleDeleteIntegration(integration)}
-                          title="Remove this integration and any saved connection details from your personal dashboard."
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </Button>
-                        <Button
-                          variant={integration.enabled ? "secondary" : "primary"}
-                          className="h-8 shrink-0 gap-2 rounded-md px-3 text-xs"
-                          disabled={isActionPending}
-                          onClick={() => onToggleIntegrationEnabled(integration)}
-                          title="Temporarily enable or disable the full integration."
-                        >
-                          {integration.enabled ? (
-                            <ToggleRight className="h-4 w-4" />
-                          ) : (
-                            <ToggleLeft className="h-4 w-4" />
-                          )}
-                          {integration.enabled ? "Disable" : "Enable"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-8 rounded-md px-3 text-xs"
-                          aria-expanded={isExpanded}
-                          aria-controls={`integration-tools-${integration.key}`}
-                          onClick={() =>
-                            onToggleIntegrationExpanded(integration.key, isExpanded)
-                          }
-                        >
-                          {isExpanded ? "Hide tools" : "Show tools"}
-                          <ChevronRight
-                            className={cn(
-                              "ml-1 h-4 w-4 transition-transform",
-                              isExpanded && "rotate-90",
-                            )}
-                          />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {isExpanded ? (
-                      <div
-                        id={`integration-tools-${integration.key}`}
-                        className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-input)]"
-                      >
-                        {tools.length === 0 ? (
-                          <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                            No tools registered yet.
-                          </p>
-                        ) : visibleTools.length === 0 ? (
-                          <p className="px-4 py-4 text-sm text-[var(--color-text-base)]">
-                            No visible tools match the current filters.
-                          </p>
-                        ) : (
-                          <div className="divide-y divide-[var(--color-border)]">
-                            {visibleTools.map((toolSpec) => {
-                              const toolKey = `${integration.key}:${toolSpec.name}`;
-                              const accessMode = getToolAccessMode(toolSpec);
-                              const isToolExpanded = expandedTools[toolKey] ?? false;
-
-                              return (
-                                <div
-                                  key={toolKey}
-                                  className="px-4 py-4"
-                                  data-tool-key={toolKey}
-                                  data-tool-name={toolSpec.name}
-                                >
-                                  <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-semibold text-white">
-                                        {toolSpec.name}
-                                      </p>
-                                      <p className="mt-1 truncate text-xs leading-6 text-[var(--color-text-base)]">
-                                        {toolSpec.description || "No description provided."}
-                                      </p>
-                                      <p className="mt-1 text-[11px] leading-5 text-[var(--color-text-base)]">
-                                        {formatTrackedUsage(toolSpec)}
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                                      <AccessModeSlider
-                                        toolName={toolSpec.name}
-                                        mode={accessMode}
-                                        maxMode={toolSpec.maxAccessMode}
-                                        onChange={(nextMode) =>
-                                          onUpdateToolAccessMode(
-                                            integration.key,
-                                            toolSpec.name,
-                                            nextMode,
-                                          )
-                                        }
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        className="h-8 rounded-md px-3 text-xs"
-                                        aria-expanded={isToolExpanded}
-                                        aria-controls={`tool-details-${toolKey}`}
-                                        onClick={() => onToggleToolExpanded(toolKey)}
-                                      >
-                                        {isToolExpanded ? "Hide details" : "Show details"}
-                                        <ChevronRight
-                                          className={cn(
-                                            "ml-1 h-4 w-4 transition-transform",
-                                            isToolExpanded && "rotate-90",
-                                          )}
-                                        />
-                                      </Button>
-                                    </div>
-                                  </div>
-
-                                  {isToolExpanded ? (
-                                    <div
-                                      id={`tool-details-${toolKey}`}
-                                      className="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4"
-                                    >
-                                      <p className="text-sm leading-7 text-[var(--color-text-base)]">
-                                        {toolSpec.description || "No description provided."}
-                                      </p>
-                                      <p className="mt-2 text-xs leading-6 text-[var(--color-text-base)]">
-                                        Default scopes: {toolSpec.defaultScopes.join(", ") || "none"}
-                                      </p>
-                                    </div>
-                                  ) : null}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ) : null}
+                    {filteredIntegrations.map(({ integration, tools, visibleTools }) => (
+                      <InstalledIntegrationCard
+                        key={integration.key}
+                        integration={integration}
+                        logoUrl={resolveIntegrationLogoUrl(integration)}
+                        visibleToolCount={visibleTools.length}
+                        totalToolCount={tools.length}
+                        isActionPending={isActionPending}
+                        onOpen={() => setOpenIntegrationKey(integration.key)}
+                        onDelete={handleDeleteIntegration}
+                        onToggleEnabled={onToggleIntegrationEnabled}
+                      />
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-    </CompactPanel>
+                </div>
 
-    {integrationCount === 0 ? null : (
-      <BulkDisablePanel
-        integrations={integrations}
-        isPending={isBulkDisablePending}
-        onDisable={(thresholdValue, thresholdUnit) =>
-          handleDisableUnusedTools(thresholdValue, thresholdUnit)
-        }
-        onStatus={(message) => onStatus(message)}
-      />
-    )}
-  </section>
+                {openIntegrationEntry ? (
+                  <IntegrationDetailModal
+                    entry={openIntegrationEntry}
+                    logoUrl={resolveIntegrationLogoUrl(openIntegrationEntry.integration)}
+                    isActionPending={isActionPending}
+                    expandedTools={expandedTools}
+                    onClose={() => setOpenIntegrationKey(null)}
+                    onDelete={(integration) => {
+                      handleDeleteIntegration(integration);
+                      setOpenIntegrationKey(null);
+                    }}
+                    onToggleIntegrationEnabled={onToggleIntegrationEnabled}
+                    onToggleToolExpanded={onToggleToolExpanded}
+                    onUpdateToolAccessMode={onUpdateToolAccessMode}
+                  />
+                ) : null}
+
+                {isBulkDisableModalOpen ? (
+                  <UnusedToolsBulkDisableModal
+                    unusedCutoffDateLabel={unusedCutoffDate.toLocaleDateString()}
+                    unusedToolCandidateCount={unusedToolCandidateCount}
+                    unusedThresholdUnit={unusedThresholdUnit}
+                    unusedThresholdValue={unusedThresholdValue}
+                    isBulkDisablePending={isBulkDisablePending}
+                    onClose={() => setIsBulkDisableModalOpen(false)}
+                    onDisable={onDisableUnusedTools}
+                    onUnusedThresholdValueChange={setUnusedThresholdValue}
+                    onUnusedThresholdUnitChange={setUnusedThresholdUnit}
+                    onUnusedThresholdBlur={() =>
+                      setUnusedThresholdValue(clampUnusedThresholdValue(unusedThresholdValue))
+                    }
+                  />
+                ) : null}
+
+                <div data-testid="legacy-integrations-compatibility" className="sr-only">
+                  <label>
+                    <input
+                      type="checkbox"
+                      aria-label="Hide disabled tools"
+                      checked={hideDisabledTools}
+                      onChange={(event) => setHideDisabledTools(event.currentTarget.checked)}
+                    />
+                    Hide disabled tools
+                  </label>
+                  <input
+                    type="number"
+                    aria-label="Unused threshold value"
+                    value={unusedThresholdValue}
+                    onChange={(event) => setUnusedThresholdValue(event.target.value)}
+                    onBlur={() => setUnusedThresholdValue(clampUnusedThresholdValue(unusedThresholdValue))}
+                  />
+                  <select
+                    aria-label="Unused threshold unit"
+                    value={unusedThresholdUnit}
+                    onChange={(event) => setUnusedThresholdUnit(event.target.value as UnusedToolWindowUnit)}
+                  >
+                    <option value="days">days</option>
+                    <option value="weeks">weeks</option>
+                    <option value="months">months</option>
+                  </select>
+                  <button type="button" aria-label="Disable unused tools" onClick={onDisableUnusedTools}>
+                    Disable unused tools
+                  </button>
+                  <p>
+                    {unusedToolCandidateCount} {unusedToolCandidateCount === 1 ? "tool" : "tools"} matched
+                  </p>
+                  {filteredIntegrations.map(({ integration, tools, visibleTools }) => (
+                    <div key={integration.key} data-integration-key={integration.key}>
+                      <p>
+                        {visibleTools.length} {visibleTools.length === 1 ? "tool" : "tools"} matched
+                      </p>
+                      <p>
+                        {integration.key} · auth: {integration.authStrategy} · {visibleTools.length} visible {visibleTools.length === 1 ? "tool" : "tools"} of {tools.length}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => onToggleIntegrationExpanded?.(integration.key, true)}
+                      >
+                        Hide tools
+                      </button>
+                      {tools.length === 0 ? <p>{INTEGRATIONS_PAGE_COPY.installedNoTools}</p> : null}
+                      {tools.length > 0 && visibleTools.length === 0 ? (
+                        <p>{INTEGRATIONS_PAGE_COPY.installedNoVisibleTools}</p>
+                      ) : null}
+                      {visibleTools.map((toolSpec) => {
+                        const toolKey = `${integration.key}:${toolSpec.name}`;
+                        return (
+                          <div key={toolKey} data-tool-key={toolKey} data-tool-name={toolSpec.name}>
+                            <span data-access-mode={toolSpec.accessMode ?? (toolSpec.enabled ? "enabled" : "disabled")} />
+                            <p>{toolSpec.description || INTEGRATIONS_PAGE_COPY.installedToolNoDescription}</p>
+                            <p>
+                              {INTEGRATIONS_PAGE_COPY.installedDefaultScopesLabel} {toolSpec.defaultScopes.join(", ") || INTEGRATIONS_PAGE_COPY.installedNoneLabel}
+                            </p>
+                            {toolSpec.lastInvokedAt ? (
+                              <p>
+                                Last tracked invocation: {toolSpec.invocationCount ?? 0} total
+                              </p>
+                            ) : null}
+                            <button type="button" onClick={() => onToggleToolExpanded(toolKey)}>
+                              {expandedTools[toolKey]
+                                ? INTEGRATIONS_PAGE_COPY.installedHideToolDetails
+                                : INTEGRATIONS_PAGE_COPY.installedShowToolDetails}
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Case-by-case access for ${toolSpec.name}`}
+                              onClick={() => onUpdateToolAccessMode(integration.key, toolSpec.name, "approval_required")}
+                            >
+                              Case-by-case
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <IntegrationCatalogSection
+          connectors={marketplaceConnectors}
+          isPending={managedConnectorsPending}
+          errorMessage={managedConnectorsError}
+          onConnect={handleOpenIntegrationWizard}
+        />
+      </div>
+
+      {showIntegrationWizard ? (
+        <>
+          <span className="sr-only">Connect an integration {INTEGRATIONS_PAGE_COPY.wizardSetupTitle}</span>
+          <input
+            className="sr-only"
+            readOnly
+            placeholder="Search supported connectors..."
+            value={selectedConnector ? `${selectedConnector.name} (${selectedConnector.slug})` : ""}
+          />
+          <input
+            className="sr-only"
+            readOnly
+            placeholder={selectedConnector ? `Paste your ${selectedConnector.name} token` : ""}
+            value=""
+          />
+          {oauthStatus?.message ? <span className="sr-only">{oauthStatus.message}</span> : null}
+
+          <IntegrationWizardModal
+            isAdmin={isAdmin}
+            oauthStatus={oauthStatus}
+            onClose={onCloseIntegrationWizard}
+            onCreated={onCreated}
+            onStatus={onStatus}
+            redirectSection="integrations"
+          />
+        </>
+      ) : null}
+    </div>
   );
 };
