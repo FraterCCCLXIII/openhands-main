@@ -268,6 +268,69 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("enabled");
   });
 
+  it("places server-fetched installed integrations in Your integrations, not the marketplace, on first load", async () => {
+    // Reproduces the production first-login path: ClientDashboardPage passes
+    // no initialIntegrations, so the workspace must fetch /api/integrations
+    // and render already-installed integrations under "Your integrations"
+    // rather than leaving them in the "Add integration" marketplace.
+    const installedIntegration: IntegrationSpec = {
+      key: "slack",
+      name: "Slack",
+      kind: "mcp",
+      provider: "mcp",
+      authStrategy: "oauth2",
+      enabled: true,
+      fineGrainedPermissions: true,
+      config: { managedConnectorSlug: "slack" },
+      credentials: {},
+      tools: {
+        slack_search_public: {
+          name: "slack_search_public",
+          description: "Search public Slack messages",
+          enabled: true,
+          accessMode: "enabled",
+          fineGrainedPermissions: true,
+          defaultScopes: [],
+          executionMode: "provider",
+          config: {},
+        },
+      },
+    };
+
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        integrations: [installedIntegration],
+        managedConnectors,
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            currentUser={{ name: "User", email: "user@example.com" }}
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
+            isAdmin={false}
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    // Already-installed Slack must appear in "Your integrations"...
+    expect(container.textContent).toContain("Your integrations");
+    expect(container.textContent).toContain("Slack");
+    expect(container.textContent).toContain("Disable");
+    // ...and must NOT be offered again as an installable marketplace card.
+    expect(
+      container.querySelector(
+        "button[data-managed-connector-slug='slack']",
+      ),
+    ).toBeNull();
+  });
+
   it("deletes an installed integration from the your integrations list", async () => {
     let integrationsState: IntegrationSpec[] = [
       {

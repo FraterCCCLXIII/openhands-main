@@ -47,6 +47,10 @@ export const useIntegrationsSection = ({
     queryKey: ["integrations"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
     initialData: initialIntegrations,
+    // Mark the seed as stale so a background refetch fires on mount; matches
+    // the workspace-level query and avoids a stale empty seed masking
+    // already-installed integrations on first load.
+    initialDataUpdatedAt: 0,
     enabled,
     staleTime: 30_000,
   });

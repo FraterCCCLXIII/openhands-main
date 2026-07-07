@@ -97,17 +97,23 @@ export const DashboardWorkspace = ({
   // canonical cache for integrations/access-requests; the section hooks
   // reuse the same query keys so there is one fetch per endpoint per mount.
   // `initialData` lets tests seed synchronous data; production leaves it
-  // empty so the single fetch populates the cache.
+  // empty so the single fetch populates the cache. `initialDataUpdatedAt: 0`
+  // marks the seed as stale so a background refetch fires immediately on
+  // mount — otherwise the empty production seed would suppress the fetch for
+  // `staleTime` and already-installed integrations would render only in the
+  // "Add integration" marketplace until a manual action invalidated the query.
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
     initialData: initialIntegrations,
+    initialDataUpdatedAt: 0,
     staleTime: 30_000,
   });
   const accessRequestsQuery = useQuery({
     queryKey: ["access-requests"],
     queryFn: () => fetchJson<AccessRequest[]>("/api/case-by-case-approvals"),
     initialData: initialAccessRequests,
+    initialDataUpdatedAt: 0,
     enabled: activeSection === "caseByCaseApprovals",
     staleTime: 0,
     refetchInterval: 5_000,
