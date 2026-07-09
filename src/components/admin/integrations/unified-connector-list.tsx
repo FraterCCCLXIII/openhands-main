@@ -23,13 +23,22 @@ const getProviderAuthStrategy = (provider: IntegrationCatalogOption) =>
 const usesOAuthConnector = (provider: IntegrationCatalogOption) =>
   getProviderAuthStrategy(provider) === "oauth2";
 
+/** Dynamic OAuth connectors (e.g. Atlassian, PayPal) discover their OAuth
+ *  endpoints at runtime via .well-known metadata — the catalog has no
+ *  authorizationUrl. They need no admin-supplied client credentials. */
+const isDynamicOAuthConnector = (provider: IntegrationCatalogOption) =>
+  usesOAuthConnector(provider) &&
+  !provider.connectionDefaults?.oauthConfig?.authorizationUrl;
+
 const usesDynamicOAuthRegistration = (provider: IntegrationCatalogOption) =>
   usesOAuthConnector(provider) &&
   provider.connectionDefaults?.oauthConfig?.clientAuthentication === "none" &&
   Boolean(provider.connectionDefaults?.oauthConfig?.registrationUrl);
 
 const requiresManualOAuthClientCredentials = (provider: IntegrationCatalogOption) =>
-  usesOAuthConnector(provider) && !usesDynamicOAuthRegistration(provider);
+  usesOAuthConnector(provider) &&
+  !usesDynamicOAuthRegistration(provider) &&
+  !isDynamicOAuthConnector(provider);
 
 const isHttpManagedConnector = (provider: IntegrationCatalogOption) =>
   provider.connectionDefaults?.provider === "http" ||
@@ -62,8 +71,8 @@ const catalogToConnector = (catalog: IntegrationCatalogOption): ManagedConnector
     authModes: cd?.authModes?.length && cd.authModes.every(Boolean) ? cd.authModes : [authStrategy],
     authStrategy,
     provider: (cd?.provider as "mcp" | "http") ?? getManagedConnectorProvider(catalog),
-    oauthConfigured: false,
-    oauthClientStatus: "missing",
+    oauthConfigured: cd?.oauthConfigured ?? false,
+    oauthClientStatus: cd?.oauthConfigured ? "decryptable" : "missing",
     credentialLabel: cd?.credentialLabel ?? `Connect ${catalog.name}`,
     credentialPlaceholder: cd?.credentialPlaceholder ?? `Connect ${catalog.name}`,
     credentialHelp: cd?.credentialHelp ?? `OAuth connection for ${catalog.name}.`,

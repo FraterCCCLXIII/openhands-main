@@ -123,6 +123,9 @@ export interface IntegrationConnectionDefaults {
   serverUrl?: string;
   openApiUrl?: string;
   oauthConfig?: GenericOAuthConfig;
+  /** True when the backend considers this connector ready (e.g. dynamic OAuth
+   * connectors that discover their own endpoints at runtime). */
+  oauthConfigured?: boolean;
 }
 
 export interface IntegrationCatalogOption {

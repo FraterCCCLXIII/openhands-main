@@ -234,7 +234,10 @@ export const ConnectorSetupProgress = ({
   onToolAccessModeChange,
 }: ConnectorSetupProgressProps) => {
   const isOauthMcp = isOAuthMcpConnector(connector);
-  const clientConfigured = isRegistered && oauthClientConfigured(connector);
+  const isOAuth = connector.authStrategy === "oauth2";
+  const isDynamicOAuth = isOAuth && !connector.oauthConfig?.authorizationUrl;
+  const clientConfigured =
+    isRegistered && (isDynamicOAuth || oauthClientConfigured(connector));
   const connectionConfigured = Boolean(connection);
   const toolsIndexed = connector.tools.length > 0;
   const step1InferredDone = isRegistered && (isOauthMcp ? (clientConfigured || connectionConfigured || toolsIndexed) : true);
@@ -242,12 +245,11 @@ export const ConnectorSetupProgress = ({
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const callbackUrl = `${oauthCallbackBaseUrl}/${connector.slug}/callback`;
 
-  const isOAuth = connector.authStrategy === "oauth2";
   const usesDynamicRegistration =
     isOAuth &&
     connector.oauthConfig?.clientAuthentication === "none" &&
     Boolean(connector.oauthConfig?.registrationUrl);
-  const needsManualOAuthClient = isOAuth && !usesDynamicRegistration;
+  const needsManualOAuthClient = isOAuth && !usesDynamicRegistration && !isDynamicOAuth;
   const isHttp = configForm.provider === "http";
 
   const handleConnect = () => {
@@ -263,9 +265,11 @@ export const ConnectorSetupProgress = ({
       <StepCard
         stepNumber={1}
         title="Configure integration"
-        description={isOAuth
-          ? "Set the server URL, OAuth endpoints, scopes, and client credentials for this connector."
-          : "Set the server URL and connection details for this connector."}
+        description={isDynamicOAuth
+          ? "This connector uses dynamic OAuth — endpoints are discovered automatically at runtime. Register it to make it available, then connect your account."
+          : isOAuth
+            ? "Set the server URL, OAuth endpoints, scopes, and client credentials for this connector."
+            : "Set the server URL and connection details for this connector."}
         completed={step1Completed}
         dataStepKey="configure-integration"
       >
