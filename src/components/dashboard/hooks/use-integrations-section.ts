@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { fetchJson } from "@/src/lib/fetch-json";
+import { catalogOptionsToConnectorOptions } from "@/src/lib/catalog-mappers";
 import {
   buildConnectorMap,
   buildInstalledIntegrationKeys,
@@ -17,8 +18,8 @@ import {
 import { getConnectorLogoUrl } from "@/src/components/dashboard/shared";
 import type {
   DisableUnusedToolsResult,
+  IntegrationCatalogOption,
   IntegrationSpec,
-  ManagedConnectorOption,
   ToolAccessMode,
   UnusedToolWindowUnit,
 } from "@/src/types/integrations-hub";
@@ -57,8 +58,12 @@ export const useIntegrationsSection = ({
 
   const managedConnectorsQuery = useQuery({
     queryKey: ["managed-connectors"],
-    queryFn: () =>
-      fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
+    queryFn: async () => {
+      const catalog = await fetchJson<IntegrationCatalogOption[]>(
+        "/api/integrations?filter=enabled",
+      );
+      return catalogOptionsToConnectorOptions(catalog);
+    },
     enabled,
     staleTime: Number.POSITIVE_INFINITY,
   });

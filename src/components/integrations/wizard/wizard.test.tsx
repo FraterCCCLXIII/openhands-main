@@ -40,7 +40,7 @@ describe("IntegrationWizard", () => {
     fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -110,7 +110,7 @@ describe("IntegrationWizard", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/integrations/managed-connectors",
+      "/api/integrations?filter=enabled",
       {},
     );
 
@@ -146,7 +146,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -294,7 +294,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -356,7 +356,7 @@ describe("IntegrationWizard", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/integrations/managed-connectors",
+      "/api/integrations?filter=enabled",
       {},
     );
 
@@ -370,7 +370,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -481,7 +481,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -755,7 +755,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -876,7 +876,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {
@@ -930,7 +930,7 @@ describe("IntegrationWizard", () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString();
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(
           JSON.stringify([
             {

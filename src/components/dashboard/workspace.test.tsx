@@ -354,11 +354,11 @@ describe("DashboardWorkspace", () => {
       if (
         url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/managed-connectors"
+        url === "/api/integrations?filter=enabled"
       ) {
         return new Response(
           JSON.stringify(
-            url === "/api/integrations/managed-connectors" ? managedConnectors : [],
+            url === "/api/integrations?filter=enabled" ? managedConnectors : [],
           ),
           {
             status: 200,
@@ -830,11 +830,11 @@ describe("DashboardWorkspace", () => {
         if (
           url === "/api/case-by-case-approvals" ||
           url === "/api/notifications" ||
-          url === "/api/integrations/managed-connectors"
+          url === "/api/integrations?filter=enabled"
         ) {
           return new Response(
             JSON.stringify(
-              url === "/api/integrations/managed-connectors" ? managedConnectors : [],
+              url === "/api/integrations?filter=enabled" ? managedConnectors : [],
             ),
             {
               status: 200,
@@ -1100,11 +1100,11 @@ describe("DashboardWorkspace", () => {
       if (
         url === "/api/case-by-case-approvals" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/managed-connectors"
+        url === "/api/integrations?filter=enabled"
       ) {
         return new Response(
           JSON.stringify(
-            url === "/api/integrations/managed-connectors" ? managedConnectors : [],
+            url === "/api/integrations?filter=enabled" ? managedConnectors : [],
           ),
           {
             status: 200,
@@ -1887,7 +1887,7 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -1972,7 +1972,7 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -2084,7 +2084,7 @@ describe("DashboardWorkspace", () => {
         });
       }
 
-      if (url === "/api/integrations/managed-connectors") {
+      if (url === "/api/integrations?filter=enabled") {
         return new Response(JSON.stringify(managedConnectors), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -2284,13 +2284,13 @@ describe("DashboardWorkspace", () => {
         url === "/api/integrations" ||
         url === "/api/access-requests" ||
         url === "/api/notifications" ||
-        url === "/api/integrations/managed-connectors"
+        url === "/api/integrations?filter=enabled"
       ) {
         return new Response(
           JSON.stringify(
             url === "/api/integrations"
               ? integrationsWithoutTrackedUsage
-              : url === "/api/integrations/managed-connectors"
+              : url === "/api/integrations?filter=enabled"
                 ? managedConnectors
                 : [],
           ),

@@ -34,6 +34,7 @@ from .auth import (
 from .config import get_default_config
 from .integration_catalog import connection_defaults_from_option
 from .managed_connectors import (
+    _is_default_managed_connector,
     default_managed_connector,
     get_managed_connector,
     list_managed_connectors,
@@ -348,7 +349,7 @@ def user_openapi(request: Request, is_admin: bool) -> dict[str, Any]:
         },
     }
     if is_admin:
-        paths["/api/managed-connectors"] = {
+        paths["/api/admin/modify-integrations"] = {
             "get": {
                 "summary": "List managed connectors",
                 "responses": {
@@ -401,17 +402,17 @@ def managed_openapi(request: Request) -> dict[str, Any]:
     return {
         "openapi": "3.0.3",
         "info": {
-            "title": "Managed Connectors API",
+            "title": "Modify Integrations API",
             "version": "1.0.0",
             "description": "Create, list, index, and delete managed connector definitions used by the integrations hub.",
         },
         "servers": [{"url": base_url(request)}],
         "security": [{"UserOrAdminSession": []}],
-        "tags": [{"name": "Managed Connectors"}],
+        "tags": [{"name": "Modify Integrations"}],
         "paths": {
-            "/api/managed-connectors": {
+            "/api/admin/modify-integrations": {
                 "get": {
-                    "tags": ["Managed Connectors"],
+                    "tags": ["Modify Integrations"],
                     "summary": "List managed connectors",
                     "responses": {
                         "200": {
@@ -421,7 +422,7 @@ def managed_openapi(request: Request) -> dict[str, Any]:
                     },
                 },
                 "post": {
-                    "tags": ["Managed Connectors"],
+                    "tags": ["Modify Integrations"],
                     "summary": "Create or update a managed connector",
                     "requestBody": {
                         "required": True,
@@ -442,9 +443,9 @@ def managed_openapi(request: Request) -> dict[str, Any]:
                     },
                 },
             },
-            "/api/managed-connectors/{slug}": {
+            "/api/admin/modify-integrations/{slug}": {
                 "delete": {
-                    "tags": ["Managed Connectors"],
+                    "tags": ["Modify Integrations"],
                     "summary": "Delete a managed connector",
                     "parameters": [
                         {
@@ -463,9 +464,9 @@ def managed_openapi(request: Request) -> dict[str, Any]:
                     },
                 }
             },
-            "/api/managed-connectors/{slug}/functions": {
+            "/api/admin/modify-integrations/{slug}/functions": {
                 "post": {
-                    "tags": ["Managed Connectors"],
+                    "tags": ["Modify Integrations"],
                     "summary": "Index connector tool definitions",
                     "parameters": [
                         {
@@ -1355,14 +1356,11 @@ def requires_dashboard_session(path: str, method: str) -> bool:
         return True
     if path.startswith("/api/permission-profiles/"):
         return True
-    if path.startswith("/api/integrations") and path not in {
-        "/api/integrations/managed-connectors",
-        "/api/integrations/catalog",
-    }:
+    if path.startswith("/api/integrations") and path != "/api/integrations":
         return True
     if path == "/api/oauth/{provider}/start":
         return True
-    if path.startswith("/api/managed-connectors") and method != "GET":
+    if path.startswith("/api/admin/modify-integrations") and method != "GET":
         return True
     return False
 
@@ -1829,40 +1827,77 @@ def apply_permission_profile(
     )
 
 
-def integration_catalog() -> list[dict[str, Any]]:
+def integration_catalog(
+    filter: str = "all",
+) -> list[dict[str, Any]]:
+    """Unified integrations endpoint.
+
+    filter=all — every catalog entry (72): registered, default, and catalog-only.
+    filter=registerable — entries that can be managed connectors (47): registered
+        plus catalog defaults that pass _is_default_managed_connector.
+    filter=enabled — only connectors an admin has explicitly registered (4),
+        i.e. repository rows only, no catalog defaults.
+    """
+    if filter == "enabled":
+        managed = list_managed_connectors(include_defaults=False)
+        managed_by_slug = {c.slug: c for c in managed}
+        catalog_entries: list[dict[str, Any]] = []
+        for entry in list_integration_catalog():
+            slug = entry["id"]
+            connector = managed_by_slug.get(slug)
+            if not connector or not connector.enabled:
+                continue
+            option = (entry.get("connectionOptions") or [None])[0]
+            catalog_entries.append(_catalog_entry(entry, option, connector))
+        return catalog_entries
+
+    # filter == "all" or filter == "registerable"
     managed = {connector.slug: connector for connector in list_managed_connectors()}
-    catalog = []
+    registered_slugs = {
+        connector.slug for connector in repository.list_managed_connectors()
+    }
+    catalog_entries = []
     for entry in list_integration_catalog():
         option = (entry.get("connectionOptions") or [None])[0]
         if not option:
             continue
         slug = entry["id"]
         connector = managed.get(slug)
-        catalog.append(
-            {
-                "slug": slug,
-                "name": connector.name if connector else entry["name"],
-                "description": connector.description
-                if connector
-                else entry["description"],
-                "categories": connector.categories
-                if connector and connector.categories
-                else entry.get("categories", []),
-                "popularityRank": entry.get("popularityRank", 0),
-                "appUrl": connector.appUrl if connector else entry.get("appUrl"),
-                "docsUrl": connector.docsUrl if connector else entry.get("docsUrl"),
-                "logoUrl": connector.logoUrl if connector else entry.get("logoUrl"),
-                "iconBg": connector.iconBg if connector else entry.get("iconBg"),
-                "iconColor": connector.iconColor
-                if connector
-                else entry.get("iconColor"),
-                "connectionDefaults": connector.response()
-                if connector
-                else connection_defaults_from_option(option),
-                "notes": entry.get("notes", ""),
-            }
-        )
-    return catalog
+        if filter == "registerable":
+            # Include if explicitly registered or passes the default-managed filter.
+            if slug not in registered_slugs and not _is_default_managed_connector(entry):
+                continue
+        catalog_entries.append(_catalog_entry(entry, option, connector))
+    return catalog_entries
+
+
+def _catalog_entry(
+    entry: dict[str, Any],
+    option: dict[str, Any] | None,
+    connector: ManagedConnector | None,
+) -> dict[str, Any]:
+    return {
+        "slug": entry["id"],
+        "name": connector.name if connector else entry["name"],
+        "description": connector.description
+        if connector
+        else entry["description"],
+        "categories": connector.categories
+        if connector and connector.categories
+        else entry.get("categories", []),
+        "popularityRank": entry.get("popularityRank", 0),
+        "appUrl": connector.appUrl if connector else entry.get("appUrl"),
+        "docsUrl": connector.docsUrl if connector else entry.get("docsUrl"),
+        "logoUrl": connector.logoUrl if connector else entry.get("logoUrl"),
+        "iconBg": connector.iconBg if connector else entry.get("iconBg"),
+        "iconColor": connector.iconColor if connector else entry.get("iconColor"),
+        "connectionDefaults": connector.response()
+        if connector
+        else connection_defaults_from_option(option)
+        if option
+        else {},
+        "notes": entry.get("notes", ""),
+    }
 
 
 def approve_access_request(
@@ -2371,9 +2406,9 @@ def discovered_integration(
     # User-facing gate: a managed connector is only installable by users if an
     # admin has explicitly added it (i.e. it exists in the repository). Catalog
     # defaults are NOT installable by users without admin registration — this
-    # matches the /api/integrations/managed-connectors list gate so the list
-    # and the install path share one authorization boundary. The admin discover
-    # path passes allow_catalog_defaults=True so admins can preview defaults.
+    # matches the filter=enabled gate on /api/integrations so the list and the
+    # install path share one authorization boundary. The admin discover path
+    # passes allow_catalog_defaults=True so admins can preview defaults.
     connector = stored_connector
     if allow_catalog_defaults and not connector:
         connector = default_managed_connector(str(slug) if slug else "")
@@ -2513,10 +2548,7 @@ async def fastapi_handler(request: Request):
         return user_openapi(request, user_api_is_admin)
     if path == "/api/admin/openapi":
         return admin_openapi(request)
-    if path in {
-        "/api/managed-connectors/openapi",
-        "/api/admin/managed-connectors/openapi",
-    }:
+    if path == "/api/admin/modify-integrations/openapi":
         return managed_openapi(request)
 
     if path in {"/api/agent/skill", "/api/context/skill"}:
@@ -2542,9 +2574,6 @@ async def fastapi_handler(request: Request):
             case_by_case_approval_url(request),
             active_permission_profile,
         )
-
-    if path.endswith("/catalog"):
-        return integration_catalog()
 
     if path in {"/api/oauth/connections", "/api/user/connections"}:
         return repository.list_connections(owner)
@@ -2615,6 +2644,17 @@ async def fastapi_handler(request: Request):
 
     if path == "/api/integrations" or path == "/api/user/integrations":
         if method == "GET":
+            # The /api/integrations GET endpoint returns the user's installed
+            # integrations. When the ?filter query param is present, it returns
+            # catalog entries instead (all/registerable/enabled).
+            filter_value = (request.query_params.get("filter") or "").strip()
+            if filter_value:
+                if filter_value not in {"all", "registerable", "enabled"}:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="filter must be one of: all, registerable, enabled",
+                    )
+                return integration_catalog(filter=filter_value)
             return repository.list_integrations(owner)
         integration = IntegrationSpec.model_validate(body)
         if integration.authStrategy == "oauth2" and integration.credentials:
@@ -2703,22 +2743,7 @@ async def fastapi_handler(request: Request):
         sync_default_permission_profile(owner)
         return result
 
-    if path in {
-        "/api/integrations/managed-connectors",
-        "/api/admin/integrations/managed-connectors",
-    }:
-        # User-facing list: only connectors an admin has explicitly registered
-        # are available to users. Catalog defaults are NOT surfaced here — an
-        # admin must add a connector (POST /api/managed-connectors) before
-        # users can see or connect it, even when API-token auth would otherwise
-        # work without registration.
-        return [
-            connector.option()
-            for connector in list_managed_connectors(include_defaults=False)
-            if connector.enabled
-        ]
-
-    if path == "/api/managed-connectors" or path == "/api/admin/managed-connectors":
+    if path == "/api/admin/modify-integrations":
         if method == "GET":
             return [connector.response() for connector in list_managed_connectors()]
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
@@ -2738,20 +2763,14 @@ async def fastapi_handler(request: Request):
             regenerate_http_openapi_tools(connector, existing_modes)
         return repository.save_managed_connector(connector).response()
 
-    if (
-        path == "/api/managed-connectors/{slug}"
-        or path == "/api/admin/managed-connectors/{slug}"
-    ):
+    if path == "/api/admin/modify-integrations/{slug}":
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         if not repository.delete_managed_connector(params["slug"]):
             raise HTTPException(status_code=404, detail="Managed connector not found.")
         repository.delete_connections_by_integration_key(params["slug"])
         return {"deleted": True, "slug": params["slug"]}
 
-    if (
-        path == "/api/managed-connectors/{slug}/functions"
-        or path == "/api/admin/managed-connectors/{slug}/functions"
-    ):
+    if path == "/api/admin/modify-integrations/{slug}/functions":
         require_app_admin(owner, ADMIN_CONNECTOR_MANAGEMENT_DETAIL, user_api_is_admin)
         return index_managed_connector_functions(params["slug"], owner)
 

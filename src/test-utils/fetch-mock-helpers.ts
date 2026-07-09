@@ -56,7 +56,7 @@ interface DashboardFetchMockOverrides {
 
 /**
  * Build a vitest fetch mock that returns standard dashboard JSON for the
- * four common routes (`/api/integrations`, `/api/integrations/managed-connectors`,
+ * four common routes (`/api/integrations`, `/api/integrations?filter=enabled`,
  * `/api/case-by-case-approvals`, `/api/notifications`) and throws for any
  * unexpected request so tests can't silently drift into untested routes.
  */
@@ -82,7 +82,7 @@ export const createDashboardFetchMock = (
       return jsonResponse(payload);
     }
 
-    if (url === "/api/integrations/managed-connectors") {
+    if (url === "/api/integrations?filter=enabled") {
       return jsonResponse(overrides.managedConnectors ?? []);
     }
 

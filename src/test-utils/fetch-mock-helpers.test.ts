@@ -94,7 +94,7 @@ describe("createDashboardFetchMock", () => {
       notifications: [sampleNotification],
     });
 
-    const managed = await fetchMock("/api/integrations/managed-connectors");
+    const managed = await fetchMock("/api/integrations?filter=enabled");
     const approvals = await fetchMock("/api/case-by-case-approvals");
     const notifications = await fetchMock("/api/notifications");
 
@@ -107,7 +107,7 @@ describe("createDashboardFetchMock", () => {
     const fetchMock = createDashboardFetchMock();
 
     const integrations = await fetchMock("/api/integrations");
-    const managed = await fetchMock("/api/integrations/managed-connectors");
+    const managed = await fetchMock("/api/integrations?filter=enabled");
     const approvals = await fetchMock("/api/case-by-case-approvals");
     const notifications = await fetchMock("/api/notifications");
 

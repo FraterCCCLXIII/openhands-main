@@ -236,7 +236,7 @@ def test_managed_connector_discovery_and_user_key_flow(
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     connector_response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {admin_key}"},
         json={
             "slug": "linear",
@@ -289,7 +289,7 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     connector_response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {admin_key}"},
         json={
             "slug": "linear",
@@ -371,7 +371,7 @@ def test_oauth_callback_backfills_mcp_tools_for_saved_integration(
 
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     connector_response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {admin_key}"},
         json={
             "slug": "gh",
@@ -472,7 +472,7 @@ def _seed_oauth_connector_and_state(
 ) -> None:
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     connector_response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {admin_key}"},
         json={
             "slug": "gh",
@@ -754,7 +754,7 @@ def test_oauth_invocation_requires_connection_and_refreshes_expired_tokens(
         admin_key = client.post("/api/admin/key").json()["apiKey"]
         assert (
             client.post(
-                "/api/managed-connectors",
+                "/api/admin/modify-integrations",
                 headers={"Authorization": f"Bearer {admin_key}"},
                 json={
                     "slug": "refresh-provider",
@@ -819,7 +819,7 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
     response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {admin_key}"},
         json={
             "slug": "oauth-params",
@@ -900,7 +900,7 @@ def test_dynamic_oauth_client_registration_for_public_clients(
     try:
         admin_key = client.post("/api/admin/key").json()["apiKey"]
         response = client.post(
-            "/api/managed-connectors",
+            "/api/admin/modify-integrations",
             headers={"Authorization": f"Bearer {admin_key}"},
             json={
                 "slug": "dynamic-oauth",
@@ -970,7 +970,7 @@ def test_dynamic_oauth_default_connector_is_configured_without_admin(
     monkeypatch.setattr(main_mod, "list_integration_catalog", patched_list)
     mc_mod.default_managed_connectors.cache_clear()
     try:
-        catalog = client.get("/api/integrations/catalog").json()
+        catalog = client.get("/api/integrations?filter=all").json()
         entry = next(e for e in catalog if e["slug"] == "dynamic-oauth-default")
         assert entry["connectionDefaults"]["authStrategy"] == "oauth2"
         assert entry["connectionDefaults"]["provider"] == "mcp"
@@ -1066,7 +1066,7 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         # registrationUrl — the server advertises its own endpoints).
         admin_key = client.post("/api/admin/key").json()["apiKey"]
         response = client.post(
-            "/api/managed-connectors",
+            "/api/admin/modify-integrations",
             headers={"Authorization": f"Bearer {admin_key}"},
             json={
                 "slug": "dyn-oauth-flow",
@@ -1934,13 +1934,13 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
     assert client.get("/api/notifications", headers=user_headers).status_code == 403
     assert (
         client.post(
-            "/api/managed-connectors/sample/functions", headers=user_headers, json=[]
+            "/api/admin/modify-integrations/sample/functions", headers=user_headers, json=[]
         ).status_code
         == 403
     )
     assert (
         client.delete(
-            "/api/managed-connectors/sample", headers=user_headers
+            "/api/admin/modify-integrations/sample", headers=user_headers
         ).status_code
         == 403
     )
@@ -1974,19 +1974,19 @@ def test_admin_dashboard_routes_allow_privileged_api_calls_in_dev_mode(
     assert client.post("/api/admin/key", headers=admin_headers).status_code == 200
     assert (
         client.post(
-            "/api/managed-connectors", headers=admin_headers, json=connector
+            "/api/admin/modify-integrations", headers=admin_headers, json=connector
         ).status_code
         == 200
     )
     functions_response = client.post(
-        "/api/managed-connectors/sample/functions",
+        "/api/admin/modify-integrations/sample/functions",
         headers=admin_headers,
     )
     assert functions_response.status_code == 200
     assert functions_response.json()["tools"][0]["name"] == "lookup"
     assert (
         client.delete(
-            "/api/managed-connectors/sample", headers=admin_headers
+            "/api/admin/modify-integrations/sample", headers=admin_headers
         ).status_code
         == 200
     )
@@ -2002,12 +2002,12 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
     # available to users. With no admin-added connectors, the user list is
     # empty — catalog defaults (including API-token/bearer/none MCP servers)
     # are NOT surfaced to users until an admin adds them.
-    connectors = client.get("/api/integrations/managed-connectors").json()
+    connectors = client.get("/api/integrations?filter=enabled").json()
     assert connectors == []
 
     # The catalog still lists every entry so an admin can browse and add any
     # provider (OAuth or MCP).
-    catalog = client.get("/api/integrations/catalog").json()
+    catalog = client.get("/api/integrations?filter=all").json()
     catalog_by_slug = {entry["slug"]: entry for entry in catalog}
     assert len(catalog_by_slug) > 13
     assert (
@@ -2039,10 +2039,10 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
             credentialHelp="API key for Ordinal.",
         )
     )
-    listed = client.get("/api/integrations/managed-connectors").json()
+    listed = client.get("/api/integrations?filter=enabled").json()
     by_slug = {connector["slug"]: connector for connector in listed}
     assert "ordinal" in by_slug
-    assert by_slug["ordinal"]["authStrategy"] == "bearer"
+    assert by_slug["ordinal"]["connectionDefaults"]["authStrategy"] == "bearer"
 
     # A disabled admin-added connector is not surfaced to users.
     repository.save_managed_connector(
@@ -2055,7 +2055,7 @@ def test_default_managed_connectors_are_listed_and_require_credentials(
             enabled=False,
         )
     )
-    suppressed = client.get("/api/integrations/managed-connectors").json()
+    suppressed = client.get("/api/integrations?filter=enabled").json()
     assert "ordinal" not in {connector["slug"] for connector in suppressed}
     disabled_discovery = client.post(
         "/api/integrations/discover",
@@ -2133,7 +2133,7 @@ def test_managed_connector_function_indexing_generates_tools_and_preserves_acces
         ],
     )
 
-    response = client.post("/api/managed-connectors/catalog-api/functions")
+    response = client.post("/api/admin/modify-integrations/catalog-api/functions")
 
     assert response.status_code == 200
     tools = {tool["name"]: tool for tool in response.json()["tools"]}
@@ -2308,14 +2308,14 @@ def test_generated_openapi_documents_include_route_details(
     user_doc = client.get(
         "/api/user/openapi", headers={"Authorization": f"Bearer {user_key}"}
     ).json()
-    managed_doc = client.get("/api/managed-connectors/openapi").json()
+    managed_doc = client.get("/api/admin/modify-integrations/openapi").json()
 
     assert user_doc["security"] == [{"UserApiKey": []}]
     assert (
         user_doc["paths"]["/api/user/integrations"]["post"]["summary"]
         == "Install an owner integration"
     )
-    functions_doc = managed_doc["paths"]["/api/managed-connectors/{slug}/functions"][
+    functions_doc = managed_doc["paths"]["/api/admin/modify-integrations/{slug}/functions"][
         "post"
     ]
     assert functions_doc["summary"] == "Index connector tool definitions"
@@ -2880,7 +2880,7 @@ def test_oauth_catalog_and_admin_overview_are_data_driven(
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
-    catalog = client.get("/api/integrations/catalog").json()
+    catalog = client.get("/api/integrations?filter=all").json()
     assert {item["slug"] for item in catalog} >= {
         "github",
         "slack",

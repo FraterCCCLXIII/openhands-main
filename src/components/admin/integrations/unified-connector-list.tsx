@@ -230,7 +230,7 @@ export function UnifiedConnectorList({
     updateConfigForm(pseudoConnector, { submitting: true, status: "idle", message: "" });
 
     try {
-      const response = await apiFetch("/api/managed-connectors", {
+      const response = await apiFetch("/api/admin/modify-integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildConfigPayload(pseudoConnector, form)),
@@ -275,7 +275,7 @@ export function UnifiedConnectorList({
     updateConfigForm(connector, { submitting: true, status: "idle", message: "" });
 
     try {
-      const response = await apiFetch("/api/managed-connectors", {
+      const response = await apiFetch("/api/admin/modify-integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildConfigPayload(connector, form)),
@@ -309,7 +309,7 @@ export function UnifiedConnectorList({
     }
     updateConfigForm(connector, { deleting: true, status: "idle", message: "" });
     try {
-      const response = await apiFetch(`/api/managed-connectors/${encodeURIComponent(connector.slug)}`, { method: "DELETE" });
+      const response = await apiFetch(`/api/admin/modify-integrations/${encodeURIComponent(connector.slug)}`, { method: "DELETE" });
       const body = (await response.json().catch(() => null)) as { detail?: string } | null;
       if (!response.ok) {
         throw new Error(body?.detail || "Failed to delete connector.");
@@ -338,7 +338,7 @@ export function UnifiedConnectorList({
   const handleIndex = async (connector: ManagedConnectorDefinition) => {
     updateConfigForm(connector, { indexing: true, status: "idle", message: "" });
     try {
-      const response = await apiFetch(`/api/managed-connectors/${encodeURIComponent(connector.slug)}/functions`, { method: "POST" });
+      const response = await apiFetch(`/api/admin/modify-integrations/${encodeURIComponent(connector.slug)}/functions`, { method: "POST" });
       const body = (await response.json().catch(() => null)) as ManagedConnectorDefinition & { detail?: string } | null;
       if (!response.ok) {
         throw new Error(body?.detail || "Failed to index tools.");
@@ -370,7 +370,7 @@ export function UnifiedConnectorList({
       current.map((c) => (c.slug === updatedConnector.slug ? updatedConnector : c)),
     );
     try {
-      await apiFetch("/api/managed-connectors", {
+      await apiFetch("/api/admin/modify-integrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildConfigPayload(updatedConnector, getConfigForm(updatedConnector))),

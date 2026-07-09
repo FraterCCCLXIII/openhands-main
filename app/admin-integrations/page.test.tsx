@@ -61,7 +61,7 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
     // and a non-OAuth provider (ElevenLabs, api_key) so the page's OAuth-only
     // filtering can be asserted.
     fetchJsonMock.mockImplementation((url: string) => {
-      if (url === "/api/admin/managed-connectors") {
+      if (url === "/api/admin/modify-integrations") {
         return Promise.resolve([
           {
             slug: "github",
@@ -88,25 +88,25 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
           },
         ]);
       }
-      if (url === "/api/integrations/managed-connectors") {
-        return Promise.resolve([
-          { slug: "github", name: "GitHub", authStrategy: "oauth2", oauthConfigured: true },
-          { slug: "elevenlabs", name: "ElevenLabs", authStrategy: "api_key", oauthConfigured: true },
-        ]);
-      }
-      if (url === "/api/integrations/catalog") {
+      if (url === "/api/integrations?filter=all") {
         return Promise.resolve([
           {
             slug: "github",
             name: "GitHub",
             description: "GitHub API",
             categories: ["development", "version-control"],
+            notes: "",
+            popularityRank: 0,
             connectionDefaults: {
               provider: "mcp",
               authStrategy: "oauth2",
               serverUrl: "https://api.githubcopilot.com/mcp/",
-              authorizationUrl: "https://github.com/login/oauth/authorize",
-              tokenUrl: "https://github.com/login/oauth/access_token",
+              oauthConfigured: true,
+              oauthConfig: {
+                authorizationUrl: "https://github.com/login/oauth/authorize",
+                tokenUrl: "https://github.com/login/oauth/access_token",
+                scopes: ["repo"],
+              },
             },
           },
           {
@@ -114,10 +114,13 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
             name: "ElevenLabs",
             description: "Text to speech",
             categories: ["audio"],
+            notes: "",
+            popularityRank: 0,
             connectionDefaults: {
               provider: "http",
               authStrategy: "api_key",
               apiBaseUrl: "https://api.elevenlabs.io",
+              oauthConfigured: true,
             },
           },
         ]);

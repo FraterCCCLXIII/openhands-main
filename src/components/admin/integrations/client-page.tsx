@@ -14,6 +14,7 @@ import { useAuth } from "@/src/components/auth/auth-context";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
+import { catalogOptionToConnectorOption } from "@/src/lib/catalog-mappers";
 import type {
   IntegrationConnectionStatus,
   ManagedConnectorDefinition,
@@ -27,13 +28,6 @@ interface AdminIntegrationsData {
   integrationCatalog: IntegrationCatalogOption[];
 }
 
-// The admin integrations page shows every catalog connector regardless of
-// auth strategy (OAuth2, API key, bearer, or none) so admins can register
-// any provider. Only connectors an admin has explicitly added are surfaced
-// to users (see the backend /api/integrations/managed-connectors gating).
-const isReadyConnector = (connector: ManagedConnectorOption) =>
-  connector.oauthConfigured !== false;
-
 export function ClientAdminIntegrationsPage() {
   const queryClient = useQueryClient();
   const { user, isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -41,18 +35,19 @@ export function ClientAdminIntegrationsPage() {
   const { data, isLoading: dataLoading, error } = useQuery({
     queryKey: ["admin-integrations-init"],
     queryFn: async (): Promise<AdminIntegrationsData> => {
-      const [managedConnectors, allConnectors, integrationCatalog] = await Promise.all([
+      const [managedConnectors, enabledCatalog] = await Promise.all([
         isAdmin
-          ? fetchJson<ManagedConnectorDefinition[]>("/api/admin/managed-connectors")
+          ? fetchJson<ManagedConnectorDefinition[]>("/api/admin/modify-integrations")
           : Promise.resolve([]),
-        fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
-        fetchJson<IntegrationCatalogOption[]>("/api/integrations/catalog"),
+        fetchJson<IntegrationCatalogOption[]>("/api/integrations?filter=all"),
       ]);
 
       return {
         managedConnectors,
-        readyConnectors: allConnectors.filter(isReadyConnector),
-        integrationCatalog,
+        readyConnectors: enabledCatalog
+          .filter((entry) => entry.connectionDefaults?.oauthConfigured !== false)
+          .map(catalogOptionToConnectorOption),
+        integrationCatalog: enabledCatalog,
       };
     },
     enabled: isAuthenticated,

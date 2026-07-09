@@ -134,7 +134,7 @@ def body_for(path: str) -> object:
                 "accessMode": "enabled",
             }
         ]
-    if path in {"/api/managed-connectors", "/api/admin/managed-connectors"}:
+    if path in {"/api/admin/modify-integrations", "/api/admin/modify-integrations"}:
         return {
             "slug": "sample-connector",
             "name": "Sample connector",
@@ -334,7 +334,7 @@ def test_admin_api_key_can_reindex_managed_connector_tools(
 
     client = get_client()
     response = client.post(
-        f"/api/admin/managed-connectors/{slug}/functions",
+        f"/api/admin/modify-integrations/{slug}/functions",
         headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
     )
 
@@ -373,7 +373,7 @@ def test_admin_api_key_reindex_rejects_non_admin_key() -> None:
     )
     client = get_client()
     response = client.post(
-        f"/api/admin/managed-connectors/{slug}/functions",
+        f"/api/admin/modify-integrations/{slug}/functions",
         headers={"Authorization": f"Bearer {AGENT_KEY}", "X-Owner-Id": OWNER},
     )
     assert response.status_code in {401, 403}
@@ -412,7 +412,7 @@ def test_reindex_oauth_mcp_connector_without_admin_connection_returns_friendly_e
     )
     client = get_client()
     response = client.post(
-        f"/api/admin/managed-connectors/{slug}/functions",
+        f"/api/admin/modify-integrations/{slug}/functions",
         headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
     )
     assert response.status_code == 403
@@ -452,7 +452,7 @@ def test_reindex_oauth_mcp_connector_friendly_error_uses_credential_label() -> N
     )
     client = get_client()
     response = client.post(
-        f"/api/admin/managed-connectors/{slug}/functions",
+        f"/api/admin/modify-integrations/{slug}/functions",
         headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
     )
     assert response.status_code == 403
@@ -503,7 +503,7 @@ def test_save_http_oauth_connector_indexes_full_tool_set(
 
     client = get_client()
     response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
         json={
             "slug": "notion",
@@ -619,7 +619,7 @@ def test_save_http_oauth_connector_preserves_existing_access_modes(
 
     client = get_client()
     response = client.post(
-        "/api/managed-connectors",
+        "/api/admin/modify-integrations",
         headers={"Authorization": f"Bearer {ADMIN_KEY}", "X-Owner-Id": OWNER},
         json={
             "slug": "notion",

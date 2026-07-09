@@ -273,7 +273,7 @@ describe("IntegrationsCatalog", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/managed-connectors/google-calendar", {
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/modify-integrations/google-calendar", {
       method: "DELETE",
     });
 

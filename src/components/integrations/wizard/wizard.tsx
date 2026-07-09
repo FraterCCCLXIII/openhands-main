@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { fetchJson, ApiRequestError } from "@/src/lib/fetch-json";
+import { catalogOptionsToConnectorOptions } from "@/src/lib/catalog-mappers";
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
 import { ReviewStep } from "@/src/components/integrations/wizard/review-step";
 import {
@@ -16,6 +17,7 @@ import {
 import { useWizardState } from "@/src/components/integrations/wizard/use-wizard-state";
 import { Card } from "@/src/components/ui/card";
 import type {
+  IntegrationCatalogOption,
   ManagedConnectorOption,
   IntegrationConnectionStatus,
 } from "@/src/types/integrations-hub";
@@ -49,8 +51,12 @@ export const IntegrationWizard = ({
 
   const managedConnectorsQuery = useQuery({
     queryKey: ["managed-connectors"],
-    queryFn: () =>
-      fetchJson<ManagedConnectorOption[]>("/api/integrations/managed-connectors"),
+    queryFn: async () => {
+      const catalog = await fetchJson<IntegrationCatalogOption[]>(
+        "/api/integrations?filter=enabled",
+      );
+      return catalogOptionsToConnectorOptions(catalog);
+    },
     enabled: true,
     staleTime: 0,
     refetchOnMount: "always",
