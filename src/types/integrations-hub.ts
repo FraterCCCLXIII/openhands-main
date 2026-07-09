@@ -141,8 +141,8 @@ export interface IntegrationCatalogOption {
 }
 
 export interface GenericOAuthConfig {
-  authorizationUrl: string;
-  tokenUrl: string;
+  authorizationUrl?: string;
+  tokenUrl?: string;
   scopes: string[];
   optionalScopes?: string[];
   scopeSeparator?: "space" | "comma";

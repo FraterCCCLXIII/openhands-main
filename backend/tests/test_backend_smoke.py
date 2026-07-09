@@ -930,6 +930,201 @@ def test_dynamic_oauth_client_registration_for_public_clients(
         thread.join(timeout=2)
 
 
+def test_dynamic_oauth_default_connector_is_configured_without_admin(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """Dynamic OAuth connectors (no catalog authorizationUrl) should surface as
+    oauthConfigured=True by default — no admin pre-configuration is needed."""
+    from backend.app import managed_connectors as mc_mod
+    from backend.app import main as main_mod
+
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    client = TestClient(app)
+
+    synthetic_entry = {
+        "id": "dynamic-oauth-default",
+        "name": "Dynamic OAuth Default",
+        "description": "Server-managed OAuth via mcp-remote",
+        "categories": [],
+        "popularityRank": 999,
+        "connectionOptions": [
+            {
+                "id": "mcp-remote",
+                "provider": "mcp",
+                "transport": {"type": "mcp-remote", "url": "https://mcp.dynamic.example/mcp"},
+                "auth": {
+                    "strategy": "oauth2",
+                    "oauth": {
+                        "scopes": [],
+                        "clientAuthentication": "none",
+                        "pkce": True,
+                    },
+                },
+            }
+        ],
+    }
+
+    original_list = mc_mod.list_integration_catalog
+    patched_list = lambda: [*original_list(), synthetic_entry]
+    monkeypatch.setattr(mc_mod, "list_integration_catalog", patched_list)
+    monkeypatch.setattr(main_mod, "list_integration_catalog", patched_list)
+    mc_mod.default_managed_connectors.cache_clear()
+    try:
+        catalog = client.get("/api/integrations/catalog").json()
+        entry = next(e for e in catalog if e["slug"] == "dynamic-oauth-default")
+        assert entry["connectionDefaults"]["authStrategy"] == "oauth2"
+        assert entry["connectionDefaults"]["provider"] == "mcp"
+        assert (
+            entry["connectionDefaults"]["serverUrl"]
+            == "https://mcp.dynamic.example/mcp"
+        )
+        # No authorizationUrl in the catalog entry — this is dynamic OAuth.
+        assert not entry["connectionDefaults"].get("oauthConfig", {}).get(
+            "authorizationUrl"
+        )
+    finally:
+        mc_mod.default_managed_connectors.cache_clear()
+
+
+def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """Full OAuth flow for a dynamic OAuth connector: metadata discovery →
+    dynamic client registration → redirect → token exchange via discovered
+    tokenUrl."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_DISABLE_AUTH", "true")
+    client = TestClient(app)
+
+    metadata = {
+        "authorization_endpoint": "https://mcp.dynamic.example/oauth/authorize",
+        "token_endpoint": None,  # set per-test below
+        "registration_endpoint": None,  # set per-test below
+    }
+    registrations: list[dict[str, object]] = []
+    token_exchanges: list[dict[str, object]] = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            if "/.well-known/oauth-authorization-server" in self.path:
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(metadata).encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def do_POST(self):  # noqa: N802
+            length = int(self.headers.get("content-length", "0"))
+            raw = self.rfile.read(length).decode()
+            content_type = self.headers.get("content-type", "")
+            if "application/json" in content_type:
+                body = json.loads(raw or "{}")
+            else:
+                body = dict(urllib.parse.parse_qsl(raw))
+            if self.path == "/oauth/register":
+                registrations.append(body)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps({"client_id": "discovered-client"}).encode()
+                )
+            elif self.path == "/oauth/token":
+                token_exchanges.append(body)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps(
+                        {"access_token": "dynamic-token", "refresh_token": "rt-1"}
+                    ).encode()
+                )
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, *_args):
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_port
+    # Point the token and registration endpoints at the local test server so
+    # the hub can actually exchange the code and register a client. The
+    # authorization endpoint stays on the fake domain — the hub only redirects
+    # the browser there, it doesn't call it server-side.
+    metadata["token_endpoint"] = f"http://127.0.0.1:{port}/oauth/token"
+    metadata["registration_endpoint"] = f"http://127.0.0.1:{port}/oauth/register"
+    try:
+        # Register a dynamic OAuth connector (no authorizationUrl, no
+        # registrationUrl — the server advertises its own endpoints).
+        admin_key = client.post("/api/admin/key").json()["apiKey"]
+        response = client.post(
+            "/api/managed-connectors",
+            headers={"Authorization": f"Bearer {admin_key}"},
+            json={
+                "slug": "dyn-oauth-flow",
+                "name": "Dynamic OAuth Flow",
+                "description": "Server-managed OAuth",
+                "authModes": ["oauth2"],
+                "authStrategy": "oauth2",
+                "provider": "mcp",
+                "serverUrl": f"http://127.0.0.1:{port}/mcp",
+                "oauthConfig": {
+                    "scopes": [],
+                    "clientAuthentication": "none",
+                    "pkce": True,
+                },
+            },
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["oauthConfigured"] is True
+
+        # Start OAuth — should discover metadata, register client, redirect.
+        start = client.get(
+            "/api/oauth/dyn-oauth-flow/start",
+            follow_redirects=False,
+            headers={"Accept": "application/json"},
+        )
+        assert start.status_code == 200, start.text
+        redirect_url = start.json()["redirectUrl"]
+        parsed = urllib.parse.urlparse(redirect_url)
+        assert parsed.netloc == "mcp.dynamic.example"
+        query = urllib.parse.parse_qs(parsed.query)
+        assert query["client_id"] == ["discovered-client"]
+        assert query["response_type"] == ["code"]
+        assert "code_challenge" in query  # PKCE
+        assert len(registrations) == 1
+        assert registrations[0]["token_endpoint_auth_method"] == "none"
+
+        # Simulate the OAuth provider redirecting back with a code.
+        state = query["state"][0]
+        callback = client.get(
+            f"/api/oauth/dyn-oauth-flow/callback?state={state}&code=test-code",
+            follow_redirects=False,
+        )
+        assert callback.status_code == 307
+        assert "oauth_status=connected" in callback.headers["location"]
+
+        # Token exchange used the discovered tokenUrl.
+        assert len(token_exchanges) == 1
+        assert token_exchanges[0]["grant_type"] == "authorization_code"
+        assert token_exchanges[0]["code"] == "test-code"
+
+        # Connection is saved.
+        connections = client.get("/api/oauth/connections").json()
+        assert any(c["provider"] == "dyn-oauth-flow" for c in connections)
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+
 def test_approval_required_requests_are_deduplicated(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:

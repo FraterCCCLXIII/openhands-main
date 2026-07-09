@@ -776,7 +776,14 @@ class Repository:
     def save_managed_connector(self, connector: ManagedConnector) -> ManagedConnector:
         connector.updatedAt = now_iso()
         if connector.authStrategy == "oauth2":
-            connector.oauthConfigured = bool(connector.oauthClientId)
+            oauth_config = connector.oauthConfig or {}
+            # Dynamic OAuth connectors (no catalog authorizationUrl) delegate
+            # the OAuth dance to the MCP server. They are configured as soon
+            # as metadata is discoverable — no client_id is needed.
+            if oauth_config.get("dynamicOAuth"):
+                connector.oauthConfigured = True
+            else:
+                connector.oauthConfigured = bool(connector.oauthClientId)
         else:
             connector.oauthConfigured = connector.authStrategy != "oauth2"
         if not connector.authModes:

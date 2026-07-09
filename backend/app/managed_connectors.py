@@ -10,6 +10,16 @@ from .models import ManagedConnector
 from .repository import repository
 
 
+def _is_dynamic_oauth(defaults: dict[str, Any]) -> bool:
+    """OAuth2 connector with no catalog authorizationUrl (server-managed OAuth)."""
+    if defaults.get("authStrategy") != "oauth2":
+        return False
+    oauth_config = defaults.get("oauthConfig") or {}
+    if oauth_config.get("dynamicOAuth"):
+        return True
+    return not oauth_config.get("authorizationUrl")
+
+
 def _is_default_managed_connector(entry: dict[str, Any]) -> bool:
     # Tools come from MCP `tools/list` (live) or HTTP OpenAPI (regenerated on
     # save). An HTTP connector without an openApiUrl has no tool source, so we
@@ -59,7 +69,13 @@ def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
         # Default connectors ship with no tools; tools are discovered (MCP) or
         # generated from openApiUrl (HTTP) on connect/save/index.
         "tools": [],
-        "oauthConfigured": defaults["authStrategy"] != "oauth2",
+        # Static OAuth2 connectors need an admin to supply client credentials
+        # before users can connect. Dynamic OAuth connectors (no catalog
+        # authorizationUrl) delegate the entire OAuth dance to the MCP server
+        # via .well-known metadata — there is nothing for an admin to
+        # pre-configure, so they are immediately ready.
+        "oauthConfigured": defaults["authStrategy"] != "oauth2"
+        or _is_dynamic_oauth(defaults),
     }
 
 

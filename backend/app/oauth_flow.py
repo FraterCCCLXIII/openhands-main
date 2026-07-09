@@ -20,6 +20,82 @@ from .repository import repository
 from .url_security import urlopen_no_redirect, validate_external_url
 
 
+def is_dynamic_oauth(connector: ManagedConnector) -> bool:
+    """An OAuth2 connector whose OAuth endpoints are discovered at runtime.
+
+    These connectors (e.g. Superhuman Mail) delegate the entire OAuth dance to
+    the MCP server itself via RFC 9728 ``.well-known/oauth-authorization-server``
+    metadata. The hub discovers the authorization/token endpoints at runtime
+    instead of reading them from the catalog, and no admin pre-configuration
+    (client credentials or registration URL) is needed.
+
+    A connector is dynamic if either (a) its catalog entry has no
+    ``authorizationUrl`` (pre-discovery), or (b) it was previously enriched
+    with discovered endpoints and flagged with ``dynamicOAuth: true`` in its
+    ``oauthConfig`` (post-discovery, e.g. loaded from the DB).
+    """
+    if connector.authStrategy != "oauth2":
+        return False
+    oauth_config = connector.oauthConfig or {}
+    if oauth_config.get("dynamicOAuth"):
+        return True
+    return not oauth_config.get("authorizationUrl")
+
+
+def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
+    """Fetch RFC 9728 OAuth authorization-server metadata from an MCP server.
+
+    Returns a dict with keys mapped to the hub's ``oauthConfig`` shape:
+    ``authorizationUrl``, ``tokenUrl``, and optionally ``registrationUrl``.
+    """
+    well_known = server_url.rstrip("/")
+    if not well_known.endswith("/.well-known/oauth-authorization-server"):
+        well_known = well_known + "/.well-known/oauth-authorization-server"
+    well_known = validate_external_url(well_known, purpose="OAuth metadata endpoint")
+    request = urllib.request.Request(well_known, headers={"Accept": "application/json"})
+    try:
+        with urlopen_no_redirect(request, timeout=10) as response:
+            payload = json.loads(response.read().decode() or "{}")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"OAuth metadata discovery failed for {server_url}: {exc}",
+        ) from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(
+            status_code=502, detail="OAuth metadata endpoint returned invalid JSON."
+        )
+    authorization_url = payload.get("authorization_endpoint")
+    token_url = payload.get("token_endpoint")
+    if not authorization_url or not token_url:
+        raise HTTPException(
+            status_code=502,
+            detail="OAuth metadata is missing authorization_endpoint or token_endpoint.",
+        )
+    return {
+        "authorizationUrl": str(authorization_url),
+        "tokenUrl": str(token_url),
+        "registrationUrl": str(payload["registration_endpoint"])
+        if payload.get("registration_endpoint")
+        else None,
+    }
+
+
+def enrich_dynamic_oauth_config(
+    connector: ManagedConnector, metadata: dict[str, Any]
+) -> ManagedConnector:
+    """Merge discovered OAuth endpoints into a connector's oauthConfig."""
+    oauth_config = dict(connector.oauthConfig or {})
+    oauth_config["authorizationUrl"] = metadata["authorizationUrl"]
+    oauth_config["tokenUrl"] = metadata["tokenUrl"]
+    if metadata.get("registrationUrl") and not oauth_config.get("registrationUrl"):
+        oauth_config["registrationUrl"] = metadata["registrationUrl"]
+    # Mark the connector as dynamic OAuth so downstream code (e.g.
+    # save_managed_connector) knows not to require a client_id.
+    oauth_config["dynamicOAuth"] = True
+    return connector.model_copy(update={"oauthConfig": oauth_config})
+
+
 def b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
 
@@ -253,6 +329,20 @@ def ensure_managed_oauth_client(connector: ManagedConnector) -> ManagedConnector
                 "oauthConfigured": True,
             }
         )
+    # Dynamic OAuth: the MCP server advertises its own endpoints via
+    # .well-known/oauth-authorization-server. Discover them, optionally
+    # register a client (RFC 7591) if the server exposes a registration
+    # endpoint, then mark the connector as configured. No admin-supplied
+    # client credentials or catalog authorizationUrl are needed.
+    if is_dynamic_oauth(connector) and connector.serverUrl:
+        metadata = discover_oauth_metadata(str(connector.serverUrl))
+        enriched = enrich_dynamic_oauth_config(connector, metadata)
+        if (
+            enriched.oauthConfig.get("clientAuthentication") == "none"
+            and enriched.oauthConfig.get("registrationUrl")
+        ):
+            return register_dynamic_oauth_client(enriched)
+        return enriched.model_copy(update={"oauthConfigured": True})
     if connector.oauthConfig.get(
         "clientAuthentication"
     ) == "none" and connector.oauthConfig.get("registrationUrl"):
@@ -280,12 +370,34 @@ def start_oauth_redirect(
         raise HTTPException(
             status_code=404, detail=f"Unknown OAuth provider '{provider}'."
         )
+    # Dynamic OAuth connectors have no catalog authorizationUrl; discover the
+    # server's OAuth metadata at runtime so we can redirect the user to the
+    # right authorization endpoint. The discovered tokenUrl is stashed in the
+    # oauth_state's callback_url field so the callback can exchange the code
+    # without re-discovering.
+    discovered_token_url: str | None = None
+    if is_dynamic_oauth(connector) and connector.serverUrl:
+        metadata = discover_oauth_metadata(str(connector.serverUrl))
+        connector = enrich_dynamic_oauth_config(connector, metadata)
+        discovered_token_url = metadata["tokenUrl"]
     client = repository.read_oauth_client(connector)
     if not client:
-        raise HTTPException(
-            status_code=500,
-            detail=f"{connector.name} is missing stored OAuth client credentials.",
-        )
+        # For dynamic OAuth with a discovered registration endpoint, register
+        # a client on the fly so default (non-admin-saved) connectors can
+        # start the OAuth flow without a prior admin save.
+        if (
+            is_dynamic_oauth(connector)
+            and connector.oauthConfig.get("clientAuthentication") == "none"
+            and connector.oauthConfig.get("registrationUrl")
+        ):
+            connector = register_dynamic_oauth_client(connector)
+            repository.save_managed_connector(connector)
+            client = repository.read_oauth_client(connector)
+        if not client:
+            raise HTTPException(
+                status_code=500,
+                detail=f"{connector.name} is missing stored OAuth client credentials.",
+            )
     state = secrets.token_urlsafe(24)
     verifier = secrets.token_urlsafe(48) if connector.oauthConfig.get("pkce") else None
     raw_redirect_to = (
@@ -343,7 +455,7 @@ def start_oauth_redirect(
         verifier,
         redirect_to,
         redirect_uri,
-        None,
+        discovered_token_url,
         oauth_expiry(),
     )
     redirect_url = (
@@ -364,6 +476,15 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
     if not connector or not connector.oauthConfig:
         raise HTTPException(
             status_code=404, detail=f"Unknown OAuth provider '{provider}'."
+        )
+    # For dynamic OAuth, the token endpoint was discovered at start time and
+    # stashed in the state's callback_url field. Enrich the connector so
+    # fetch_oauth_token can use it.
+    discovered_token_url = record.get("callback_url") or ""
+    if discovered_token_url and not connector.oauthConfig.get("tokenUrl"):
+        connector = enrich_dynamic_oauth_config(
+            connector,
+            {"authorizationUrl": "", "tokenUrl": str(discovered_token_url)},
         )
     client = repository.read_oauth_client(connector)
     if not client:
@@ -467,6 +588,13 @@ def refresh_oauth_connection(record: dict[str, Any]) -> dict[str, Any]:
         raise HTTPException(
             status_code=500,
             detail=f"OAuth provider '{record.get('provider')}' is not configured.",
+        )
+    # Dynamic OAuth: the connector may be a catalog default without a
+    # persisted tokenUrl. Re-discover so the refresh can hit the right
+    # endpoint.
+    if is_dynamic_oauth(connector) and connector.serverUrl:
+        connector = enrich_dynamic_oauth_config(
+            connector, discover_oauth_metadata(str(connector.serverUrl))
         )
     client = repository.read_oauth_client(connector)
     if not client:
