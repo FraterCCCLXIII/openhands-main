@@ -25,7 +25,6 @@ from openhands_extensions import list_integration_catalog
 from pydantic import ValidationError
 
 from .auth import (
-    DEFAULT_OWNER,
     AuthUnavailable,
     OpenHandsUser,
     authenticate_token,
@@ -1356,7 +1355,7 @@ def requires_dashboard_session(path: str, method: str) -> bool:
         return True
     if path.startswith("/api/permission-profiles/"):
         return True
-    if path.startswith("/api/integrations") and path != "/api/integrations":
+    if path.startswith("/api/integrations"):
         return True
     if path == "/api/oauth/{provider}/start":
         return True
@@ -1440,7 +1439,7 @@ def authorize_user_api_owner(request: Request) -> tuple[str, bool]:
     return owner, is_admin_owner(owner)
 
 
-def authorize_user_api_owner_or_session(request: Request) -> str | None:
+def authorize_user_api_owner_or_session(request: Request) -> str:
     """Resolve the owner for a user-facing endpoint (e.g. case-by-case
     approvals) from one of:
 
@@ -1503,10 +1502,6 @@ def authorize_admin_api_owner(request: Request) -> str:
         detail="Provide a valid admin API key or sign in with OpenHands Cloud as an app administrator.",
         headers={"WWW-Authenticate": 'Bearer realm="integrations-hub-admin-api"'},
     )
-
-
-def owner_id(request: Request) -> str:
-    return (request.headers.get("x-owner-id") or DEFAULT_OWNER).strip().lower()
 
 
 def optional_trimmed_config(config: dict[str, Any], key: str) -> str | None:
@@ -2485,14 +2480,60 @@ async def fastapi_handler(request: Request):
     params = request.path_params
     path = request.scope["route"].path
     method = request.method
-    session_user: OpenHandsUser | None = None
+
+    if path == "/api/health":
+        return {"status": "ok", "backend": "fastapi"}
+
+    if path == "/api/oauth/{provider}/callback":
+        provider = params["provider"]
+        state = request.query_params.get("state", "")
+        code = request.query_params.get("code", "")
+        error = request.query_params.get("error")
+        if error:
+            redirect_to = consume_oauth_redirect_target(provider, state)
+            return RedirectResponse(
+                build_oauth_callback_redirect(
+                    redirect_to,
+                    oauth_status="error",
+                    oauth_provider=provider,
+                    oauth_error=error,
+                )
+            )
+        connection = exchange_oauth_code(provider, state, code)
+        # Best-effort: populate the full MCP tool set now that the user's
+        # OAuth credentials exist, so the integration doesn't show 1/no tools
+        # until a manual "Refresh indexed tools".
+        connector = get_managed_connector(provider)
+        if connector:
+            backfill_oauth_mcp_tools_after_connection(
+                str(connection.get("ownerId") or ""),
+                str(connection.get("integrationKey") or provider),
+                connector,
+            )
+        return RedirectResponse(
+            build_oauth_callback_redirect(
+                str(connection.get("redirect_to") or ""),
+                oauth_status="connected",
+                oauth_provider=provider,
+                integration_key=str(connection["integrationKey"]),
+            )
+        )
+
+    if path == "/api/cron/expire-grants":
+        try:
+            secret = get_default_config().require_cron_secret()
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        if request.headers.get("authorization") != f"Bearer {secret}":
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        return {"purged": repository.purge_expired_grants()}
+
+    owner: str | None = None
+    user_api_is_admin = False
     if requires_dashboard_session(path, method):
         session_user = authorize_dashboard_user(request)
         owner = session_user.owner_id
         user_api_is_admin = session_user.is_admin
-    else:
-        owner = owner_id(request)
-        user_api_is_admin = is_admin_owner(owner)
     active_permission_profile: PermissionProfile | None = None
     if path.startswith("/api/agent") or path.startswith("/api/context"):
         agent_record = authorized_agent_record(request, "call /api/agent")
@@ -2508,14 +2549,15 @@ async def fastapi_handler(request: Request):
     }:
         owner, user_api_is_admin = authorize_user_api_owner(request)
     if path.startswith("/api/case-by-case-approvals"):
-        resolved_owner = authorize_user_api_owner_or_session(request)
-        if resolved_owner is not None:
-            owner = resolved_owner
-            user_api_is_admin = is_admin_owner(owner)
+        owner = authorize_user_api_owner_or_session(request)
+        user_api_is_admin = is_admin_owner(owner)
     if path.startswith("/api/admin/") and path != "/api/admin/key":
         owner = authorize_admin_api_owner(request)
         user_api_is_admin = True
     body = await json_body(request) if method in {"POST", "PATCH", "PUT"} else {}
+
+    if owner is None:
+        raise HTTPException(status_code=401, detail="Authentication is required.")
 
     if path == "/api/permission-profiles":
         ensure_default_permission_profile(owner, refresh=True)
@@ -2538,9 +2580,6 @@ async def fastapi_handler(request: Request):
         result = apply_permission_profile(owner, params["profileId"])
         sync_default_permission_profile(owner)
         return result
-
-    if path == "/api/health":
-        return {"status": "ok", "backend": "fastapi"}
 
     if path in {"/api/agent/openapi", "/api/context/openapi"}:
         return agent_openapi(owner, request, active_permission_profile)
@@ -2597,50 +2636,6 @@ async def fastapi_handler(request: Request):
             response_as_json=accepts_json
             or request.query_params.get("response") == "json",
         )
-
-    if path == "/api/oauth/{provider}/callback":
-        provider = params["provider"]
-        state = request.query_params.get("state", "")
-        code = request.query_params.get("code", "")
-        error = request.query_params.get("error")
-        if error:
-            redirect_to = consume_oauth_redirect_target(provider, state)
-            return RedirectResponse(
-                build_oauth_callback_redirect(
-                    redirect_to,
-                    oauth_status="error",
-                    oauth_provider=provider,
-                    oauth_error=error,
-                )
-            )
-        connection = exchange_oauth_code(provider, state, code)
-        # Best-effort: populate the full MCP tool set now that the user's
-        # OAuth credentials exist, so the integration doesn't show 1/no tools
-        # until a manual "Refresh indexed tools".
-        connector = get_managed_connector(provider)
-        if connector:
-            backfill_oauth_mcp_tools_after_connection(
-                str(connection.get("ownerId") or ""),
-                str(connection.get("integrationKey") or provider),
-                connector,
-            )
-        return RedirectResponse(
-            build_oauth_callback_redirect(
-                str(connection.get("redirect_to") or ""),
-                oauth_status="connected",
-                oauth_provider=provider,
-                integration_key=str(connection["integrationKey"]),
-            )
-        )
-
-    if path == "/api/cron/expire-grants":
-        try:
-            secret = get_default_config().require_cron_secret()
-        except RuntimeError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
-        if request.headers.get("authorization") != f"Bearer {secret}":
-            raise HTTPException(status_code=401, detail="Unauthorized")
-        return {"purged": repository.purge_expired_grants()}
 
     if path == "/api/integrations" or path == "/api/user/integrations":
         if method == "GET":

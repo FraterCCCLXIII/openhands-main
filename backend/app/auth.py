@@ -9,7 +9,6 @@ import httpx
 from .config import get_default_config
 
 
-DEFAULT_OWNER = "dev@localhost"
 _AUTH_CACHE_TTL_SECONDS = 20.0
 _AUTH_UNAVAILABLE_CACHE_TTL_SECONDS = 2.0
 _AUTH_CACHE_MAX_ENTRIES = 1024
@@ -74,15 +73,6 @@ def normalize_org_id(user_id: str, org_id: str | None) -> str | None:
 def owner_scope_id(user_id: str, org_id: str | None) -> str:
     org_scope = org_id.strip().lower() if org_id else NULL_ORG_SCOPE
     return f"{user_id.strip().lower()}:{org_scope}"
-
-
-_DEV_USER = OpenHandsUser(
-    id="dev-user-id",
-    org_id=None,
-    email=DEFAULT_OWNER,
-    role="owner",
-    permissions=("manage_items",),
-)
 
 
 def is_admin_owner(owner_id: str) -> bool:

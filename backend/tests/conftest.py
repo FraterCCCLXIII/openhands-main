@@ -45,7 +45,9 @@ def local_auth_bypass(monkeypatch):
 
     def fake_openhands_user_from_request(request):
         if os.getenv("PYTEST_INTHUB_AUTH_BYPASS") == "true":
-            owner = main_module.owner_id(request)
+            owner = (
+                (request.headers.get("x-owner-id") or "dev@localhost").strip().lower()
+            )
             is_admin = main_module.is_admin_owner(owner)
             return SimpleNamespace(
                 id=owner,

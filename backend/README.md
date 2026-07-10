@@ -22,7 +22,7 @@ uv pip install -e ".[dev]"
 uvicorn backend.app.main:app --reload --app-dir ..
 ```
 
-The FastAPI app owns the `/api/...` backend paths that were previously implemented as Next.js route handlers. For local parity testing, set authenticated local development or send `X-Owner-Id: <email>` headers.
+The FastAPI app owns the `/api/...` backend paths that were previously implemented as Next.js route handlers. For local parity testing, use authenticated local development with an OpenHands Cloud bearer token.
 
 ## Running tests
 

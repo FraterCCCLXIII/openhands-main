@@ -1467,6 +1467,46 @@ def test_dashboard_key_routes_reject_spoofed_owner_without_token(
     assert "Sign in" in response.json()["detail"]
 
 
+def test_dashboard_integrations_use_the_openhands_session_owner(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {"id": "user-1", "org_id": "org-1", "email": "User@Example.com"},
+    )
+    repository.save_integration(
+        "user-1:org-1",
+        IntegrationSpec(
+            key="visible",
+            name="Visible",
+            kind="api",
+            provider="mock",
+            authStrategy="none",
+        ),
+    )
+
+    response = TestClient(app).get(
+        "/api/integrations", headers={"Authorization": "Bearer cloud-token"}
+    )
+
+    assert response.status_code == 200
+    assert [integration["key"] for integration in response.json()] == ["visible"]
+
+
+def test_dashboard_integrations_reject_a_spoofed_owner_without_a_session(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
+
+    response = TestClient(app).get(
+        "/api/integrations", headers={"X-Owner-Id": "attacker@example.com"}
+    )
+
+    assert response.status_code == 401
+
+
 def test_dashboard_key_routes_accept_openhands_bearer_token(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
