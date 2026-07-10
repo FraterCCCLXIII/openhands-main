@@ -2925,6 +2925,7 @@ def test_oauth_catalog_and_admin_overview_are_data_driven(
         "github",
         "slack",
         "notion",
+        "superhuman-mail",
         "hubspot",
         "elevenlabs",
         "ordinal",

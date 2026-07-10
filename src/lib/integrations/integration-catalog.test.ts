@@ -92,7 +92,7 @@ describe("listIntegrationCatalogOptions", () => {
     });
     expect(datadog?.connectionDefaults).toMatchObject({
       provider: "mcp",
-      serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp",
+      serverUrl: "https://mcp.datadoghq.com/v1/mcp",
       oauthConfig: {
         authorizationUrl: "https://app.datadoghq.com/oauth2/v1/authorize",
         tokenUrl: "https://api.datadoghq.com/oauth2/v1/token",
