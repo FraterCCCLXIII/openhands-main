@@ -319,6 +319,11 @@ describe("DashboardWorkspace", () => {
       );
     });
 
+    // The empty seed intentionally refetches after mount.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
     // Already-installed Slack must appear in "Your integrations"...
     expect(container.textContent).toContain("Your integrations");
     expect(container.textContent).toContain("Slack");

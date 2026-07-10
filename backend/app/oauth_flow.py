@@ -23,11 +23,12 @@ from .url_security import urlopen_no_redirect, validate_external_url
 def is_dynamic_oauth(connector: ManagedConnector) -> bool:
     """An OAuth2 connector whose OAuth endpoints are discovered at runtime.
 
-    These connectors (e.g. Superhuman Mail) delegate the entire OAuth dance to
-    the MCP server itself via RFC 9728 ``.well-known/oauth-authorization-server``
-    metadata. The hub discovers the authorization/token endpoints at runtime
-    instead of reading them from the catalog, and no admin pre-configuration
-    (client credentials or registration URL) is needed.
+    These connectors (e.g. Superhuman Mail) advertise RFC 9728 protected-resource
+    metadata from their MCP URL. That metadata identifies the authorization server,
+    whose RFC 8414 metadata supplies the authorization/token endpoints. The hub
+    discovers those endpoints at runtime instead of reading them from the catalog,
+    and no admin pre-configuration (client credentials or registration URL) is
+    needed.
 
     A connector is dynamic if either (a) its catalog entry has no
     ``authorizationUrl`` (pre-discovery), or (b) it was previously enriched
@@ -42,29 +43,72 @@ def is_dynamic_oauth(connector: ManagedConnector) -> bool:
     return not oauth_config.get("authorizationUrl")
 
 
-def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
-    """Fetch RFC 9728 OAuth authorization-server metadata from an MCP server.
+def well_known_metadata_url(identifier: str, document: str) -> str:
+    """Insert a well-known metadata path before an identifier's path.
 
-    Returns a dict with keys mapped to the hub's ``oauthConfig`` shape:
-    ``authorizationUrl``, ``tokenUrl``, and optionally ``registrationUrl``.
+    RFC 9728 and RFC 8414 both derive metadata URLs by inserting the
+    ``/.well-known/<document>`` segment between the origin and the identifier's
+    path. Appending the segment to an MCP endpoint path produces a different,
+    invalid URL (for example, ``/mcp/.well-known/...``).
     """
-    well_known = server_url.rstrip("/")
-    if not well_known.endswith("/.well-known/oauth-authorization-server"):
-        well_known = well_known + "/.well-known/oauth-authorization-server"
-    well_known = validate_external_url(well_known, purpose="OAuth metadata endpoint")
-    request = urllib.request.Request(well_known, headers={"Accept": "application/json"})
+    validated = validate_external_url(identifier, purpose=f"{document} identifier")
+    parsed = urllib.parse.urlsplit(validated)
+    path = parsed.path or ""
+    return urllib.parse.urlunsplit(
+        parsed._replace(path=f"/.well-known/{document}{path}", fragment="")
+    )
+
+
+def fetch_oauth_metadata_document(url: str, purpose: str) -> dict[str, Any]:
+    validated = validate_external_url(url, purpose=purpose)
+    request = urllib.request.Request(validated, headers={"Accept": "application/json"})
     try:
         with urlopen_no_redirect(request, timeout=10) as response:
             payload = json.loads(response.read().decode() or "{}")
     except Exception as exc:
         raise HTTPException(
-            status_code=502,
-            detail=f"OAuth metadata discovery failed for {server_url}: {exc}",
+            status_code=502, detail=f"{purpose} discovery failed: {exc}"
         ) from exc
     if not isinstance(payload, dict):
+        raise HTTPException(status_code=502, detail=f"{purpose} returned invalid JSON.")
+    return payload
+
+
+def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
+    """Discover an MCP resource's OAuth authorization-server metadata.
+
+    Returns a dict with keys mapped to the hub's ``oauthConfig`` shape:
+    ``authorizationUrl``, ``tokenUrl``, and optionally ``registrationUrl``.
+    """
+    protected_resource = fetch_oauth_metadata_document(
+        well_known_metadata_url(server_url, "oauth-protected-resource"),
+        "OAuth protected-resource metadata",
+    )
+    authorization_servers = protected_resource.get("authorization_servers")
+    if not isinstance(authorization_servers, list):
         raise HTTPException(
-            status_code=502, detail="OAuth metadata endpoint returned invalid JSON."
+            status_code=502,
+            detail="OAuth protected-resource metadata is missing authorization_servers.",
         )
+    authorization_server = next(
+        (
+            value.strip()
+            for value in authorization_servers
+            if isinstance(value, str) and value.strip()
+        ),
+        None,
+    )
+    if not authorization_server:
+        raise HTTPException(
+            status_code=502,
+            detail="OAuth protected-resource metadata has no usable authorization server.",
+        )
+    payload = fetch_oauth_metadata_document(
+        well_known_metadata_url(
+            authorization_server, "oauth-authorization-server"
+        ),
+        "OAuth authorization-server metadata",
+    )
     authorization_url = payload.get("authorization_endpoint")
     token_url = payload.get("token_endpoint")
     if not authorization_url or not token_url:

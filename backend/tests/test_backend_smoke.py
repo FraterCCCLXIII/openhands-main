@@ -1006,10 +1006,27 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
     }
     registrations: list[dict[str, object]] = []
     token_exchanges: list[dict[str, object]] = []
+    metadata_requests: list[str] = []
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):  # noqa: N802
-            if "/.well-known/oauth-authorization-server" in self.path:
+            if self.path == "/.well-known/oauth-protected-resource/mcp":
+                metadata_requests.append(self.path)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps(
+                        {
+                            "resource": f"http://127.0.0.1:{port}/mcp",
+                            "authorization_servers": [
+                                f"http://127.0.0.1:{port}"
+                            ],
+                        }
+                    ).encode()
+                )
+            elif self.path == "/.well-known/oauth-authorization-server":
+                metadata_requests.append(self.path)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
@@ -1102,6 +1119,10 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         assert "code_challenge" in query  # PKCE
         assert len(registrations) == 1
         assert registrations[0]["token_endpoint_auth_method"] == "none"
+        assert metadata_requests == [
+            "/.well-known/oauth-protected-resource/mcp",
+            "/.well-known/oauth-authorization-server",
+        ] * 2
 
         # Simulate the OAuth provider redirecting back with a code.
         state = query["state"][0]

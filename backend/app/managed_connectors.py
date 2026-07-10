@@ -72,8 +72,8 @@ def _to_default_managed_connector(entry: dict[str, Any]) -> dict[str, Any]:
         # Static OAuth2 connectors need an admin to supply client credentials
         # before users can connect. Dynamic OAuth connectors (no catalog
         # authorizationUrl) delegate the entire OAuth dance to the MCP server
-        # via .well-known metadata — there is nothing for an admin to
-        # pre-configure, so they are immediately ready.
+        # via protected-resource and authorization-server metadata — there is
+        # nothing for an admin to pre-configure, so they are immediately ready.
         "oauthConfigured": defaults["authStrategy"] != "oauth2"
         or _is_dynamic_oauth(defaults),
     }
