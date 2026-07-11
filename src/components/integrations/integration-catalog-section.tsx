@@ -14,6 +14,7 @@ import type { ManagedConnectorOption } from "@/src/types/integrations-hub";
 
 interface IntegrationCatalogSectionProps {
   connectors: ManagedConnectorOption[];
+  connectedConnectorCount?: number;
   isPending?: boolean;
   errorMessage?: string | null;
   onConnect: (slug: string) => void;
@@ -24,6 +25,7 @@ const CONNECTOR_PAGE_SIZE = 5;
 
 export function IntegrationCatalogSection({
   connectors,
+  connectedConnectorCount = 0,
   isPending = false,
   errorMessage = null,
   onConnect,
@@ -46,6 +48,9 @@ export function IntegrationCatalogSection({
         <SectionCountBadge count={connectors.length} />
         <span className="text-xs text-tertiary-light">
           {displayedConnectors.length} shown · {connectors.length} available
+          {connectedConnectorCount > 0
+            ? ` · ${connectedConnectorCount} already connected`
+            : ""}
         </span>
       </div>
       <p className="mt-1 text-xs text-tertiary-light">

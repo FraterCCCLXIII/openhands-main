@@ -873,6 +873,148 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(
     assert json_query["scope"] == ["read,write"]
 
 
+def test_oauth_callback_returns_to_requested_duplicate_integration_key(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+    admin_key = client.post("/api/admin/key").json()["apiKey"]
+    response = client.post(
+        "/api/admin/modify-integrations",
+        headers={"Authorization": f"Bearer {admin_key}"},
+        json={
+            "slug": "linear",
+            "name": "Linear",
+            "description": "Linear OAuth",
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "mcp",
+            "serverUrl": "https://mcp.linear.app/mcp",
+            "oauthConfigured": True,
+            "oauthClientId": "client-id",
+            "oauthClientSecret": "client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://linear.app/oauth/authorize",
+                "tokenUrl": "https://api.linear.app/oauth/token",
+                "scopes": ["read"],
+            },
+        },
+    )
+    assert response.status_code == 200
+
+    def fake_fetch_oauth_token(_connector, body, _headers):
+        assert body["code"] == "oauth-code"
+        return {"access_token": "linear-token", "scope": "read"}
+
+    monkeypatch.setattr(oauth_flow, "fetch_oauth_token", fake_fetch_oauth_token)
+
+    redirect_to = "/integrations?showIntegrationWizard=1&managedConnector=linear&integrationKey=linear-2"
+    start = client.get(
+        f"/api/oauth/linear/start?integrationKey=linear-2&redirectTo={urllib.parse.quote(redirect_to)}",
+        follow_redirects=False,
+    )
+    assert start.status_code == 307
+    state = urllib.parse.parse_qs(
+        urllib.parse.urlparse(start.headers["location"]).query
+    )["state"][0]
+
+    callback = client.get(
+        f"/api/oauth/linear/callback?state={state}&code=oauth-code",
+        follow_redirects=False,
+    )
+
+    assert callback.status_code == 307
+    assert callback.headers["location"] == (
+        "/integrations?showIntegrationWizard=1&managedConnector=linear&"
+        "oauth_status=connected&oauth_provider=linear&integrationKey=linear-2"
+    )
+    connection = repository.get_connection("dev@localhost", "linear-2")
+    assert connection is not None
+    assert connection["integrationKey"] == "linear-2"
+
+
+def test_multiple_oauth_accounts_same_connector_coexist(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    """Installing the same managed OAuth connector twice with different
+    integration keys should create two independent connections that coexist."""
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
+    client = TestClient(app)
+    admin_key = client.post("/api/admin/key").json()["apiKey"]
+    client.post(
+        "/api/admin/modify-integrations",
+        headers={"Authorization": f"Bearer {admin_key}"},
+        json={
+            "slug": "linear",
+            "name": "Linear",
+            "description": "Linear OAuth",
+            "authModes": ["oauth2"],
+            "authStrategy": "oauth2",
+            "provider": "mcp",
+            "serverUrl": "https://mcp.linear.app/mcp",
+            "oauthConfigured": True,
+            "oauthClientId": "client-id",
+            "oauthClientSecret": "client-secret",
+            "oauthConfig": {
+                "authorizationUrl": "https://linear.app/oauth/authorize",
+                "tokenUrl": "https://api.linear.app/oauth/token",
+                "scopes": ["read"],
+            },
+        },
+    )
+
+    tokens = iter(["token-account-1", "token-account-2"])
+
+    def fake_fetch_oauth_token(_connector, body, _headers):
+        return {"access_token": next(tokens), "scope": "read"}
+
+    monkeypatch.setattr(oauth_flow, "fetch_oauth_token", fake_fetch_oauth_token)
+
+    # First OAuth install with default key "linear"
+    start1 = client.get(
+        "/api/oauth/linear/start?redirectTo=" + urllib.parse.quote("/integrations"),
+        follow_redirects=False,
+    )
+    assert start1.status_code == 307
+    state1 = urllib.parse.parse_qs(
+        urllib.parse.urlparse(start1.headers["location"]).query
+    )["state"][0]
+    cb1 = client.get(
+        f"/api/oauth/linear/callback?state={state1}&code=code-1",
+        follow_redirects=False,
+    )
+    assert cb1.status_code == 307
+    assert "oauth_status=connected" in cb1.headers["location"]
+    conn1 = repository.get_connection("dev@localhost", "linear")
+    assert conn1 is not None
+
+    # Second OAuth install with a different integration key "linear-2"
+    start2 = client.get(
+        "/api/oauth/linear/start?integrationKey=linear-2&redirectTo="
+        + urllib.parse.quote("/integrations"),
+        follow_redirects=False,
+    )
+    assert start2.status_code == 307
+    state2 = urllib.parse.parse_qs(
+        urllib.parse.urlparse(start2.headers["location"]).query
+    )["state"][0]
+    cb2 = client.get(
+        f"/api/oauth/linear/callback?state={state2}&code=code-2",
+        follow_redirects=False,
+    )
+    assert cb2.status_code == 307
+    assert "oauth_status=connected" in cb2.headers["location"]
+    assert "integrationKey=linear-2" in cb2.headers["location"]
+
+    # Both connections must coexist with different integration keys
+    conn2 = repository.get_connection("dev@localhost", "linear-2")
+    assert conn2 is not None
+    assert conn2["integrationKey"] == "linear-2"
+    assert conn1 is not None  # first connection still present
+
+
 def test_stable_oauth_proxy_forwards_callbacks_to_the_originating_preview(
     config_env: ConfigEnvFixture,
 ) -> None:
@@ -1014,8 +1156,7 @@ def test_dynamic_oauth_default_connector_is_configured_without_admin(
 ) -> None:
     """Dynamic OAuth connectors (no catalog authorizationUrl) should surface as
     oauthConfigured=True by default — no admin pre-configuration is needed."""
-    from backend.app import managed_connectors as mc_mod
-    from backend.app import main as main_mod
+    from backend.app import main as main_mod, managed_connectors as mc_mod
 
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
@@ -1030,7 +1171,10 @@ def test_dynamic_oauth_default_connector_is_configured_without_admin(
             {
                 "id": "mcp-remote",
                 "provider": "mcp",
-                "transport": {"type": "mcp-remote", "url": "https://mcp.dynamic.example/mcp"},
+                "transport": {
+                    "type": "mcp-remote",
+                    "url": "https://mcp.dynamic.example/mcp",
+                },
                 "auth": {
                     "strategy": "oauth2",
                     "oauth": {
@@ -1044,7 +1188,10 @@ def test_dynamic_oauth_default_connector_is_configured_without_admin(
     }
 
     original_list = mc_mod.list_integration_catalog
-    patched_list = lambda: [*original_list(), synthetic_entry]
+
+    def patched_list():
+        return [*original_list(), synthetic_entry]
+
     monkeypatch.setattr(mc_mod, "list_integration_catalog", patched_list)
     monkeypatch.setattr(main_mod, "list_integration_catalog", patched_list)
     mc_mod.default_managed_connectors.cache_clear()
@@ -1058,8 +1205,10 @@ def test_dynamic_oauth_default_connector_is_configured_without_admin(
             == "https://mcp.dynamic.example/mcp"
         )
         # No authorizationUrl in the catalog entry — this is dynamic OAuth.
-        assert not entry["connectionDefaults"].get("oauthConfig", {}).get(
-            "authorizationUrl"
+        assert (
+            not entry["connectionDefaults"]
+            .get("oauthConfig", {})
+            .get("authorizationUrl")
         )
     finally:
         mc_mod.default_managed_connectors.cache_clear()
@@ -1098,9 +1247,7 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
                     json.dumps(
                         {
                             "resource": f"http://127.0.0.1:{port}/mcp",
-                            "authorization_servers": [
-                                f"http://127.0.0.1:{port}"
-                            ],
+                            "authorization_servers": [f"http://127.0.0.1:{port}"],
                         }
                     ).encode()
                 )
@@ -1198,10 +1345,14 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         assert "code_challenge" in query  # PKCE
         assert len(registrations) == 1
         assert registrations[0]["token_endpoint_auth_method"] == "none"
-        assert metadata_requests == [
-            "/.well-known/oauth-protected-resource/mcp",
-            "/.well-known/oauth-authorization-server",
-        ] * 2
+        assert (
+            metadata_requests
+            == [
+                "/.well-known/oauth-protected-resource/mcp",
+                "/.well-known/oauth-authorization-server",
+            ]
+            * 2
+        )
 
         # Simulate the OAuth provider redirecting back with a code.
         state = query["state"][0]
@@ -2074,7 +2225,9 @@ def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
     assert client.get("/api/notifications", headers=user_headers).status_code == 403
     assert (
         client.post(
-            "/api/admin/modify-integrations/sample/functions", headers=user_headers, json=[]
+            "/api/admin/modify-integrations/sample/functions",
+            headers=user_headers,
+            json=[],
         ).status_code
         == 403
     )
@@ -2455,9 +2608,9 @@ def test_generated_openapi_documents_include_route_details(
         user_doc["paths"]["/api/user/integrations"]["post"]["summary"]
         == "Install an owner integration"
     )
-    functions_doc = managed_doc["paths"]["/api/admin/modify-integrations/{slug}/functions"][
-        "post"
-    ]
+    functions_doc = managed_doc["paths"][
+        "/api/admin/modify-integrations/{slug}/functions"
+    ]["post"]
     assert functions_doc["summary"] == "Index connector tool definitions"
     assert "requestBody" not in functions_doc
 

@@ -9,8 +9,8 @@ const { wizardRenderMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/src/components/integrations/wizard/wizard", () => ({
-  IntegrationWizard: (props: { redirectSection: string }) => {
-    wizardRenderMock(props.redirectSection);
+  IntegrationWizard: (props: { existingIntegrationKeys?: Set<string>; redirectSection: string }) => {
+    wizardRenderMock(props.redirectSection, props.existingIntegrationKeys);
     return <div data-testid="integration-wizard">Step-by-step integration setup</div>;
   },
 }));
@@ -94,6 +94,7 @@ const trackedIntegration: IntegrationSpec = {
 const createDefaultProps = () => ({
   addIntegrationSearch: "",
   availableConnectorCount: 3,
+  connectedConnectorCount: 1,
   integrations: [trackedIntegration],
   managedConnectorsError: null,
   managedConnectorsPending: false,
@@ -101,6 +102,8 @@ const createDefaultProps = () => ({
   handleDeleteIntegration: vi.fn(),
   handleDisableUnusedTools: vi.fn(),
   hideDisabledTools: true,
+  existingIntegrationKeys: new Set(["github"]),
+
   integrationCount: 1,
   integrationSearch: "github",
   isActionPending: false,
@@ -151,7 +154,10 @@ describe("IntegrationsSection", () => {
     });
 
     expect(container.textContent).toContain("Step-by-step integration setup");
-    expect(wizardRenderMock).toHaveBeenCalledWith("integrations");
+    expect(wizardRenderMock).toHaveBeenCalledWith(
+      "integrations",
+      props.existingIntegrationKeys,
+    );
     expect(container.textContent).toContain("Loading available integrations...");
 
     await act(async () => {

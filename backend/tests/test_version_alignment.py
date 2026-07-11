@@ -40,7 +40,9 @@ def _npm_extensions_version() -> str:
     spec = deps.get("@openhands/extensions", "")
     # Accept "^0.8.0", "~0.8.0", "0.8.0", etc.
     match = re.match(r"[^0-9]*([0-9]+\.[0-9]+\.[0-9]+)", spec)
-    assert match, f"@openhands/extensions not found or unparseable in package.json: {spec!r}"
+    assert match, (
+        f"@openhands/extensions not found or unparseable in package.json: {spec!r}"
+    )
     return match.group(1)
 
 
@@ -53,7 +55,9 @@ def _pip_extensions_version() -> str:
         match = re.match(r"openhands-extensions==([0-9]+\.[0-9]+\.[0-9]+)", dep.strip())
         if match:
             return match.group(1)
-    raise AssertionError("openhands-extensions not found in backend/pyproject.toml dependencies")
+    raise AssertionError(
+        "openhands-extensions not found in backend/pyproject.toml dependencies"
+    )
 
 
 def test_frontend_and_backend_extensions_versions_match() -> None:

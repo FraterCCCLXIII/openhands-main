@@ -32,6 +32,7 @@ import {
 import { type AdminSection } from "@/src/lib/admin-routes";
 
 interface IntegrationWizardProps {
+  existingIntegrationKeys?: Set<string>;
   isAdmin?: boolean;
   oauthStatus?: OAuthReturnStatus | null;
   onCreated: () => Promise<void>;
@@ -40,6 +41,7 @@ interface IntegrationWizardProps {
 }
 
 export const IntegrationWizard = ({
+  existingIntegrationKeys,
   isAdmin = true,
   oauthStatus = null,
   onCreated,
@@ -75,6 +77,7 @@ export const IntegrationWizard = ({
   });
 
   const state = useWizardState({
+    existingIntegrationKeys,
     managedConnectors,
     onStatus,
     searchParams,

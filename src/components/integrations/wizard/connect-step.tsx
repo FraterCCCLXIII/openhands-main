@@ -57,6 +57,7 @@ const buildOAuthStartPath = ({
     buildAdminSectionHref(redirectSection, {
       showIntegrationWizard: "1",
       managedConnector,
+      integrationKey,
     }),
   )}`;
 

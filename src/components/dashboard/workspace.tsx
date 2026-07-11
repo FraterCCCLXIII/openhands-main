@@ -11,6 +11,11 @@ import { ApprovalsSection } from "@/src/components/dashboard/sections/approvals-
 import { IntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
 import { PermissionProfilesSection } from "@/src/components/dashboard/sections/permission-profiles-section";
 import { ProfileSection } from "@/src/components/dashboard/sections/profile-section";
+import {
+  buildInstalledIntegrationKeys,
+  buildInstalledManagedConnectorSlugs,
+  buildSuggestedIntegrationKey,
+} from "@/src/components/dashboard/utils";
 import { useApiKeys } from "@/src/components/dashboard/hooks/use-api-keys";
 import { useApprovalsSection } from "@/src/components/dashboard/hooks/use-approvals-section";
 import { useIntegrationsSection } from "@/src/components/dashboard/hooks/use-integrations-section";
@@ -164,6 +169,15 @@ export const DashboardWorkspace = ({
     onStatus: setStatusMessage,
   });
 
+  const installedIntegrationKeys = useMemo(
+    () => buildInstalledIntegrationKeys(integrations),
+    [integrations],
+  );
+  const connectedConnectorCount = useMemo(
+    () => buildInstalledManagedConnectorSlugs(integrations).size,
+    [integrations],
+  );
+
   const agentConnectionGuide = useMemo(
     () =>
       buildAgentConnectionGuide({
@@ -187,12 +201,20 @@ export const DashboardWorkspace = ({
     `${adminOpenApiSchemaEndpoint}, feel free to manage admin QA and connector workflows there.`;
 
   const openIntegrationWizard = (managedConnectorSlug?: string) => {
+    const suggestedIntegrationKey = managedConnectorSlug
+      ? buildSuggestedIntegrationKey(managedConnectorSlug, installedIntegrationKeys)
+      : undefined;
+
     setShowIntegrationWizard(true);
     setActiveSection("integrations");
     router.push(
       buildAdminSectionHref("integrations", {
         showIntegrationWizard: "1",
         managedConnector: managedConnectorSlug,
+        integrationKey:
+          suggestedIntegrationKey && suggestedIntegrationKey !== managedConnectorSlug
+            ? suggestedIntegrationKey
+            : undefined,
       }),
     );
   };
@@ -256,6 +278,8 @@ export const DashboardWorkspace = ({
       {activeSection === "integrations" ? (
         <IntegrationsSection
           {...integrationsSection}
+          connectedConnectorCount={connectedConnectorCount}
+          existingIntegrationKeys={installedIntegrationKeys}
           integrations={integrations}
           isAdmin={isAdmin}
           oauthStatus={oauthStatus}

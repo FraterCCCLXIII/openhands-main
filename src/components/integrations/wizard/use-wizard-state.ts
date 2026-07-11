@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { buildSuggestedIntegrationKey } from "@/src/components/dashboard/utils";
 import { getToolAccessMode } from "@/src/components/integrations/tool-access-controls";
 import type { ManagedConnectorOption, ToolAccessMode } from "@/src/types/integrations-hub";
 import {
@@ -17,29 +18,56 @@ interface SearchParamsLike {
   get(name: string): string | null;
 }
 
+const EMPTY_INTEGRATION_KEYS = new Set<string>();
+
+const nextAutoDisplayName = ({
+  connectorName,
+  integrationKey,
+  managedConnectorSlug,
+}: {
+  connectorName: string;
+  integrationKey: string;
+  managedConnectorSlug: string;
+}) =>
+  integrationKey === managedConnectorSlug
+    ? connectorName
+    : `${connectorName} (${integrationKey})`;
+
 interface UseIntegrationWizardStateOptions {
+  existingIntegrationKeys?: Set<string>;
   managedConnectors: ManagedConnectorOption[];
   onStatus: (message: string | null) => void;
   searchParams: SearchParamsLike;
 }
 
 export const useWizardState = ({
+  existingIntegrationKeys = EMPTY_INTEGRATION_KEYS,
   managedConnectors,
   onStatus,
   searchParams,
 }: UseIntegrationWizardStateOptions) => {
   const initialManagedConnectorSlug = searchParams.get("managedConnector")?.trim() || "";
-  const [draft, setDraft] = useState<WizardDraft>(() =>
-    initialManagedConnectorSlug
-      ? {
-          ...INITIAL_DRAFT,
-          kind: "managed",
-          managedConnectorSlug: initialManagedConnectorSlug,
-          key: initialManagedConnectorSlug,
-          name: initialManagedConnectorSlug,
-        }
-      : { ...INITIAL_DRAFT, kind: "managed" },
+  const initialIntegrationKey = searchParams.get("integrationKey")?.trim() || "";
+  const initialSuggestedIntegrationKey = initialManagedConnectorSlug
+    ? initialIntegrationKey ||
+      buildSuggestedIntegrationKey(initialManagedConnectorSlug, existingIntegrationKeys)
+    : "";
+  const autoSuggestedIntegrationKey = useRef(
+    initialIntegrationKey ? "" : initialSuggestedIntegrationKey,
   );
+  const [draft, setDraft] = useState<WizardDraft>(() => {
+    if (!initialManagedConnectorSlug) {
+      return { ...INITIAL_DRAFT, kind: "managed" };
+    }
+
+    return {
+      ...INITIAL_DRAFT,
+      kind: "managed",
+      managedConnectorSlug: initialManagedConnectorSlug,
+      key: initialSuggestedIntegrationKey,
+      name: initialManagedConnectorSlug,
+    };
+  });
   const [discovery, setDiscovery] = useState<DiscoveryResponse | null>(null);
   const [toolModes, setToolModes] = useState<Record<string, ToolAccessMode>>({});
   const [selectedTools, setSelectedTools] = useState<Record<string, boolean>>({});
@@ -48,7 +76,8 @@ export const useWizardState = ({
   const [toolSearch, setToolSearch] = useState("");
   const [discoverFeedback, setDiscoverFeedback] =
     useState<DiscoverFeedback | null>(null);
-  const lastSyncedManagedConnectorSlug = useRef(initialManagedConnectorSlug);
+  const initialRouteSelection = `${initialManagedConnectorSlug}:${initialIntegrationKey}`;
+  const lastSyncedRouteSelection = useRef(initialRouteSelection);
 
   const selectedConnector = useMemo(
     () =>
@@ -92,13 +121,25 @@ export const useWizardState = ({
     !requiresOAuthConnection || selectedConnector?.oauthConfigured !== false;
 
   const handleConnectorSelect = useCallback(
-    (connector: ManagedConnectorOption) => {
+    (connector: ManagedConnectorOption, preferredIntegrationKey?: string) => {
+      const explicitIntegrationKey = preferredIntegrationKey?.trim() || "";
+      const nextIntegrationKey =
+        explicitIntegrationKey ||
+        buildSuggestedIntegrationKey(connector.slug, existingIntegrationKeys);
+
+      autoSuggestedIntegrationKey.current = explicitIntegrationKey
+        ? ""
+        : nextIntegrationKey;
+
       setDraft((current) => ({
         ...current,
         kind: "managed",
         managedConnectorSlug: connector.slug,
-        key: connector.slug,
-        name: connector.name,
+        key: nextIntegrationKey,
+        name:
+          nextIntegrationKey === connector.slug
+            ? connector.name
+            : `${connector.name} (${nextIntegrationKey})`,
         accessToken:
           current.managedConnectorSlug === connector.slug && connector.authStrategy === "bearer"
             ? current.accessToken
@@ -125,7 +166,7 @@ export const useWizardState = ({
       setDiscoverFeedback(null);
       onStatus(null);
     },
-    [onStatus],
+    [existingIntegrationKeys, onStatus],
   );
 
   const handleConnectorSearchChange = (value: string) => {
@@ -152,11 +193,12 @@ export const useWizardState = ({
 
   useEffect(() => {
     if (!initialManagedConnectorSlug) {
-      lastSyncedManagedConnectorSlug.current = "";
+      lastSyncedRouteSelection.current = "";
+      autoSuggestedIntegrationKey.current = "";
       return;
     }
 
-    if (lastSyncedManagedConnectorSlug.current === initialManagedConnectorSlug) {
+    if (lastSyncedRouteSelection.current === initialRouteSelection) {
       return;
     }
 
@@ -165,13 +207,19 @@ export const useWizardState = ({
       null;
 
     if (connector) {
-      handleConnectorSelect(connector);
+      handleConnectorSelect(connector, initialIntegrationKey || undefined);
     } else {
+      const nextIntegrationKey =
+        initialIntegrationKey ||
+        buildSuggestedIntegrationKey(initialManagedConnectorSlug, existingIntegrationKeys);
+      autoSuggestedIntegrationKey.current = initialIntegrationKey
+        ? ""
+        : nextIntegrationKey;
       setDraft({
         ...INITIAL_DRAFT,
         kind: "managed",
         managedConnectorSlug: initialManagedConnectorSlug,
-        key: initialManagedConnectorSlug,
+        key: nextIntegrationKey,
         name: initialManagedConnectorSlug,
       });
       setConnectorSearch(initialManagedConnectorSlug);
@@ -184,12 +232,78 @@ export const useWizardState = ({
     setSelectedTools({});
     setExpandedTools({});
     setToolSearch("");
-    lastSyncedManagedConnectorSlug.current = initialManagedConnectorSlug;
+    lastSyncedRouteSelection.current = initialRouteSelection;
   }, [
+    existingIntegrationKeys,
     handleConnectorSelect,
+    initialIntegrationKey,
     initialManagedConnectorSlug,
+    initialRouteSelection,
     managedConnectors,
     onStatus,
+  ]);
+
+  useEffect(() => {
+    if (!initialManagedConnectorSlug || initialIntegrationKey) {
+      return;
+    }
+
+    const nextIntegrationKey = buildSuggestedIntegrationKey(
+      initialManagedConnectorSlug,
+      existingIntegrationKeys,
+    );
+    const previousAutoIntegrationKey = autoSuggestedIntegrationKey.current;
+
+    if (!previousAutoIntegrationKey || previousAutoIntegrationKey === nextIntegrationKey) {
+      return;
+    }
+
+    setDraft((current) => {
+      if (
+        current.kind !== "managed" ||
+        current.managedConnectorSlug !== initialManagedConnectorSlug ||
+        current.key.trim() !== previousAutoIntegrationKey
+      ) {
+        return current;
+      }
+
+      autoSuggestedIntegrationKey.current = nextIntegrationKey;
+      const connectorName = selectedConnector?.name.trim() || initialManagedConnectorSlug;
+      const currentName = current.name.trim();
+      const previousAutoNames = new Set([
+        initialManagedConnectorSlug,
+        connectorName,
+        nextAutoDisplayName({
+          connectorName,
+          integrationKey: previousAutoIntegrationKey,
+          managedConnectorSlug: initialManagedConnectorSlug,
+        }),
+        nextAutoDisplayName({
+          connectorName: initialManagedConnectorSlug,
+          integrationKey: previousAutoIntegrationKey,
+          managedConnectorSlug: initialManagedConnectorSlug,
+        }),
+      ]);
+      const shouldUpdateName =
+        !currentName || previousAutoNames.has(currentName);
+
+      return {
+        ...current,
+        key: nextIntegrationKey,
+        name: shouldUpdateName
+          ? nextAutoDisplayName({
+              connectorName,
+              integrationKey: nextIntegrationKey,
+              managedConnectorSlug: initialManagedConnectorSlug,
+            })
+          : current.name,
+      };
+    });
+  }, [
+    existingIntegrationKeys,
+    initialIntegrationKey,
+    initialManagedConnectorSlug,
+    selectedConnector?.name,
   ]);
 
   const selectKind = (kind: WizardDraft["kind"]) => {

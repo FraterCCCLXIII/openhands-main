@@ -104,9 +104,7 @@ def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
             detail="OAuth protected-resource metadata has no usable authorization server.",
         )
     payload = fetch_oauth_metadata_document(
-        well_known_metadata_url(
-            authorization_server, "oauth-authorization-server"
-        ),
+        well_known_metadata_url(authorization_server, "oauth-authorization-server"),
         "OAuth authorization-server metadata",
     )
     authorization_url = payload.get("authorization_endpoint")
@@ -465,10 +463,9 @@ def ensure_managed_oauth_client(connector: ManagedConnector) -> ManagedConnector
     if is_dynamic_oauth(connector) and connector.serverUrl:
         metadata = discover_oauth_metadata(str(connector.serverUrl))
         enriched = enrich_dynamic_oauth_config(connector, metadata)
-        if (
-            enriched.oauthConfig.get("clientAuthentication") == "none"
-            and enriched.oauthConfig.get("registrationUrl")
-        ):
+        if enriched.oauthConfig.get(
+            "clientAuthentication"
+        ) == "none" and enriched.oauthConfig.get("registrationUrl"):
             return register_dynamic_oauth_client(enriched)
         return enriched.model_copy(update={"oauthConfigured": True})
     if connector.oauthConfig.get(
@@ -699,6 +696,9 @@ def build_oauth_callback_redirect(
         target = "/integrations"
     parsed = urllib.parse.urlparse(target)
     params = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    # Remove any existing integrationKey so we don't duplicate it when the
+    # callback appends the resolved key.
+    params = [(k, v) for k, v in params if k != "integrationKey"]
     params.append(("oauth_status", oauth_status))
     params.append(("oauth_provider", oauth_provider))
     if oauth_error:

@@ -38,6 +38,7 @@ import type {
 interface IntegrationsSectionProps {
   addIntegrationSearch: string;
   availableConnectorCount: number;
+  connectedConnectorCount: number;
   integrations: IntegrationSpec[];
   managedConnectorsError?: string | null;
   managedConnectorsPending: boolean;
@@ -48,6 +49,7 @@ interface IntegrationsSectionProps {
     thresholdUnit: UnusedToolWindowUnit,
   ) => void;
   hideDisabledTools: boolean;
+  existingIntegrationKeys: Set<string>;
   integrationCount: number;
   integrationSearch: string;
   isActionPending: boolean;
@@ -89,6 +91,7 @@ const clampUnusedThresholdValue = (value: string) => {
 
 export const IntegrationsSection = ({
   addIntegrationSearch,
+  connectedConnectorCount,
   integrations,
   managedConnectorsError,
   managedConnectorsPending,
@@ -96,6 +99,7 @@ export const IntegrationsSection = ({
   handleDeleteIntegration,
   handleDisableUnusedTools,
   hideDisabledTools,
+  existingIntegrationKeys,
   integrationCount,
   integrationSearch,
   isActionPending,
@@ -430,6 +434,7 @@ export const IntegrationsSection = ({
 
         <IntegrationCatalogSection
           connectors={marketplaceConnectors}
+          connectedConnectorCount={connectedConnectorCount}
           isPending={managedConnectorsPending}
           errorMessage={managedConnectorsError}
           onConnect={handleOpenIntegrationWizard}
@@ -454,6 +459,7 @@ export const IntegrationsSection = ({
           {oauthStatus?.message ? <span className="sr-only">{oauthStatus.message}</span> : null}
 
           <IntegrationWizardModal
+            existingIntegrationKeys={existingIntegrationKeys}
             isAdmin={isAdmin}
             oauthStatus={oauthStatus}
             onClose={onCloseIntegrationWizard}

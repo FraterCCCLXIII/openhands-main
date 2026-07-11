@@ -442,7 +442,7 @@ describe("ConnectStep", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
+      "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion%26integrationKey%3Dnotion-workspace",
       expect.objectContaining({ headers: expect.any(Headers) }),
     );
     const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
@@ -571,7 +571,7 @@ describe("ConnectStep", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fprofile%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion",
+      "/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fprofile%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion%26integrationKey%3Dnotion",
       expect.objectContaining({ headers: expect.any(Headers) }),
     );
     expect(window.location.href).toBe(

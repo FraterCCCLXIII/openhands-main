@@ -6,7 +6,9 @@ import { getConnectorLogoUrl } from "@/src/components/dashboard/shared";
 import {
   approvalStatusTone,
   buildInstalledIntegrationKeys,
+  buildInstalledManagedConnectorSlugs,
   buildMarketplaceConnectors,
+  buildSuggestedIntegrationKey,
   buildToolAccessPatch,
   buildUnusedToolCandidates,
   copyTextToClipboard,
@@ -156,12 +158,9 @@ describe("dashboard-workspace-utils", () => {
     });
   });
 
-  it("builds marketplace rows in popular order while excluding installed connectors", () => {
-    const installedKeys = buildInstalledIntegrationKeys(integrations);
-
+  it("builds marketplace rows in popular order while keeping installed connectors available for duplicate accounts", () => {
     const results = buildMarketplaceConnectors({
       managedConnectors: connectors,
-      installedIntegrationKeys: installedKeys,
       search: "",
     });
 
@@ -169,7 +168,22 @@ describe("dashboard-workspace-utils", () => {
       "airtable",
       "notion",
       "linear",
+      "slack",
     ]);
+  });
+
+  it("tracks installed integration keys separately from connector slugs", () => {
+    expect([...buildInstalledIntegrationKeys(integrations)].sort()).toEqual(["slack"]);
+    expect([...buildInstalledManagedConnectorSlugs(integrations)].sort()).toEqual([
+      "slack",
+    ]);
+  });
+
+  it("suggests a suffixed integration key for additional accounts", () => {
+    const installedKeys = new Set(["linear", "linear-2"]);
+
+    expect(buildSuggestedIntegrationKey("linear", installedKeys)).toBe("linear-3");
+    expect(buildSuggestedIntegrationKey("notion", installedKeys)).toBe("notion");
   });
 
   it("builds exact tool access patch payloads", () => {

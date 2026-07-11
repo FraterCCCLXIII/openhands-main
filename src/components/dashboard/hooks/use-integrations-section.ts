@@ -7,7 +7,6 @@ import { fetchJson } from "@/src/lib/fetch-json";
 import { catalogOptionsToConnectorOptions } from "@/src/lib/catalog-mappers";
 import {
   buildConnectorMap,
-  buildInstalledIntegrationKeys,
   buildMarketplaceConnectors,
   buildToolAccessPatch,
   buildUnusedToolCandidates,
@@ -127,29 +126,18 @@ export const useIntegrationsSection = ({
   const integrations = integrationsQuery.data ?? [];
   const managedConnectors = managedConnectorsQuery.data ?? [];
 
-  const installedIntegrationKeys = useMemo(
-    () => buildInstalledIntegrationKeys(integrations),
-    [integrations],
-  );
   const connectorBySlug = useMemo(
     () => buildConnectorMap(managedConnectors),
     [managedConnectors],
   );
-  const availableConnectorCount = useMemo(
-    () =>
-      managedConnectors.filter(
-        (connector) => !installedIntegrationKeys.has(connector.slug),
-      ).length,
-    [managedConnectors, installedIntegrationKeys],
-  );
+  const availableConnectorCount = managedConnectors.length;
   const marketplaceConnectors = useMemo(
     () =>
       buildMarketplaceConnectors({
         managedConnectors,
-        installedIntegrationKeys,
         search: addIntegrationSearch,
       }),
-    [addIntegrationSearch, managedConnectors, installedIntegrationKeys],
+    [addIntegrationSearch, managedConnectors],
   );
   const filteredIntegrations = useMemo(
     () =>

@@ -1861,7 +1861,9 @@ def integration_catalog(
         connector = managed.get(slug)
         if filter == "registerable":
             # Include if explicitly registered or passes the default-managed filter.
-            if slug not in registered_slugs and not _is_default_managed_connector(entry):
+            if slug not in registered_slugs and not _is_default_managed_connector(
+                entry
+            ):
                 continue
         catalog_entries.append(_catalog_entry(entry, option, connector))
     return catalog_entries
@@ -1875,9 +1877,7 @@ def _catalog_entry(
     return {
         "slug": entry["id"],
         "name": connector.name if connector else entry["name"],
-        "description": connector.description
-        if connector
-        else entry["description"],
+        "description": connector.description if connector else entry["description"],
         "categories": connector.categories
         if connector and connector.categories
         else entry.get("categories", []),

@@ -18,6 +18,7 @@ import {
 } from "@/src/components/integrations/wizard/utils";
 
 interface IntegrationWizardModalProps {
+  existingIntegrationKeys?: Set<string>;
   isAdmin: boolean;
   oauthStatus?: OAuthReturnStatus | null;
   onClose: () => void;
@@ -37,6 +38,7 @@ function getWizardStepId(step: WizardStep): "chooseType" | "connect" | "review" 
 }
 
 export function IntegrationWizardModal({
+  existingIntegrationKeys,
   isAdmin,
   oauthStatus = null,
   onClose,
@@ -72,6 +74,7 @@ export function IntegrationWizardModal({
 
         <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-7">
           <IntegrationWizard
+            existingIntegrationKeys={existingIntegrationKeys}
             isAdmin={isAdmin}
             oauthStatus={oauthStatus}
             onCreated={onCreated}

@@ -491,7 +491,7 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).not.toContain("Search popular integrations");
   });
 
-  it("hides already installed integrations from the add integration list", async () => {
+  it("keeps installed connector types available for adding another account", async () => {
     const integrationsState: IntegrationSpec[] = [
       {
         key: "github",
@@ -501,7 +501,7 @@ describe("DashboardWorkspace", () => {
         authStrategy: "bearer",
         enabled: true,
         fineGrainedPermissions: true,
-        config: {},
+        config: { managedConnectorSlug: "github" },
         credentials: {},
         tools: {},
       },
@@ -536,9 +536,9 @@ describe("DashboardWorkspace", () => {
       (element) => element.getAttribute("data-managed-connector-slug"),
     );
 
-    expect(addMenuSlugs).not.toContain("github");
-    expect(addMenuSlugs).toEqual(["elevenlabs", "notion", "linear", "slack"]);
-    expect(container.textContent).toContain("4 available");
+    expect(addMenuSlugs).toEqual(["elevenlabs", "notion", "linear", "slack", "github"]);
+    expect(container.textContent).toContain("5 available");
+    expect(container.textContent).toContain("1 already connected");
   });
 
   it("opens the setup flow from a marketplace card and auto-selects the managed connector", async () => {

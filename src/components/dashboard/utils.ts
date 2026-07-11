@@ -296,31 +296,49 @@ export const filterIntegrationsForDisplay = ({
 };
 
 export const buildInstalledIntegrationKeys = (integrations: IntegrationSpec[]) =>
+  new Set(integrations.map((integration) => integration.key.trim()).filter(Boolean));
+
+export const buildInstalledManagedConnectorSlugs = (integrations: IntegrationSpec[]) =>
   new Set(
-    integrations.flatMap((integration) => {
-      const managedConnectorSlug =
+    integrations
+      .map((integration) =>
         typeof integration.config.managedConnectorSlug === "string"
           ? integration.config.managedConnectorSlug.trim()
-          : "";
-
-      return [integration.key, managedConnectorSlug].filter(Boolean);
-    }),
+          : "",
+      )
+      .filter(Boolean),
   );
+
+export const buildSuggestedIntegrationKey = (
+  baseKey: string,
+  installedIntegrationKeys: Set<string>,
+) => {
+  const normalizedBaseKey = baseKey.trim() || "integration";
+  if (!installedIntegrationKeys.has(normalizedBaseKey)) {
+    return normalizedBaseKey;
+  }
+
+  for (let suffix = 2; suffix < 1000; suffix += 1) {
+    const candidate = `${normalizedBaseKey}-${suffix}`;
+    if (!installedIntegrationKeys.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  return `${normalizedBaseKey}-${Date.now()}`;
+};
 
 export const buildMarketplaceConnectors = ({
   managedConnectors,
-  installedIntegrationKeys,
   search,
 }: {
   managedConnectors: ManagedConnectorOption[];
-  installedIntegrationKeys: Set<string>;
   search: string;
 }) => {
   const normalizeRank = (connector: ManagedConnectorOption) =>
     POPULARITY_RANK_BY_SLUG.get(connector.slug) ?? DEFAULT_POPULARITY_RANK;
 
   return [...managedConnectors]
-    .filter((connector) => !installedIntegrationKeys.has(connector.slug))
     .sort((left, right) => {
       const rankDelta = normalizeRank(left) - normalizeRank(right);
       return rankDelta !== 0 ? rankDelta : left.name.localeCompare(right.name);

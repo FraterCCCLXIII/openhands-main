@@ -97,16 +97,21 @@ const discoveryResult: DiscoveryResponse = {
 
 const mountedRoots: Array<{ container: HTMLDivElement; root: Root }> = [];
 
-const renderWizardState = async (initialSearch = "") => {
+const renderWizardState = async (
+  initialSearch = "",
+  existingIntegrationKeys = new Set<string>(),
+) => {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
   const onStatus = vi.fn();
   let latestState: ReturnType<typeof useWizardState> | null = null;
   let currentSearch = initialSearch;
+  const stableExistingIntegrationKeys = existingIntegrationKeys;
 
   const Harness = ({ search }: { search: string }) => {
     latestState = useWizardState({
+      existingIntegrationKeys: stableExistingIntegrationKeys,
       managedConnectors: connectors,
       onStatus,
       searchParams: new URLSearchParams(search),
@@ -136,6 +141,73 @@ const renderWizardState = async (initialSearch = "") => {
     },
     rerender: async (search: string) => {
       currentSearch = search;
+      await renderHarness();
+    },
+  };
+};
+
+const renderWizardStateWithMutableKeys = async (
+  initialSearch = "",
+  initialExistingIntegrationKeys = new Set<string>(),
+) => {
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  const onStatus = vi.fn();
+  let latestState: ReturnType<typeof useWizardState> | null = null;
+  let currentSearch = initialSearch;
+  let currentExistingIntegrationKeys = initialExistingIntegrationKeys;
+
+  const Harness = ({
+    existingIntegrationKeys,
+    search,
+  }: {
+    existingIntegrationKeys: Set<string>;
+    search: string;
+  }) => {
+    latestState = useWizardState({
+      existingIntegrationKeys,
+      managedConnectors: connectors,
+      onStatus,
+      searchParams: new URLSearchParams(search),
+    });
+
+    return null;
+  };
+
+  const renderHarness = async () => {
+    await act(async () => {
+      root.render(
+        <Harness
+          existingIntegrationKeys={currentExistingIntegrationKeys}
+          search={currentSearch}
+        />,
+      );
+    });
+  };
+
+  await renderHarness();
+
+  mountedRoots.push({ container, root });
+
+  return {
+    getState: () => {
+      if (!latestState) {
+        throw new Error("Wizard state was not initialized.");
+      }
+
+      return latestState;
+    },
+    rerender: async ({
+      existingIntegrationKeys,
+      search,
+    }: {
+      existingIntegrationKeys?: Set<string>;
+      search?: string;
+    }) => {
+      currentExistingIntegrationKeys =
+        existingIntegrationKeys ?? currentExistingIntegrationKeys;
+      currentSearch = search ?? currentSearch;
       await renderHarness();
     },
   };
@@ -273,6 +345,98 @@ describe("useWizardState", () => {
     expect(onStatus).toHaveBeenLastCalledWith(null);
   });
 
+  it("uses the integrationKey search param for additional OAuth accounts", async () => {
+    const { getState, rerender } = await renderWizardState(
+      "managedConnector=notion&integrationKey=notion-workspace",
+      new Set(["notion"]),
+    );
+
+    expect(getState().draft).toMatchObject({
+      kind: "managed",
+      managedConnectorSlug: "notion",
+      key: "notion-workspace",
+    });
+
+    await rerender("managedConnector=notion&integrationKey=notion-personal");
+
+    expect(getState().draft).toMatchObject({
+      managedConnectorSlug: "notion",
+      key: "notion-personal",
+    });
+  });
+
+  it("suggests the next available key when selecting an already installed connector", async () => {
+    const { getState } = await renderWizardState("", new Set(["notion", "notion-2"]));
+
+    await act(async () => {
+      getState().handleConnectorSelect(notionConnector);
+    });
+
+    expect(getState().draft).toMatchObject({
+      managedConnectorSlug: "notion",
+      key: "notion-3",
+      name: "Notion (notion-3)",
+    });
+  });
+
+  it("updates an auto-suggested key when installed integrations load after the wizard opens", async () => {
+    const { getState, rerender } = await renderWizardStateWithMutableKeys(
+      "managedConnector=notion",
+      new Set(),
+    );
+
+    expect(getState().draft).toMatchObject({
+      managedConnectorSlug: "notion",
+      key: "notion",
+    });
+
+    await rerender({
+      existingIntegrationKeys: new Set(["notion", "notion-2"]),
+    });
+
+    expect(getState().draft).toMatchObject({
+      managedConnectorSlug: "notion",
+      key: "notion-3",
+      name: "Notion (notion-3)",
+    });
+  });
+
+  it("does not replace an explicit or manually edited integration key when installed integrations load", async () => {
+    const explicit = await renderWizardStateWithMutableKeys(
+      "managedConnector=notion&integrationKey=notion-workspace",
+      new Set(),
+    );
+
+    await explicit.rerender({
+      existingIntegrationKeys: new Set(["notion", "notion-workspace"]),
+    });
+
+    expect(explicit.getState().draft).toMatchObject({
+      key: "notion-workspace",
+    });
+
+    const manual = await renderWizardStateWithMutableKeys(
+      "managedConnector=notion",
+      new Set(),
+    );
+
+    await act(async () => {
+      manual.getState().setDraft((current) => ({
+        ...current,
+        key: "custom-notion",
+        name: "Custom Notion",
+      }));
+    });
+
+    await manual.rerender({
+      existingIntegrationKeys: new Set(["notion", "custom-notion"]),
+    });
+
+    expect(manual.getState().draft).toMatchObject({
+      key: "custom-notion",
+      name: "Custom Notion",
+    });
+  });
 
   it("ignores the legacy builtIn search param", async () => {
     const { getState } = await renderWizardState("builtIn=notion");
