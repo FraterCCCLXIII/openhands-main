@@ -2481,8 +2481,13 @@ async def fastapi_handler(request: Request):
     path = request.scope["route"].path
     method = request.method
 
-    if path == "/api/health":
+    if path in {"/api/health", "/api/live"}:
         return {"status": "ok", "backend": "fastapi"}
+
+    if path == "/api/ready":
+        if not repository.database_ready():
+            raise HTTPException(status_code=503, detail="Database is not ready.")
+        return {"status": "ready", "backend": "fastapi"}
 
     if path == "/api/oauth/{provider}/callback":
         provider = params["provider"]
@@ -2911,9 +2916,13 @@ for route_method, route_path in ROUTES:
         name=f"{route_method} {route_path}",
     )
 
-app.add_api_route(
-    "/api/health", fastapi_handler, methods=["GET"], name="GET /api/health"
-)
+for health_path in ["/api/health", "/api/live", "/api/ready"]:
+    app.add_api_route(
+        health_path,
+        fastapi_handler,
+        methods=["GET"],
+        name=f"GET {health_path}",
+    )
 
 for auth_path in ["/api/auth/config", "/api/auth/session"]:
     app.add_api_route(

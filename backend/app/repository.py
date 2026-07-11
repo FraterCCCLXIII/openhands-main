@@ -57,6 +57,15 @@ class Repository:
                 cur.execute(query, params)
             conn.commit()
 
+    def database_ready(self) -> bool:
+        """Return whether the configured Postgres database accepts a query."""
+        if not self.database_url:
+            return False
+        try:
+            return bool(self.db_rows("SELECT 1 AS ready"))
+        except psycopg.Error:
+            return False
+
     @staticmethod
     def iso(value: Any) -> str | None:
         if value is None:
