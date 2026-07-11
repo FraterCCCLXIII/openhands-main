@@ -114,12 +114,16 @@ def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
             status_code=502,
             detail="OAuth metadata is missing authorization_endpoint or token_endpoint.",
         )
+    code_challenge_methods = payload.get("code_challenge_methods_supported")
     return {
         "authorizationUrl": str(authorization_url),
         "tokenUrl": str(token_url),
         "registrationUrl": str(payload["registration_endpoint"])
         if payload.get("registration_endpoint")
         else None,
+        "code_challenge_methods_supported": (
+            code_challenge_methods if isinstance(code_challenge_methods, list) else []
+        ),
     }
 
 
@@ -132,6 +136,9 @@ def enrich_dynamic_oauth_config(
     oauth_config["tokenUrl"] = metadata["tokenUrl"]
     if metadata.get("registrationUrl") and not oauth_config.get("registrationUrl"):
         oauth_config["registrationUrl"] = metadata["registrationUrl"]
+    code_challenge_methods = metadata.get("code_challenge_methods_supported")
+    if isinstance(code_challenge_methods, list) and "S256" in code_challenge_methods:
+        oauth_config["pkce"] = True
     # Mark the connector as dynamic OAuth so downstream code (e.g.
     # save_managed_connector) knows not to require a client_id.
     oauth_config["dynamicOAuth"] = True

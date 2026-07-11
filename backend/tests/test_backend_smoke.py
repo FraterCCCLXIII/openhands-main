@@ -1231,6 +1231,7 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         "authorization_endpoint": "https://mcp.dynamic.example/oauth/authorize",
         "token_endpoint": None,  # set per-test below
         "registration_endpoint": None,  # set per-test below
+        "code_challenge_methods_supported": ["S256"],
     }
     registrations: list[dict[str, object]] = []
     token_exchanges: list[dict[str, object]] = []
@@ -1322,7 +1323,6 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
                 "oauthConfig": {
                     "scopes": [],
                     "clientAuthentication": "none",
-                    "pkce": True,
                 },
             },
         )
@@ -1367,6 +1367,7 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         assert len(token_exchanges) == 1
         assert token_exchanges[0]["grant_type"] == "authorization_code"
         assert token_exchanges[0]["code"] == "test-code"
+        assert token_exchanges[0]["code_verifier"]
 
         # Connection is saved.
         connections = client.get("/api/oauth/connections").json()
