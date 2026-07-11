@@ -144,6 +144,39 @@ class CapturingOpWithBind(CapturingOp):
         return self.bind
 
 
+class CapturingCredentialBind(CapturingBind):
+    def __init__(
+        self,
+        rows: list[dict[str, object]],
+        encrypted_rows: list[dict[str, object]] | None = None,
+        verifier_rows: list[dict[str, object]] | None = None,
+        encrypted_verifier_rows: list[dict[str, object]] | None = None,
+    ) -> None:
+        super().__init__(rows)
+        self.encrypted_rows = encrypted_rows or []
+        self.verifier_rows = verifier_rows or []
+        self.encrypted_verifier_rows = encrypted_verifier_rows or []
+
+    def execute(
+        self, statement: object, params: dict[str, object] | None = None
+    ) -> CapturingResult:
+        normalized = " ".join(str(statement).split())
+        self.statements.append(normalized)
+        self.params.append(params)
+        if "SELECT owner_id, key, credentials FROM owner_integrations" in normalized:
+            return CapturingResult(self.rows)
+        if (
+            "SELECT owner_id, key, encrypted_credentials FROM owner_integrations"
+            in normalized
+        ):
+            return CapturingResult(self.encrypted_rows)
+        if "SELECT state, code_verifier FROM oauth_states" in normalized:
+            return CapturingResult(self.verifier_rows)
+        if "SELECT state, encrypted_code_verifier FROM oauth_states" in normalized:
+            return CapturingResult(self.encrypted_verifier_rows)
+        return CapturingResult([])
+
+
 def test_0007_overwrites_existing_agent_keys(monkeypatch) -> None:
     migration = importlib.import_module(
         "backend.alembic.versions.20260628_0007_agent_api_key_hashes"
@@ -210,3 +243,141 @@ def test_0007_overwrites_existing_agent_keys(monkeypatch) -> None:
     assert "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS key_suffix" in joined
     assert "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS key_prefix" in joined
     assert "ALTER TABLE agent_api_keys DROP COLUMN IF EXISTS api_key_hash" in joined
+
+
+def test_0008_encrypts_legacy_static_integration_credentials(monkeypatch) -> None:
+    migration = importlib.import_module(
+        "backend.alembic.versions.20260710_0008_encrypt_static_integration_credentials"
+    )
+    bind = CapturingCredentialBind(
+        [
+            {
+                "owner_id": "owner@example.com",
+                "key": "private-api",
+                "credentials": {"secret": "legacy-secret"},
+            }
+        ],
+        encrypted_rows=[
+            {
+                "owner_id": "owner@example.com",
+                "key": "private-api",
+                "encrypted_credentials": "encrypted:legacy-secret",
+            }
+        ],
+    )
+    capture = CapturingOpWithBind(bind)
+    monkeypatch.setattr(migration, "op", capture)
+    monkeypatch.setattr(
+        migration,
+        "_encrypt_credentials",
+        lambda value: f"encrypted:{value['secret']}",
+    )
+    monkeypatch.setattr(
+        migration,
+        "_decrypt_credentials",
+        lambda value: {"secret": value.removeprefix("encrypted:")},
+    )
+
+    migration.upgrade()
+
+    joined = "\n".join(capture.statements + bind.statements)
+    assert migration.revision == "0008"
+    assert migration.down_revision == "0007"
+    assert (
+        "ALTER TABLE owner_integrations ADD COLUMN IF NOT EXISTS encrypted_credentials TEXT"
+        in joined
+    )
+    assert "SELECT owner_id, key, credentials FROM owner_integrations" in joined
+    assert "SET credentials = '{}'::jsonb" in joined
+    credential_params = [params for params in bind.params if params is not None]
+    assert credential_params[-1] == {
+        "owner_id": "owner@example.com",
+        "key": "private-api",
+        "encrypted_credentials": "encrypted:legacy-secret",
+    }
+
+    capture.statements.clear()
+    bind.statements.clear()
+    bind.params.clear()
+    migration.downgrade()
+
+    joined = "\n".join(capture.statements + bind.statements)
+    assert (
+        "SELECT owner_id, key, encrypted_credentials FROM owner_integrations" in joined
+    )
+    assert "SET credentials = CAST(:credentials AS jsonb)" in joined
+    credential_params = [params for params in bind.params if params is not None]
+    assert credential_params[-1] == {
+        "owner_id": "owner@example.com",
+        "key": "private-api",
+        "credentials": '{"secret":"legacy-secret"}',
+    }
+    assert (
+        "ALTER TABLE owner_integrations DROP COLUMN IF EXISTS encrypted_credentials"
+        in joined
+    )
+
+
+def test_0008_encrypts_legacy_oauth_pkce_verifiers(monkeypatch) -> None:
+    migration = importlib.import_module(
+        "backend.alembic.versions.20260710_0008_encrypt_static_integration_credentials"
+    )
+    bind = CapturingCredentialBind(
+        [],
+        encrypted_rows=[],
+        verifier_rows=[
+            {"state": "state-abc", "code_verifier": "plaintext-verifier"},
+        ],
+        encrypted_verifier_rows=[
+            {"state": "state-abc", "encrypted_code_verifier": "encrypted-verifier"},
+        ],
+    )
+    capture = CapturingOpWithBind(bind)
+    monkeypatch.setattr(migration, "op", capture)
+    monkeypatch.setattr(
+        migration,
+        "_encrypt_verifier",
+        lambda value: f"encrypted:{value}",
+    )
+    monkeypatch.setattr(
+        migration,
+        "_decrypt_verifier",
+        lambda value: value.removeprefix("encrypted:"),
+    )
+
+    migration.upgrade()
+
+    joined = "\n".join(capture.statements + bind.statements)
+    assert (
+        "ALTER TABLE oauth_states ADD COLUMN IF NOT EXISTS encrypted_code_verifier TEXT"
+        in joined
+    )
+    assert "SELECT state, code_verifier FROM oauth_states" in joined
+    assert "SET code_verifier = NULL" in joined
+    verifier_params = [params for params in bind.params if params is not None]
+    assert verifier_params[-1] == {
+        "state": "state-abc",
+        "encrypted_code_verifier": "encrypted:plaintext-verifier",
+    }
+
+    capture.statements.clear()
+    bind.statements.clear()
+    bind.params.clear()
+    migration.downgrade()
+
+    joined = "\n".join(capture.statements + bind.statements)
+    assert "SELECT state, encrypted_code_verifier FROM oauth_states" in joined
+    assert "SET code_verifier = :code_verifier" in joined
+    verifier_params = [params for params in bind.params if params is not None]
+    assert verifier_params[-1] == {
+        "state": "state-abc",
+        "code_verifier": "encrypted-verifier",
+    }
+    assert (
+        "ALTER TABLE oauth_states DROP COLUMN IF EXISTS encrypted_code_verifier"
+        in joined
+    )
+    assert (
+        "ALTER TABLE owner_integrations DROP COLUMN IF EXISTS encrypted_credentials"
+        in joined
+    )

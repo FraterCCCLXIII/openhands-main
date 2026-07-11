@@ -174,7 +174,21 @@ class Repository:
     )
     profile_agent_keys: dict[str, str] = field(default_factory=dict)
 
-    def row_to_integration(self, row: dict[str, Any]) -> IntegrationSpec:
+    @staticmethod
+    def legacy_credentials(row: dict[str, Any]) -> dict[str, Any]:
+        credentials = row.get("credentials")
+        return credentials if isinstance(credentials, dict) else {}
+
+    @classmethod
+    def integration_credentials(cls, row: dict[str, Any]) -> dict[str, Any]:
+        encrypted = row.get("encrypted_credentials")
+        if encrypted:
+            return decrypt_credentials(str(encrypted))
+        return cls.legacy_credentials(row)
+
+    def row_to_integration(
+        self, row: dict[str, Any], *, include_credentials: bool = True
+    ) -> IntegrationSpec:
         return IntegrationSpec(
             key=str(row["key"]),
             name=str(row["name"]),
@@ -184,7 +198,9 @@ class Repository:
             enabled=bool(row["enabled"]),
             fineGrainedPermissions=bool(row["fine_grained_permissions"]),
             config=row.get("config") or {},
-            credentials=row.get("credentials") or {},
+            credentials=self.integration_credentials(row)
+            if include_credentials
+            else {},
             tools=row.get("functions") or {},
         )
 
@@ -198,7 +214,10 @@ class Repository:
                 """,
                 (owner_id,),
             )
-            return [self.row_to_integration(row).redacted() for row in rows]
+            return [
+                self.row_to_integration(row, include_credentials=False).redacted()
+                for row in rows
+            ]
         return [
             integration.redacted()
             for integration in self.integrations.get(owner_id, {}).values()
@@ -208,12 +227,18 @@ class Repository:
         self, owner_id: str, integration: IntegrationSpec
     ) -> IntegrationSpec:
         if self.database_url:
+            encrypted_credentials = (
+                encrypt_credentials(integration.credentials)
+                if integration.credentials
+                else None
+            )
             self.execute_db(
                 """
                 INSERT INTO owner_integrations (
                     owner_id, key, name, kind, provider, auth_strategy, enabled,
-                    fine_grained_permissions, config, credentials, functions, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                    fine_grained_permissions, config, credentials, encrypted_credentials,
+                    functions, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (owner_id, key) DO UPDATE SET
                     name = EXCLUDED.name,
                     kind = EXCLUDED.kind,
@@ -223,6 +248,7 @@ class Repository:
                     fine_grained_permissions = EXCLUDED.fine_grained_permissions,
                     config = EXCLUDED.config,
                     credentials = EXCLUDED.credentials,
+                    encrypted_credentials = EXCLUDED.encrypted_credentials,
                     functions = EXCLUDED.functions,
                     updated_at = NOW()
                 """,
@@ -236,7 +262,8 @@ class Repository:
                     integration.enabled,
                     integration.fineGrainedPermissions,
                     Jsonb(integration.config),
-                    Jsonb(integration.credentials),
+                    Jsonb({}),
+                    encrypted_credentials,
                     Jsonb(
                         {
                             name: tool.model_dump()
@@ -260,8 +287,28 @@ class Repository:
                 """,
                 (owner_id, integration_key),
             )
-            return self.row_to_integration(rows[0]) if rows else None
+            if not rows:
+                return None
+            row = rows[0]
+            integration = self.row_to_integration(row)
+            if not row.get("encrypted_credentials") and integration.credentials:
+                self.backfill_legacy_integration_credentials(
+                    owner_id, integration_key, integration.credentials
+                )
+            return integration
         return self.integrations.get(owner_id, {}).get(integration_key)
+
+    def backfill_legacy_integration_credentials(
+        self, owner_id: str, integration_key: str, credentials: dict[str, Any]
+    ) -> None:
+        self.execute_db(
+            """
+            UPDATE owner_integrations
+            SET credentials = %s, encrypted_credentials = %s, updated_at = NOW()
+            WHERE LOWER(owner_id) = LOWER(%s) AND key = %s
+            """,
+            (Jsonb({}), encrypt_credentials(credentials), owner_id, integration_key),
+        )
 
     def delete_integration(self, owner_id: str, integration_key: str) -> bool:
         if self.database_url:
@@ -886,7 +933,8 @@ class Repository:
             )
             return bool(rows)
         return any(
-            key == integration_key and self.connections.pop((owner, key), None) is not None
+            key == integration_key
+            and self.connections.pop((owner, key), None) is not None
             for (owner, key) in list(self.connections)
         )
 
@@ -1054,17 +1102,22 @@ class Repository:
         callback_url: str | None,
         expires_at: str,
     ) -> None:
+        encrypted_verifier = (
+            encrypt_credentials({"code_verifier": code_verifier})
+            if code_verifier
+            else None
+        )
         if self.database_url:
             self.execute_db(
-                """INSERT INTO oauth_states (state, owner_id, integration_key, provider, code_verifier, redirect_to, redirect_uri, callback_url, created_at, expires_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
-                ON CONFLICT (state) DO UPDATE SET owner_id = EXCLUDED.owner_id, integration_key = EXCLUDED.integration_key, provider = EXCLUDED.provider, code_verifier = EXCLUDED.code_verifier, redirect_to = EXCLUDED.redirect_to, redirect_uri = EXCLUDED.redirect_uri, callback_url = EXCLUDED.callback_url, expires_at = EXCLUDED.expires_at""",
+                """INSERT INTO oauth_states (state, owner_id, integration_key, provider, code_verifier, encrypted_code_verifier, redirect_to, redirect_uri, callback_url, created_at, expires_at)
+                VALUES (%s, %s, %s, %s, NULL, %s, %s, %s, %s, NOW(), %s)
+                ON CONFLICT (state) DO UPDATE SET owner_id = EXCLUDED.owner_id, integration_key = EXCLUDED.integration_key, provider = EXCLUDED.provider, code_verifier = NULL, encrypted_code_verifier = EXCLUDED.encrypted_code_verifier, redirect_to = EXCLUDED.redirect_to, redirect_uri = EXCLUDED.redirect_uri, callback_url = EXCLUDED.callback_url, expires_at = EXCLUDED.expires_at""",
                 (
                     state,
                     owner_id,
                     integration_key,
                     provider,
-                    code_verifier,
+                    encrypted_verifier,
                     redirect_to,
                     redirect_uri,
                     callback_url,
@@ -1090,7 +1143,15 @@ class Repository:
                 "DELETE FROM oauth_states WHERE state = %s AND provider = %s AND expires_at > NOW() RETURNING *",
                 (state, provider),
             )
-            return rows[0] if rows else None
+            if not rows:
+                return None
+            row = rows[0]
+            encrypted_verifier = row.get("encrypted_code_verifier")
+            if encrypted_verifier:
+                row["code_verifier"] = decrypt_credentials(str(encrypted_verifier)).get(
+                    "code_verifier"
+                )
+            return row
         row = self.oauth_states.pop(state, None)
         return row if row and row.get("provider") == provider else None
 
