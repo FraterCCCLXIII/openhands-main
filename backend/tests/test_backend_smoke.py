@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastapi.testclient import TestClient
+from starlette.requests import Request
 
 from backend.app import auth as backend_auth, main as backend_main, oauth_flow
 from backend.app.config import reset_config
@@ -870,6 +871,84 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(
         "https://stable.example.dev/api/oauth/oauth-params/callback"
     ]
     assert json_query["scope"] == ["read,write"]
+
+
+def test_stable_oauth_proxy_forwards_callbacks_to_the_originating_preview(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
+    config_env("AUTH_URL", "https://integrations-pr-215.example.dev")
+    config_env(
+        "INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX",
+        r"integrations-pr-[0-9]+\.example\.dev",
+    )
+    state = oauth_flow.oauth_state_with_preview_target()
+    assert state.startswith("oh_preview_v1.")
+    stable_request = Request(
+        {
+            "type": "http",
+            "scheme": "https",
+            "server": ("stable.example.dev", 443),
+            "headers": [(b"host", b"stable.example.dev")],
+            "method": "GET",
+            "path": "/api/oauth/preview-oauth/callback",
+            "raw_path": b"/api/oauth/preview-oauth/callback",
+            "query_string": b"",
+        }
+    )
+    assert oauth_flow.oauth_proxy_callback_target(stable_request, state) == (
+        "https://integrations-pr-215.example.dev"
+    )
+
+
+def test_stable_oauth_proxy_rejects_untrusted_preview_target(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
+    config_env(
+        "INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX",
+        r"integrations-pr-[0-9]+\.example\.dev",
+    )
+    target = oauth_flow.b64url(b"https://attacker.example")
+    state = f"oh_preview_v1.{target}.opaque-state"
+    stable_request = Request(
+        {
+            "type": "http",
+            "scheme": "https",
+            "server": ("stable.example.dev", 443),
+            "headers": [(b"host", b"stable.example.dev")],
+            "method": "GET",
+            "path": "/api/oauth/preview-oauth/callback",
+            "raw_path": b"/api/oauth/preview-oauth/callback",
+            "query_string": b"",
+        }
+    )
+    assert oauth_flow.oauth_proxy_callback_target(stable_request, state) is None
+
+
+def test_stable_oauth_proxy_rejects_preview_targets_on_nondefault_ports(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
+    config_env(
+        "INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX",
+        r"integrations-pr-[0-9]+\.example\.dev",
+    )
+    target = oauth_flow.b64url(b"https://integrations-pr-215.example.dev:444")
+    state = f"oh_preview_v1.{target}.opaque-state"
+    stable_request = Request(
+        {
+            "type": "http",
+            "scheme": "https",
+            "server": ("stable.example.dev", 443),
+            "headers": [(b"host", b"stable.example.dev")],
+            "method": "GET",
+            "path": "/api/oauth/preview-oauth/callback",
+            "raw_path": b"/api/oauth/preview-oauth/callback",
+            "query_string": b"",
+        }
+    )
+    assert oauth_flow.oauth_proxy_callback_target(stable_request, state) is None
 
 
 def test_dynamic_oauth_client_registration_for_public_clients(

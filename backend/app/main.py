@@ -58,6 +58,7 @@ from .oauth_flow import (
     credentials_for,
     ensure_managed_oauth_client,
     exchange_oauth_code,
+    oauth_proxy_callback_target,
     start_oauth_redirect,
 )
 from .openapi_tools import generate_openapi_tools
@@ -2492,6 +2493,14 @@ async def fastapi_handler(request: Request):
     if path == "/api/oauth/{provider}/callback":
         provider = params["provider"]
         state = request.query_params.get("state", "")
+        preview_target = oauth_proxy_callback_target(request, state)
+        if preview_target:
+            callback_query = urllib.parse.urlencode(
+                list(request.query_params.multi_items())
+            )
+            return RedirectResponse(
+                f"{preview_target}/api/oauth/{provider}/callback?{callback_query}"
+            )
         code = request.query_params.get("code", "")
         error = request.query_params.get("error")
         if error:

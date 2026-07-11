@@ -180,6 +180,7 @@ Optional integration/provider variables:
 Optional deployment variables:
 
 - `INTHUB_OAUTH_REDIRECT_PROXY_URL=https://<stable-host>` for preview-deployment provider OAuth callbacks
+- `INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX=<regex>` on the stable deployment to allow callbacks only to trusted preview-host names
 - `INTHUB_APP_ADMIN_EMAILS` to allowlist admin-integrations, admin automation features, and FastAPI admin routes. The dashboard infers admin status from the backend `/api/context/me` response, not from a client-side env var.
 
 Optional notification variables:

@@ -171,6 +171,90 @@ def oauth_callback_base_url(request: Request) -> str:
     return f"{request.url.scheme}://{request.url.netloc}/api/oauth"
 
 
+_PREVIEW_PROXY_STATE_PREFIX = "oh_preview_v1"
+
+
+def _https_origin(value: str) -> str | None:
+    """Return a normalized HTTPS origin, rejecting non-origin URLs."""
+    parsed = urllib.parse.urlparse(value.strip())
+    try:
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.username
+        or parsed.password
+        or port not in (None, 443)
+        or parsed.path not in ("", "/")
+        or parsed.params
+        or parsed.query
+        or parsed.fragment
+    ):
+        return None
+    return f"https://{parsed.hostname}"
+
+
+def oauth_state_with_preview_target() -> str:
+    """Create OAuth state, carrying the safe return origin for a stable proxy.
+
+    Preview deployments must register a stable OAuth callback URL, but their
+    state records live in preview-local databases.  When both proxy and target
+    URLs are configured, embed the configured preview origin in the otherwise
+    opaque state so the stable callback can route the provider response back to
+    the preview that created it.  The stable deployment validates the target
+    against its explicit hostname allowlist before redirecting.
+    """
+    state = secrets.token_urlsafe(24)
+    proxy = _https_origin(os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "")
+    target = _https_origin(os.getenv("AUTH_URL") or "")
+    if not proxy or not target or proxy == target:
+        return state
+    return f"{_PREVIEW_PROXY_STATE_PREFIX}.{b64url(target.encode())}.{state}"
+
+
+def oauth_proxy_callback_target(request: Request, state: str) -> str | None:
+    """Return the validated preview origin for a stable OAuth callback.
+
+    A state is routed only when the request reached the configured stable
+    proxy origin and the encoded target hostname fully matches
+    ``INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX``.  A malformed or
+    untrusted state deliberately falls through to normal callback handling,
+    where it cannot consume a preview's OAuth state.
+    """
+    proxy = _https_origin(os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "")
+    pattern = (
+        os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX") or ""
+    ).strip()
+    if not proxy or not pattern:
+        return None
+    request_origin = _https_origin(str(request.base_url))
+    if request_origin != proxy:
+        return None
+
+    prefix, separator, remainder = state.partition(".")
+    if prefix != _PREVIEW_PROXY_STATE_PREFIX or not separator:
+        return None
+    encoded_target, separator, _opaque_state = remainder.partition(".")
+    if not encoded_target or not separator:
+        return None
+    try:
+        padded_target = encoded_target + "=" * (-len(encoded_target) % 4)
+        target_value = base64.urlsafe_b64decode(padded_target).decode("utf-8")
+    except (UnicodeDecodeError, ValueError):
+        return None
+    target = _https_origin(target_value)
+    if not target:
+        return None
+    target_host = urllib.parse.urlparse(target).hostname
+    try:
+        allowed = bool(target_host and re.fullmatch(pattern, target_host))
+    except re.error:
+        return None
+    return target if allowed else None
+
+
 def requested_oauth_scopes(oauth_config: dict[str, Any]) -> list[str]:
     scopes = split_oauth_scopes(oauth_config.get("scopes") or [])
     optional = split_oauth_scopes(oauth_config.get("optionalScopes") or [])
@@ -442,7 +526,7 @@ def start_oauth_redirect(
                 status_code=500,
                 detail=f"{connector.name} is missing stored OAuth client credentials.",
             )
-    state = secrets.token_urlsafe(24)
+    state = oauth_state_with_preview_target()
     verifier = secrets.token_urlsafe(48) if connector.oauthConfig.get("pkce") else None
     raw_redirect_to = (
         request.query_params.get("redirectTo")
