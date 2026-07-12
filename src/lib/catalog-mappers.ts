@@ -54,6 +54,7 @@ export const catalogOptionToConnectorOption = (
       cd?.credentialPlaceholder ?? entry.credentialPlaceholder ?? `Connect ${entry.name}`,
     credentialHelp: cd?.credentialHelp ?? entry.credentialHelp ?? `OAuth connection for ${entry.name}.`,
     apiKeyHeaderName: cd?.apiKeyHeaderName ?? entry.apiKeyHeaderName,
+    connectionModel: cd?.connectionModel,
   };
 };
 

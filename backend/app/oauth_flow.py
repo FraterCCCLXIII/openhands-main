@@ -17,13 +17,13 @@ from pydantic import ValidationError
 
 from .managed_connectors import get_managed_connector
 from .models import (
+    ConnectionResourceInput,
     IntegrationSpec,
     ManagedConnector,
     OAuthAuthorizationServerMetadata,
     OAuthConfig,
     OAuthConnection,
     OAuthConnectionMetadata,
-    OAuthCredentials,
     OAuthProtectedResourceMetadata,
     OAuthTokenResponse,
 )
@@ -353,31 +353,185 @@ def fetch_oauth_token(
         ) from exc
 
 
+def value_at_path(payload: Any, path: Any) -> Any:
+    if not isinstance(path, str) or not path:
+        return None
+    value = payload
+    for part in path.split("."):
+        if not isinstance(value, dict):
+            return None
+        value = value.get(part)
+    return value
+
+
+def optional_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    rendered = str(value).strip()
+    return rendered or None
+
+
+def access_token_claims(access_token: Any) -> dict[str, Any]:
+    if not isinstance(access_token, str):
+        return {}
+    parts = access_token.split(".")
+    if len(parts) != 3:
+        return {}
+    try:
+        padded = parts[1] + "=" * (-len(parts[1]) % 4)
+        value = json.loads(base64.urlsafe_b64decode(padded).decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def fetch_oauth_identity(endpoint: str, access_token: str) -> Any:
+    url = validate_external_url(endpoint, purpose="OAuth identity endpoint")
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {access_token}",
+        },
+    )
+    try:
+        with urlopen_no_redirect(request, timeout=10) as response:
+            return json.loads(response.read().decode() or "{}")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="OAuth identity lookup failed.",
+        ) from exc
+
+
+def oauth_identity_payload(
+    connector: ManagedConnector, payload: OAuthTokenResponse
+) -> dict[str, Any]:
+    model = connector.connectionModel
+    mapping = model.identityMapping if model else None
+    if not mapping:
+        return {}
+    source = mapping.source
+    if source == "oauth_token_response":
+        return payload.model_dump(exclude_none=True)
+    if source == "access_token_claims":
+        return access_token_claims(payload.access_token)
+    if source == "identity_api" and mapping.endpoint:
+        result = fetch_oauth_identity(mapping.endpoint, payload.access_token)
+        return result if isinstance(result, dict) else {}
+    return {}
+
+
 def oauth_metadata(
     connector: ManagedConnector,
     payload: OAuthTokenResponse,
-    existing: dict[str, Any] | None = None,
+    existing: OAuthConnection | None = None,
 ) -> OAuthConnectionMetadata:
+    existing_values = existing.model_dump(exclude_none=True) if existing else {}
     expires_at = None
     if isinstance(payload.expires_in, int):
         expires_at = oauth_expiry(payload.expires_in)
     scopes = (
         split_oauth_scopes(payload.scope)
-        or split_oauth_scopes((existing or {}).get("scopes"))
+        or split_oauth_scopes(existing_values.get("scopes"))
         or requested_oauth_scopes(connector.oauthConfig or OAuthConfig())
     )
-    metadata = dict((existing or {}).get("metadata") or {})
+    metadata = dict(existing_values.get("metadata") or {})
+    model = connector.connectionModel
+    mapping = model.identityMapping if model else None
+    identity = oauth_identity_payload(connector, payload)
+    external_account_id = optional_string(
+        value_at_path(identity, mapping.externalPrincipalIdPath) if mapping else None
+    )
+    external_tenant_id = optional_string(
+        value_at_path(identity, mapping.externalTenantIdPath) if mapping else None
+    )
+    external_resource_id = optional_string(
+        value_at_path(identity, mapping.externalResourceIdPath) if mapping else None
+    )
+    resource_name = optional_string(
+        value_at_path(identity, mapping.resourceNamePath) if mapping else None
+    )
+    resource_url = optional_string(
+        value_at_path(identity, mapping.resourceUrlPath) if mapping else None
+    )
+    for key, value in {
+        "externalTenantId": external_tenant_id,
+        "externalResourceId": external_resource_id,
+        "resourceType": model.resourceType if model else None,
+        "resourceName": resource_name,
+        "resourceUrl": resource_url,
+        "principalType": model.principalType if model else None,
+        "credentialScope": model.credentialScope if model else None,
+    }.items():
+        if value is not None:
+            metadata[key] = value
     return OAuthConnectionMetadata(
-        tokenType=payload.token_type or (existing or {}).get("tokenType"),
+        tokenType=payload.token_type or existing_values.get("tokenType"),
         scopes=scopes,
         expiresAt=expires_at,
-        externalAccountId=payload.externalAccountId
-        or (existing or {}).get("externalAccountId"),
-        externalWorkspaceId=payload.externalWorkspaceId
-        or (existing or {}).get("externalWorkspaceId"),
-        displayName=payload.displayName or (existing or {}).get("displayName"),
+        externalAccountId=external_account_id
+        or payload.externalAccountId
+        or existing_values.get("externalAccountId"),
+        externalWorkspaceId=external_resource_id
+        or payload.externalWorkspaceId
+        or existing_values.get("externalWorkspaceId"),
+        displayName=resource_name
+        or payload.displayName
+        or existing_values.get("displayName"),
         metadata=metadata,
     )
+
+
+def oauth_connection_resources(
+    connector: ManagedConnector,
+    payload: OAuthTokenResponse,
+    connection_metadata: OAuthConnectionMetadata,
+) -> list[ConnectionResourceInput]:
+    model = connector.connectionModel
+    resource_type = model.resourceType if model else "resource"
+    discovery = model.resourceDiscovery if model else None
+    if discovery:
+        discovered = fetch_oauth_identity(discovery.endpoint, payload.access_token)
+        items = value_at_path(discovered, discovery.itemsPath)
+        if not discovery.itemsPath:
+            items = discovered
+        if not isinstance(items, list):
+            raise HTTPException(
+                status_code=502,
+                detail="OAuth resource discovery returned an invalid resource list.",
+            )
+        return [
+            ConnectionResourceInput(
+                resourceType=resource_type,
+                externalResourceId=str(resource_id),
+                displayName=optional_string(
+                    value_at_path(item, discovery.resourceNamePath)
+                ),
+                externalUrl=optional_string(
+                    value_at_path(item, discovery.resourceUrlPath)
+                ),
+            )
+            for item in items
+            if isinstance(item, dict)
+            and (resource_id := value_at_path(item, discovery.externalResourceIdPath))
+            is not None
+        ]
+    metadata = connection_metadata.metadata
+    external_resource_id = (
+        metadata.get("externalResourceId") or connection_metadata.externalWorkspaceId
+    )
+    if not external_resource_id:
+        return []
+    return [
+        ConnectionResourceInput(
+            resourceType=resource_type,
+            externalResourceId=str(external_resource_id),
+            displayName=optional_string(metadata.get("resourceName"))
+            or connection_metadata.displayName,
+            externalUrl=optional_string(metadata.get("resourceUrl")),
+        )
+    ]
 
 
 def is_expired(expires_at: str | None) -> bool:
@@ -657,6 +811,8 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
             status_code=502,
             detail="OAuth token exchange did not return an access token.",
         )
+    connection_metadata = oauth_metadata(connector, payload)
+    resources = oauth_connection_resources(connector, payload, connection_metadata)
     connection = repository.save_connection(
         record.ownerId,
         record.integrationKey,
@@ -668,7 +824,8 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
                 {"refreshToken": payload.refresh_token} if payload.refresh_token else {}
             ),
         },
-        oauth_metadata(connector, payload).model_dump(),
+        connection_metadata,
+        resources,
     ) | {
         "ownerId": record.ownerId,
     }
@@ -776,8 +933,9 @@ def refresh_oauth_connection(
             status_code=502,
             detail="OAuth token refresh did not return an access token.",
         )
-    refreshed_metadata = oauth_metadata(connector, payload, record.model_dump())
-    repository.save_connection(
+    connection_metadata = oauth_metadata(connector, payload, record)
+    resources = oauth_connection_resources(connector, payload, connection_metadata)
+    saved = repository.save_connection(
         record.ownerId,
         record.integrationKey,
         record.provider,
@@ -786,24 +944,30 @@ def refresh_oauth_connection(
             "accessToken": access_token,
             "refreshToken": payload.refresh_token or refresh_token,
         },
-        refreshed_metadata.model_dump(),
+        connection_metadata,
+        resources,
     )
-    return OAuthConnection(
-        ownerId=record.ownerId,
-        integrationKey=record.integrationKey,
-        provider=record.provider,
-        credentials=OAuthCredentials(
-            accessToken=access_token,
-            refreshToken=payload.refresh_token or refresh_token,
-        ),
-        **refreshed_metadata.model_dump(),
+    return OAuthConnection.model_validate(
+        {
+            "ownerId": record.ownerId,
+            "credentials": {
+                "accessToken": access_token,
+                "refreshToken": payload.refresh_token or refresh_token,
+            },
+            **saved,
+        }
     )
 
 
 def credentials_for(owner: str, integration: IntegrationSpec) -> dict[str, Any]:
     """Return provider credentials, refreshing expired OAuth tokens as a side effect."""
     if integration.authStrategy == "oauth2":
-        stored_record = repository.get_connection(owner, integration.key)
+        configured_connection_id = integration.config.get("connectionId")
+        stored_record = (
+            repository.get_connection_by_id(owner, str(configured_connection_id))
+            if configured_connection_id
+            else repository.get_connection(owner, integration.key)
+        )
         if not stored_record:
             raise HTTPException(
                 status_code=403,

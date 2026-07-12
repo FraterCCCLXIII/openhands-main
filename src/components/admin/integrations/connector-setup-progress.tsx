@@ -116,6 +116,7 @@ export const buildConfigPayload = (connector: ManagedConnectorDefinition, form: 
     additionalAuthorizationParams: connector.oauthConfig?.additionalAuthorizationParams,
     additionalTokenParams: connector.oauthConfig?.additionalTokenParams,
   } : undefined,
+  connectionModel: connector.connectionModel,
   oauthClientId: form.oauthClientId.trim(),
   oauthClientSecret: form.oauthClientSecret.trim(),
   tools: connector.tools,

@@ -330,15 +330,21 @@ export const buildSuggestedIntegrationKey = (
 
 export const buildMarketplaceConnectors = ({
   managedConnectors,
+  installedIntegrationKeys,
   search,
 }: {
   managedConnectors: ManagedConnectorOption[];
+  installedIntegrationKeys: Set<string>;
   search: string;
 }) => {
   const normalizeRank = (connector: ManagedConnectorOption) =>
     POPULARITY_RANK_BY_SLUG.get(connector.slug) ?? DEFAULT_POPULARITY_RANK;
 
   return [...managedConnectors]
+    .map((connector) => ({
+      ...connector,
+      hasInstalledConnection: installedIntegrationKeys.has(connector.slug),
+    }))
     .sort((left, right) => {
       const rankDelta = normalizeRank(left) - normalizeRank(right);
       return rankDelta !== 0 ? rankDelta : left.name.localeCompare(right.name);

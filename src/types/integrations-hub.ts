@@ -1,3 +1,17 @@
+import type {
+  IntegrationConnectionModel,
+  IntegrationIdentityMapping,
+  IntegrationIdentitySource,
+  IntegrationResourceDiscovery,
+} from "@openhands/extensions/integrations";
+
+export type {
+  IntegrationConnectionModel,
+  IntegrationIdentityMapping,
+  IntegrationIdentitySource,
+  IntegrationResourceDiscovery,
+};
+
 export type IntegrationKind = "api" | "mcp";
 
 export type IntegrationProvider = "mcp" | "mock" | "http";
@@ -101,6 +115,8 @@ export interface ManagedConnectorOption {
   credentialPlaceholder: string;
   credentialHelp: string;
   apiKeyHeaderName?: string;
+  connectionModel?: IntegrationConnectionModel;
+  hasInstalledConnection?: boolean;
 }
 
 
@@ -123,6 +139,7 @@ export interface IntegrationConnectionDefaults {
   serverUrl?: string;
   openApiUrl?: string;
   oauthConfig?: GenericOAuthConfig;
+  connectionModel?: IntegrationConnectionModel;
   /** True when the backend considers this connector ready (e.g. dynamic OAuth
    * connectors that discover their own endpoints at runtime). */
   oauthConfigured?: boolean;
@@ -197,6 +214,7 @@ export interface ManagedConnectorDefinition {
   serverUrl?: string;
   openApiUrl?: string;
   oauthConfig?: GenericOAuthConfig;
+  connectionModel?: IntegrationConnectionModel;
   tools: ManagedConnectorToolDefinition[];
   enabled: boolean;
   createdAt: string;
@@ -255,6 +273,7 @@ export interface AdminApiKeyStatus {
 }
 
 export interface IntegrationConnectionStatus {
+  connectionId?: string;
   integrationKey: string;
   provider: string;
   authStrategy: AuthStrategy;
@@ -263,13 +282,28 @@ export interface IntegrationConnectionStatus {
   expiresAt?: string;
   externalAccountId?: string;
   externalWorkspaceId?: string;
+  externalTenantId?: string;
   displayName?: string;
+  resources?: IntegrationConnectionResource[];
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IntegrationConnectionResource {
+  id: string;
+  connectionId: string;
+  resourceType: string;
+  externalResourceId: string;
+  displayName?: string;
+  externalUrl?: string;
   metadata: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface AdminIntegrationConnectionSummary {
+  connectionId?: string;
   ownerId: string;
   integrationKey: string;
   provider: string;

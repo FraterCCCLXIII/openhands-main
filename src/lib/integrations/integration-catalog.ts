@@ -7,6 +7,7 @@ import {
 import type {
   IntegrationCatalogOption,
   IntegrationConnectionDefaults,
+  IntegrationConnectionModel,
   GenericOAuthConfig,
 } from "@/src/types/integrations-hub";
 
@@ -20,6 +21,11 @@ const connectionDefaultsFromOption = (
   const oauth = auth.oauth ?? {};
   const http = option.http ?? {};
   const transportUrl = option.transport && "url" in option.transport ? option.transport.url : undefined;
+  const connectionModel = (
+    option as IntegrationConnectionOption & {
+      connectionModel?: IntegrationConnectionModel;
+    }
+  ).connectionModel;
 
   const oauthConfig = definedEntries({
     authorizationUrl: oauth.authorizationUrl,
@@ -47,6 +53,7 @@ const connectionDefaultsFromOption = (
     serverUrl: transportUrl,
     openApiUrl: http.openApiUrl,
     oauthConfig,
+    connectionModel,
   }) as IntegrationConnectionDefaults;
 };
 

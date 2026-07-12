@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from secrets import token_urlsafe
 from typing import Any
@@ -21,6 +22,8 @@ from .models import (
     AdminConnectionFilters,
     AdminOverview,
     AgentApiKeyRecord,
+    ConnectionResource,
+    ConnectionResourceInput,
     ConnectionSummary,
     DuplicateExternalAccount,
     IntegrationSpec,
@@ -179,6 +182,7 @@ class Repository:
     admin_keys: dict[str, str] = field(default_factory=dict)
     oauth_states: dict[str, OAuthState] = field(default_factory=dict)
     connections: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
+    connection_resources: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     temporary_grants: dict[str, dict[str, Any]] = field(default_factory=dict)
     tool_invocations: list[dict[str, Any]] = field(default_factory=list)
     permission_profiles: dict[str, dict[str, PermissionProfile]] = field(
@@ -337,6 +341,9 @@ class Repository:
                 (owner_id, integration_key, owner_id, integration_key),
             )
             return bool(rows)
+        connection = self.connections.pop((owner_id, integration_key), None)
+        if connection and connection.get("connectionId"):
+            self.connection_resources.pop(str(connection["connectionId"]), None)
         return (
             self.integrations.get(owner_id, {}).pop(integration_key, None) is not None
         )
@@ -832,6 +839,7 @@ class Repository:
             serverUrl=row.get("server_url"),
             openApiUrl=row.get("open_api_url"),
             oauthConfig=row.get("oauth_config"),
+            connectionModel=row.get("connection_model"),
             tools=row.get("functions") or [],
             enabled=bool(row["enabled"]),
             createdAt=row["created_at"].isoformat()
@@ -870,8 +878,8 @@ class Repository:
                     slug, name, description, logo_url, icon_bg, icon_color, app_url, docs_url, categories,
                     auth_modes, auth_strategy, provider, credential_label, credential_placeholder,
                     credential_help, api_base_url, server_url, open_api_url, oauth_config,
-                    encrypted_oauth_client, functions, enabled, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                    connection_model, encrypted_oauth_client, functions, enabled, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (slug) DO UPDATE SET
                     name = EXCLUDED.name,
                     description = EXCLUDED.description,
@@ -891,6 +899,7 @@ class Repository:
                     server_url = EXCLUDED.server_url,
                     open_api_url = EXCLUDED.open_api_url,
                     oauth_config = EXCLUDED.oauth_config,
+                    connection_model = EXCLUDED.connection_model,
                     encrypted_oauth_client = COALESCE(EXCLUDED.encrypted_oauth_client, managed_connectors.encrypted_oauth_client),
                     functions = EXCLUDED.functions,
                     enabled = EXCLUDED.enabled,
@@ -917,6 +926,9 @@ class Repository:
                     connector.openApiUrl,
                     Jsonb(connector.oauthConfig.model_dump(exclude_none=True))
                     if connector.oauthConfig
+                    else None,
+                    Jsonb(connector.connectionModel.model_dump(exclude_none=True))
+                    if connector.connectionModel
                     else None,
                     encrypt_credentials(
                         {
@@ -949,15 +961,23 @@ class Repository:
     def delete_connections_by_integration_key(self, integration_key: str) -> bool:
         if self.database_url:
             rows = self.db_rows(
-                "DELETE FROM integration_connections WHERE integration_key = %s RETURNING integration_key",
-                (integration_key,),
+                "DELETE FROM integration_connections WHERE integration_key = %s OR provider = %s RETURNING integration_key",
+                (integration_key, integration_key),
             )
             return bool(rows)
-        return any(
-            key == integration_key
-            and self.connections.pop((owner, key), None) is not None
-            for (owner, key) in list(self.connections)
-        )
+        deleted = False
+        for owner, key in list(self.connections):
+            connection = self.connections.get((owner, key))
+            if (
+                key != integration_key
+                and (connection or {}).get("provider") != integration_key
+            ):
+                continue
+            connection = self.connections.pop((owner, key), None)
+            if connection and connection.get("connectionId"):
+                self.connection_resources.pop(str(connection["connectionId"]), None)
+            deleted = deleted or connection is not None
+        return deleted
 
     def get_managed_connector(self, slug: str) -> ManagedConnector | None:
         if self.database_url:
@@ -966,6 +986,128 @@ class Repository:
             )
             return self.row_to_managed_connector(rows[0]) if rows else None
         return self.managed_connectors.get(slug)
+
+    @staticmethod
+    def connection_resource_id(
+        connection_id: str, resource_type: str, external_resource_id: str
+    ) -> str:
+        raw = f"{connection_id}:{resource_type}:{external_resource_id}"
+        return "res_" + hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+
+    def list_connection_resources(
+        self, connection_ids: list[str]
+    ) -> list[dict[str, Any]]:
+        if not connection_ids:
+            return []
+        if self.database_url:
+            rows = self.db_rows(
+                """
+                SELECT * FROM connection_resources
+                WHERE connection_id = ANY(%s)
+                ORDER BY display_name ASC NULLS LAST, external_resource_id ASC
+                """,
+                (connection_ids,),
+            )
+        else:
+            rows = [
+                resource
+                for connection_id in connection_ids
+                for resource in self.connection_resources.get(connection_id, [])
+            ]
+        return [
+            {
+                "id": str(row.get("id")),
+                "connectionId": str(
+                    row.get("connection_id") or row.get("connectionId")
+                ),
+                "resourceType": str(
+                    row.get("resource_type") or row.get("resourceType")
+                ),
+                "externalResourceId": str(
+                    row.get("external_resource_id") or row.get("externalResourceId")
+                ),
+                "displayName": row.get("display_name") or row.get("displayName"),
+                "externalUrl": row.get("external_url") or row.get("externalUrl"),
+                "metadata": row.get("metadata") or {},
+                "createdAt": self.iso(row.get("created_at") or row.get("createdAt"))
+                or now_iso(),
+                "updatedAt": self.iso(row.get("updated_at") or row.get("updatedAt"))
+                or now_iso(),
+            }
+            for row in rows
+        ]
+
+    def replace_connection_resources(
+        self,
+        owner_id: str,
+        connection_id: str,
+        resources: Sequence[ConnectionResourceInput | dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        normalized = []
+        for raw_resource in resources:
+            resource = ConnectionResourceInput.model_validate(raw_resource)
+            resource_type = resource.resourceType.strip() or "resource"
+            external_id = resource.externalResourceId.strip()
+            if not external_id:
+                continue
+            normalized.append(
+                {
+                    "id": self.connection_resource_id(
+                        connection_id, resource_type, external_id
+                    ),
+                    "connectionId": connection_id,
+                    "resourceType": resource_type,
+                    "externalResourceId": external_id,
+                    "displayName": resource.displayName,
+                    "externalUrl": resource.externalUrl,
+                    "metadata": resource.metadata,
+                    "createdAt": now_iso(),
+                    "updatedAt": now_iso(),
+                }
+            )
+        if self.database_url:
+            resource_ids = [resource["id"] for resource in normalized]
+            with psycopg.connect(self.database_url) as conn:
+                with conn.cursor() as cur:
+                    if resource_ids:
+                        cur.execute(
+                            "DELETE FROM connection_resources WHERE connection_id = %s AND NOT (id = ANY(%s))",
+                            (connection_id, resource_ids),
+                        )
+                    else:
+                        cur.execute(
+                            "DELETE FROM connection_resources WHERE connection_id = %s",
+                            (connection_id,),
+                        )
+                    for resource in normalized:
+                        cur.execute(
+                            """
+                            INSERT INTO connection_resources (
+                                id, connection_id, owner_id, resource_type,
+                                external_resource_id, display_name, external_url,
+                                metadata, created_at, updated_at
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                            ON CONFLICT (connection_id, resource_type, external_resource_id)
+                            DO UPDATE SET display_name = EXCLUDED.display_name,
+                                external_url = EXCLUDED.external_url,
+                                metadata = EXCLUDED.metadata,
+                                updated_at = NOW()
+                            """,
+                            (
+                                resource["id"],
+                                connection_id,
+                                owner_id,
+                                resource["resourceType"],
+                                resource["externalResourceId"],
+                                resource.get("displayName"),
+                                resource.get("externalUrl"),
+                                Jsonb(resource.get("metadata") or {}),
+                            ),
+                        )
+                conn.commit()
+            return self.list_connection_resources([connection_id])
+        self.connection_resources[connection_id] = normalized
+        return normalized
 
     def list_connections(
         self,
@@ -1025,6 +1167,7 @@ class Repository:
                 rows.append(
                     {
                         "owner_id": saved_owner,
+                        "connection_id": record.get("connectionId"),
                         "integration_key": record.get("integrationKey"),
                         "provider": record.get("provider"),
                         "auth_strategy": record.get("authStrategy"),
@@ -1040,21 +1183,34 @@ class Repository:
                     }
                 )
         query = filters.q if filters and filters.q else ""
+        resources_by_connection: dict[str, list[dict[str, Any]]] = {}
+        connection_ids = [
+            str(row.get("connection_id")) for row in rows if row.get("connection_id")
+        ]
+        for resource in self.list_connection_resources(connection_ids):
+            resources_by_connection.setdefault(
+                str(resource["connectionId"]), []
+            ).append(resource)
         result = []
         for row in rows:
+            connection_id = str(row.get("connection_id") or "")
+            connection_metadata = row.get("metadata") or {}
             item = ConnectionSummary.model_validate(
                 {
-                    "ownerId": row.get("owner_id"),
-                    "integrationKey": row.get("integration_key"),
-                    "provider": row.get("provider"),
-                    "authStrategy": row.get("auth_strategy"),
+                    "ownerId": str(row.get("owner_id") or ""),
+                    "connectionId": connection_id,
+                    "integrationKey": str(row.get("integration_key") or ""),
+                    "provider": str(row.get("provider") or ""),
+                    "authStrategy": row.get("auth_strategy") or "oauth2",
                     "tokenType": row.get("token_type"),
                     "scopes": row.get("scopes") or [],
                     "expiresAt": self.iso(row.get("expires_at")),
                     "externalAccountId": row.get("external_account_id"),
                     "externalWorkspaceId": row.get("external_workspace_id"),
+                    "externalTenantId": connection_metadata.get("externalTenantId"),
                     "displayName": row.get("display_name"),
-                    "metadata": row.get("metadata") or {},
+                    "resources": resources_by_connection.get(connection_id, []),
+                    "metadata": connection_metadata,
                     "createdAt": self.iso(row.get("created_at")) or now_iso(),
                     "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
                 }
@@ -1069,6 +1225,8 @@ class Repository:
                 item.pop("ownerId", None)
             if filters and filters.admin:
                 item.pop("metadata", None)
+                for resource in item["resources"]:
+                    resource.pop("metadata", None)
             result.append(item)
         return result
 
@@ -1214,6 +1372,8 @@ class Repository:
                     "agentId": agent_id,
                     "agentClass": agent_class,
                     "integrationKey": integration.key,
+                    "connectionId": integration.config.get("connectionId"),
+                    "resourceId": integration.config.get("resourceId"),
                     "toolName": tool.name,
                     "scopes": scopes,
                     "provider": integration.provider,
@@ -1227,14 +1387,16 @@ class Repository:
             )
             return
         self.execute_db(
-            """INSERT INTO tool_invocations (id, owner_id, agent_id, agent_class, integration_key, function_name, scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms, payload_keys, error_message)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s, %s)""",
+            """INSERT INTO tool_invocations (id, owner_id, agent_id, agent_class, integration_key, connection_id, resource_id, function_name, scopes, provider, kind, auth_strategy, outcome, invoked_at, duration_ms, payload_keys, error_message)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s, %s, %s)""",
             (
                 token_urlsafe(18),
                 owner_id,
                 agent_id,
                 agent_class,
                 integration.key,
+                integration.config.get("connectionId"),
+                integration.config.get("resourceId"),
                 tool.name,
                 Jsonb(scopes),
                 integration.provider,
@@ -1253,18 +1415,30 @@ class Repository:
         integration_key: str,
         provider: str,
         auth_strategy: str,
-        credentials: dict[str, Any],
-        metadata: dict[str, Any],
+        credentials: OAuthCredentials | dict[str, Any],
+        metadata: OAuthConnectionMetadata | dict[str, Any],
+        resources: Sequence[ConnectionResourceInput | dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         oauth_credentials = OAuthCredentials.model_validate(credentials)
         oauth_metadata = OAuthConnectionMetadata.model_validate(metadata)
         encrypted = encrypt_credentials(oauth_credentials.model_dump(exclude_none=True))
+        existing = self.get_connection(owner_id, integration_key)
+        existing_connection = (
+            OAuthConnection.model_validate(existing) if existing else None
+        )
+        metadata_connection_id = oauth_metadata.metadata.get("connectionId")
+        connection_id = str(
+            metadata_connection_id
+            or (existing_connection.connectionId if existing_connection else None)
+            or f"conn_{token_urlsafe(18)}"
+        )
         if self.database_url:
             self.execute_db(
-                """INSERT INTO integration_connections (owner_id, integration_key, provider, auth_strategy, encrypted_credentials, token_type, scopes, expires_at, external_account_id, external_workspace_id, display_name, metadata, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                """INSERT INTO integration_connections (connection_id, owner_id, integration_key, provider, auth_strategy, encrypted_credentials, token_type, scopes, expires_at, external_account_id, external_workspace_id, display_name, metadata, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
                 ON CONFLICT (owner_id, integration_key) DO UPDATE SET provider = EXCLUDED.provider, auth_strategy = EXCLUDED.auth_strategy, encrypted_credentials = EXCLUDED.encrypted_credentials, token_type = EXCLUDED.token_type, scopes = EXCLUDED.scopes, expires_at = EXCLUDED.expires_at, external_account_id = EXCLUDED.external_account_id, external_workspace_id = EXCLUDED.external_workspace_id, display_name = EXCLUDED.display_name, metadata = EXCLUDED.metadata, updated_at = NOW()""",
                 (
+                    connection_id,
                     owner_id,
                     integration_key,
                     provider,
@@ -1281,12 +1455,31 @@ class Repository:
             )
         connection = OAuthConnection(
             ownerId=owner_id,
+            connectionId=connection_id,
             integrationKey=integration_key,
             provider=provider,
             authStrategy="oauth2",
             credentials=oauth_credentials,
+            resources=[
+                ConnectionResource.model_validate(resource)
+                for resource in (
+                    existing_connection.resources if existing_connection else []
+                )
+            ],
             **oauth_metadata.model_dump(),
         )
+        if resources is not None:
+            normalized_resources = self.replace_connection_resources(
+                owner_id, connection_id, resources
+            )
+            connection = connection.model_copy(
+                update={
+                    "resources": [
+                        ConnectionResource.model_validate(resource)
+                        for resource in normalized_resources
+                    ]
+                }
+            )
         self.connections[(owner_id, integration_key)] = connection.model_dump(
             exclude_none=True
         )
@@ -1305,6 +1498,7 @@ class Repository:
             row = rows[0]
             return OAuthConnection(
                 ownerId=str(row.get("owner_id") or owner_id),
+                connectionId=str(row["connection_id"]),
                 integrationKey=str(row.get("integration_key") or integration_key),
                 provider=str(row.get("provider") or ""),
                 authStrategy="oauth2",
@@ -1316,8 +1510,15 @@ class Repository:
                 expiresAt=self.iso(row.get("expires_at")),
                 externalAccountId=row.get("external_account_id"),
                 externalWorkspaceId=row.get("external_workspace_id"),
+                externalTenantId=(row.get("metadata") or {}).get("externalTenantId"),
                 displayName=row.get("display_name"),
                 metadata=row.get("metadata") or {},
+                resources=[
+                    ConnectionResource.model_validate(resource)
+                    for resource in self.list_connection_resources(
+                        [str(row.get("connection_id"))]
+                    )
+                ],
                 createdAt=self.iso(row.get("created_at")) or now_iso(),
                 updatedAt=self.iso(row.get("updated_at")) or now_iso(),
             ).model_dump(exclude_none=True)
@@ -1330,11 +1531,47 @@ class Repository:
             {"ownerId": owner_id, **record}
         ).model_dump(exclude_none=True)
 
+    def get_connection_by_id(
+        self, owner_id: str, connection_id: str
+    ) -> OAuthConnection | None:
+        if self.database_url:
+            rows = self.db_rows(
+                "SELECT integration_key FROM integration_connections WHERE LOWER(owner_id) = LOWER(%s) AND connection_id = %s",
+                (owner_id, connection_id),
+            )
+            record = (
+                self.get_connection(owner_id, str(rows[0]["integration_key"]))
+                if rows
+                else None
+            )
+            return OAuthConnection.model_validate(record) if record else None
+        for (saved_owner, integration_key), record in self.connections.items():
+            if (
+                saved_owner.lower() == owner_id.lower()
+                and record.get("connectionId") == connection_id
+            ):
+                record = self.get_connection(owner_id, integration_key)
+                return OAuthConnection.model_validate(record) if record else None
+        return None
+
     def get_connection_credentials(
-        self, owner_id: str, integration_key: str
+        self,
+        owner_id: str,
+        integration_key: str,
+        connection_id: str | None = None,
     ) -> dict[str, Any] | None:
-        record = self.get_connection(owner_id, integration_key)
-        return record.get("credentials") if record else None
+        record = (
+            self.get_connection_by_id(owner_id, connection_id)
+            if connection_id
+            else self.get_connection(owner_id, integration_key)
+        )
+        if not record:
+            return None
+        if isinstance(record, OAuthConnection):
+            return record.credentials.model_dump(exclude_none=True)
+        return OAuthConnection.model_validate(record).credentials.model_dump(
+            exclude_none=True
+        )
 
     def has_agent_api_keys(self) -> bool:
         if self.database_url:

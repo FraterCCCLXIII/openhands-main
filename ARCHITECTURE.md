@@ -94,6 +94,33 @@ There is also an **admin ceiling** on managed connectors:
 3. The integrations hub resolves the owner, validates the integration, loads that owner's connection details if needed, and invokes the downstream connector.
 4. Invocation metadata is recorded as a best-effort audit side effect.
 
+#### Connections and external resources
+
+A catalog connector is a service definition, not an installed account. Owners
+may authorize the same connector more than once, such as separate Slack
+workspaces or Microsoft tenants. The runtime models that boundary explicitly:
+
+- `integration_connections.connection_id` is the stable opaque ID for one
+  credential grant. The user-editable integration key remains the agent-facing
+  instance name and is not used as the credential identity.
+- `connection_resources` stores the workspace, site, tenant, organization, or
+  other external resources represented by the grant. Provider IDs and display
+  names are metadata; credentials remain only on the parent connection.
+- `owner_integrations.config.connectionId` binds an installed integration to a
+  connection. `resourceId` binds it to one discovered resource when the catalog
+  requires a post-auth selection.
+- OAuth callbacks extract identity and discover resources only through the
+  connection model shipped by the extensions catalog. The hub does not contain
+  provider-name branches for Slack, GitHub, Atlassian, or Microsoft.
+- Runtime credential resolution verifies owner and connection membership.
+  Invocation audit rows record the selected connection and resource IDs.
+
+For resource-scoped credentials (for example, one Slack token per workspace),
+the provider credential itself enforces the resource boundary. Account- or
+tenant-scoped credentials may expose several resources; selecting one records
+the intended context and audit identity, but does not claim stronger isolation
+than the provider token actually enforces.
+
 #### Approval-required tool flow
 
 1. A user or admin marks a tool `approval_required`.

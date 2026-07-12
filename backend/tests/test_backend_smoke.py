@@ -7,6 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastapi.testclient import TestClient
+from openhands_extensions import (
+    IntegrationConnectionModel,
+    IntegrationIdentityMapping,
+    IntegrationResourceDiscovery,
+)
 from starlette.requests import Request
 
 from backend.app import auth as backend_auth, main as backend_main, oauth_flow
@@ -17,6 +22,9 @@ from backend.app.models import (
     IntegrationSpec,
     ManagedConnector,
     ManagedConnectorTool,
+    OAuthConfig,
+    OAuthConnectionMetadata,
+    OAuthTokenResponse,
     ToolSpec,
 )
 from backend.app.repository import repository
@@ -34,6 +42,7 @@ def setup_function() -> None:
     repository.user_keys.clear()
     repository.admin_keys.clear()
     repository.connections.clear()
+    repository.connection_resources.clear()
     os.environ["INTHUB_APP_ADMIN_EMAILS"] = "dev@localhost,admin@example.com"
     os.environ["INTHUB_CREDENTIAL_ENCRYPTION_KEY"] = "test-encryption-key-for-tests"
     # Reset config cache to pick up env var changes
@@ -411,6 +420,142 @@ def test_managed_oauth_mcp_discovery_uses_saved_connection(
         "serverUrl": "https://mcp.linear.app/mcp",
         "headers": {"Authorization": "Bearer saved-linear-token"},
     }
+
+
+def test_oauth_workspace_identity_creates_connection_resource() -> None:
+    connector = ManagedConnector(
+        slug="slack",
+        name="Slack",
+        description="Slack MCP",
+        authStrategy="oauth2",
+        oauthConfig=OAuthConfig(scopes=["chat:write"]),
+        connectionModel=IntegrationConnectionModel(
+            principalType="user",
+            credentialScope="resource",
+            resourceType="workspace",
+            resourceCardinality="one",
+            selectionMode="automatic",
+            identityMapping=IntegrationIdentityMapping(
+                source="oauth_token_response",
+                externalPrincipalIdPath="authed_user.id",
+                externalTenantIdPath="enterprise.id",
+                externalResourceIdPath="team.id",
+                resourceNamePath="team.name",
+            ),
+        ),
+    )
+    payload = OAuthTokenResponse.model_validate(
+        {
+            "access_token": "opaque-token",
+            "token_type": "user",
+            "scope": "chat:write",
+            "authed_user": {"id": "U123"},
+            "enterprise": {"id": "E123"},
+            "team": {"id": "T123", "name": "OpenHands"},
+        }
+    )
+
+    metadata = oauth_flow.oauth_metadata(connector, payload)
+    resources = oauth_flow.oauth_connection_resources(connector, payload, metadata)
+    connection = repository.save_connection(
+        "owner@example.com",
+        "slack-openhands",
+        "slack",
+        "oauth2",
+        {"accessToken": "opaque-token"},
+        metadata,
+        resources,
+    )
+
+    assert metadata.externalAccountId == "U123"
+    assert metadata.externalWorkspaceId == "T123"
+    assert metadata.metadata["externalTenantId"] == "E123"
+    assert connection["connectionId"].startswith("conn_")
+    assert connection["resources"][0]["resourceType"] == "workspace"
+    assert connection["resources"][0]["externalResourceId"] == "T123"
+    assert connection["resources"][0]["displayName"] == "OpenHands"
+
+
+def test_runtime_credentials_follow_explicit_connection_binding() -> None:
+    first = repository.save_connection(
+        "owner@example.com",
+        "slack",
+        "slack",
+        "oauth2",
+        {"accessToken": "company-token"},
+        {},
+    )
+    second = repository.save_connection(
+        "owner@example.com",
+        "slack-community",
+        "slack",
+        "oauth2",
+        {"accessToken": "community-token"},
+        {},
+    )
+    integration = IntegrationSpec(
+        key="community-messages",
+        name="Community Slack",
+        kind="mcp",
+        provider="mcp",
+        authStrategy="oauth2",
+        config={"connectionId": second["connectionId"]},
+    )
+
+    assert first["connectionId"] != second["connectionId"]
+    assert oauth_flow.credentials_for("owner@example.com", integration) == {
+        "accessToken": "community-token"
+    }
+
+
+def test_oauth_resource_discovery_maps_multiple_resources(monkeypatch) -> None:
+    connector = ManagedConnector(
+        slug="github",
+        name="GitHub",
+        description="GitHub MCP",
+        authStrategy="oauth2",
+        connectionModel=IntegrationConnectionModel(
+            principalType="user",
+            credentialScope="account",
+            resourceType="organization",
+            resourceCardinality="many",
+            selectionMode="post_auth",
+            resourceDiscovery=IntegrationResourceDiscovery(
+                endpoint="https://api.github.com/user/orgs",
+                externalResourceIdPath="id",
+                resourceNamePath="login",
+                resourceUrlPath="html_url",
+            ),
+        ),
+    )
+    monkeypatch.setattr(
+        oauth_flow,
+        "fetch_oauth_identity",
+        lambda _endpoint, _token: [
+            {
+                "id": 123,
+                "login": "OpenHands",
+                "html_url": "https://github.com/OpenHands",
+            },
+            {
+                "id": 456,
+                "login": "All-Hands-AI",
+                "html_url": "https://github.com/All-Hands-AI",
+            },
+        ],
+    )
+
+    resources = oauth_flow.oauth_connection_resources(
+        connector,
+        OAuthTokenResponse(access_token="opaque-token"),
+        OAuthConnectionMetadata(),
+    )
+
+    assert [resource.externalResourceId for resource in resources] == [
+        "123",
+        "456",
+    ]
+    assert resources[0].displayName == "OpenHands"
 
 
 def test_oauth_callback_backfills_mcp_tools_for_saved_integration(

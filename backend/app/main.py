@@ -54,6 +54,7 @@ from .models import (
     IntegrationToggleRequest,
     ManagedConnector,
     ManagedConnectorTool,
+    OAuthConnection,
     PermissionProfile,
     PermissionProfileApplyResult,
     PermissionProfileCreateRequest,
@@ -135,14 +136,15 @@ def human_approval_required_detail(
 def agent_openapi(
     owner: str, request: Request, profile: PermissionProfile | None = None
 ) -> dict[str, Any]:
-    connection_keys = {
-        item["integrationKey"] for item in repository.list_connections(owner)
-    }
+    connections = repository.list_connections(owner)
+    connection_keys = {item["integrationKey"] for item in connections}
+    connection_ids = {item["connectionId"] for item in connections}
     paths: dict[str, Any] = {}
     for integration in profiled_integrations(owner, profile):
         if not integration.enabled or (
             integration.authStrategy == "oauth2"
             and integration.key not in connection_keys
+            and integration.config.get("connectionId") not in connection_ids
         ):
             continue
         for tool in integration.tools.values():
@@ -2290,10 +2292,11 @@ def managed_mcp_discovery_credentials(
     integration_key: str,
     connector: ManagedConnector,
     credentials: dict[str, Any],
+    connection_id: str | None = None,
 ) -> dict[str, Any]:
     if connector.authStrategy == "oauth2":
         saved_credentials = repository.get_connection_credentials(
-            owner, integration_key
+            owner, integration_key, connection_id
         )
         if not saved_credentials:
             raise HTTPException(
@@ -2311,6 +2314,7 @@ def discover_managed_mcp_tools_for_owner(
     credentials: dict[str, Any],
     *,
     timeout: float | None = None,
+    connection_id: str | None = None,
 ) -> dict[str, ToolSpec]:
     server_url = str(connector.serverUrl or connector.apiBaseUrl or "").strip()
     if not server_url:
@@ -2319,7 +2323,7 @@ def discover_managed_mcp_tools_for_owner(
             detail=f"Managed MCP connector '{connector.slug}' is missing a server URL.",
         )
     discovery_credentials = managed_mcp_discovery_credentials(
-        owner, integration_key, connector, credentials
+        owner, integration_key, connector, credentials, connection_id
     )
     return discover_mcp_tools_with_transport_order(
         server_url,
@@ -2428,12 +2432,58 @@ def discovered_integration(
                 status_code=403,
                 detail=f"{connector.name} needs an admin to configure OAuth before users can add it.",
             )
+        configured_connection_id = str(config.get("connectionId") or "").strip()
+        configured_resource_id = str(config.get("resourceId") or "").strip()
+        connection: OAuthConnection | None = None
+        if connector.authStrategy == "oauth2":
+            stored_connection = (
+                repository.get_connection_by_id(owner, configured_connection_id)
+                if configured_connection_id
+                else repository.get_connection(owner, integration_key)
+            )
+            if not stored_connection:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Connect {connector.name} for this user before discovering tools.",
+                )
+            connection = OAuthConnection.model_validate(stored_connection)
+            connection_provider = connection.provider
+            is_legacy_transport_provider = (
+                connection_provider == connector.provider
+                and connection.integrationKey == integration_key
+            )
+            if (
+                connection_provider != connector.slug
+                and not is_legacy_transport_provider
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="The selected connection belongs to a different connector.",
+                )
+            if configured_resource_id and not any(
+                resource.id == configured_resource_id
+                for resource in connection.resources
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail="The selected external resource does not belong to this connection.",
+                )
+            configured_connection_id = connection.connectionId
         resolved_credentials = managed_connector_credentials(connector, credentials)
         tools = connector_tools(connector)
         if connector.provider == "mcp" and not tools:
             tools = discover_managed_mcp_tools_for_owner(
-                owner, integration_key, connector, credentials
+                owner,
+                integration_key,
+                connector,
+                credentials,
+                connection_id=configured_connection_id or None,
             )
+        integration_config = {"managedConnectorSlug": connector.slug}
+        if configured_connection_id:
+            integration_config["connectionId"] = configured_connection_id
+        if configured_resource_id:
+            integration_config["resourceId"] = configured_resource_id
         return {
             "key": integration_key,
             "name": payload.name or connector.name,
@@ -2442,7 +2492,7 @@ def discovered_integration(
             "authStrategy": connector.authStrategy,
             "enabled": True,
             "fineGrainedPermissions": True,
-            "config": {"managedConnectorSlug": connector.slug},
+            "config": integration_config,
             "credentials": resolved_credentials,
             "tools": {name: tool.model_dump() for name, tool in tools.items()},
         }
@@ -2472,6 +2522,72 @@ def discovered_integration(
         "credentials": credentials,
         "tools": {name: tool.model_dump() for name, tool in tools.items()},
     }
+
+
+def bind_oauth_integration_connection(
+    owner: str, integration: IntegrationSpec
+) -> IntegrationSpec:
+    if integration.authStrategy != "oauth2":
+        return integration
+    config = dict(integration.config)
+    configured_connection_id = str(config.get("connectionId") or "").strip()
+    stored_connection = (
+        repository.get_connection_by_id(owner, configured_connection_id)
+        if configured_connection_id
+        else repository.get_connection(owner, integration.key)
+    )
+    if not stored_connection:
+        if not configured_connection_id and not config.get("resourceId"):
+            return integration
+        raise HTTPException(
+            status_code=403,
+            detail=f"Connect {integration.name} before saving this integration.",
+        )
+    connection = OAuthConnection.model_validate(stored_connection)
+    config["connectionId"] = connection.connectionId
+    configured_resource_id = str(config.get("resourceId") or "").strip()
+    resources = connection.resources
+    if configured_resource_id and not any(
+        resource.id == configured_resource_id for resource in resources
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="The selected external resource does not belong to this connection.",
+        )
+    connector_slug = str(config.get("managedConnectorSlug") or "").strip()
+    connector = get_managed_connector(connector_slug) if connector_slug else None
+    connection_provider = connection.provider
+    is_legacy_transport_provider = bool(
+        connector
+        and connection_provider == connector.provider
+        and connection.integrationKey == integration.key
+    )
+    if (
+        connector
+        and connection_provider != connector.slug
+        and not is_legacy_transport_provider
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="The selected connection belongs to a different connector.",
+        )
+    selection_mode = (
+        connector.connectionModel.selectionMode
+        if connector and connector.connectionModel
+        else None
+    )
+    if selection_mode == "post_auth" and not configured_resource_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Select an external resource before saving this integration.",
+        )
+    if (
+        not configured_resource_id
+        and selection_mode == "automatic"
+        and len(resources) == 1
+    ):
+        config["resourceId"] = resources[0].id
+    return integration.model_copy(update={"config": config})
 
 
 async def json_body(request: Request) -> Any:
@@ -2679,9 +2795,10 @@ async def fastapi_handler(request: Request):
                 detail="OAuth integrations cannot store credentials directly. Save per-user OAuth connections instead.",
             )
         assert_user_can_save_integration(owner, integration, user_api_is_admin)
-        saved_integration = repository.save_integration(
+        integration = bind_oauth_integration_connection(
             owner, apply_managed_constraints(integration)
         )
+        saved_integration = repository.save_integration(owner, integration)
         sync_default_permission_profile(owner)
         return saved_integration
 

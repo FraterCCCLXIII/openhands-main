@@ -59,6 +59,7 @@ def test_connection_summary_retains_optional_provider_metadata() -> None:
     summary = ConnectionSummary.model_validate(
         {
             "ownerId": "owner",
+            "connectionId": "conn_github",
             "integrationKey": "github",
             "provider": "http",
             "authStrategy": "oauth2",

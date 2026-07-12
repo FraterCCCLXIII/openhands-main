@@ -62,6 +62,7 @@ export interface WizardDraft {
   headerName: string;
   username: string;
   password: string;
+  resourceId: string;
 }
 
 export const INITIAL_DRAFT: WizardDraft = {
@@ -75,6 +76,7 @@ export const INITIAL_DRAFT: WizardDraft = {
   headerName: "X-API-Key",
   username: "",
   password: "",
+  resourceId: "",
 };
 
 export const integrationWizardInputClassName =
@@ -172,6 +174,7 @@ export const hasManagedConnectorCredentialInput = (
 export const buildDiscoverPayload = (
   draft: WizardDraft,
   connector: ManagedConnectorOption | null,
+  connection?: { connectionId?: string } | null,
 ) => {
   if (!draft.kind) {
     throw new Error("Select Managed connector or MCP first.");
@@ -187,6 +190,10 @@ export const buildDiscoverPayload = (
       kind: "managed" as const,
       config: {
         managedConnectorSlug: draft.managedConnectorSlug.trim(),
+        ...(connection?.connectionId
+          ? { connectionId: connection.connectionId }
+          : {}),
+        ...(draft.resourceId.trim() ? { resourceId: draft.resourceId.trim() } : {}),
       },
       credentials: buildManagedConnectorCredentials(draft, connector),
     };
@@ -219,10 +226,13 @@ export const buildCreatePayload = (
   }
 
   const key = draft.key.trim();
+  const draftName = draft.name.trim();
   const name =
     draft.kind === "managed"
-      ? (connector?.name ?? draft.name.trim()) || key
-      : draft.name.trim() || key;
+      ? draftName && draftName !== key && draftName !== draft.managedConnectorSlug.trim()
+        ? draftName
+        : connector?.name || key
+      : draftName || key;
 
   return {
     key,
@@ -241,6 +251,12 @@ export const buildCreatePayload = (
       draft.kind === "managed"
         ? {
             managedConnectorSlug: draft.managedConnectorSlug.trim(),
+            ...(typeof discovery.config.connectionId === "string"
+              ? { connectionId: discovery.config.connectionId }
+              : {}),
+            ...(typeof discovery.config.resourceId === "string"
+              ? { resourceId: discovery.config.resourceId }
+              : {}),
           }
         : discovery.config,
     credentials: discovery.credentials,

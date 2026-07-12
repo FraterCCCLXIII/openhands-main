@@ -80,6 +80,7 @@ const catalogToConnector = (catalog: IntegrationCatalogOption): ManagedConnector
     openApiUrl: cd?.openApiUrl,
     serverUrl: cd?.serverUrl,
     oauthConfig: cd?.oauthConfig,
+    connectionModel: cd?.connectionModel,
     tools: [],
     enabled: true,
     createdAt: "",

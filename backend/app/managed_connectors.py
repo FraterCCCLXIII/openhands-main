@@ -64,6 +64,7 @@ def _to_default_managed_connector(entry: IntegrationCatalogEntry) -> ManagedConn
         openApiUrl=defaults.openApiUrl,
         serverUrl=defaults.serverUrl,
         oauthConfig=defaults.oauthConfig,
+        connectionModel=defaults.connectionModel,
         # Default connectors ship with no tools; tools are discovered (MCP) or
         # generated from openApiUrl (HTTP) on connect/save/index.
         tools=[],
@@ -98,11 +99,28 @@ def default_managed_connector(slug: str) -> ManagedConnector | None:
 
 
 def get_managed_connector(slug: str) -> ManagedConnector | None:
-    return repository.get_managed_connector(slug) or default_managed_connector(slug)
+    stored = repository.get_managed_connector(slug)
+    catalog_default = default_managed_connector(slug)
+    if stored and not stored.connectionModel and catalog_default:
+        return stored.model_copy(
+            update={"connectionModel": catalog_default.connectionModel}
+        )
+    return stored or catalog_default
 
 
 def list_managed_connectors(include_defaults: bool = True) -> list[ManagedConnector]:
     connectors = repository.list_managed_connectors()
+    catalog_defaults = {
+        connector.slug: connector for connector in default_managed_connectors()
+    }
+    connectors = [
+        connector.model_copy(
+            update={"connectionModel": catalog_defaults[connector.slug].connectionModel}
+        )
+        if not connector.connectionModel and connector.slug in catalog_defaults
+        else connector
+        for connector in connectors
+    ]
     # OAuth2 connectors may have a stale oauthConfigured flag (the DB
     # encrypted_oauth_client column can be NULL even when OAuth works —
     # e.g. credentials were stored then a subsequent save cleared them).
@@ -110,8 +128,10 @@ def list_managed_connectors(include_defaults: bool = True) -> list[ManagedConnec
     # necessarily configured, so infer oauthConfigured=True.
     if connectors:
         connected_slugs = {
-            str(conn.get("integrationKey") or conn.get("provider") or "")
+            str(value)
             for conn in repository.list_connections()
+            for value in (conn.get("integrationKey"), conn.get("provider"))
+            if value
         }
         for connector in connectors:
             if (
@@ -126,7 +146,7 @@ def list_managed_connectors(include_defaults: bool = True) -> list[ManagedConnec
             *connectors,
             *[
                 connector
-                for connector in default_managed_connectors()
+                for connector in catalog_defaults.values()
                 if connector.slug not in registered
             ],
         ]

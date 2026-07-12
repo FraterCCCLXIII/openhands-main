@@ -79,6 +79,11 @@ export function IntegrationCatalogCard({
             <span className={extensionModuleCardPillClassName}>
               {connector.toolCount} tools
             </span>
+            {connector.hasInstalledConnection ? (
+              <span className={extensionModuleCardPillClassName}>
+                Connect another
+              </span>
+            ) : null}
           </div>
         </div>
       </div>

@@ -142,6 +142,80 @@ describe("IntegrationWizard", () => {
     expect(customMcpLink).toBeFalsy();
   });
 
+  it("suggests a new integration key for another workspace", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url === "/api/integrations?filter=enabled") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "slack",
+              name: "Slack",
+              description: "Slack connector",
+              categories: ["Communication"],
+              connectionDefaults: {
+                authModes: ["oauth2"],
+                authStrategy: "oauth2",
+                oauthConfigured: true,
+                credentialLabel: "Connect Slack",
+                credentialPlaceholder: "Connect Slack",
+                credentialHelp: "Connect a Slack workspace.",
+                connectionModel: {
+                  principalType: "user",
+                  credentialScope: "resource",
+                  resourceType: "workspace",
+                  resourceCardinality: "one",
+                  selectionMode: "automatic",
+                },
+              },
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url === "/api/oauth/connections") {
+        return new Response(
+          JSON.stringify([
+            {
+              connectionId: "conn_company",
+              integrationKey: "slack",
+              provider: "slack",
+              authStrategy: "oauth2",
+              scopes: [],
+              resources: [],
+              metadata: {},
+              createdAt: "2026-07-10T00:00:00Z",
+              updatedAt: "2026-07-10T00:00:00Z",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams("managedConnector=slack"),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    expect(
+      Array.from(container.querySelectorAll("input")).some(
+        (input) => input.value === "slack-2",
+      ),
+    ).toBe(true);
+    expect(container.textContent).toContain("Connect your Slack account");
+  });
+
   it("discovers default API-key connectors with their configured header name", async () => {
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input.toString();

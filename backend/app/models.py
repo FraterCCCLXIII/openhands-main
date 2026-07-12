@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
+from openhands_extensions import IntegrationConnectionModel
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool
 
 
@@ -73,6 +74,7 @@ class ConnectionDefaults(BaseModel):
     serverUrl: str | None = None
     openApiUrl: str | None = None
     oauthConfig: OAuthConfig | None = None
+    connectionModel: IntegrationConnectionModel | None = None
 
 
 class OAuthTokenResponse(BaseModel):
@@ -127,8 +129,24 @@ class OAuthCredentials(BaseModel):
     refreshToken: str | None = None
 
 
+class ConnectionResourceInput(BaseModel):
+    resourceType: str
+    externalResourceId: str
+    displayName: str | None = None
+    externalUrl: str | None = None
+    metadata: dict[str, JsonValue] = Field(default_factory=dict)
+
+
+class ConnectionResource(ConnectionResourceInput):
+    id: str
+    connectionId: str
+    createdAt: str = Field(default_factory=now_iso)
+    updatedAt: str = Field(default_factory=now_iso)
+
+
 class OAuthConnection(BaseModel):
     ownerId: str
+    connectionId: str
     integrationKey: str
     provider: str
     authStrategy: Literal["oauth2"] = "oauth2"
@@ -138,8 +156,10 @@ class OAuthConnection(BaseModel):
     expiresAt: str | None = None
     externalAccountId: str | None = None
     externalWorkspaceId: str | None = None
+    externalTenantId: str | None = None
     displayName: str | None = None
     metadata: dict[str, JsonValue] = Field(default_factory=dict)
+    resources: list[ConnectionResource] = Field(default_factory=list)
     createdAt: str = Field(default_factory=now_iso)
     updatedAt: str = Field(default_factory=now_iso)
 
@@ -188,6 +208,7 @@ class TemporaryGrant(BaseModel):
 
 class ConnectionSummary(BaseModel):
     ownerId: str
+    connectionId: str
     integrationKey: str
     provider: str
     authStrategy: AuthStrategy
@@ -196,8 +217,10 @@ class ConnectionSummary(BaseModel):
     expiresAt: str | None = None
     externalAccountId: str | None = None
     externalWorkspaceId: str | None = None
+    externalTenantId: str | None = None
     displayName: str | None = None
     metadata: dict[str, JsonValue] = Field(default_factory=dict)
+    resources: list[ConnectionResource] = Field(default_factory=list)
     createdAt: str
     updatedAt: str
 
@@ -441,6 +464,7 @@ class ManagedConnector(BaseModel):
     serverUrl: str | None = None
     openApiUrl: str | None = None
     oauthConfig: OAuthConfig | None = None
+    connectionModel: IntegrationConnectionModel | None = None
     oauthClientId: str | None = None
     oauthClientSecret: str | None = None
     tools: list[ManagedConnectorTool] = Field(default_factory=list)
@@ -466,6 +490,7 @@ class ManagedConnector(BaseModel):
             "credentialPlaceholder": self.credentialPlaceholder,
             "credentialHelp": self.credentialHelp,
             "apiKeyHeaderName": self.apiKeyHeaderName,
+            "connectionModel": self.connectionModel,
         }
 
     def response(self) -> dict[str, Any]:

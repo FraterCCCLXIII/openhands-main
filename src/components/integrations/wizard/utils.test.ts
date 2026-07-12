@@ -91,6 +91,7 @@ const managedDraft: WizardDraft = {
   headerName: " X-API-Key ",
   username: " alice ",
   password: " wonderland ",
+  resourceId: "",
 };
 
 const listModelsTool: ToolSpec = {
@@ -195,6 +196,25 @@ describe("integration-wizard-utils", () => {
         accessToken: "bearer-secret",
       },
     });
+
+    expect(
+      buildDiscoverPayload(
+        {
+          ...managedDraft,
+          key: "notion-community",
+          managedConnectorSlug: "notion",
+          resourceId: "res_workspace",
+        },
+        oauthConnector,
+        { connectionId: "conn_slack_openhands" },
+      ),
+    ).toMatchObject({
+      config: {
+        managedConnectorSlug: "notion",
+        connectionId: "conn_slack_openhands",
+        resourceId: "res_workspace",
+      },
+    });
   });
 
   it("validates required wizard selections before building payloads", () => {
@@ -277,6 +297,29 @@ describe("integration-wizard-utils", () => {
     expect(payload.tools.delete_voice).toMatchObject({
       accessMode: "disabled",
       enabled: false,
+    });
+  });
+
+  it("preserves explicit connection and resource bindings when creating", () => {
+    const payload = buildCreatePayload(
+      { ...managedDraft, name: "ElevenLabs workspace", resourceId: "res_workspace" },
+      {
+        ...discovery,
+        config: {
+          ...discovery.config,
+          connectionId: "conn_workspace",
+          resourceId: "res_workspace",
+        },
+      },
+      {},
+      elevenLabsConnector,
+    );
+
+    expect(payload.name).toBe("ElevenLabs workspace");
+    expect(payload.config).toEqual({
+      managedConnectorSlug: "elevenlabs",
+      connectionId: "conn_workspace",
+      resourceId: "res_workspace",
     });
   });
 

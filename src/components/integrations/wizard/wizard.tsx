@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { fetchJson, ApiRequestError } from "@/src/lib/fetch-json";
 import { catalogOptionsToConnectorOptions } from "@/src/lib/catalog-mappers";
@@ -93,6 +93,64 @@ export const IntegrationWizard = ({
     [connectionStatusesQuery.data, state.draft.managedConnectorSlug, state.draft.key],
   );
 
+  useEffect(() => {
+    const connector = state.selectedConnector;
+    const connections = connectionStatusesQuery.data ?? [];
+    if (
+      !connector ||
+      !connector.connectionModel ||
+      searchParams.get("integrationKey") ||
+      state.draft.key.trim() !== connector.slug ||
+      !connections.some((connection) => connection.integrationKey === connector.slug)
+    ) {
+      return;
+    }
+    const usedKeys = new Set(connections.map((connection) => connection.integrationKey));
+    let suffix = 2;
+    while (usedKeys.has(`${connector.slug}-${suffix}`)) {
+      suffix += 1;
+    }
+    state.setDraft((current) => ({
+      ...current,
+      key: `${connector.slug}-${suffix}`,
+      name: `${connector.name} ${suffix}`,
+      resourceId: "",
+    }));
+  }, [
+    connectionStatusesQuery.data,
+    searchParams,
+    state.draft.key,
+    state.selectedConnector,
+    state.setDraft,
+  ]);
+
+  useEffect(() => {
+    const primaryResource = effectiveSelectedConnection?.resources?.[0];
+    if (!primaryResource || state.draft.resourceId) {
+      return;
+    }
+    if (state.selectedConnector?.connectionModel?.selectionMode === "automatic") {
+      state.setDraft((current) => ({
+        ...current,
+        resourceId: primaryResource.id,
+        name:
+          primaryResource.displayName &&
+          (current.name === state.selectedConnector?.name ||
+            current.name === state.selectedConnector?.slug)
+            ? `${state.selectedConnector.name} - ${primaryResource.displayName}`
+            : current.name,
+      }));
+    }
+  }, [
+    effectiveSelectedConnection,
+    state.draft.resourceId,
+    state.selectedConnector,
+    state.setDraft,
+  ]);
+
+  const requiresResourceSelection =
+    state.selectedConnector?.connectionModel?.selectionMode === "post_auth";
+
   const canDiscover =
     !!state.draft.kind &&
     !!state.draft.key.trim() &&
@@ -100,7 +158,9 @@ export const IntegrationWizard = ({
     (state.draft.kind === "managed"
       ? !!state.draft.managedConnectorSlug.trim() &&
         (state.requiresOAuthConnection
-          ? state.oauthConnectionEnabled && !!effectiveSelectedConnection
+          ? state.oauthConnectionEnabled &&
+            !!effectiveSelectedConnection &&
+            (!requiresResourceSelection || !!state.draft.resourceId.trim())
           : hasManagedConnectorCredentialInput(state.draft, state.selectedConnector))
       : !!state.draft.serverUrl.trim());
 
@@ -112,7 +172,13 @@ export const IntegrationWizard = ({
       fetchJson<DiscoveryResponse>("/api/integrations/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildDiscoverPayload(input.draft, input.connector)),
+        body: JSON.stringify(
+          buildDiscoverPayload(
+            input.draft,
+            input.connector,
+            effectiveSelectedConnection,
+          ),
+        ),
       }),
     onMutate: (input) => {
       const providerName =

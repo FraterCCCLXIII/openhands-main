@@ -36,6 +36,7 @@ def connection_defaults_from_option(
         serverUrl=server_url,
         openApiUrl=http.openApiUrl if http else None,
         oauthConfig=oauth_config,
+        connectionModel=option.connectionModel,
     )
 
 

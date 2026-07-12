@@ -32,6 +32,7 @@ const baseManagedDraft: WizardDraft = {
   headerName: "",
   username: "",
   password: "",
+  resourceId: "",
 };
 
 const notionConnector: ManagedConnectorOption = {

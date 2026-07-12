@@ -110,6 +110,45 @@ def test_0004_adds_icon_columns_to_managed_connectors(monkeypatch) -> None:
     assert "DROP COLUMN IF EXISTS icon_bg" in joined
 
 
+def test_0008_adds_connection_resources_and_backfills_bindings(monkeypatch) -> None:
+    migration = importlib.import_module(
+        "backend.alembic.versions.20260710_0008_multi_connection_resources"
+    )
+    capture = CapturingOp()
+    monkeypatch.setattr(migration, "op", capture)
+
+    migration.upgrade()
+
+    joined = "\n".join(capture.statements)
+    assert migration.revision == "0008"
+    assert migration.down_revision == "0007"
+    assert (
+        "ALTER TABLE integration_connections ADD COLUMN IF NOT EXISTS connection_id TEXT"
+        in joined
+    )
+    assert "CREATE TABLE IF NOT EXISTS connection_resources" in joined
+    assert (
+        "ALTER TABLE tool_invocations ADD COLUMN IF NOT EXISTS connection_id TEXT"
+        in joined
+    )
+    assert "jsonb_build_object('connectionId', connection.connection_id)" in joined
+    assert "jsonb_build_object('resourceId', resource.id)" in joined
+
+    capture.statements.clear()
+    migration.downgrade()
+
+    joined = "\n".join(capture.statements)
+    assert "DROP TABLE IF EXISTS connection_resources" in joined
+    assert (
+        "ALTER TABLE integration_connections DROP COLUMN IF EXISTS connection_id"
+        in joined
+    )
+    assert (
+        "ALTER TABLE managed_connectors DROP COLUMN IF EXISTS connection_model"
+        in joined
+    )
+
+
 class CapturingResult:
     def __init__(self, rows: list[dict[str, object]]) -> None:
         self.rows = rows

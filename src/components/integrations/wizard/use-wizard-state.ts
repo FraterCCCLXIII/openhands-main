@@ -161,6 +161,7 @@ export const useWizardState = ({
           current.managedConnectorSlug === connector.slug && connector.authStrategy === "basic"
             ? current.password
             : "",
+        resourceId: "",
       }));
       setConnectorSearch(connectorOptionLabel(connector));
       setDiscoverFeedback(null);

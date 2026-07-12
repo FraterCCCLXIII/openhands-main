@@ -45,6 +45,13 @@ const connectors: ManagedConnectorOption[] = [
     credentialLabel: "OAuth",
     credentialPlaceholder: "Connect Slack",
     credentialHelp: "Connect Slack.",
+    connectionModel: {
+      principalType: "user",
+      credentialScope: "resource",
+      resourceType: "workspace",
+      resourceCardinality: "one",
+      selectionMode: "automatic",
+    },
   },
   {
     slug: "notion",
@@ -159,8 +166,10 @@ describe("dashboard-workspace-utils", () => {
   });
 
   it("builds marketplace rows in popular order while keeping installed connectors available for duplicate accounts", () => {
+    const installedKeys = buildInstalledIntegrationKeys(integrations);
     const results = buildMarketplaceConnectors({
       managedConnectors: connectors,
+      installedIntegrationKeys: installedKeys,
       search: "",
     });
 
@@ -170,6 +179,9 @@ describe("dashboard-workspace-utils", () => {
       "linear",
       "slack",
     ]);
+    expect(results.find((connector) => connector.slug === "slack")).toMatchObject({
+      hasInstalledConnection: true,
+    });
   });
 
   it("tracks installed integration keys separately from connector slugs", () => {

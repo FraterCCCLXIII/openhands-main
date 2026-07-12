@@ -108,6 +108,15 @@ export const ConnectStep = ({
   onSelectKind,
 }: ConnectStepProps) => {
   const managedConnectorAuthStrategy = selectedConnector?.authStrategy ?? null;
+  const selectedResource =
+    selectedConnection?.resources?.find(
+      (resource) => resource.id === draft.resourceId,
+    ) ??
+    (selectedConnector?.connectionModel?.selectionMode === "automatic"
+      ? selectedConnection?.resources?.[0]
+      : undefined);
+  const requiresResourceSelection =
+    selectedConnector?.connectionModel?.selectionMode === "post_auth";
 
   return (
     <div className="space-y-4">
@@ -183,6 +192,11 @@ export const ConnectStep = ({
                         Expires {new Date(selectedConnection.expiresAt).toLocaleString()}.
                       </p>
                     ) : null}
+                    {selectedResource ? (
+                      <p className="text-xs leading-5 text-[var(--color-text-base)]">
+                        {selectedResource.resourceType}: {selectedResource.displayName || selectedResource.externalResourceId}
+                      </p>
+                    ) : null}
                   </div>
                   <Button
                     className="h-9 shrink-0 rounded-lg px-4 text-xs"
@@ -210,6 +224,33 @@ export const ConnectStep = ({
                         : "Connect"}
                   </Button>
                 </div>
+              ) : null}
+              {requiresResourceSelection && selectedConnection ? (
+                <label className="mt-3 grid gap-1.5 text-sm text-white">
+                  <span className="font-medium">
+                    Choose {selectedConnector.connectionModel?.resourceType || "resource"}
+                  </span>
+                  <select
+                    className={integrationWizardInputClassName}
+                    value={draft.resourceId}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        resourceId: event.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Select a resource…</option>
+                    {(selectedConnection.resources ?? []).map((resource) => (
+                      <option key={resource.id} value={resource.id}>
+                        {resource.displayName || resource.externalResourceId}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs leading-5 text-[var(--color-text-base)]">
+                    This integration instance will be bound to the selected resource.
+                  </span>
+                </label>
               ) : null}
               {selectedConnector.appUrl ? (
                 <a
