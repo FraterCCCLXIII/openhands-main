@@ -254,7 +254,7 @@ def test_consume_oauth_state_decrypts_pkce_verifier_from_database(
     record = repo.consume_oauth_state("state-123", "gh")
 
     assert record is not None
-    assert record["code_verifier"] == verifier
+    assert record.codeVerifier == verifier
 
 
 def test_consume_oauth_state_returns_none_verifier_when_no_encrypted_value(
@@ -275,4 +275,4 @@ def test_consume_oauth_state_returns_none_verifier_when_no_encrypted_value(
     record = repo.consume_oauth_state("state-123", "gh")
 
     assert record is not None
-    assert record.get("code_verifier") is None
+    assert record.codeVerifier is None

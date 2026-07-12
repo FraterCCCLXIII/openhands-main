@@ -20,10 +20,14 @@ import { listIntegrationCatalogOptions } from "@/src/lib/integrations/integratio
 
 const mockListIntegrationCatalog = vi.mocked(listIntegrationCatalog);
 
-const baseEntry = (overrides: Partial<IntegrationCatalogEntry> = {}): IntegrationCatalogEntry => ({
+const baseEntry = ({
+  docsUrl = "https://docs.example.com/test",
+  ...overrides
+}: Partial<IntegrationCatalogEntry> = {}): IntegrationCatalogEntry => ({
   id: "test-integration",
   name: "Test Integration",
   description: "A test integration",
+  docsUrl,
   connectionOptions: [],
   ...overrides,
 });
@@ -135,7 +139,9 @@ describe("listIntegrationCatalogOptions — connection-defaults derivation", () 
     // The catalog's defaultTool field is intentionally not mapped — tools are
     // generated from the OpenAPI URL server-side, never hardcoded.
     expect("toolName" in (result[0]?.connectionDefaults ?? {})).toBe(false);
-    expect("requestMethod" in (result[0]?.connectionDefaults ?? {})).toBe(false);
+    expect("requestMethod" in (result[0]?.connectionDefaults ?? {})).toBe(
+      false,
+    );
   });
 
   it("maps all mcp/oauth2 connectionOption fields into connectionDefaults", () => {
@@ -187,9 +193,13 @@ describe("listIntegrationCatalogOptions — connection-defaults derivation", () 
       },
     });
     // OAuth fields should be nested inside oauthConfig, not at the top level
-    expect("authorizationUrl" in (result[0]?.connectionDefaults ?? {})).toBe(false);
+    expect("authorizationUrl" in (result[0]?.connectionDefaults ?? {})).toBe(
+      false,
+    );
     expect("tokenUrl" in (result[0]?.connectionDefaults ?? {})).toBe(false);
-    expect("clientAuthentication" in (result[0]?.connectionDefaults ?? {})).toBe(false);
+    expect(
+      "clientAuthentication" in (result[0]?.connectionDefaults ?? {}),
+    ).toBe(false);
   });
 
   it("maps top-level catalog entry metadata to catalog option fields", () => {

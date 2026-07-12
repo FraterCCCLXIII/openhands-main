@@ -18,11 +18,25 @@ from .crypto import (
 )
 from .models import (
     AccessRequest,
+    AdminConnectionFilters,
+    AdminOverview,
+    AgentApiKeyRecord,
+    ConnectionSummary,
+    DuplicateExternalAccount,
     IntegrationSpec,
+    KeyStatus,
     ManagedConnector,
+    NotificationRecord,
+    OAuthConnection,
+    OAuthConnectionMetadata,
+    OAuthCredentials,
+    OAuthState,
     PermissionProfile,
     PermissionProfileSnapshot,
+    TemporaryGrant,
+    ToolAccessPatch,
     ToolSpec,
+    ToolUsageSummary,
     now_iso,
 )
 
@@ -80,13 +94,12 @@ class Repository:
     ) -> dict[str, Any] | None:
         if not value:
             return None
-        return {
-            "keyPrefix": value[:12],
-            "keySuffix": value[-4:],
-            "recoverable": True,
-            "createdAt": Repository.iso(created_at) or now_iso(),
-            "updatedAt": Repository.iso(updated_at) or now_iso(),
-        }
+        return KeyStatus(
+            keyPrefix=value[:12],
+            keySuffix=value[-4:],
+            createdAt=Repository.iso(created_at) or now_iso(),
+            updatedAt=Repository.iso(updated_at) or now_iso(),
+        ).model_dump()
 
     @staticmethod
     def stored_key_status(
@@ -96,13 +109,12 @@ class Repository:
         suffix = str(key_suffix or "")
         if not prefix and not suffix:
             return None
-        return {
-            "keyPrefix": prefix,
-            "keySuffix": suffix,
-            "recoverable": True,
-            "createdAt": Repository.iso(created_at) or now_iso(),
-            "updatedAt": Repository.iso(updated_at) or now_iso(),
-        }
+        return KeyStatus(
+            keyPrefix=prefix,
+            keySuffix=suffix,
+            createdAt=Repository.iso(created_at) or now_iso(),
+            updatedAt=Repository.iso(updated_at) or now_iso(),
+        ).model_dump()
 
     @staticmethod
     def decrypt_api_key_value(payload: str | None) -> str | None:
@@ -165,7 +177,7 @@ class Repository:
     agent_keys: dict[str, str] = field(default_factory=dict)
     user_keys: dict[str, str] = field(default_factory=dict)
     admin_keys: dict[str, str] = field(default_factory=dict)
-    oauth_states: dict[str, dict[str, Any]] = field(default_factory=dict)
+    oauth_states: dict[str, OAuthState] = field(default_factory=dict)
     connections: dict[tuple[str, str], dict[str, Any]] = field(default_factory=dict)
     temporary_grants: dict[str, dict[str, Any]] = field(default_factory=dict)
     tool_invocations: list[dict[str, Any]] = field(default_factory=list)
@@ -340,22 +352,29 @@ class Repository:
         return tool
 
     def update_tool(
-        self, owner_id: str, integration_key: str, tool_name: str, patch: dict[str, Any]
+        self,
+        owner_id: str,
+        integration_key: str,
+        tool_name: str,
+        patch: ToolAccessPatch,
     ) -> ToolSpec | None:
         integration = self.get_integration(owner_id, integration_key)
         if not integration or tool_name not in integration.tools:
             return None
         current = integration.tools[tool_name]
-        if "accessMode" in patch and current.maxAccessMode:
+        if current.maxAccessMode:
             priority = {"disabled": 0, "approval_required": 1, "enabled": 2}
-            requested = patch["accessMode"]
+            requested = patch.accessMode
             if priority.get(requested, 0) > priority.get(current.maxAccessMode, 0):
                 raise ValueError(
                     f"Tool '{tool_name}' cannot exceed the organization-managed '{current.maxAccessMode}' access level."
                 )
-        next_tool = current.model_copy(update=patch)
-        if "accessMode" in patch:
-            next_tool.enabled = patch["accessMode"] != "disabled"
+        next_tool = current.model_copy(
+            update={
+                "accessMode": patch.accessMode,
+                "enabled": patch.accessMode != "disabled",
+            }
+        )
         integration.tools[tool_name] = next_tool
         self.save_integration(owner_id, integration)
         return next_tool
@@ -832,11 +851,11 @@ class Repository:
     def save_managed_connector(self, connector: ManagedConnector) -> ManagedConnector:
         connector.updatedAt = now_iso()
         if connector.authStrategy == "oauth2":
-            oauth_config = connector.oauthConfig or {}
+            oauth_config = connector.oauthConfig
             # Dynamic OAuth connectors (no catalog authorizationUrl) delegate
             # the OAuth dance to the MCP server. They are configured as soon
             # as metadata is discoverable — no client_id is needed.
-            if oauth_config.get("dynamicOAuth"):
+            if oauth_config and oauth_config.dynamicOAuth:
                 connector.oauthConfigured = True
             else:
                 connector.oauthConfigured = bool(connector.oauthClientId)
@@ -896,7 +915,9 @@ class Repository:
                     connector.apiBaseUrl or "",
                     connector.serverUrl,
                     connector.openApiUrl,
-                    Jsonb(connector.oauthConfig) if connector.oauthConfig else None,
+                    Jsonb(connector.oauthConfig.model_dump(exclude_none=True))
+                    if connector.oauthConfig
+                    else None,
                     encrypt_credentials(
                         {
                             "clientId": connector.oauthClientId,
@@ -947,15 +968,16 @@ class Repository:
         return self.managed_connectors.get(slug)
 
     def list_connections(
-        self, owner_id: str | None = None, filters: dict[str, Any] | None = None
+        self,
+        owner_id: str | None = None,
+        filters: AdminConnectionFilters | None = None,
     ) -> list[dict[str, Any]]:
         if self.database_url:
-            filters = filters or {}
-            owner_filter = owner_id or filters.get("ownerId")
-            provider = filters.get("provider")
-            integration_key = filters.get("integrationKey")
-            limit = int(filters.get("limit") or 100)
-            offset = int(filters.get("offset") or 0)
+            owner_filter = owner_id or (filters.ownerId if filters else None)
+            provider = filters.provider if filters else None
+            integration_key = filters.integrationKey if filters else None
+            limit = filters.limit if filters else 100
+            offset = filters.offset if filters else 0
             rows = self.db_rows(
                 """
                 SELECT * FROM integration_connections
@@ -983,21 +1005,21 @@ class Repository:
                     continue
                 if (
                     filters
-                    and filters.get("ownerId")
-                    and saved_owner.lower() != str(filters.get("ownerId")).lower()
+                    and filters.ownerId
+                    and saved_owner.lower() != filters.ownerId.lower()
                 ):
                     continue
                 if (
                     filters
-                    and filters.get("provider")
+                    and filters.provider
                     and str(record.get("provider", "")).lower()
-                    != str(filters.get("provider")).lower()
+                    != filters.provider.lower()
                 ):
                     continue
                 if (
                     filters
-                    and filters.get("integrationKey")
-                    and record.get("integrationKey") != filters.get("integrationKey")
+                    and filters.integrationKey
+                    and record.get("integrationKey") != filters.integrationKey
                 ):
                     continue
                 rows.append(
@@ -1017,24 +1039,26 @@ class Repository:
                         "updated_at": record.get("updatedAt"),
                     }
                 )
-        query = (filters or {}).get("q") or ""
+        query = filters.q if filters and filters.q else ""
         result = []
         for row in rows:
-            item = {
-                "ownerId": row.get("owner_id"),
-                "integrationKey": row.get("integration_key"),
-                "provider": row.get("provider"),
-                "authStrategy": row.get("auth_strategy"),
-                "tokenType": row.get("token_type"),
-                "scopes": row.get("scopes") or [],
-                "expiresAt": self.iso(row.get("expires_at")),
-                "externalAccountId": row.get("external_account_id"),
-                "externalWorkspaceId": row.get("external_workspace_id"),
-                "displayName": row.get("display_name"),
-                "metadata": row.get("metadata") or {},
-                "createdAt": self.iso(row.get("created_at")) or now_iso(),
-                "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
-            }
+            item = ConnectionSummary.model_validate(
+                {
+                    "ownerId": row.get("owner_id"),
+                    "integrationKey": row.get("integration_key"),
+                    "provider": row.get("provider"),
+                    "authStrategy": row.get("auth_strategy"),
+                    "tokenType": row.get("token_type"),
+                    "scopes": row.get("scopes") or [],
+                    "expiresAt": self.iso(row.get("expires_at")),
+                    "externalAccountId": row.get("external_account_id"),
+                    "externalWorkspaceId": row.get("external_workspace_id"),
+                    "displayName": row.get("display_name"),
+                    "metadata": row.get("metadata") or {},
+                    "createdAt": self.iso(row.get("created_at")) or now_iso(),
+                    "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
+                }
+            ).model_dump()
             if (
                 query
                 and query.lower()
@@ -1043,7 +1067,7 @@ class Repository:
                 continue
             if owner_id:
                 item.pop("ownerId", None)
-            if filters and filters.get("admin"):
+            if filters and filters.admin:
                 item.pop("metadata", None)
             result.append(item)
         return result
@@ -1052,15 +1076,15 @@ class Repository:
         if self.database_url:
             rows = self.db_rows("SELECT * FROM notifications ORDER BY created_at DESC")
             return [
-                {
-                    "id": str(row["id"]),
-                    "channel": row["channel"],
-                    "recipient": row["recipient"],
-                    "subject": row["subject"],
-                    "body": row["body"],
-                    "metadata": row.get("metadata") or {},
-                    "createdAt": self.iso(row.get("created_at")) or now_iso(),
-                }
+                NotificationRecord(
+                    id=str(row["id"]),
+                    channel=str(row["channel"]),
+                    recipient=str(row["recipient"]),
+                    subject=str(row["subject"]),
+                    body=str(row["body"]),
+                    metadata=row.get("metadata") or {},
+                    createdAt=self.iso(row.get("created_at")) or now_iso(),
+                ).model_dump()
                 for row in rows
             ]
         return []
@@ -1102,6 +1126,17 @@ class Repository:
         callback_url: str | None,
         expires_at: str,
     ) -> None:
+        oauth_state = OAuthState(
+            state=state,
+            ownerId=owner_id,
+            integrationKey=integration_key,
+            provider=provider,
+            codeVerifier=code_verifier,
+            redirectTo=redirect_to,
+            redirectUri=redirect_uri,
+            callbackUrl=callback_url,
+            expiresAt=expires_at,
+        )
         encrypted_verifier = (
             encrypt_credentials({"code_verifier": code_verifier})
             if code_verifier
@@ -1125,19 +1160,9 @@ class Repository:
                 ),
             )
         else:
-            self.oauth_states[state] = {
-                "state": state,
-                "owner_id": owner_id,
-                "integration_key": integration_key,
-                "provider": provider,
-                "code_verifier": code_verifier,
-                "redirect_to": redirect_to,
-                "redirect_uri": redirect_uri,
-                "callback_url": callback_url,
-                "expires_at": expires_at,
-            }
+            self.oauth_states[state] = oauth_state
 
-    def consume_oauth_state(self, state: str, provider: str) -> dict[str, Any] | None:
+    def consume_oauth_state(self, state: str, provider: str) -> OAuthState | None:
         if self.database_url:
             rows = self.db_rows(
                 "DELETE FROM oauth_states WHERE state = %s AND provider = %s AND expires_at > NOW() RETURNING *",
@@ -1147,13 +1172,26 @@ class Repository:
                 return None
             row = rows[0]
             encrypted_verifier = row.get("encrypted_code_verifier")
-            if encrypted_verifier:
-                row["code_verifier"] = decrypt_credentials(str(encrypted_verifier)).get(
-                    "code_verifier"
-                )
-            return row
+            code_verifier = (
+                decrypt_credentials(str(encrypted_verifier)).get("code_verifier")
+                if encrypted_verifier
+                else row.get("code_verifier")
+            )
+            return OAuthState(
+                state=str(row["state"]),
+                ownerId=str(row["owner_id"]),
+                integrationKey=str(row["integration_key"]),
+                provider=str(row["provider"]),
+                codeVerifier=str(code_verifier) if code_verifier else None,
+                redirectTo=str(row.get("redirect_to") or ""),
+                redirectUri=str(row.get("redirect_uri") or ""),
+                callbackUrl=str(row["callback_url"])
+                if row.get("callback_url")
+                else None,
+                expiresAt=self.iso(row.get("expires_at")) or now_iso(),
+            )
         row = self.oauth_states.pop(state, None)
-        return row if row and row.get("provider") == provider else None
+        return row if row and row.provider == provider else None
 
     def record_tool_invocation(
         self,
@@ -1218,7 +1256,9 @@ class Repository:
         credentials: dict[str, Any],
         metadata: dict[str, Any],
     ) -> dict[str, Any]:
-        encrypted = encrypt_credentials(credentials)
+        oauth_credentials = OAuthCredentials.model_validate(credentials)
+        oauth_metadata = OAuthConnectionMetadata.model_validate(metadata)
+        encrypted = encrypt_credentials(oauth_credentials.model_dump(exclude_none=True))
         if self.database_url:
             self.execute_db(
                 """INSERT INTO integration_connections (owner_id, integration_key, provider, auth_strategy, encrypted_credentials, token_type, scopes, expires_at, external_account_id, external_workspace_id, display_name, metadata, created_at, updated_at)
@@ -1230,34 +1270,27 @@ class Repository:
                     provider,
                     auth_strategy,
                     encrypted,
-                    metadata.get("tokenType"),
-                    Jsonb(metadata.get("scopes") or []),
-                    metadata.get("expiresAt"),
-                    metadata.get("externalAccountId"),
-                    metadata.get("externalWorkspaceId"),
-                    metadata.get("displayName"),
-                    Jsonb(metadata.get("metadata") or {}),
+                    oauth_metadata.tokenType,
+                    Jsonb(oauth_metadata.scopes),
+                    oauth_metadata.expiresAt,
+                    oauth_metadata.externalAccountId,
+                    oauth_metadata.externalWorkspaceId,
+                    oauth_metadata.displayName,
+                    Jsonb(oauth_metadata.metadata),
                 ),
             )
-        record = {
-            "integrationKey": integration_key,
-            "provider": provider,
-            "authStrategy": auth_strategy,
-            "tokenType": metadata.get("tokenType"),
-            "scopes": metadata.get("scopes") or [],
-            "expiresAt": metadata.get("expiresAt"),
-            "externalAccountId": metadata.get("externalAccountId"),
-            "externalWorkspaceId": metadata.get("externalWorkspaceId"),
-            "displayName": metadata.get("displayName"),
-            "metadata": metadata.get("metadata") or {},
-            "createdAt": now_iso(),
-            "updatedAt": now_iso(),
-        }
-        self.connections[(owner_id, integration_key)] = {
-            **record,
-            "credentials": credentials,
-        }
-        return record
+        connection = OAuthConnection(
+            ownerId=owner_id,
+            integrationKey=integration_key,
+            provider=provider,
+            authStrategy="oauth2",
+            credentials=oauth_credentials,
+            **oauth_metadata.model_dump(),
+        )
+        self.connections[(owner_id, integration_key)] = connection.model_dump(
+            exclude_none=True
+        )
+        return connection.model_dump(exclude={"ownerId", "credentials"})
 
     def get_connection(
         self, owner_id: str, integration_key: str
@@ -1270,28 +1303,32 @@ class Repository:
             if not rows:
                 return None
             row = rows[0]
-            return {
-                "ownerId": row.get("owner_id"),
-                "integrationKey": row.get("integration_key"),
-                "provider": row.get("provider"),
-                "authStrategy": row.get("auth_strategy"),
-                "credentials": decrypt_credentials(row["encrypted_credentials"]),
-                "tokenType": row.get("token_type"),
-                "scopes": row.get("scopes") or [],
-                "expiresAt": self.iso(row.get("expires_at")),
-                "externalAccountId": row.get("external_account_id"),
-                "externalWorkspaceId": row.get("external_workspace_id"),
-                "displayName": row.get("display_name"),
-                "metadata": row.get("metadata") or {},
-                "createdAt": self.iso(row.get("created_at")) or now_iso(),
-                "updatedAt": self.iso(row.get("updated_at")) or now_iso(),
-            }
+            return OAuthConnection(
+                ownerId=str(row.get("owner_id") or owner_id),
+                integrationKey=str(row.get("integration_key") or integration_key),
+                provider=str(row.get("provider") or ""),
+                authStrategy="oauth2",
+                credentials=OAuthCredentials.model_validate(
+                    decrypt_credentials(row["encrypted_credentials"])
+                ),
+                tokenType=row.get("token_type"),
+                scopes=row.get("scopes") or [],
+                expiresAt=self.iso(row.get("expires_at")),
+                externalAccountId=row.get("external_account_id"),
+                externalWorkspaceId=row.get("external_workspace_id"),
+                displayName=row.get("display_name"),
+                metadata=row.get("metadata") or {},
+                createdAt=self.iso(row.get("created_at")) or now_iso(),
+                updatedAt=self.iso(row.get("updated_at")) or now_iso(),
+            ).model_dump(exclude_none=True)
         record = self.connections.get(
             (owner_id, integration_key)
         ) or self.connections.get((owner_id.lower(), integration_key))
         if not record:
             return None
-        return {"ownerId": owner_id, **record}
+        return OAuthConnection.model_validate(
+            {"ownerId": owner_id, **record}
+        ).model_dump(exclude_none=True)
 
     def get_connection_credentials(
         self, owner_id: str, integration_key: str
@@ -1321,37 +1358,36 @@ class Repository:
             if not rows:
                 return None
             row = rows[0]
-            return {
-                "ownerId": row["owner_id"],
-                "apiKey": value,
-                "permissionProfileId": row.get("permission_profile_id"),
-                "permissionProfileName": row.get("permission_profile_name"),
-                "createdAt": self.iso(row.get("created_at")),
-                "updatedAt": self.iso(row.get("updated_at")),
-            }
+            return AgentApiKeyRecord(
+                ownerId=str(row["owner_id"]),
+                apiKey=value,
+                permissionProfileId=row.get("permission_profile_id"),
+                permissionProfileName=row.get("permission_profile_name"),
+                createdAt=self.iso(row.get("created_at")) or now_iso(),
+                updatedAt=self.iso(row.get("updated_at")) or now_iso(),
+            ).model_dump()
         for owner_id, profiles in self.permission_profiles.items():
             for profile_id in profiles:
                 if self.profile_agent_keys.get(profile_id) == value:
                     profile = profiles[profile_id]
-                    return {
-                        "ownerId": owner_id,
-                        "apiKey": value,
-                        "permissionProfileId": profile_id,
-                        "permissionProfileName": profile.name,
-                        "createdAt": profile.createdAt,
-                        "updatedAt": profile.updatedAt,
-                    }
+                    return AgentApiKeyRecord(
+                        ownerId=owner_id,
+                        apiKey=value,
+                        permissionProfileId=profile_id,
+                        permissionProfileName=profile.name,
+                        createdAt=profile.createdAt,
+                        updatedAt=profile.updatedAt,
+                    ).model_dump()
         for owner_id, stored in self.agent_keys.items():
             if stored == value:
                 profile = self.get_default_permission_profile(owner_id)
-                return {
-                    "ownerId": owner_id,
-                    "apiKey": stored,
-                    "permissionProfileId": profile.id if profile else None,
-                    "permissionProfileName": None,
-                    "createdAt": now_iso(),
-                    "updatedAt": now_iso(),
-                }
+                return AgentApiKeyRecord(
+                    ownerId=owner_id,
+                    apiKey=stored,
+                    permissionProfileId=profile.id if profile else None,
+                    createdAt=now_iso(),
+                    updatedAt=now_iso(),
+                ).model_dump()
         return None
 
     def find_scoped_api_key(self, kind: str, api_key: str) -> dict[str, Any] | None:
@@ -1362,12 +1398,12 @@ class Repository:
             bucket = {"user": self.user_keys, "admin": self.admin_keys}[kind]
             for owner_id, stored in bucket.items():
                 if stored == value:
-                    return {
-                        "ownerId": owner_id,
-                        "apiKey": stored,
-                        "createdAt": now_iso(),
-                        "updatedAt": now_iso(),
-                    }
+                    return AgentApiKeyRecord(
+                        ownerId=owner_id,
+                        apiKey=stored,
+                        createdAt=now_iso(),
+                        updatedAt=now_iso(),
+                    ).model_dump()
             return None
         table = "user_api_keys" if kind == "user" else "admin_api_keys"
         rows = self.db_rows(
@@ -1376,12 +1412,12 @@ class Repository:
         if not rows:
             return None
         row = rows[0]
-        return {
-            "ownerId": row["owner_id"],
-            "apiKey": value,
-            "createdAt": self.iso(row.get("created_at")),
-            "updatedAt": self.iso(row.get("updated_at")),
-        }
+        return AgentApiKeyRecord(
+            ownerId=str(row["owner_id"]),
+            apiKey=value,
+            createdAt=self.iso(row.get("created_at")) or now_iso(),
+            updatedAt=self.iso(row.get("updated_at")) or now_iso(),
+        ).model_dump()
 
     def get_key(self, owner_id: str, kind: str) -> dict[str, Any]:
         if kind == "agent":
@@ -1504,18 +1540,18 @@ class Repository:
                     "SELECT * FROM temporary_grants ORDER BY created_at DESC"
                 )
             return [
-                {
-                    "id": str(row["id"]),
-                    "ownerId": str(row.get("owner_id") or ""),
-                    "agentId": row.get("agent_id"),
-                    "agentClass": row.get("agent_class"),
-                    "integrationKey": str(row["integration_key"]),
-                    "toolName": str(row["function_name"]),
-                    "scopes": row.get("scopes") or [],
-                    "grantedBy": str(row["granted_by"]),
-                    "createdAt": self.iso(row.get("created_at")) or now_iso(),
-                    "expiresAt": self.iso(row.get("expires_at")) or now_iso(),
-                }
+                TemporaryGrant(
+                    id=str(row["id"]),
+                    ownerId=str(row.get("owner_id") or ""),
+                    agentId=row.get("agent_id"),
+                    agentClass=row.get("agent_class"),
+                    integrationKey=str(row["integration_key"]),
+                    toolName=str(row["function_name"]),
+                    scopes=row.get("scopes") or [],
+                    grantedBy=str(row["granted_by"]),
+                    createdAt=self.iso(row.get("created_at")) or now_iso(),
+                    expiresAt=self.iso(row.get("expires_at")) or now_iso(),
+                ).model_dump()
                 for row in rows
             ]
         grants = list(self.temporary_grants.values())
@@ -1528,6 +1564,8 @@ class Repository:
         return grants
 
     def save_temporary_grant(self, grant: dict[str, Any]) -> dict[str, Any]:
+        validated_grant = TemporaryGrant.model_validate(grant)
+        grant = validated_grant.model_dump()
         if self.database_url:
             self.execute_db(
                 """INSERT INTO temporary_grants (id, owner_id, agent_id, agent_class, integration_key, function_name, scopes, granted_by, created_at, expires_at)
@@ -1560,13 +1598,13 @@ class Repository:
                 (owner_id,),
             )
             return [
-                {
-                    "integrationKey": str(row["integration_key"]),
-                    "toolName": str(row["function_name"]),
-                    "lastInvokedAt": self.iso(row.get("last_invoked_at")) or now_iso(),
-                    "lastInvocationOutcome": row.get("last_outcome"),
-                    "invocationCount": int(row.get("invocation_count") or 0),
-                }
+                ToolUsageSummary(
+                    integrationKey=str(row["integration_key"]),
+                    toolName=str(row["function_name"]),
+                    lastInvokedAt=self.iso(row.get("last_invoked_at")) or now_iso(),
+                    lastInvocationOutcome=row["last_outcome"],
+                    invocationCount=int(row.get("invocation_count") or 0),
+                ).model_dump()
                 for row in rows
             ]
         summaries: dict[tuple[str, str], dict[str, Any]] = {}
@@ -1588,7 +1626,10 @@ class Repository:
             summaries[key]["invocationCount"] = (
                 int(summaries[key].get("invocationCount") or 0) + 1
             )
-        return list(summaries.values())
+        return [
+            ToolUsageSummary.model_validate(summary).model_dump()
+            for summary in summaries.values()
+        ]
 
     def purge_expired_grants(self) -> int:
         if self.database_url:
@@ -1599,9 +1640,7 @@ class Repository:
         return 0
 
     def overview(self) -> dict[str, Any]:
-        connections = self.list_connections(
-            filters={"admin": True, "limit": 1000, "offset": 0}
-        )
+        connections = self.list_connections(filters=AdminConnectionFilters(limit=1000))
         access_requests = self.list_access_requests(None)
         notifications = self.list_notifications()
         users: dict[str, dict[str, Any]] = {}
@@ -1680,18 +1719,22 @@ class Repository:
                 dup for dup in duplicates if summary["ownerId"] in dup["owners"]
             ]
             user_list.append(summary)
-        return {
-            "totalConnections": len(connections),
-            "connectedOwners": len(users),
-            "managedConnectors": len(self.list_managed_connectors()),
-            "totalAccessRequests": len(access_requests),
-            "pendingAccessRequests": sum(
+        duplicate_models = [
+            DuplicateExternalAccount.model_validate(duplicate)
+            for duplicate in duplicates
+        ]
+        return AdminOverview(
+            totalConnections=len(connections),
+            connectedOwners=len(users),
+            managedConnectors=len(self.list_managed_connectors()),
+            totalAccessRequests=len(access_requests),
+            pendingAccessRequests=sum(
                 1 for r in access_requests if r.status == "pending"
             ),
-            "notifications": len(notifications),
-            "duplicateExternalAccounts": duplicates,
-            "users": user_list,
-        }
+            notifications=len(notifications),
+            duplicateExternalAccounts=duplicate_models,
+            users=user_list,
+        ).model_dump()
 
     def rotate_key(self, bucket: dict[str, str], owner_id: str, prefix: str) -> str:
         value = f"{prefix}_{token_urlsafe(24)}"

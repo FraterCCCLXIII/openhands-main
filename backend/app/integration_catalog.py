@@ -1,51 +1,43 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
+
+from openhands_extensions import (
+    HttpConnectionOption,
+    IntegrationCatalogEntry,
+    IntegrationConnectionOption,
+    McpConnectionOption,
+)
+
+from .models import AuthStrategy, ConnectionDefaults, OAuthConfig
 
 
-def defined_values(values: dict[str, Any]) -> dict[str, Any]:
-    return {key: value for key, value in values.items() if value is not None}
-
-
-def connection_defaults_from_option(option: dict[str, Any]) -> dict[str, Any]:
-    auth = option.get("auth", {})
-    oauth = auth.get("oauth", {})
-    http = option.get("http", {})
-    transport = option.get("transport", {})
-    oauth_config = defined_values(
-        {
-            "authorizationUrl": oauth.get("authorizationUrl"),
-            "tokenUrl": oauth.get("tokenUrl"),
-            "scopes": oauth.get("scopes"),
-            "optionalScopes": oauth.get("optionalScopes"),
-            "scopeSeparator": oauth.get("scopeSeparator"),
-            "pkce": oauth.get("pkce"),
-            "clientAuthentication": oauth.get("clientAuthentication"),
-            "registrationUrl": oauth.get("registrationUrl"),
-            "additionalAuthorizationParams": oauth.get("additionalAuthorizationParams"),
-            "additionalTokenParams": oauth.get("additionalTokenParams"),
-        }
+def connection_defaults_from_option(
+    option: IntegrationConnectionOption,
+) -> ConnectionDefaults:
+    oauth_config = (
+        OAuthConfig.model_validate(option.auth.oauth.model_dump(exclude_none=True))
+        if option.auth.oauth
+        else None
     )
-    return defined_values(
-        {
-            "provider": option.get("provider"),
-            "authModes": auth.get("authModes"),
-            "authStrategy": auth.get("strategy"),
-            "credentialLabel": auth.get("credentialLabel"),
-            "credentialPlaceholder": auth.get("credentialPlaceholder"),
-            "credentialHelp": auth.get("credentialHelp"),
-            "apiKeyHeaderName": auth.get("apiKeyHeaderName"),
-            "apiKeyOptional": auth.get("apiKeyOptional"),
-            "apiBaseUrl": http.get("apiBaseUrl"),
-            "serverUrl": transport.get("url"),
-            "openApiUrl": http.get("openApiUrl"),
-            "oauthConfig": oauth_config if oauth_config else None,
-        }
+    http = option.http if isinstance(option, HttpConnectionOption) else None
+    transport = option.transport if isinstance(option, McpConnectionOption) else None
+    server_url = getattr(transport, "url", None) if transport else None
+    return ConnectionDefaults(
+        provider=option.provider,
+        authModes=cast(list[AuthStrategy] | None, option.auth.authModes),
+        authStrategy=option.auth.strategy,
+        credentialLabel=option.auth.credentialLabel,
+        credentialPlaceholder=option.auth.credentialPlaceholder,
+        credentialHelp=option.auth.credentialHelp,
+        apiKeyHeaderName=option.auth.apiKeyHeaderName,
+        apiKeyOptional=option.auth.apiKeyOptional,
+        apiBaseUrl=http.apiBaseUrl if http else None,
+        serverUrl=server_url,
+        openApiUrl=http.openApiUrl if http else None,
+        oauthConfig=oauth_config,
     )
 
 
-def first_connection_defaults(entry: dict[str, Any]) -> dict[str, Any] | None:
-    option = (entry.get("connectionOptions") or [None])[0]
-    if not option:
-        return None
-    return connection_defaults_from_option(option)
+def first_connection_defaults(entry: IntegrationCatalogEntry) -> ConnectionDefaults:
+    return connection_defaults_from_option(entry.connectionOptions[0])

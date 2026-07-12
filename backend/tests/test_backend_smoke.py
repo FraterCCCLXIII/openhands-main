@@ -89,6 +89,56 @@ def test_register_integration_and_invoke_mock_tool(
     assert result.json()["data"] == {"ok": True}
 
 
+def test_rejects_invalid_small_mutation_request_bodies(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    client = TestClient(app)
+    integration = {
+        "key": "crm",
+        "name": "CRM",
+        "kind": "api",
+        "provider": "mock",
+        "authStrategy": "none",
+        "tools": {"lookup": {"name": "lookup", "executionMode": "mock"}},
+    }
+    assert client.post("/api/integrations", json=integration).status_code == 200
+
+    # This endpoint only supports accessMode. Previously, any ToolSpec field
+    # supplied in the patch was passed through to model_copy().
+    patch = client.patch(
+        "/api/integrations/crm/tools/lookup",
+        json={"accessMode": "disabled", "executionMode": "provider"},
+    )
+    assert patch.status_code == 422, patch.text
+    saved = repository.get_integration("dev@localhost", "crm")
+    assert saved is not None
+    assert saved.tools["lookup"].executionMode == "mock"
+
+    # StrictBool avoids Python's bool("false") == True behavior.
+    assert (
+        client.post(
+            "/api/integrations/crm/toggle", json={"enabled": "false"}
+        ).status_code
+        == 422
+    )
+    assert saved.enabled is True
+    assert (
+        client.post(
+            "/api/integrations/disable-unused",
+            json={"thresholdValue": 0, "thresholdUnit": "days"},
+        ).status_code
+        == 422
+    )
+    assert client.post("/api/integrations/discover", json=[]).status_code == 422
+    assert (
+        client.post(
+            "/api/permission-profiles", json={"name": "Research", "role": "admin"}
+        ).status_code
+        == 422
+    )
+
+
 def test_permission_profiles_save_load_and_update_current_settings(
     config_env: ConfigEnvFixture,
 ) -> None:
@@ -1156,44 +1206,49 @@ def test_dynamic_oauth_default_connector_is_configured_without_admin(
 ) -> None:
     """Dynamic OAuth connectors (no catalog authorizationUrl) should surface as
     oauthConfigured=True by default — no admin pre-configuration is needed."""
+    from openhands_extensions import IntegrationCatalogEntry
+
     from backend.app import main as main_mod, managed_connectors as mc_mod
 
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     client = TestClient(app)
 
-    synthetic_entry = {
-        "id": "dynamic-oauth-default",
-        "name": "Dynamic OAuth Default",
-        "description": "Server-managed OAuth via mcp-remote",
-        "categories": [],
-        "popularityRank": 999,
-        "connectionOptions": [
-            {
-                "id": "mcp-remote",
-                "provider": "mcp",
-                "transport": {
-                    "type": "mcp-remote",
-                    "url": "https://mcp.dynamic.example/mcp",
-                },
-                "auth": {
-                    "strategy": "oauth2",
-                    "oauth": {
-                        "scopes": [],
-                        "clientAuthentication": "none",
-                        "pkce": True,
+    synthetic_entry = IntegrationCatalogEntry.model_validate(
+        {
+            "id": "dynamic-oauth-default",
+            "name": "Dynamic OAuth Default",
+            "description": "Server-managed OAuth via mcp-remote",
+            "docsUrl": "https://docs.example/dynamic-oauth-default",
+            "categories": ["Testing"],
+            "popularityRank": 999,
+            "connectionOptions": [
+                {
+                    "id": "mcp-remote",
+                    "provider": "mcp",
+                    "transport": {
+                        "kind": "shttp",
+                        "url": "https://mcp.dynamic.example/mcp",
                     },
-                },
-            }
-        ],
-    }
+                    "auth": {
+                        "strategy": "oauth2",
+                        "oauth": {
+                            "scopes": [],
+                            "clientAuthentication": "none",
+                            "pkce": True,
+                        },
+                    },
+                }
+            ],
+        }
+    )
 
-    original_list = mc_mod.list_integration_catalog
+    original_list = mc_mod.list_integration_catalog_models
 
     def patched_list():
         return [*original_list(), synthetic_entry]
 
-    monkeypatch.setattr(mc_mod, "list_integration_catalog", patched_list)
-    monkeypatch.setattr(main_mod, "list_integration_catalog", patched_list)
+    monkeypatch.setattr(mc_mod, "list_integration_catalog_models", patched_list)
+    monkeypatch.setattr(main_mod, "list_integration_catalog_models", patched_list)
     mc_mod.default_managed_connectors.cache_clear()
     try:
         catalog = client.get("/api/integrations?filter=all").json()

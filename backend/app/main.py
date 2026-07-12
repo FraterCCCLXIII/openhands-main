@@ -21,7 +21,11 @@ from fastapi.responses import (
     Response,
     StreamingResponse,
 )
-from openhands_extensions import list_integration_catalog
+from openhands_extensions import (
+    IntegrationCatalogEntry,
+    IntegrationConnectionOption,
+    list_integration_catalog_models,
+)
 from pydantic import ValidationError
 
 from .auth import (
@@ -40,15 +44,23 @@ from .managed_connectors import (
 )
 from .models import (
     AccessRequest,
+    AccessRequestApprovalRequest,
+    AdminConnectionFilters,
     AgentInvocationRequest,
+    DisableUnusedToolsRequest,
+    HttpRequestTemplate,
+    IntegrationDiscoveryRequest,
     IntegrationSpec,
+    IntegrationToggleRequest,
     ManagedConnector,
     ManagedConnectorTool,
     PermissionProfile,
     PermissionProfileApplyResult,
+    PermissionProfileCreateRequest,
     PermissionProfileIntegrationSnapshot,
     PermissionProfileSnapshot,
     ToolAccessMode,
+    ToolAccessPatch,
     ToolSpec,
     now_iso,
 )
@@ -96,17 +108,8 @@ ADMIN_API_SESSION_DETAIL = "Only app administrators can use admin API routes."
 CASE_BY_CASE_APPROVAL_PATH = "/case-by-case-approvals"
 
 
-def admin_connection_filters(request: Request) -> dict[str, Any]:
-    params = request.query_params
-    return {
-        "ownerId": params.get("ownerId"),
-        "provider": params.get("provider"),
-        "integrationKey": params.get("integrationKey"),
-        "q": params.get("q"),
-        "limit": int(params.get("limit") or 100),
-        "offset": int(params.get("offset") or 0),
-        "admin": True,
-    }
+def admin_connection_filters(request: Request) -> AdminConnectionFilters:
+    return AdminConnectionFilters.model_validate(request.query_params)
 
 
 def base_url(request: Request) -> str:
@@ -687,7 +690,7 @@ def invoke_http_tool(
     owner: str, integration: IntegrationSpec, tool: ToolSpec, payload: dict[str, Any]
 ) -> Any:
     base = http_api_base_url(integration)
-    request_template = (
+    request_template_data = (
         tool.config.get("request") if isinstance(tool.config, dict) else None
     )
     if not base:
@@ -695,32 +698,35 @@ def invoke_http_tool(
             status_code=400,
             detail=f"Integration '{integration.key}' is missing an apiBaseUrl configuration.",
         )
-    if (
-        not isinstance(request_template, dict)
-        or not request_template.get("method")
-        or not request_template.get("path")
-    ):
+    if not isinstance(request_template_data, dict):
         raise HTTPException(
             status_code=400,
             detail=f"Tool '{tool.name}' is missing an HTTP request template.",
         )
-    method = str(request_template["method"]).upper()
+    try:
+        request_template = HttpRequestTemplate.model_validate(request_template_data)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tool '{tool.name}' has an invalid HTTP request template.",
+        ) from exc
+    method = request_template.method.upper()
     validate_external_url(base, purpose="HTTP API base")
-    path = path_template(str(request_template["path"]), payload).lstrip("/")
+    path = path_template(request_template.path, payload).lstrip("/")
     url = f"{base}/{path}"
-    query = resolve_template(request_template.get("query") or {}, payload)
+    query = resolve_template(request_template.query, payload)
     if isinstance(query, dict) and query:
         url += "?" + urllib.parse.urlencode(query, doseq=True)
     headers = http_auth_headers(integration, credentials_for(owner, integration))
-    header_values = resolve_template(request_template.get("headers") or {}, payload)
+    header_values = resolve_template(request_template.headers, payload)
     if isinstance(header_values, dict):
         headers.update(
             {str(k): str(v) for k, v in header_values.items() if v is not None}
         )
-    body = resolve_template(request_template.get("body"), payload)
+    body = resolve_template(request_template.body, payload)
     data = None
     if method not in {"GET", "HEAD"} and body is not None:
-        content_type = request_template.get("contentType") or "json"
+        content_type = request_template.contentType
         if content_type == "form_urlencoded":
             data = urllib.parse.urlencode(
                 body if isinstance(body, dict) else {}
@@ -1541,11 +1547,11 @@ def assert_user_can_save_integration(
 
 
 def assert_user_can_discover_integration(
-    owner: str, payload: dict[str, Any], is_admin: bool | None = None
+    owner: str,
+    payload: IntegrationDiscoveryRequest,
+    is_admin: bool | None = None,
 ) -> None:
-    if (owner_is_admin(owner) if is_admin is None else is_admin) or payload.get(
-        "kind"
-    ) == "managed":
+    if (owner_is_admin(owner) if is_admin is None else is_admin) or payload.is_managed:
         return
     raise HTTPException(
         status_code=403, detail=RAW_CONNECTOR_DISCOVERY_FORBIDDEN_DETAIL
@@ -1572,14 +1578,11 @@ def subtract_unused_window(value: int, unit: str) -> str:
     return cutoff.isoformat().replace("+00:00", "Z")
 
 
-def disable_unused_tools(owner: str, body: dict[str, Any]) -> dict[str, Any]:
-    value = int(body.get("thresholdValue") or 30)
-    unit = str(body.get("thresholdUnit") or "days")
-    if value <= 0 or unit not in {"days", "weeks", "months"}:
-        raise HTTPException(
-            status_code=400,
-            detail="thresholdValue must be positive and thresholdUnit must be days, weeks, or months.",
-        )
+def disable_unused_tools(
+    owner: str, request: DisableUnusedToolsRequest
+) -> dict[str, Any]:
+    value = request.thresholdValue
+    unit = request.thresholdUnit
     cutoff = subtract_unused_window(value, unit)
     usage = {
         (summary["integrationKey"], summary["toolName"]): summary
@@ -1622,8 +1625,8 @@ def disable_unused_tools(owner: str, body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def trimmed_profile_name(body: Any) -> str:
-    name = str((body or {}).get("name") or "").strip()
+def trimmed_profile_name(request: PermissionProfileCreateRequest) -> str:
+    name = request.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Profile name is required.")
     if len(name) > 80:
@@ -1739,8 +1742,10 @@ def profiled_integration(
     return apply_permission_profile_to_integration(integration, profile)
 
 
-def create_permission_profile(owner: str, body: Any) -> PermissionProfile:
-    name = trimmed_profile_name(body)
+def create_permission_profile(
+    owner: str, request: PermissionProfileCreateRequest
+) -> PermissionProfile:
+    name = trimmed_profile_name(request)
     if repository.permission_profile_name_exists(owner, name):
         raise HTTPException(
             status_code=409,
@@ -1838,12 +1843,12 @@ def integration_catalog(
         managed = list_managed_connectors(include_defaults=False)
         managed_by_slug = {c.slug: c for c in managed}
         catalog_entries: list[dict[str, Any]] = []
-        for entry in list_integration_catalog():
-            slug = entry["id"]
+        for entry in list_integration_catalog_models():
+            slug = entry.id
             connector = managed_by_slug.get(slug)
             if not connector or not connector.enabled:
                 continue
-            option = (entry.get("connectionOptions") or [None])[0]
+            option = entry.connectionOptions[0]
             catalog_entries.append(_catalog_entry(entry, option, connector))
         return catalog_entries
 
@@ -1853,11 +1858,9 @@ def integration_catalog(
         connector.slug for connector in repository.list_managed_connectors()
     }
     catalog_entries = []
-    for entry in list_integration_catalog():
-        option = (entry.get("connectionOptions") or [None])[0]
-        if not option:
-            continue
-        slug = entry["id"]
+    for entry in list_integration_catalog_models():
+        option = entry.connectionOptions[0]
+        slug = entry.id
         connector = managed.get(slug)
         if filter == "registerable":
             # Include if explicitly registered or passes the default-managed filter.
@@ -1870,29 +1873,27 @@ def integration_catalog(
 
 
 def _catalog_entry(
-    entry: dict[str, Any],
-    option: dict[str, Any] | None,
+    entry: IntegrationCatalogEntry,
+    option: IntegrationConnectionOption,
     connector: ManagedConnector | None,
 ) -> dict[str, Any]:
     return {
-        "slug": entry["id"],
-        "name": connector.name if connector else entry["name"],
-        "description": connector.description if connector else entry["description"],
+        "slug": entry.id,
+        "name": connector.name if connector else entry.name,
+        "description": connector.description if connector else entry.description,
         "categories": connector.categories
         if connector and connector.categories
-        else entry.get("categories", []),
-        "popularityRank": entry.get("popularityRank", 0),
-        "appUrl": connector.appUrl if connector else entry.get("appUrl"),
-        "docsUrl": connector.docsUrl if connector else entry.get("docsUrl"),
-        "logoUrl": connector.logoUrl if connector else entry.get("logoUrl"),
-        "iconBg": connector.iconBg if connector else entry.get("iconBg"),
-        "iconColor": connector.iconColor if connector else entry.get("iconColor"),
+        else entry.categories or [],
+        "popularityRank": entry.popularityRank or 0,
+        "appUrl": connector.appUrl if connector else entry.appUrl,
+        "docsUrl": connector.docsUrl if connector else entry.docsUrl,
+        "logoUrl": connector.logoUrl if connector else entry.logoUrl,
+        "iconBg": connector.iconBg if connector else entry.iconBg,
+        "iconColor": connector.iconColor if connector else entry.iconColor,
         "connectionDefaults": connector.response()
         if connector
-        else connection_defaults_from_option(option)
-        if option
-        else {},
-        "notes": entry.get("notes", ""),
+        else connection_defaults_from_option(option).model_dump(exclude_none=True),
+        "notes": entry.notes or "",
     }
 
 
@@ -2002,7 +2003,11 @@ def connector_tools(connector: ManagedConnector) -> dict[str, ToolSpec]:
             enabled=tool.accessMode != "disabled",
             config={
                 **tool.config,
-                **({"request": tool.request} if tool.request else {}),
+                **(
+                    {"request": tool.request.model_dump(exclude_none=True)}
+                    if tool.request
+                    else {}
+                ),
             },
         )
         for tool in source_tools
@@ -2012,12 +2017,13 @@ def connector_tools(connector: ManagedConnector) -> dict[str, ToolSpec]:
 def managed_tool_from_tool_spec(
     tool: ToolSpec, access_mode: str
 ) -> ManagedConnectorTool:
-    request = (
+    request_data = (
         tool.config.get("request")
         if isinstance(tool.config, dict)
         and isinstance(tool.config.get("request"), dict)
         else None
     )
+    request = HttpRequestTemplate.model_validate(request_data) if request_data else None
     config = dict(tool.config)
     config.pop("request", None)
     return ManagedConnectorTool(
@@ -2381,18 +2387,17 @@ def backfill_oauth_mcp_tools_after_connection(
 
 
 def discovered_integration(
-    payload: dict[str, Any], owner: str, *, allow_catalog_defaults: bool = False
+    payload: IntegrationDiscoveryRequest,
+    owner: str,
+    *,
+    allow_catalog_defaults: bool = False,
 ) -> dict[str, Any]:
-    config = payload.get("config") if isinstance(payload.get("config"), dict) else {}
-    credentials = (
-        payload.get("credentials")
-        if isinstance(payload.get("credentials"), dict)
-        else {}
-    )
+    config = payload.config
+    credentials = payload.credentials
     slug = (
-        payload.get("managedConnectorSlug")
+        payload.managedConnectorSlug
         or config.get("managedConnectorSlug")
-        or payload.get("key")
+        or payload.key
     )
     stored_connector = repository.get_managed_connector(str(slug)) if slug else None
     if stored_connector and not stored_connector.enabled:
@@ -2408,7 +2413,7 @@ def discovered_integration(
     connector = stored_connector
     if allow_catalog_defaults and not connector:
         connector = default_managed_connector(str(slug) if slug else "")
-    if slug and not connector and payload.get("kind") == "managed":
+    if slug and not connector and payload.is_managed:
         raise HTTPException(
             status_code=404,
             detail=(
@@ -2417,7 +2422,7 @@ def discovered_integration(
             ),
         )
     if connector:
-        integration_key = str(payload.get("key") or connector.slug)
+        integration_key = str(payload.key or connector.slug)
         if connector.authStrategy == "oauth2" and not connector.oauthConfigured:
             raise HTTPException(
                 status_code=403,
@@ -2431,7 +2436,7 @@ def discovered_integration(
             )
         return {
             "key": integration_key,
-            "name": payload.get("name") or connector.name,
+            "name": payload.name or connector.name,
             "kind": "mcp" if connector.provider == "mcp" else "api",
             "provider": connector.provider,
             "authStrategy": connector.authStrategy,
@@ -2441,7 +2446,7 @@ def discovered_integration(
             "credentials": resolved_credentials,
             "tools": {name: tool.model_dump() for name, tool in tools.items()},
         }
-    if payload.get("kind") != "mcp":
+    if payload.kind != "mcp":
         raise HTTPException(
             status_code=400,
             detail="Only managed connectors and raw MCP discovery are supported.",
@@ -2456,8 +2461,8 @@ def discovered_integration(
         server_url, mcp_discovery_headers(auth_strategy, credentials), config
     )
     return {
-        "key": payload.get("key", "custom"),
-        "name": payload.get("name", payload.get("key", "Custom integration")),
+        "key": payload.key or "custom",
+        "name": payload.name or payload.key or "Custom integration",
         "kind": "mcp",
         "provider": "mcp",
         "authStrategy": auth_strategy,
@@ -2577,7 +2582,9 @@ async def fastapi_handler(request: Request):
         ensure_default_permission_profile(owner, refresh=True)
         if method == "GET":
             return repository.list_permission_profiles(owner)
-        return create_permission_profile(owner, body)
+        return create_permission_profile(
+            owner, PermissionProfileCreateRequest.model_validate(body)
+        )
 
     if path == "/api/permission-profiles/{profileId}/update":
         return update_permission_profile(owner, params["profileId"])
@@ -2691,7 +2698,10 @@ async def fastapi_handler(request: Request):
         integration = repository.get_integration(owner, params["integrationKey"])
         if not integration:
             raise HTTPException(status_code=404, detail="Integration not found.")
-        integration.enabled = bool(body.get("enabled", not integration.enabled))
+        toggle = IntegrationToggleRequest.model_validate(body)
+        integration.enabled = (
+            toggle.enabled if toggle.enabled is not None else not integration.enabled
+        )
         saved_integration = repository.save_integration(
             owner, apply_managed_constraints(integration)
         )
@@ -2711,9 +2721,13 @@ async def fastapi_handler(request: Request):
         "/api/integrations/{integrationKey}/tools/{toolName}",
         "/api/user/integrations/{integrationKey}/tools/{toolName}",
     }:
+        patch = ToolAccessPatch.model_validate(body)
         try:
             tool = repository.update_tool(
-                owner, params["integrationKey"], params["toolName"], body
+                owner,
+                params["integrationKey"],
+                params["toolName"],
+                patch,
             )
         except ValueError as exc:
             raise HTTPException(status_code=403, detail=str(exc)) from exc
@@ -2723,13 +2737,14 @@ async def fastapi_handler(request: Request):
         return tool
 
     if path == "/api/integrations/{integrationKey}/tools/{toolName}/toggle":
-        access_mode = "enabled" if body.get("enabled", True) else "disabled"
+        toggle = IntegrationToggleRequest.model_validate(body)
+        access_mode = "enabled" if toggle.enabled is not False else "disabled"
         try:
             tool = repository.update_tool(
                 owner,
                 params["integrationKey"],
                 params["toolName"],
-                {"accessMode": access_mode, "enabled": access_mode != "disabled"},
+                ToolAccessPatch(accessMode=access_mode),
             )
         except ValueError as exc:
             raise HTTPException(status_code=403, detail=str(exc)) from exc
@@ -2739,16 +2754,23 @@ async def fastapi_handler(request: Request):
         return tool
 
     if path in {"/api/integrations/discover", "/api/admin/integrations/discover"}:
-        if path == "/api/integrations/discover" and isinstance(body, dict):
-            assert_user_can_discover_integration(owner, body, user_api_is_admin)
+        discovery_request = IntegrationDiscoveryRequest.model_validate(body)
+        if path == "/api/integrations/discover":
+            assert_user_can_discover_integration(
+                owner, discovery_request, user_api_is_admin
+            )
         # The admin discover path may preview catalog-default connectors that
         # have not been admin-added yet; the user path is gated to admin-added.
         return discovered_integration(
-            body, owner, allow_catalog_defaults=path.startswith("/api/admin/")
+            discovery_request,
+            owner,
+            allow_catalog_defaults=path.startswith("/api/admin/"),
         )
 
     if path == "/api/integrations/disable-unused":
-        result = disable_unused_tools(owner, body if isinstance(body, dict) else {})
+        result = disable_unused_tools(
+            owner, DisableUnusedToolsRequest.model_validate(body)
+        )
         sync_default_permission_profile(owner)
         return result
 
@@ -2833,9 +2855,9 @@ async def fastapi_handler(request: Request):
         request_id = params["requestId"]
         request_owner = None if path.startswith("/api/admin/") else owner
         if path.endswith("/approve"):
-            duration = body.get("durationMinutes") if isinstance(body, dict) else None
+            approval = AccessRequestApprovalRequest.model_validate(body)
             return approve_access_request(
-                request_owner, request_id, owner, int(duration) if duration else None
+                request_owner, request_id, owner, approval.durationMinutes
             )
         return reject_access_request(request_owner, request_id, owner)
 

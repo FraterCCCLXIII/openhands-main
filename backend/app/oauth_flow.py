@@ -13,9 +13,20 @@ from typing import Any
 
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
+from pydantic import ValidationError
 
 from .managed_connectors import get_managed_connector
-from .models import IntegrationSpec, ManagedConnector
+from .models import (
+    IntegrationSpec,
+    ManagedConnector,
+    OAuthAuthorizationServerMetadata,
+    OAuthConfig,
+    OAuthConnection,
+    OAuthConnectionMetadata,
+    OAuthCredentials,
+    OAuthProtectedResourceMetadata,
+    OAuthTokenResponse,
+)
 from .repository import repository
 from .url_security import urlopen_no_redirect, validate_external_url
 
@@ -37,10 +48,10 @@ def is_dynamic_oauth(connector: ManagedConnector) -> bool:
     """
     if connector.authStrategy != "oauth2":
         return False
-    oauth_config = connector.oauthConfig or {}
-    if oauth_config.get("dynamicOAuth"):
+    oauth_config = connector.oauthConfig
+    if oauth_config and oauth_config.dynamicOAuth:
         return True
-    return not oauth_config.get("authorizationUrl")
+    return not oauth_config or not oauth_config.authorizationUrl
 
 
 def well_known_metadata_url(identifier: str, document: str) -> str:
@@ -74,18 +85,20 @@ def fetch_oauth_metadata_document(url: str, purpose: str) -> dict[str, Any]:
     return payload
 
 
-def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
+def discover_oauth_metadata(server_url: str) -> OAuthConfig:
     """Discover an MCP resource's OAuth authorization-server metadata.
 
     Returns a dict with keys mapped to the hub's ``oauthConfig`` shape:
     ``authorizationUrl``, ``tokenUrl``, and optionally ``registrationUrl``.
     """
-    protected_resource = fetch_oauth_metadata_document(
-        well_known_metadata_url(server_url, "oauth-protected-resource"),
-        "OAuth protected-resource metadata",
+    protected_resource = OAuthProtectedResourceMetadata.model_validate(
+        fetch_oauth_metadata_document(
+            well_known_metadata_url(server_url, "oauth-protected-resource"),
+            "OAuth protected-resource metadata",
+        )
     )
-    authorization_servers = protected_resource.get("authorization_servers")
-    if not isinstance(authorization_servers, list):
+    authorization_servers = protected_resource.authorization_servers
+    if not authorization_servers:
         raise HTTPException(
             status_code=502,
             detail="OAuth protected-resource metadata is missing authorization_servers.",
@@ -103,46 +116,47 @@ def discover_oauth_metadata(server_url: str) -> dict[str, Any]:
             status_code=502,
             detail="OAuth protected-resource metadata has no usable authorization server.",
         )
-    payload = fetch_oauth_metadata_document(
-        well_known_metadata_url(authorization_server, "oauth-authorization-server"),
-        "OAuth authorization-server metadata",
-    )
-    authorization_url = payload.get("authorization_endpoint")
-    token_url = payload.get("token_endpoint")
-    if not authorization_url or not token_url:
+    try:
+        payload = OAuthAuthorizationServerMetadata.model_validate(
+            fetch_oauth_metadata_document(
+                well_known_metadata_url(
+                    authorization_server, "oauth-authorization-server"
+                ),
+                "OAuth authorization-server metadata",
+            )
+        )
+    except ValidationError as exc:
         raise HTTPException(
             status_code=502,
             detail="OAuth metadata is missing authorization_endpoint or token_endpoint.",
-        )
-    code_challenge_methods = payload.get("code_challenge_methods_supported")
-    return {
-        "authorizationUrl": str(authorization_url),
-        "tokenUrl": str(token_url),
-        "registrationUrl": str(payload["registration_endpoint"])
-        if payload.get("registration_endpoint")
-        else None,
-        "code_challenge_methods_supported": (
-            code_challenge_methods if isinstance(code_challenge_methods, list) else []
-        ),
-    }
+        ) from exc
+    return OAuthConfig(
+        authorizationUrl=payload.authorization_endpoint,
+        tokenUrl=payload.token_endpoint,
+        registrationUrl=payload.registration_endpoint,
+        code_challenge_methods_supported=payload.code_challenge_methods_supported,
+    )
 
 
 def enrich_dynamic_oauth_config(
-    connector: ManagedConnector, metadata: dict[str, Any]
+    connector: ManagedConnector, metadata: OAuthConfig
 ) -> ManagedConnector:
     """Merge discovered OAuth endpoints into a connector's oauthConfig."""
-    oauth_config = dict(connector.oauthConfig or {})
-    oauth_config["authorizationUrl"] = metadata["authorizationUrl"]
-    oauth_config["tokenUrl"] = metadata["tokenUrl"]
-    if metadata.get("registrationUrl") and not oauth_config.get("registrationUrl"):
-        oauth_config["registrationUrl"] = metadata["registrationUrl"]
-    code_challenge_methods = metadata.get("code_challenge_methods_supported")
-    if isinstance(code_challenge_methods, list) and "S256" in code_challenge_methods:
-        oauth_config["pkce"] = True
+    oauth_config = connector.oauthConfig or OAuthConfig()
+    updates: dict[str, Any] = {
+        "authorizationUrl": metadata.authorizationUrl,
+        "tokenUrl": metadata.tokenUrl,
+        "dynamicOAuth": True,
+    }
+    if metadata.registrationUrl and not oauth_config.registrationUrl:
+        updates["registrationUrl"] = metadata.registrationUrl
+    if "S256" in (metadata.code_challenge_methods_supported or []):
+        updates["pkce"] = True
     # Mark the connector as dynamic OAuth so downstream code (e.g.
     # save_managed_connector) knows not to require a client_id.
-    oauth_config["dynamicOAuth"] = True
-    return connector.model_copy(update={"oauthConfig": oauth_config})
+    return connector.model_copy(
+        update={"oauthConfig": oauth_config.model_copy(update=updates)}
+    )
 
 
 def b64url(data: bytes) -> str:
@@ -260,14 +274,12 @@ def oauth_proxy_callback_target(request: Request, state: str) -> str | None:
     return target if allowed else None
 
 
-def requested_oauth_scopes(oauth_config: dict[str, Any]) -> list[str]:
-    scopes = split_oauth_scopes(oauth_config.get("scopes") or [])
-    optional = split_oauth_scopes(oauth_config.get("optionalScopes") or [])
+def requested_oauth_scopes(oauth_config: OAuthConfig) -> list[str]:
+    scopes = split_oauth_scopes(oauth_config.scopes or [])
+    optional = split_oauth_scopes(oauth_config.optionalScopes or [])
     optional.extend(
         split_oauth_scopes(
-            (oauth_config.get("additionalAuthorizationParams") or {}).get(
-                "optional_scope"
-            )
+            (oauth_config.additionalAuthorizationParams or {}).get("optional_scope")
         )
     )
     seen: set[str] = set()
@@ -282,7 +294,8 @@ def requested_oauth_scopes(oauth_config: dict[str, Any]) -> list[str]:
 def token_request_body(
     connector: ManagedConnector, client: dict[str, str], values: dict[str, str]
 ) -> tuple[dict[str, str], dict[str, str]]:
-    auth_mode = (connector.oauthConfig or {}).get("clientAuthentication")
+    oauth_config = connector.oauthConfig or OAuthConfig()
+    auth_mode = oauth_config.clientAuthentication
     body = dict(values)
     headers = {
         "Accept": "application/json",
@@ -298,18 +311,21 @@ def token_request_body(
             f"{client['clientId']}:{client.get('clientSecret', '')}".encode()
         ).decode()
         headers["Authorization"] = f"Basic {token}"
-    for key, value in (
-        (connector.oauthConfig or {}).get("additionalTokenParams") or {}
-    ).items():
+    for key, value in (oauth_config.additionalTokenParams or {}).items():
         body[str(key)] = str(value)
     return body, headers
 
 
 def fetch_oauth_token(
     connector: ManagedConnector, body: dict[str, str], headers: dict[str, str]
-) -> dict[str, Any]:
+) -> OAuthTokenResponse:
+    oauth_config = connector.oauthConfig
+    if not oauth_config or not oauth_config.tokenUrl:
+        raise HTTPException(
+            status_code=500, detail="OAuth token URL is not configured."
+        )
     token_url = validate_external_url(
-        str(connector.oauthConfig["tokenUrl"]), purpose="OAuth token endpoint"
+        oauth_config.tokenUrl, purpose="OAuth token endpoint"
     )
     request = urllib.request.Request(
         token_url,
@@ -328,35 +344,40 @@ def fetch_oauth_token(
         raise HTTPException(
             status_code=502, detail="OAuth token exchange returned an invalid response."
         )
-    return payload
+    try:
+        return OAuthTokenResponse.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail="OAuth token exchange did not return a valid access token.",
+        ) from exc
 
 
 def oauth_metadata(
     connector: ManagedConnector,
-    payload: dict[str, Any],
+    payload: OAuthTokenResponse,
     existing: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+) -> OAuthConnectionMetadata:
     expires_at = None
-    if isinstance(payload.get("expires_in"), int):
-        expires_at = oauth_expiry(int(payload["expires_in"]))
+    if isinstance(payload.expires_in, int):
+        expires_at = oauth_expiry(payload.expires_in)
     scopes = (
-        split_oauth_scopes(payload.get("scope"))
+        split_oauth_scopes(payload.scope)
         or split_oauth_scopes((existing or {}).get("scopes"))
-        or requested_oauth_scopes(connector.oauthConfig or {})
+        or requested_oauth_scopes(connector.oauthConfig or OAuthConfig())
     )
     metadata = dict((existing or {}).get("metadata") or {})
-    return {
-        "tokenType": payload.get("token_type") or (existing or {}).get("tokenType"),
-        "scopes": scopes,
-        "expiresAt": expires_at,
-        "externalAccountId": payload.get("externalAccountId")
+    return OAuthConnectionMetadata(
+        tokenType=payload.token_type or (existing or {}).get("tokenType"),
+        scopes=scopes,
+        expiresAt=expires_at,
+        externalAccountId=payload.externalAccountId
         or (existing or {}).get("externalAccountId"),
-        "externalWorkspaceId": payload.get("externalWorkspaceId")
+        externalWorkspaceId=payload.externalWorkspaceId
         or (existing or {}).get("externalWorkspaceId"),
-        "displayName": payload.get("displayName")
-        or (existing or {}).get("displayName"),
-        "metadata": metadata,
-    }
+        displayName=payload.displayName or (existing or {}).get("displayName"),
+        metadata=metadata,
+    )
 
 
 def is_expired(expires_at: str | None) -> bool:
@@ -385,10 +406,8 @@ def configured_oauth_callback_url(provider: str) -> str:
 
 
 def register_dynamic_oauth_client(connector: ManagedConnector) -> ManagedConnector:
-    oauth_config = connector.oauthConfig or {}
-    if oauth_config.get("clientAuthentication") != "none" or not oauth_config.get(
-        "registrationUrl"
-    ):
+    oauth_config = connector.oauthConfig or OAuthConfig()
+    if oauth_config.clientAuthentication != "none" or not oauth_config.registrationUrl:
         return connector
     callback_url = configured_oauth_callback_url(connector.slug)
     data = json.dumps(
@@ -397,11 +416,11 @@ def register_dynamic_oauth_client(connector: ManagedConnector) -> ManagedConnect
             "redirect_uris": [callback_url],
             "grant_types": ["authorization_code", "refresh_token"],
             "response_types": ["code"],
-            "token_endpoint_auth_method": oauth_config.get("clientAuthentication"),
+            "token_endpoint_auth_method": oauth_config.clientAuthentication,
         }
     ).encode()
     registration_url = validate_external_url(
-        str(oauth_config["registrationUrl"]), purpose="OAuth registration endpoint"
+        oauth_config.registrationUrl, purpose="OAuth registration endpoint"
     )
     request = urllib.request.Request(
         registration_url,
@@ -442,7 +461,7 @@ def ensure_managed_oauth_client(connector: ManagedConnector) -> ManagedConnector
         )
     if connector.oauthClientId:
         if (
-            connector.oauthConfig.get("clientAuthentication") != "none"
+            connector.oauthConfig.clientAuthentication != "none"
             and not connector.oauthClientSecret
         ):
             raise HTTPException(
@@ -470,14 +489,17 @@ def ensure_managed_oauth_client(connector: ManagedConnector) -> ManagedConnector
     if is_dynamic_oauth(connector) and connector.serverUrl:
         metadata = discover_oauth_metadata(str(connector.serverUrl))
         enriched = enrich_dynamic_oauth_config(connector, metadata)
-        if enriched.oauthConfig.get(
-            "clientAuthentication"
-        ) == "none" and enriched.oauthConfig.get("registrationUrl"):
+        if (
+            enriched.oauthConfig
+            and enriched.oauthConfig.clientAuthentication == "none"
+            and enriched.oauthConfig.registrationUrl
+        ):
             return register_dynamic_oauth_client(enriched)
         return enriched.model_copy(update={"oauthConfigured": True})
-    if connector.oauthConfig.get(
-        "clientAuthentication"
-    ) == "none" and connector.oauthConfig.get("registrationUrl"):
+    if (
+        connector.oauthConfig.clientAuthentication == "none"
+        and connector.oauthConfig.registrationUrl
+    ):
         return register_dynamic_oauth_client(connector)
     if existing_connector:
         # The connector already exists in the database (e.g. its OAuth client
@@ -502,6 +524,7 @@ def start_oauth_redirect(
         raise HTTPException(
             status_code=404, detail=f"Unknown OAuth provider '{provider}'."
         )
+    oauth_config = connector.oauthConfig
     # Dynamic OAuth connectors have no catalog authorizationUrl; discover the
     # server's OAuth metadata at runtime so we can redirect the user to the
     # right authorization endpoint. The discovered tokenUrl is stashed in the
@@ -511,7 +534,8 @@ def start_oauth_redirect(
     if is_dynamic_oauth(connector) and connector.serverUrl:
         metadata = discover_oauth_metadata(str(connector.serverUrl))
         connector = enrich_dynamic_oauth_config(connector, metadata)
-        discovered_token_url = metadata["tokenUrl"]
+        oauth_config = connector.oauthConfig or OAuthConfig()
+        discovered_token_url = metadata.tokenUrl
     client = repository.read_oauth_client(connector)
     if not client:
         # For dynamic OAuth with a discovered registration endpoint, register
@@ -519,8 +543,8 @@ def start_oauth_redirect(
         # start the OAuth flow without a prior admin save.
         if (
             is_dynamic_oauth(connector)
-            and connector.oauthConfig.get("clientAuthentication") == "none"
-            and connector.oauthConfig.get("registrationUrl")
+            and oauth_config.clientAuthentication == "none"
+            and oauth_config.registrationUrl
         ):
             connector = register_dynamic_oauth_client(connector)
             repository.save_managed_connector(connector)
@@ -531,7 +555,7 @@ def start_oauth_redirect(
                 detail=f"{connector.name} is missing stored OAuth client credentials.",
             )
     state = oauth_state_with_preview_target()
-    verifier = secrets.token_urlsafe(48) if connector.oauthConfig.get("pkce") else None
+    verifier = secrets.token_urlsafe(48) if oauth_config.pkce else None
     raw_redirect_to = (
         request.query_params.get("redirectTo")
         or f"/integrations?showIntegrationWizard=1&managedConnector={provider}"
@@ -552,18 +576,14 @@ def start_oauth_redirect(
         "redirect_uri": redirect_uri,
         "state": state,
     }
-    scope_separator = connector.oauthConfig.get("scopeSeparator")
-    scopes = split_oauth_scopes(connector.oauthConfig.get("scopes") or [])
+    scope_separator = oauth_config.scopeSeparator
+    scopes = split_oauth_scopes(oauth_config.scopes or [])
     if scopes:
         query["scope"] = join_oauth_scopes(scopes, scope_separator)
-    optional_scopes = split_oauth_scopes(
-        connector.oauthConfig.get("optionalScopes") or []
-    )
+    optional_scopes = split_oauth_scopes(oauth_config.optionalScopes or [])
     optional_scopes.extend(
         split_oauth_scopes(
-            (connector.oauthConfig.get("additionalAuthorizationParams") or {}).get(
-                "optional_scope"
-            )
+            (oauth_config.additionalAuthorizationParams or {}).get("optional_scope")
         )
     )
     if optional_scopes:
@@ -571,9 +591,7 @@ def start_oauth_redirect(
     if verifier:
         query["code_challenge"] = b64url(hashlib.sha256(verifier.encode()).digest())
         query["code_challenge_method"] = "S256"
-    for key, value in (
-        connector.oauthConfig.get("additionalAuthorizationParams") or {}
-    ).items():
+    for key, value in (oauth_config.additionalAuthorizationParams or {}).items():
         if key == "scope" and scopes:
             continue
         if key == "optional_scope" and optional_scopes:
@@ -590,9 +608,7 @@ def start_oauth_redirect(
         discovered_token_url,
         oauth_expiry(),
     )
-    redirect_url = (
-        f"{connector.oauthConfig['authorizationUrl']}?{urllib.parse.urlencode(query)}"
-    )
+    redirect_url = f"{oauth_config.authorizationUrl}?{urllib.parse.urlencode(query)}"
     if response_as_json:
         return {"redirectUrl": redirect_url}
     return RedirectResponse(redirect_url)
@@ -612,11 +628,11 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
     # For dynamic OAuth, the token endpoint was discovered at start time and
     # stashed in the state's callback_url field. Enrich the connector so
     # fetch_oauth_token can use it.
-    discovered_token_url = record.get("callback_url") or ""
-    if discovered_token_url and not connector.oauthConfig.get("tokenUrl"):
+    discovered_token_url = record.callbackUrl or ""
+    if discovered_token_url and not connector.oauthConfig.tokenUrl:
         connector = enrich_dynamic_oauth_config(
             connector,
-            {"authorizationUrl": "", "tokenUrl": str(discovered_token_url)},
+            OAuthConfig(authorizationUrl="", tokenUrl=str(discovered_token_url)),
         )
     client = repository.read_oauth_client(connector)
     if not client:
@@ -627,39 +643,39 @@ def exchange_oauth_code(provider: str, state: str, code: str) -> dict[str, Any]:
     body = {
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": str(record.get("redirect_uri") or ""),
+        "redirect_uri": record.redirectUri,
     }
-    if record.get("code_verifier"):
-        body["code_verifier"] = str(record.get("code_verifier"))
+    if record.codeVerifier:
+        body["code_verifier"] = record.codeVerifier
     body, headers = token_request_body(connector, client, body)
-    payload = fetch_oauth_token(connector, body, headers)
-    access_token = payload.get("access_token")
-    if not isinstance(access_token, str) or not access_token:
+    payload = OAuthTokenResponse.model_validate(
+        fetch_oauth_token(connector, body, headers)
+    )
+    access_token = payload.access_token
+    if not access_token:
         raise HTTPException(
             status_code=502,
             detail="OAuth token exchange did not return an access token.",
         )
     connection = repository.save_connection(
-        str(record["owner_id"]),
-        str(record["integration_key"]),
+        record.ownerId,
+        record.integrationKey,
         provider,
         "oauth2",
         {
             "accessToken": access_token,
             **(
-                {"refreshToken": payload.get("refresh_token")}
-                if payload.get("refresh_token")
-                else {}
+                {"refreshToken": payload.refresh_token} if payload.refresh_token else {}
             ),
         },
-        oauth_metadata(connector, payload),
+        oauth_metadata(connector, payload).model_dump(),
     ) | {
-        "ownerId": str(record["owner_id"]),
+        "ownerId": record.ownerId,
     }
     # Preserve the wizard return target (`redirect_to`) so the callback can
     # send the user back into the integration wizard they started OAuth from,
     # instead of dropping them on /integrations with the wizard closed.
-    connection["redirect_to"] = str(record.get("redirect_to") or "")
+    connection["redirect_to"] = record.redirectTo
     return connection
 
 
@@ -672,7 +688,7 @@ def consume_oauth_redirect_target(provider: str, state: str) -> str:
     consumed so it cannot be replayed.
     """
     record = repository.consume_oauth_state(state, provider)
-    return str((record or {}).get("redirect_to") or "")
+    return record.redirectTo if record else ""
 
 
 def build_oauth_callback_redirect(
@@ -717,12 +733,15 @@ def build_oauth_callback_redirect(
     )
 
 
-def refresh_oauth_connection(record: dict[str, Any]) -> dict[str, Any]:
-    connector = get_managed_connector(str(record.get("provider") or ""))
+def refresh_oauth_connection(
+    record: OAuthConnection | dict[str, Any],
+) -> OAuthConnection:
+    record = OAuthConnection.model_validate(record)
+    connector = get_managed_connector(record.provider)
     if not connector or not connector.oauthConfig:
         raise HTTPException(
             status_code=500,
-            detail=f"OAuth provider '{record.get('provider')}' is not configured.",
+            detail=f"OAuth provider '{record.provider}' is not configured.",
         )
     # Dynamic OAuth: the connector may be a catalog default without a
     # persisted tokenUrl. Re-discover so the refresh can hit the right
@@ -737,58 +756,61 @@ def refresh_oauth_connection(record: dict[str, Any]) -> dict[str, Any]:
             status_code=500,
             detail=f"{connector.name} is missing stored OAuth client credentials.",
         )
-    credentials = (
-        record.get("credentials") if isinstance(record.get("credentials"), dict) else {}
-    )
-    refresh_token = str(credentials.get("refreshToken") or "").strip()
+    refresh_token = str(record.credentials.refreshToken or "").strip()
     if not refresh_token:
         raise HTTPException(
             status_code=403,
-            detail=f"Reconnect {record.get('provider')} to refresh the expired access token.",
+            detail=f"Reconnect {record.provider} to refresh the expired access token.",
         )
     body, headers = token_request_body(
         connector,
         client,
         {"grant_type": "refresh_token", "refresh_token": refresh_token},
     )
-    payload = fetch_oauth_token(connector, body, headers)
-    access_token = payload.get("access_token")
-    if not isinstance(access_token, str) or not access_token:
+    payload = OAuthTokenResponse.model_validate(
+        fetch_oauth_token(connector, body, headers)
+    )
+    access_token = payload.access_token
+    if not access_token:
         raise HTTPException(
             status_code=502,
             detail="OAuth token refresh did not return an access token.",
         )
-    return repository.save_connection(
-        str(record["ownerId"]),
-        str(record["integrationKey"]),
-        str(record["provider"]),
+    refreshed_metadata = oauth_metadata(connector, payload, record.model_dump())
+    repository.save_connection(
+        record.ownerId,
+        record.integrationKey,
+        record.provider,
         "oauth2",
         {
             "accessToken": access_token,
-            "refreshToken": payload.get("refresh_token") or refresh_token,
+            "refreshToken": payload.refresh_token or refresh_token,
         },
-        oauth_metadata(connector, payload, record),
-    ) | {
-        "credentials": {
-            "accessToken": access_token,
-            "refreshToken": payload.get("refresh_token") or refresh_token,
-        }
-    }
+        refreshed_metadata.model_dump(),
+    )
+    return OAuthConnection(
+        ownerId=record.ownerId,
+        integrationKey=record.integrationKey,
+        provider=record.provider,
+        credentials=OAuthCredentials(
+            accessToken=access_token,
+            refreshToken=payload.refresh_token or refresh_token,
+        ),
+        **refreshed_metadata.model_dump(),
+    )
 
 
 def credentials_for(owner: str, integration: IntegrationSpec) -> dict[str, Any]:
     """Return provider credentials, refreshing expired OAuth tokens as a side effect."""
     if integration.authStrategy == "oauth2":
-        record = repository.get_connection(owner, integration.key)
-        if not record:
+        stored_record = repository.get_connection(owner, integration.key)
+        if not stored_record:
             raise HTTPException(
                 status_code=403,
                 detail=f"Connect {integration.name} for this user before invoking '{integration.key}'.",
             )
-        if record.get("authStrategy") == "oauth2" and is_expired(
-            record.get("expiresAt")
-        ):
+        record = OAuthConnection.model_validate(stored_record)
+        if is_expired(record.expiresAt):
             record = refresh_oauth_connection(record)
-        credentials = record.get("credentials")
-        return credentials if isinstance(credentials, dict) else {}
+        return record.credentials.model_dump(exclude_none=True)
     return integration.credentials

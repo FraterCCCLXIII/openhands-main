@@ -1139,7 +1139,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "openhands-agent-server", specifier = ">=1.0.0,<2" },
-    { name = "openhands-extensions", specifier = "==0.9.0" },
+    { name = "openhands-extensions", specifier = "==0.10.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pydantic", specifier = ">=2.10,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<9" },
@@ -1850,11 +1850,16 @@ wheels = [
 
 [[package]]
 name = "openhands-extensions"
-version = "0.9.0"
+version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fb/6e/36790ffc2d5fc68811231a396777c4c9c88cb5bbabf205e413ed01066639/openhands_extensions-0.9.0.tar.gz", hash = "sha256:ef7b4604a1da1e2d53e7398a9564a751c18884b1f49cb773495a5120b2cb1af5", size = 724127, upload-time = "2026-07-09T13:42:04.922Z" }
+dependencies = [
+    { name = "deprecation" },
+    { name = "packaging" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/d4/c70aa7a6677c6adafdba68df6a0afd9433e4e61db066a015e09385f717f2/openhands_extensions-0.10.0.tar.gz", hash = "sha256:26e41eea3b4fcc9f9b26c93f4ff493df049fd478d26718007513e505dc13cea1", size = 735818, upload-time = "2026-07-12T08:28:56.558Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/86/4de0a057438722b6a9affb69eb0557c49037366e9d86ef0c46a93a6ecbf3/openhands_extensions-0.9.0-py3-none-any.whl", hash = "sha256:b550b2f909f8e45db5935d738d5e14b86a583f67444641b8cbfaf723cac2ae80", size = 54519, upload-time = "2026-07-09T13:42:03.432Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/df/3f4f4927f21ccbbb51fcb96847b0cd758f5a42db11c26d1feba795589612/openhands_extensions-0.10.0-py3-none-any.whl", hash = "sha256:b5ff374ae9b05f35f1e3e485290b0b0168f795d509f122f65821d418dbaf9957", size = 61336, upload-time = "2026-07-12T08:28:55.283Z" },
 ]
 
 [[package]]
@@ -2076,11 +2081,11 @@ wheels = [
 
 [[package]]
 name = "packaging"
-version = "26.2"
+version = "25.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d7/f1/e7a6dd94a8d4a5626c03e4e99c87f241ba9e350cd9e6d75123f992427270/packaging-26.2.tar.gz", hash = "sha256:ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661", size = 228134, upload-time = "2026-04-24T20:15:23.917Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b96ca8f8c3ba19e6a61c8253c72794544580a7b6c24d/packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f", size = 165727, upload-time = "2025-04-19T11:48:59.673Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/b2/87e62e8c3e2f4b32e5fe99e0b86d576da1312593b39f47d8ceef365e95ed/packaging-26.2-py3-none-any.whl", hash = "sha256:5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e", size = 100195, upload-time = "2026-04-24T20:15:22.081Z" },
+    { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469, upload-time = "2025-04-19T11:48:57.875Z" },
 ]
 
 [[package]]

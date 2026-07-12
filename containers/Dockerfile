@@ -20,7 +20,7 @@ ENV PYTHONPATH=/app \
     INTHUB_STATIC_DIR=/app/out
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libpq5 && \
+    apt-get install -y --no-install-recommends git libpq5 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     pip install --no-cache-dir uv==0.11.21
 

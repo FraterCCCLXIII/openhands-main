@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from .models import ManagedConnectorTool
+from .models import HttpRequestTemplate, ManagedConnectorTool
 from .url_security import urlopen_no_redirect, validate_external_url
 
 
@@ -245,7 +245,7 @@ def generate_openapi_tools(
                         query_params,
                         request_body if isinstance(request_body, dict) else None,
                     ),
-                    request=request_template,
+                    request=HttpRequestTemplate.model_validate(request_template),
                     config={
                         "inputSchema": openapi_input_schema(
                             parameters,
