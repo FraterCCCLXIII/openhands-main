@@ -110,9 +110,9 @@ def test_0004_adds_icon_columns_to_managed_connectors(monkeypatch) -> None:
     assert "DROP COLUMN IF EXISTS icon_bg" in joined
 
 
-def test_0008_adds_connection_resources_and_backfills_bindings(monkeypatch) -> None:
+def test_0009_adds_connection_resources_and_backfills_bindings(monkeypatch) -> None:
     migration = importlib.import_module(
-        "backend.alembic.versions.20260710_0008_multi_connection_resources"
+        "backend.alembic.versions.20260710_0009_multi_connection_resources"
     )
     capture = CapturingOp()
     monkeypatch.setattr(migration, "op", capture)
@@ -120,8 +120,8 @@ def test_0008_adds_connection_resources_and_backfills_bindings(monkeypatch) -> N
     migration.upgrade()
 
     joined = "\n".join(capture.statements)
-    assert migration.revision == "0008"
-    assert migration.down_revision == "0007"
+    assert migration.revision == "0009"
+    assert migration.down_revision == "0008"
     assert (
         "ALTER TABLE integration_connections ADD COLUMN IF NOT EXISTS connection_id TEXT"
         in joined
@@ -420,3 +420,40 @@ def test_0008_encrypts_legacy_oauth_pkce_verifiers(monkeypatch) -> None:
         "ALTER TABLE owner_integrations DROP COLUMN IF EXISTS encrypted_credentials"
         in joined
     )
+
+
+def test_0010_adds_indexes_for_repository_query_patterns(monkeypatch) -> None:
+    migration = importlib.import_module(
+        "backend.alembic.versions.20260712_0010_add_query_indexes"
+    )
+    capture = CapturingOp()
+    monkeypatch.setattr(migration, "op", capture)
+
+    migration.upgrade()
+
+    joined = "\n".join(capture.statements)
+    assert migration.revision == "0010"
+    assert migration.down_revision == "0009"
+    assert "owner_integrations_owner_key_lower_idx" in joined
+    assert "ON owner_integrations (LOWER(owner_id), key)" in joined
+    assert "integration_connections_owner_key_lower_idx" in joined
+    assert "integration_connections_integration_key_idx" in joined
+    assert "access_requests_owner_created_at_idx" in joined
+    assert "access_requests_pending_lookup_idx" in joined
+    assert "WHERE status = 'pending'" in joined
+    assert "tool_invocations_owner_tool_invoked_at_idx" in joined
+    assert "INCLUDE (outcome)" in joined
+    assert "temporary_grants_expires_at_idx" in joined
+
+    capture.statements.clear()
+    migration.downgrade()
+
+    assert capture.statements == [
+        "DROP INDEX IF EXISTS temporary_grants_expires_at_idx",
+        "DROP INDEX IF EXISTS tool_invocations_owner_tool_invoked_at_idx",
+        "DROP INDEX IF EXISTS access_requests_pending_lookup_idx",
+        "DROP INDEX IF EXISTS access_requests_owner_created_at_idx",
+        "DROP INDEX IF EXISTS integration_connections_integration_key_idx",
+        "DROP INDEX IF EXISTS integration_connections_owner_key_lower_idx",
+        "DROP INDEX IF EXISTS owner_integrations_owner_key_lower_idx",
+    ]
