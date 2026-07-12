@@ -40,4 +40,4 @@ EXPOSE 8000
 # Datadog is configured by the deployment's standard DD_* variables.  Running
 # through ddtrace-run instruments imports before FastAPI and its dependencies
 # load; DD_TRACE_ENABLED still controls whether traces are emitted.
-CMD ["ddtrace-run", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["ddtrace-run", "python", "-m", "backend.app.server"]

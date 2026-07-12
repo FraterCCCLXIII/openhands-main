@@ -5,15 +5,19 @@ import json
 import logging
 import re
 import secrets
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import (
     JSONResponse,
     PlainTextResponse,
@@ -21,6 +25,8 @@ from fastapi.responses import (
     Response,
     StreamingResponse,
 )
+from fastapi.routing import APIRoute
+from openhands.sdk.utils.redact import sanitize_dict
 from openhands_extensions import (
     IntegrationCatalogEntry,
     IntegrationConnectionOption,
@@ -91,9 +97,120 @@ app = FastAPI(
 )
 
 
+def request_log_fields(
+    request: Request,
+    *,
+    status_code: int | None = None,
+    duration_ms: float | None = None,
+    error_id: str | None = None,
+) -> dict[str, Any]:
+    route = request.scope.get("route")
+    fields: dict[str, Any] = {
+        "request_id": request.state.request_id,
+        "http.method": request.method,
+        "http.route": route.path if isinstance(route, APIRoute) else request.url.path,
+        "http.url": request.url.path,
+    }
+    if status_code is not None:
+        fields["http.status_code"] = status_code
+    if duration_ms is not None:
+        fields["duration_ms"] = round(duration_ms, 3)
+    if error_id is not None:
+        fields["error_id"] = error_id
+    return fields
+
+
+def request_id(request: Request) -> str:
+    supplied = request.headers.get("x-request-id", "").strip()
+    if re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", supplied):
+        return supplied
+    return uuid.uuid4().hex
+
+
+@app.middleware("http")
+async def log_request(request: Request, call_next):
+    request.state.request_id = request_id(request)
+    started_at = time.perf_counter()
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request.state.request_id
+    if request.url.path not in {"/api/health", "/api/live", "/api/ready"}:
+        status_code = response.status_code
+        logger.log(
+            logging.ERROR if status_code >= 500 else logging.INFO,
+            "request completed",
+            extra={
+                "event": "http.request.completed",
+                **request_log_fields(
+                    request,
+                    status_code=status_code,
+                    duration_ms=(time.perf_counter() - started_at) * 1000,
+                ),
+            },
+        )
+    return response
+
+
+@app.exception_handler(RequestValidationError)
 @app.exception_handler(ValidationError)
-async def validation_error_handler(_request: Request, exc: ValidationError):
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+async def validation_error_handler(
+    request: Request, exc: RequestValidationError | ValidationError
+):
+    logger.info(
+        "request validation failed",
+        extra={
+            "event": "http.request.validation_failed",
+            "validation_error_count": len(exc.errors()),
+            **request_log_fields(request, status_code=422),
+        },
+    )
+    return JSONResponse(
+        status_code=422,
+        content={"detail": sanitize_dict(exc.errors())},
+        headers={"X-Request-ID": request.state.request_id},
+    )
+
+
+@app.exception_handler(HTTPException)
+async def logged_http_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code >= 500:
+        error_id = uuid.uuid4().hex
+        logger.error(
+            "handled server error",
+            extra={
+                "event": "http.request.server_error",
+                "error.type": type(exc).__name__,
+                **request_log_fields(
+                    request, status_code=exc.status_code, error_id=error_id
+                ),
+            },
+        )
+        response = await http_exception_handler(request, exc)
+        response.headers["X-Error-ID"] = error_id
+        response.headers["X-Request-ID"] = request.state.request_id
+        return response
+    return await http_exception_handler(request, exc)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    error_id = uuid.uuid4().hex
+    logger.error(
+        "unhandled exception",
+        exc_info=(type(exc), exc, exc.__traceback__),
+        extra={
+            "event": "http.request.unhandled_exception",
+            "error.type": type(exc).__name__,
+            **request_log_fields(request, status_code=500, error_id=error_id),
+        },
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error_id": error_id},
+        headers={
+            "X-Error-ID": error_id,
+            "X-Request-ID": request.state.request_id,
+        },
+    )
 
 
 RAW_CONNECTOR_INSTALL_FORBIDDEN_DETAIL = "Only app administrators can install integrations from arbitrary connector URLs. Use a managed connector instead."

@@ -1113,8 +1113,10 @@ dependencies = [
     { name = "httpx" },
     { name = "openhands-agent-server" },
     { name = "openhands-extensions" },
+    { name = "openhands-sdk" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
+    { name = "python-json-logger" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -1140,9 +1142,11 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "openhands-agent-server", specifier = ">=1.0.0,<2" },
     { name = "openhands-extensions", specifier = "==0.10.0" },
+    { name = "openhands-sdk", specifier = ">=1.0.0,<2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pydantic", specifier = ">=2.10,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<9" },
+    { name = "python-json-logger", specifier = ">=3.3,<5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
 ]
 provides-extras = ["dev"]

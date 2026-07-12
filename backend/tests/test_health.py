@@ -31,6 +31,8 @@ def test_ready_endpoint_requires_database(monkeypatch) -> None:
 
     assert response.status_code == 503
     assert response.json()["detail"] == "Database is not ready."
+    assert response.headers["x-request-id"]
+    assert response.headers["x-error-id"]
 
 
 def test_ready_endpoint_returns_success_when_database_is_available(monkeypatch) -> None:
