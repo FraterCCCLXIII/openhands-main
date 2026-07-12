@@ -93,9 +93,7 @@ export const DashboardWorkspace = ({
   }, [pathname]);
 
   useEffect(() => {
-    if (searchParams.get("showIntegrationWizard") === "1") {
-      setShowIntegrationWizard(true);
-    }
+    setShowIntegrationWizard(searchParams.get("showIntegrationWizard") === "1");
   }, [searchParams]);
 
   // Shared counts for the sidebar/header badges. These queries own the
@@ -205,7 +203,6 @@ export const DashboardWorkspace = ({
       ? buildSuggestedIntegrationKey(managedConnectorSlug, installedIntegrationKeys)
       : undefined;
 
-    setShowIntegrationWizard(true);
     setActiveSection("integrations");
     router.push(
       buildAdminSectionHref("integrations", {
@@ -329,4 +326,3 @@ export const DashboardWorkspace = ({
     </DashboardShell>
   );
 };
-

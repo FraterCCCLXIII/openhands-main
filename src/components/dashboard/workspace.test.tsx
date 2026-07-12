@@ -593,7 +593,7 @@ describe("DashboardWorkspace", () => {
       githubCard?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Connect an integration");
+    expect(document.querySelector('[data-testid="integration-wizard-modal"]')).toBeNull();
     expect(pushMock).toHaveBeenCalledWith(
       "/integrations?showIntegrationWizard=1&managedConnector=github",
     );
@@ -615,6 +615,89 @@ describe("DashboardWorkspace", () => {
       (input) => input.getAttribute("placeholder") === "Paste your GitHub token",
     );
     expect(tokenInput).toBeTruthy();
+  });
+
+  it("does not reopen from a stale OAuth callback selection while routing to a new connector", async () => {
+    let currentSearchParams = new URLSearchParams({
+      showIntegrationWizard: "1",
+      managedConnector: "slack",
+      oauth_status: "connected",
+      oauth_provider: "slack",
+      integrationKey: "slack",
+    });
+    let pushedHref = "";
+    useSearchParamsMock.mockImplementation(() => currentSearchParams);
+    pushMock.mockImplementation((href: string) => {
+      pushedHref = href;
+    });
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        managedConnectors,
+        routeHandler: (url) => {
+          if (url === "/api/oauth/connections") {
+            return new Response(JSON.stringify([]), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+          return null;
+        },
+      }),
+    );
+
+    const renderWorkspace = async () => {
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <DashboardWorkspace
+              initialIntegrations={[]}
+              initialAccessRequests={[]}
+              currentUser={{ name: "Admin User", email: "admin@example.com" }}
+              agentApiBaseUrl="https://example.com"
+              agentApiKey="test-key"
+            />
+          </QueryClientProvider>,
+        );
+      });
+    };
+
+    await renderWorkspace();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const connectorInput = () =>
+      document
+        .querySelector('[data-testid="integration-wizard-modal"]')
+        ?.querySelector<HTMLInputElement>('input[list="managed-connector-options"]');
+    expect(connectorInput()?.value).toBe("slack");
+
+    await act(async () => {
+      document
+        .querySelector('[data-testid="integration-wizard-modal-close"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(document.querySelector('[data-testid="integration-wizard-modal"]')).toBeNull();
+    expect(pushMock).toHaveBeenLastCalledWith("/integrations");
+
+    await act(async () => {
+      container
+        .querySelector('[data-managed-connector-slug="github"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(pushMock).toHaveBeenLastCalledWith(
+      "/integrations?showIntegrationWizard=1&managedConnector=github",
+    );
+    expect(document.querySelector('[data-testid="integration-wizard-modal"]')).toBeNull();
+
+    currentSearchParams = new URLSearchParams(pushedHref.split("?")[1] ?? "");
+    await renderWorkspace();
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    expect(connectorInput()?.value).toBe("github");
   });
 
   it("keeps OAuth callback errors visible after the wizard auto-selects the connector", async () => {
