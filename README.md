@@ -168,6 +168,8 @@ Core variables:
 - `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud device-flow login and token validation
 - `INTHUB_CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
 - `INTHUB_CRON_SECRET`
+- `INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS` (default `10`) to cap legacy synchronous backend work without blocking liveness probes
+- `INTHUB_READINESS_TIMEOUT_SECONDS` (default `5`) to bound database readiness checks
 
 Optional integration/provider variables:
 

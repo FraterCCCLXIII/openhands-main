@@ -5,12 +5,14 @@ import json
 import logging
 import re
 import secrets
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -41,6 +43,7 @@ from .auth import (
     is_admin_owner,
 )
 from .config import get_default_config
+from .execution import BlockingExecutors
 from .integration_catalog import connection_defaults_from_option
 from .managed_connectors import (
     _is_default_managed_connector,
@@ -90,11 +93,55 @@ from .url_security import urlopen_no_redirect, validate_external_url
 logger = logging.getLogger("integrations_hub")
 
 
+_executor_init_lock = threading.Lock()
+
+
+def request_executors(application: FastAPI) -> BlockingExecutors:
+    """Return the process-local executors, creating a test/serverless fallback.
+
+    Production Uvicorn processes initialize this service during FastAPI's
+    lifespan. The lazy path keeps Vercel request reuse and direct ASGI tests
+    safe when a host does not run lifespan hooks.
+    """
+    executors = getattr(application.state, "request_executors", None)
+    if isinstance(executors, BlockingExecutors):
+        return executors
+    with _executor_init_lock:
+        executors = getattr(application.state, "request_executors", None)
+        if isinstance(executors, BlockingExecutors):
+            return executors
+        config = get_default_config()
+        executors = BlockingExecutors(
+            max_concurrent_requests=config.max_concurrent_blocking_requests,
+            readiness_timeout_seconds=config.readiness_timeout_seconds,
+        )
+        application.state.request_executors = executors
+        return executors
+
+
+@asynccontextmanager
+async def app_lifespan(application: FastAPI):
+    request_executors(application)
+    try:
+        yield
+    finally:
+        executors = getattr(application.state, "request_executors", None)
+        if isinstance(executors, BlockingExecutors):
+            executors.shutdown()
+            del application.state.request_executors
+
+
 app = FastAPI(
     title="OpenHands Integrations Hub Python Backend",
     version="0.1.0",
     description="FastAPI backend with route correspondence to the Next.js integrations hub API.",
+    lifespan=app_lifespan,
 )
+
+
+async def run_blocking[T](request: Request, func: Callable[..., T], *args: Any) -> T:
+    """Run existing synchronous request work without blocking the ASGI loop."""
+    return await request_executors(request.app).run(func, *args)
 
 
 def request_log_fields(
@@ -2715,18 +2762,10 @@ async def json_body(request: Request) -> Any:
     )
 
 
-async def fastapi_handler(request: Request):
+def dispatch_fastapi_request(request: Request, body: Any):
     params = request.path_params
     path = request.scope["route"].path
     method = request.method
-
-    if path in {"/api/health", "/api/live"}:
-        return {"status": "ok", "backend": "fastapi"}
-
-    if path == "/api/ready":
-        if not repository.database_ready():
-            raise HTTPException(status_code=503, detail="Database is not ready.")
-        return {"status": "ready", "backend": "fastapi"}
 
     if path == "/api/oauth/{provider}/callback":
         provider = params["provider"]
@@ -2806,8 +2845,6 @@ async def fastapi_handler(request: Request):
     if path.startswith("/api/admin/") and path != "/api/admin/key":
         owner = authorize_admin_api_owner(request)
         user_api_is_admin = True
-    body = await json_body(request) if method in {"POST", "PATCH", "PUT"} else {}
-
     if owner is None:
         raise HTTPException(status_code=401, detail="Authentication is required.")
 
@@ -3139,12 +3176,7 @@ async def fastapi_handler(request: Request):
     )
 
 
-async def auth_handler(request: Request):
-    path = request.url.path
-    cfg = get_default_config()
-    if path.endswith("/config"):
-        return {"openhandsBaseUrl": cfg.openhands_base_url or ""}
-
+def auth_session_response(request: Request):
     try:
         user = openhands_user_from_request(request)
     except AuthUnavailable as exc:
@@ -3171,6 +3203,32 @@ async def auth_handler(request: Request):
         "user": user_payload,
         "expires": "2099-01-01T00:00:00.000Z",
     }
+
+
+async def fastapi_handler(request: Request):
+    path = request.scope["route"].path
+    if path in {"/api/health", "/api/live"}:
+        return {"status": "ok", "backend": "fastapi"}
+    if path == "/api/ready":
+        ready = await request_executors(request.app).readiness(
+            repository.database_ready
+        )
+        if ready is None:
+            logger.warning("database readiness check timed out")
+        if not ready:
+            raise HTTPException(status_code=503, detail="Database is not ready.")
+        return {"status": "ready", "backend": "fastapi"}
+    body = (
+        await json_body(request) if request.method in {"POST", "PATCH", "PUT"} else {}
+    )
+    return await run_blocking(request, dispatch_fastapi_request, request, body)
+
+
+async def auth_handler(request: Request):
+    cfg = get_default_config()
+    if request.url.path.endswith("/config"):
+        return {"openhandsBaseUrl": cfg.openhands_base_url or ""}
+    return await run_blocking(request, auth_session_response, request)
 
 
 for route_method, route_path in ROUTES:

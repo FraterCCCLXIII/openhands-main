@@ -50,6 +50,8 @@ class Config(BaseModel):
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
         INTHUB_CREDENTIAL_ENCRYPTION_KEY: Key for encrypting stored credentials
         INTHUB_STATIC_DIR: Directory for pre-built SPA files (K8s mode only)
+        INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS: Worker limit for sync backend work
+        INTHUB_READINESS_TIMEOUT_SECONDS: Readiness database-check deadline
     """
 
     # Database
@@ -110,6 +112,24 @@ class Config(BaseModel):
             "Directory containing pre-built Next.js SPA static files. When set, "
             "FastAPI serves the SPA directly (for K8s/Docker deployments). "
             "Leave unset on Vercel where CDN handles static files."
+        ),
+    )
+
+    # Blocking I/O compatibility boundary
+    max_concurrent_blocking_requests: int = Field(
+        default=10,
+        ge=1,
+        description=(
+            "Maximum synchronous backend requests allowed to occupy worker threads. "
+            "Reads from INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS."
+        ),
+    )
+    readiness_timeout_seconds: float = Field(
+        default=5.0,
+        gt=0,
+        description=(
+            "Maximum time to wait for the synchronous database readiness check. "
+            "Reads from INTHUB_READINESS_TIMEOUT_SECONDS."
         ),
     )
 

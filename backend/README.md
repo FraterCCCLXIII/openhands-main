@@ -46,6 +46,8 @@ Required/optional environment variables use explicit `INTHUB_*` names. The backe
 - `INTHUB_CRON_SECRET` — bearer secret for cron routes.
 - `INTHUB_APP_ADMIN_EMAILS` — comma-separated allowlist for admin-only backend routes.
 - `INTHUB_CREDENTIAL_ENCRYPTION_KEY` — encryption key for stored provider credentials.
+- `INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS` — bounded worker limit (default `10`) for legacy synchronous connector, database, and auth work.
+- `INTHUB_READINESS_TIMEOUT_SECONDS` — deadline (default `5`) for the database readiness check.
 - Authenticated local development uses `INTHUB_OPENHANDS_BASE_URL` and OpenHands Cloud bearer tokens; no runtime auth bypass is available.
 
 The first FastAPI stack uses an in-process repository to make route behavior testable and deployable. Persistent Postgres-backed storage can be added behind `backend/app/repository.py` without changing route contracts.
