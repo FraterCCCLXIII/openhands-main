@@ -1,16 +1,17 @@
 "use client";
 
-import React from "react";
-
 import { ApprovalsDecisionMenu } from "@/src/components/approvals/approvals-decision-menu";
 import { ApprovalsList } from "@/src/components/approvals/approvals-list";
-import { ApproveSelectedModal } from "@/src/components/approvals/approve-selected-modal";
 import { SettingsTabList } from "@/src/components/ui/settings-tab-list";
 import {
   APPROVALS_PAGE_COPY,
   type ApprovalStatusFilter,
 } from "@/src/constants/approvals-page";
 import { hubSearchEmptyStateClassName } from "@/src/styles/extension-module-card-classes";
+import {
+  DEFAULT_CASE_BY_CASE_APPROVAL_HOURS,
+  normalizeApprovalDurationHours,
+} from "@/src/lib/access-requests";
 import type { AccessRequest } from "@/src/types/integrations-hub";
 
 interface ApprovalCounts {
@@ -46,22 +47,15 @@ export function ApprovalsPanel({
   onDenyRequests,
   onToggleSelected,
 }: ApprovalsPanelProps) {
-  const [isApproveModalOpen, setIsApproveModalOpen] = React.useState(false);
-  const [approveModalRequestIds, setApproveModalRequestIds] = React.useState<
-    string[]
-  >([]);
-
   const hasSelection = selectedApprovalRequestCount > 0;
   const canUseBulkActions = approvalFilter === "pending" && hasSelection;
 
-  const openApproveModal = (requestIds: string[]) => {
-    setApproveModalRequestIds(requestIds);
-    setIsApproveModalOpen(true);
-  };
-
-  const closeApproveModal = () => {
-    setIsApproveModalOpen(false);
-    setApproveModalRequestIds([]);
+  const currentDurationHours = () => {
+    const parsed = Number(approvalDurationHours);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return DEFAULT_CASE_BY_CASE_APPROVAL_HOURS;
+    }
+    return normalizeApprovalDurationHours(parsed);
   };
 
   const selectedIds = filteredAccessRequests
@@ -98,7 +92,7 @@ export function ApprovalsPanel({
         <div className="shrink-0 pb-2">
           <ApprovalsDecisionMenu
             isDisabled={!canUseBulkActions || requestActionPending}
-            onApprove={() => openApproveModal(selectedIds)}
+            onApprove={() => void onApproveRequests(selectedIds, currentDurationHours())}
             onDeny={() => void onDenyRequests(selectedIds)}
           />
         </div>
@@ -112,7 +106,9 @@ export function ApprovalsPanel({
           showRowActions={approvalFilter === "pending"}
           requestActionPending={requestActionPending}
           onToggleSelected={onToggleSelected}
-          onApproveRequest={(requestId) => openApproveModal([requestId])}
+          onApproveRequest={(requestId) =>
+            void onApproveRequests([requestId], currentDurationHours())
+          }
           onDenyRequest={(requestId) => void onDenyRequests([requestId])}
         />
       ) : (
@@ -125,18 +121,6 @@ export function ApprovalsPanel({
           </p>
         </div>
       )}
-
-      {isApproveModalOpen ? (
-        <ApproveSelectedModal
-          selectedCount={approveModalRequestIds.length}
-          initialDurationHours={approvalDurationHours}
-          onClose={closeApproveModal}
-          onConfirm={async (durationHours) => {
-            await onApproveRequests(approveModalRequestIds, durationHours);
-            closeApproveModal();
-          }}
-        />
-      ) : null}
     </div>
   );
 }

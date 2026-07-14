@@ -3,9 +3,15 @@
 import { ApprovalsMatchSelectionMenu } from "@/src/components/approvals/approvals-match-selection-menu";
 import { ApprovalsPanel } from "@/src/components/approvals/approvals-panel";
 import { IntegrationsSearchInput } from "@/src/components/integrations/integrations-search-input";
-import { APPROVALS_PAGE_COPY } from "@/src/constants/approvals-page";
+import {
+  APPROVAL_DURATION,
+  APPROVALS_PAGE_COPY,
+} from "@/src/constants/approvals-page";
 import type { ApprovalRequestFilter } from "@/src/components/dashboard/utils";
 import type { AccessRequest } from "@/src/types/integrations-hub";
+import { normalizeApprovalDurationHours } from "@/src/lib/access-requests";
+import { cn } from "@/src/lib/utils";
+import { formControlFieldClassName } from "@/src/styles/form-control-classes";
 
 interface ApprovalsSectionProps {
   approvalCounts: Record<ApprovalRequestFilter, number>;
@@ -73,9 +79,22 @@ export const ApprovalsSection = ({
     await handleAccessRequestDecision(requestIds, "approve", durationHours);
   };
 
+  const currentDurationHours = () => {
+    const parsed = Number(approvalDurationHours);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return APPROVAL_DURATION.defaultHours;
+    }
+    return normalizeApprovalDurationHours(parsed);
+  };
+
+  const canApprove =
+    approvalFilter === "pending" &&
+    selectedApprovalRequestCount > 0 &&
+    !requestActionPending;
+
   return (
     <div data-testid="approvals-page" className="space-y-6">
-      <div className="flex items-stretch gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <IntegrationsSearchInput
           testId="approvals-search"
           value={approvalSearch}
@@ -119,36 +138,65 @@ export const ApprovalsSection = ({
             setSelectedStateForApprovalRequests(selectedApprovalRequestIds, false)
           }
         />
-        <input
-          className="sr-only"
-          type="number"
-          aria-label="Approval duration in hours"
-          value={approvalDurationHours}
-          onChange={(event) => setApprovalDurationHours(event.target.value)}
-          onBlur={handleApprovalDurationBlur}
-        />
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            min={APPROVAL_DURATION.minHours}
+            max={APPROVAL_DURATION.maxHours}
+            step={1}
+            value={approvalDurationHours}
+            aria-label={APPROVALS_PAGE_COPY.durationAriaLabel}
+            data-testid="approvals-duration-hours"
+            disabled={approvalFilter !== "pending"}
+            onChange={(event) => setApprovalDurationHours(event.target.value)}
+            onBlur={handleApprovalDurationBlur}
+            className={cn(
+              formControlFieldClassName,
+              "h-9 w-20 px-2 py-1 text-xs tabular-nums",
+            )}
+          />
+          <span className="shrink-0 text-xs text-tertiary-light">
+            {APPROVALS_PAGE_COPY.hoursLabel}
+          </span>
+        </div>
         <button
           type="button"
-          className="rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50"
-          disabled={approvalFilter !== "pending" || selectedApprovalRequestCount === 0 || requestActionPending}
-          onClick={() => void handleAccessRequestDecision(selectedApprovalRequestIds, "approve")}
+          className="cursor-pointer rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!canApprove}
+          onClick={() =>
+            void handleApproveRequests(
+              selectedApprovalRequestIds,
+              currentDurationHours(),
+            )
+          }
         >
           Approve selected
         </button>
         <button
           type="button"
-          className="rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50"
-          disabled={approvalFilter !== "pending" || selectedApprovalRequestCount === 0 || requestActionPending}
+          className="cursor-pointer rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={
+            approvalFilter !== "pending" ||
+            selectedApprovalRequestCount === 0 ||
+            requestActionPending
+          }
           onClick={() => void handleAccessRequestDecision(selectedApprovalRequestIds, "deny")}
         >
           Deny selected
         </button>
-        <p className="sr-only">
-          If you want to approve for more than 100 hours, change the setting to case-by-case on the integrations page.
-        </p>
-
-
       </div>
+
+      <p className="text-xs text-[var(--oh-muted)]">
+        {APPROVALS_PAGE_COPY.decideSelectedDescription(
+          APPROVAL_DURATION.defaultHours,
+          APPROVAL_DURATION.maxHours,
+        )}{" "}
+        {APPROVALS_PAGE_COPY.longDurationHintPrefix}{" "}
+        <a href="/integrations" className="text-white hover:opacity-80">
+          {APPROVALS_PAGE_COPY.longDurationHintLink}
+        </a>
+        {APPROVALS_PAGE_COPY.longDurationHintSuffix}
+      </p>
 
       <ApprovalsPanel
         approvalFilter={approvalFilter}

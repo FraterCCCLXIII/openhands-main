@@ -1905,6 +1905,211 @@ describe("DashboardWorkspace", () => {
     );
   });
 
+  it("approves a single request in one click from the row action using the inline duration", async () => {
+    usePathnameMock.mockReturnValue("/case-by-case-approvals");
+
+    const accessRequestsState: AccessRequest[] = [
+      {
+        id: "req-pending",
+        agentId: "agent-1",
+        agentClass: "assistant",
+        integrationKey: "github",
+        toolName: "delete_repo",
+        scopes: ["repo:admin"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need repo cleanup access",
+        createdAt: "2026-03-04T09:00:00.000Z",
+        status: "pending",
+      },
+    ];
+
+    let approvePayload: { durationMinutes: number } | null = null;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations" || url === "/api/case-by-case-approvals") {
+        return new Response(
+          JSON.stringify(url === "/api/integrations" ? [] : accessRequestsState),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/case-by-case-approvals/req-pending/approve") {
+        approvePayload = JSON.parse(String(init?.body)) as {
+          durationMinutes: number;
+        };
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={accessRequestsState}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const durationInput = container.querySelector(
+      'input[data-testid="approvals-duration-hours"]',
+    ) as HTMLInputElement | null;
+    expect(durationInput).toBeTruthy();
+    expect(durationInput?.type).toBe("number");
+    expect(durationInput?.value).toBe("4");
+
+    await act(async () => {
+      setInputValue(durationInput ?? undefined, "12");
+      durationInput?.dispatchEvent(new Event("change", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    const rowApproveButton = container.querySelector(
+      '[data-testid="approval-request-approve-req-pending"]',
+    ) as HTMLButtonElement | null;
+    expect(rowApproveButton).toBeTruthy();
+
+    await act(async () => {
+      rowApproveButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(approvePayload).toEqual({
+      durationMinutes: 720,
+    });
+  });
+
+  it("approves selected requests in one click from the bulk decision menu using the inline duration", async () => {
+    usePathnameMock.mockReturnValue("/case-by-case-approvals");
+
+    const accessRequestsState: AccessRequest[] = [
+      {
+        id: "req-pending",
+        agentId: "agent-1",
+        agentClass: "assistant",
+        integrationKey: "github",
+        toolName: "delete_repo",
+        scopes: ["repo:admin"],
+        requestedMinutes: 240,
+        channels: ["in_app"],
+        notificationTargets: { in_app: "owner@example.com" },
+        justification: "Need repo cleanup access",
+        createdAt: "2026-03-04T09:00:00.000Z",
+        status: "pending",
+      },
+    ];
+
+    let approvePayload: { durationMinutes: number } | null = null;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations" || url === "/api/case-by-case-approvals") {
+        return new Response(
+          JSON.stringify(url === "/api/integrations" ? [] : accessRequestsState),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (url === "/api/case-by-case-approvals/req-pending/approve") {
+        approvePayload = JSON.parse(String(init?.body)) as {
+          durationMinutes: number;
+        };
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={accessRequestsState}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const durationInput = container.querySelector(
+      'input[data-testid="approvals-duration-hours"]',
+    ) as HTMLInputElement | null;
+    expect(durationInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(durationInput ?? undefined, "8");
+      durationInput?.dispatchEvent(new Event("change", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    const selectAllButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Select all matches"),
+    );
+    expect(selectAllButton).toBeTruthy();
+    await act(async () => {
+      selectAllButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const decisionTrigger = container.querySelector(
+      '[data-testid="approvals-decision-trigger"]',
+    ) as HTMLButtonElement | null;
+    expect(decisionTrigger).toBeTruthy();
+    await act(async () => {
+      decisionTrigger?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    const menuApproveButton = container.querySelector(
+      '[data-testid="approvals-approve-selected"]',
+    ) as HTMLButtonElement | null;
+    expect(menuApproveButton).toBeTruthy();
+
+    await act(async () => {
+      menuApproveButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(approvePayload).toEqual({
+      durationMinutes: 480,
+    });
+  });
+
   it("shows the connected OAuth banner, local session copy, and agent-key warning on the profile route", async () => {
     usePathnameMock.mockReturnValue("/profile");
     useSearchParamsMock.mockReturnValue(
