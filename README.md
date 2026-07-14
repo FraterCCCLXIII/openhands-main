@@ -166,10 +166,14 @@ Core variables:
 
 - `INTHUB_POSTGRES_URL` — database connection URL for the backend runtime
 - `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud device-flow login and token validation
+- `INTHUB_POSTHOG_CLIENT_KEY` to enable explicit, privacy-safe product analytics events (analytics is disabled when unset)
 - `INTHUB_CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
 - `INTHUB_CRON_SECRET`
 - `INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS` (default `10`) to cap legacy synchronous backend work without blocking liveness probes
 - `INTHUB_READINESS_TIMEOUT_SECONDS` (default `5`) to bound database readiness checks
+
+See [PostHog analytics](docs/posthog-analytics.md) for the event catalog and
+privacy constraints.
 
 Optional integration/provider variables:
 

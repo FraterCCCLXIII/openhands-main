@@ -30,6 +30,7 @@ import {
   type DiscoveryResponse,
 } from "@/src/components/integrations/wizard/utils";
 import { type AdminSection } from "@/src/lib/admin-routes";
+import { useTracking } from "@/src/hooks/use-tracking";
 
 interface IntegrationWizardProps {
   existingIntegrationKeys?: Set<string>;
@@ -49,6 +50,7 @@ export const IntegrationWizard = ({
   redirectSection = "integrations",
 }: IntegrationWizardProps) => {
   const searchParams = useSearchParams();
+  const { track } = useTracking();
   const [createFeedback, setCreateFeedback] = useState<DiscoverFeedback | null>(null);
 
   const managedConnectorsQuery = useQuery({
@@ -201,8 +203,14 @@ export const IntegrationWizard = ({
         message,
       });
       onStatus(message);
+      track("integration_tools_discovered", {
+        integration_kind: input.draft.kind ?? "mcp",
+        connector_slug: input.connector?.slug,
+        auth_strategy: result.authStrategy,
+        tool_count: discoveredToolCount,
+      });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, input) => {
       const message = `Discover failed: ${error.message}`;
       state.setDiscoverFeedback({
         tone: "error",
@@ -211,6 +219,11 @@ export const IntegrationWizard = ({
           error instanceof ApiRequestError ? error.debugDetails : undefined,
       });
       onStatus(message);
+      track("integration_setup_failed", {
+        stage: "discovery",
+        integration_kind: input.draft.kind ?? undefined,
+        connector_slug: input.connector?.slug,
+      });
     },
   });
 
@@ -229,13 +242,27 @@ export const IntegrationWizard = ({
     },
     onSuccess: async (_result, payload) => {
       const toolCount = Object.keys(payload.tools).length;
+      const accessModes = Object.values(payload.tools).map((tool) => tool.accessMode);
       const message = `Created ${payload.name || payload.key} with ${toolCount} discovered tool${toolCount === 1 ? "" : "s"}.`;
       setCreateFeedback(null);
       onStatus(message);
+      track("integration_created", {
+        integration_kind: payload.kind === "api" ? "api" : "mcp",
+        connector_slug:
+          typeof payload.config.managedConnectorSlug === "string"
+            ? payload.config.managedConnectorSlug
+            : undefined,
+        auth_strategy: payload.authStrategy,
+        tool_count: toolCount,
+        enabled_tool_count: accessModes.filter((mode) => mode !== "disabled").length,
+        approval_required_tool_count: accessModes.filter(
+          (mode) => mode === "approval_required",
+        ).length,
+      });
       await onCreated();
       state.resetAfterCreate();
     },
-    onError: (error: Error) => {
+    onError: (error: Error, payload) => {
       const message = `Create failed: ${error.message}`;
       setCreateFeedback({
         tone: "error",
@@ -244,6 +271,15 @@ export const IntegrationWizard = ({
           error instanceof ApiRequestError ? error.debugDetails : undefined,
       });
       onStatus(message);
+      track("integration_setup_failed", {
+        stage: "create",
+        integration_kind:
+          typeof payload.config.managedConnectorSlug === "string" ? "managed" : "mcp",
+        connector_slug:
+          typeof payload.config.managedConnectorSlug === "string"
+            ? payload.config.managedConnectorSlug
+            : undefined,
+      });
     },
   });
 

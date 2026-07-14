@@ -13,6 +13,7 @@ def test_config_reads_only_prefixed_environment(monkeypatch) -> None:
         "Admin@Example.com, second-admin@example.com ",
     )
     monkeypatch.setenv("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "prefixed-key")
+    monkeypatch.setenv("INTHUB_POSTHOG_CLIENT_KEY", "phc_test")
     monkeypatch.setenv("INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS", "3")
     monkeypatch.setenv("INTHUB_READINESS_TIMEOUT_SECONDS", "7.5")
     reset_config()
@@ -26,6 +27,7 @@ def test_config_reads_only_prefixed_environment(monkeypatch) -> None:
     assert config.is_admin_email("ADMIN@example.com")
     assert config.require_credential_encryption_key() == "prefixed-key"
     assert config.require_cron_secret() == "prefixed-cron-secret"
+    assert config.posthog_client_key == "phc_test"
     assert config.max_concurrent_blocking_requests == 3
     assert config.readiness_timeout_seconds == 7.5
 
@@ -36,12 +38,14 @@ def test_config_ignores_unprefixed_legacy_env_names(monkeypatch) -> None:
     monkeypatch.delenv("INTHUB_CRON_SECRET", raising=False)
     monkeypatch.delenv("INTHUB_APP_ADMIN_EMAILS", raising=False)
     monkeypatch.delenv("INTHUB_CREDENTIAL_ENCRYPTION_KEY", raising=False)
+    monkeypatch.delenv("INTHUB_POSTHOG_CLIENT_KEY", raising=False)
     monkeypatch.setenv("POSTGRES_URL", "postgres://legacy-db")
     monkeypatch.setenv("DATABASE_URL", "postgres://legacy-database-url")
     monkeypatch.setenv("CRON_SECRET", "legacy-cron-secret")
     monkeypatch.setenv("APP_ADMIN_EMAILS", "admin@example.com")
     monkeypatch.setenv("CREDENTIAL_ENCRYPTION_KEY", "legacy-key")
     monkeypatch.setenv("OPENHANDS_BASE_URL", "https://legacy.example.com")
+    monkeypatch.setenv("POSTHOG_CLIENT_KEY", "phc_legacy")
     reset_config()
 
     config = get_default_config()
@@ -52,6 +56,7 @@ def test_config_ignores_unprefixed_legacy_env_names(monkeypatch) -> None:
     assert not config.is_admin_email("admin@example.com")
     assert config.cron_secret is None
     assert config.credential_encryption_key is None
+    assert config.posthog_client_key is None
     with pytest.raises(RuntimeError, match="INTHUB_CREDENTIAL_ENCRYPTION_KEY"):
         config.require_credential_encryption_key()
     with pytest.raises(RuntimeError, match="INTHUB_CRON_SECRET"):

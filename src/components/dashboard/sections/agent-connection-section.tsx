@@ -18,8 +18,16 @@ import {
 import { copyTextToClipboard } from "@/src/components/dashboard/utils";
 import { Badge } from "@/src/components/ui/badge";
 import type { PermissionProfile } from "@/src/types/integrations-hub";
+import {
+  useTracking,
+  type AnalyticsEventProperties,
+} from "@/src/hooks/use-tracking";
+
+type ConnectionArtifact =
+  AnalyticsEventProperties["agent_connection_copied"]["artifact_type"];
 
 interface CopyableFieldProps {
+  artifactType?: ConnectionArtifact;
   label?: string;
   render: () => ReactNode;
   value: string;
@@ -27,7 +35,8 @@ interface CopyableFieldProps {
 
 type CopyStatus = "idle" | "copied" | "error";
 
-const CopyableField = ({ label, render, value }: CopyableFieldProps) => {
+const CopyableField = ({ artifactType, label, render, value }: CopyableFieldProps) => {
+  const { track } = useTracking();
   const [status, setStatus] = useState<CopyStatus>("idle");
   const timerRef = useRef<number | null>(null);
 
@@ -54,6 +63,9 @@ const CopyableField = ({ label, render, value }: CopyableFieldProps) => {
     }
     try {
       await copyTextToClipboard(value);
+      if (artifactType) {
+        track("agent_connection_copied", { artifact_type: artifactType });
+      }
       setStatus("copied");
       scheduleReset();
     } catch (errorValue) {
@@ -93,14 +105,18 @@ const CopyableField = ({ label, render, value }: CopyableFieldProps) => {
 interface ConnectionDetailCardProps {
   body: string;
   label: string;
+  promptArtifactType: ConnectionArtifact;
   promptExample: string;
+  schemaArtifactType: ConnectionArtifact;
   schemaEndpoint: string;
 }
 
 const ConnectionDetailCard = ({
   body,
   label,
+  promptArtifactType,
   promptExample,
+  schemaArtifactType,
   schemaEndpoint,
 }: ConnectionDetailCardProps) => (
   <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
@@ -111,6 +127,7 @@ const ConnectionDetailCard = ({
         label="OpenAPI schema"
         value={
           <CopyableField
+            artifactType={schemaArtifactType}
             value={schemaEndpoint}
             label={`Copy ${label} OpenAPI schema URL`}
             render={() => (
@@ -121,6 +138,7 @@ const ConnectionDetailCard = ({
       />
     </div>
     <CopyableField
+      artifactType={promptArtifactType}
       value={promptExample}
       label={`Copy ${label} example agent prompt`}
       render={() => (
@@ -175,6 +193,7 @@ const DashboardConnectionDetails = ({
             label="Endpoint"
             value={
               <CopyableField
+                artifactType="mcp_endpoint"
                 value={agentMcpEndpoint}
                 label="Copy MCP endpoint"
                 render={() => (
@@ -187,6 +206,7 @@ const DashboardConnectionDetails = ({
             label="Example tool"
             value={
               <CopyableField
+                artifactType="mcp_tool_name"
                 value={agentMcpToolName}
                 label="Copy example tool name"
                 render={() => (
@@ -197,6 +217,7 @@ const DashboardConnectionDetails = ({
           />
         </div>
         <CopyableField
+          artifactType="mcp_config"
           value={agentMcpConfigExample}
           label="Copy MCP config example"
           render={() => (
@@ -215,20 +236,26 @@ const DashboardConnectionDetails = ({
       <ConnectionDetailCard
         label="Agent REST API"
         body="Give your agent the agent key and the OpenAPI schema for the tool surface."
+        promptArtifactType="agent_prompt"
         promptExample={agentRestPromptExample}
+        schemaArtifactType="agent_openapi_schema"
         schemaEndpoint={agentOpenApiSchemaEndpoint}
       />
       <ConnectionDetailCard
         label="User REST API"
         body="Use the user automation key with the dashboard-equivalent OpenAPI schema."
+        promptArtifactType="user_prompt"
         promptExample={userRestPromptExample}
+        schemaArtifactType="user_openapi_schema"
         schemaEndpoint={userOpenApiSchemaEndpoint}
       />
       {isAdmin && adminPromptExample && adminSchemaEndpoint ? (
         <ConnectionDetailCard
           label="Admin REST API"
           body="Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA."
+          promptArtifactType="admin_prompt"
           promptExample={adminPromptExample}
+          schemaArtifactType="admin_openapi_schema"
           schemaEndpoint={adminSchemaEndpoint}
         />
       ) : null}

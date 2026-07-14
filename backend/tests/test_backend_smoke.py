@@ -2201,11 +2201,15 @@ def test_auth_session_returns_401_on_invalid_token(
 
 def test_auth_config_reports_openhands_base_url(config_env: ConfigEnvFixture) -> None:
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    config_env("INTHUB_POSTHOG_CLIENT_KEY", "phc_test")
 
     response = TestClient(app).get("/api/auth/config")
 
     assert response.status_code == 200
-    assert response.json() == {"openhandsBaseUrl": "https://staging.all-hands.dev"}
+    assert response.json() == {
+        "openhandsBaseUrl": "https://staging.all-hands.dev",
+        "posthogClientKey": "phc_test",
+    }
 
 
 def test_removed_inthub_disable_auth_flag_does_not_grant_access(

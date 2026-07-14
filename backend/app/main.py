@@ -3227,7 +3227,10 @@ async def fastapi_handler(request: Request):
 async def auth_handler(request: Request):
     cfg = get_default_config()
     if request.url.path.endswith("/config"):
-        return {"openhandsBaseUrl": cfg.openhands_base_url or ""}
+        return {
+            "openhandsBaseUrl": cfg.openhands_base_url or "",
+            "posthogClientKey": cfg.posthog_client_key,
+        }
     return await run_blocking(request, auth_session_response, request)
 
 

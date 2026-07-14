@@ -46,6 +46,7 @@ class Config(BaseModel):
     Environment variables:
         INTHUB_POSTGRES_URL: Database connection URL
         INTHUB_OPENHANDS_BASE_URL: OpenHands base URL for session validation
+        INTHUB_POSTHOG_CLIENT_KEY: Public PostHog project key for product analytics
         INTHUB_CRON_SECRET: Secret for cron job authentication
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
         INTHUB_CREDENTIAL_ENCRYPTION_KEY: Key for encrypting stored credentials
@@ -68,6 +69,13 @@ class Config(BaseModel):
         description=(
             "OpenHands base URL used to validate session cookies and API keys. "
             "Reads from INTHUB_OPENHANDS_BASE_URL."
+        ),
+    )
+    posthog_client_key: str | None = Field(
+        default=None,
+        description=(
+            "Public PostHog project key used to enable explicit browser analytics. "
+            "Reads from INTHUB_POSTHOG_CLIENT_KEY."
         ),
     )
     cron_secret: SecretStr | None = Field(

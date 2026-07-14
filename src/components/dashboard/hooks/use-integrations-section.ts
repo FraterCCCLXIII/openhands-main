@@ -23,6 +23,13 @@ import type {
   ToolAccessMode,
   UnusedToolWindowUnit,
 } from "@/src/types/integrations-hub";
+import { useTracking } from "@/src/hooks/use-tracking";
+
+interface IntegrationActionAnalytics {
+  action: "enabled" | "disabled" | "deleted" | "tool_access_changed";
+  integrationKind: IntegrationSpec["kind"];
+  authStrategy: IntegrationSpec["authStrategy"];
+}
 
 interface UseIntegrationsSectionOptions {
   initialIntegrations?: IntegrationSpec[];
@@ -36,6 +43,7 @@ export const useIntegrationsSection = ({
   onStatus,
 }: UseIntegrationsSectionOptions) => {
   const queryClient = useQueryClient();
+  const { track } = useTracking();
   const [addIntegrationSearch, setAddIntegrationSearch] = useState("");
   const [integrationSearch, setIntegrationSearch] = useState("");
   const [hideDisabledTools, setHideDisabledTools] = useState(true);
@@ -86,6 +94,7 @@ export const useIntegrationsSection = ({
       method: string;
       body?: unknown;
       successMessage?: string;
+      analytics?: IntegrationActionAnalytics;
     }) =>
       fetchJson(url, {
         method,
@@ -94,6 +103,13 @@ export const useIntegrationsSection = ({
       }),
     onSuccess: async (_data, variables) => {
       onStatus(variables.successMessage ?? "Saved.");
+      if (variables.analytics) {
+        track("integration_state_changed", {
+          action: variables.analytics.action,
+          integration_kind: variables.analytics.integrationKind,
+          auth_strategy: variables.analytics.authStrategy,
+        });
+      }
       await invalidateAll();
     },
     onError: (error: Error) => {
@@ -117,6 +133,12 @@ export const useIntegrationsSection = ({
           ? `Disabled ${result.disabledCount} tracked ${result.disabledCount === 1 ? "tool" : "tools"} unused since ${new Date(result.cutoffIso).toLocaleDateString()}.`
           : "No tracked tools matched the selected unused window.",
       );
+      track("unused_tools_disabled", {
+        integration_count: new Set(
+          result.disabledTools.map((tool) => tool.integrationKey),
+        ).size,
+        tool_count: result.disabledCount,
+      });
       await invalidateAll();
     },
     onError: (error: Error) => {
@@ -184,9 +206,17 @@ export const useIntegrationsSection = ({
     toolName: string,
     accessMode: ToolAccessMode,
   ) => {
-    actionMutation.mutate(
-      buildToolAccessPatch(integrationKey, toolName, accessMode),
-    );
+    const integration = integrations.find((item) => item.key === integrationKey);
+    actionMutation.mutate({
+      ...buildToolAccessPatch(integrationKey, toolName, accessMode),
+      analytics: integration
+        ? {
+            action: "tool_access_changed",
+            integrationKind: integration.kind,
+            authStrategy: integration.authStrategy,
+          }
+        : undefined,
+    });
   };
 
   const handleDisableUnusedTools = (
@@ -231,6 +261,11 @@ export const useIntegrationsSection = ({
       url: `/api/integrations/${integration.key}`,
       method: "DELETE",
       successMessage: `${integration.name} deleted.`,
+      analytics: {
+        action: "deleted",
+        integrationKind: integration.kind,
+        authStrategy: integration.authStrategy,
+      },
     });
   };
 
@@ -239,6 +274,11 @@ export const useIntegrationsSection = ({
       url: `/api/integrations/${integration.key}/toggle`,
       method: "POST",
       body: { enabled: !integration.enabled },
+      analytics: {
+        action: integration.enabled ? "disabled" : "enabled",
+        integrationKind: integration.kind,
+        authStrategy: integration.authStrategy,
+      },
     });
   };
 

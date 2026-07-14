@@ -16,6 +16,7 @@ import {
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
 import type { AccessRequest } from "@/src/types/integrations-hub";
+import { useTracking } from "@/src/hooks/use-tracking";
 
 interface UseApprovalsSectionOptions {
   initialAccessRequests?: AccessRequest[];
@@ -29,6 +30,7 @@ export const useApprovalsSection = ({
   onStatus,
 }: UseApprovalsSectionOptions) => {
   const queryClient = useQueryClient();
+  const { track } = useTracking();
   const [approvalSearch, setApprovalSearch] = useState("");
   const [approvalFilter, setApprovalFilter] =
     useState<ApprovalRequestFilter>("pending");
@@ -165,6 +167,10 @@ export const useApprovalsSection = ({
           ? `Approved ${requestIds.length} request${requestIds.length === 1 ? "" : "s"}.`
           : `Denied ${requestIds.length} request${requestIds.length === 1 ? "" : "s"}.`,
       );
+      track("access_request_resolved", {
+        decision: action === "approve" ? "approved" : "rejected",
+        request_count: requestIds.length,
+      });
       await invalidateAll();
     } catch (error) {
       onStatus(

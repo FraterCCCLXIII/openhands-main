@@ -14,6 +14,7 @@ import {
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
 import { WizardFeedback } from "@/src/components/integrations/wizard/shared";
+import { useTracking } from "@/src/hooks/use-tracking";
 
 interface ConnectStepProps {
   managedConnectors: ManagedConnectorOption[];
@@ -84,7 +85,7 @@ const startOAuthConnection = async ({
   if (!response.redirectUrl) {
     throw new Error("OAuth start response did not include a redirect URL.");
   }
-  window.location.href = response.redirectUrl;
+  return response.redirectUrl;
 };
 
 export const ConnectStep = ({
@@ -107,6 +108,7 @@ export const ConnectStep = ({
   onDiscover,
   onSelectKind,
 }: ConnectStepProps) => {
+  const { track } = useTracking();
   const managedConnectorAuthStrategy = selectedConnector?.authStrategy ?? null;
   const selectedResource =
     selectedConnection?.resources?.find(
@@ -202,19 +204,34 @@ export const ConnectStep = ({
                     className="h-9 shrink-0 rounded-lg px-4 text-xs"
                     disabled={!draft.managedConnectorSlug.trim() || !oauthConnectionEnabled}
                     onClick={() => {
+                      const connectorSlug = selectedConnector.slug;
+                      const action = selectedConnection ? "reconnect" : "connect";
                       void startOAuthConnection({
                         provider: selectedConnector.slug,
                         integrationKey: draft.key.trim() || selectedConnector.slug,
                         redirectSection,
                         managedConnector:
                           draft.managedConnectorSlug || selectedConnector.slug,
-                      }).catch((error: unknown) => {
-                        window.alert(
-                          error instanceof Error
-                            ? error.message
-                            : "Failed to start OAuth flow.",
-                        );
-                      });
+                      })
+                        .then((redirectUrl) => {
+                          track("integration_oauth_started", {
+                            connector_slug: connectorSlug,
+                            action,
+                          });
+                          window.location.href = redirectUrl;
+                        })
+                        .catch((error: unknown) => {
+                          track("integration_setup_failed", {
+                            stage: "oauth_start",
+                            integration_kind: "managed",
+                            connector_slug: connectorSlug,
+                          });
+                          window.alert(
+                            error instanceof Error
+                              ? error.message
+                              : "Failed to start OAuth flow.",
+                          );
+                        });
                     }}
                   >
                     {!oauthConnectionEnabled

@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchJson } from "@/src/lib/fetch-json";
 import { DashboardShell } from "@/src/components/dashboard/dashboard-shell";
@@ -32,6 +32,10 @@ import type {
   IntegrationSpec,
   UserApiKeyStatus,
 } from "@/src/types/integrations-hub";
+import {
+  safeAnalyticsIdentifier,
+  useTracking,
+} from "@/src/hooks/use-tracking";
 
 interface DashboardWorkspaceProps {
   initialIntegrations?: IntegrationSpec[];
@@ -58,6 +62,9 @@ export const DashboardWorkspace = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { track } = useTracking();
+  const trackedOAuthReturnRef = useRef<string | null>(null);
+  const trackedViewRef = useRef(false);
   const [activeSection, setActiveSection] = useState<AdminSection>(() =>
     getAdminSectionFromPath(pathname),
   );
@@ -136,6 +143,48 @@ export const DashboardWorkspace = ({
     (request) => request.status === "pending",
   );
 
+  useEffect(() => {
+    if (trackedViewRef.current || !integrationsQuery.isFetched) {
+      return;
+    }
+    trackedViewRef.current = true;
+    track("integrations_hub_viewed", {
+      integration_count: integrations.length,
+      enabled_integration_count: enabledIntegrationCount,
+      tool_count: discoveredToolCount,
+    });
+  }, [
+    discoveredToolCount,
+    enabledIntegrationCount,
+    integrations.length,
+    integrationsQuery.isFetched,
+    track,
+  ]);
+
+  useEffect(() => {
+    const outcome = searchParams.get("oauth_status");
+    if (outcome !== "connected" && outcome !== "error") {
+      return;
+    }
+    const connectorSlug = safeAnalyticsIdentifier(searchParams.get("oauth_provider"));
+    const eventKey = `${outcome}:${connectorSlug ?? "unknown"}`;
+    if (trackedOAuthReturnRef.current === eventKey) {
+      return;
+    }
+    trackedOAuthReturnRef.current = eventKey;
+    track("integration_oauth_completed", {
+      connector_slug: connectorSlug,
+      outcome,
+    });
+    if (outcome === "error") {
+      track("integration_setup_failed", {
+        stage: "oauth_callback",
+        integration_kind: "managed",
+        connector_slug: connectorSlug,
+      });
+    }
+  }, [searchParams, track]);
+
   const { agentApiReady, userKey, adminKey } = useApiKeys({
     agentApiKey,
     userApiKey,
@@ -202,6 +251,11 @@ export const DashboardWorkspace = ({
     const suggestedIntegrationKey = managedConnectorSlug
       ? buildSuggestedIntegrationKey(managedConnectorSlug, installedIntegrationKeys)
       : undefined;
+
+    track("integration_setup_started", {
+      source: managedConnectorSlug ? "catalog" : "manual",
+      connector_slug: managedConnectorSlug,
+    });
 
     setActiveSection("integrations");
     router.push(

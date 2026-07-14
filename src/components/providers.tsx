@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { AuthProvider } from "@/src/components/auth/auth-context";
+import { PostHogAnalytics } from "@/src/components/analytics/posthog-analytics";
 
 export const Providers = ({
   children,
@@ -16,7 +17,10 @@ export const Providers = ({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider authDisabled={authDisabled}>{children}</AuthProvider>
+      <AuthProvider authDisabled={authDisabled}>
+        <PostHogAnalytics />
+        {children}
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
