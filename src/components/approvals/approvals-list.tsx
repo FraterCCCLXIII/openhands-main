@@ -46,8 +46,8 @@ export function ApprovalsList({
 
   return (
     <div data-testid="approvals-list" className={settingsListContainerClassName}>
-      <table className="w-full table-fixed border-collapse text-left">
-        <colgroup>
+      <table className="block w-full border-collapse text-left md:table md:table-fixed">
+        <colgroup className="hidden md:table-column-group">
           {showSelectionColumn ? <col className="w-12" /> : null}
           <col className="w-[30%]" />
           <col className="w-[18%]" />
@@ -63,7 +63,12 @@ export function ApprovalsList({
           <col className="w-[16%]" />
           {showActionsColumn ? <col className="w-[72px]" /> : null}
         </colgroup>
-        <thead className={settingsListTableHeadClassName}>
+        <thead
+          className={cn(
+            settingsListTableHeadClassName,
+            "hidden md:table-header-group",
+          )}
+        >
           <tr>
             {showSelectionColumn ? (
               <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-12 pl-4 pr-2")}>
@@ -117,7 +122,7 @@ export function ApprovalsList({
             ) : null}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[var(--oh-border)]">
+        <tbody className="block divide-y divide-[var(--oh-border)] md:table-row-group">
           {requests.map((request) => (
             <ApprovalRequestRow
               key={request.id}

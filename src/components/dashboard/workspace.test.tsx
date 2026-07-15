@@ -1736,6 +1736,17 @@ describe("DashboardWorkspace", () => {
           'input[type="search"][aria-label="Search case-by-case approvals"]',
         ),
       ).toBeTruthy();
+      expect(
+        container.querySelector('[data-testid="approvals-search"]')?.className,
+      ).toContain("w-full");
+      expect(
+        container.querySelector('[data-testid="approvals-filter-toolbar"]')
+          ?.className,
+      ).toContain("flex-col");
+      expect(
+        container.querySelector('[data-testid="approvals-decision-menu"]')
+          ?.parentElement?.className,
+      ).toContain("hidden");
       expect(container.textContent).toContain("no agent identity provided");
       expect(container.textContent).toContain(
         "Invocation identity: Not provided · Not provided",

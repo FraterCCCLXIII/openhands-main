@@ -157,4 +157,33 @@ describe("ApprovalRequestRow", () => {
     expect(toolCell?.className).toContain("pr-2");
     expect(toolCell?.previousElementSibling).toBeNull();
   });
+
+  it("uses a labeled grid layout for active approvals on mobile", async () => {
+    await renderRow();
+
+    const row = container.querySelector(
+      '[data-testid="approval-request-row-req-pending"]',
+    );
+    const toolCell = container.querySelector(
+      '[data-testid="approval-request-tool-req-pending"]',
+    );
+    const approveButton = container.querySelector(
+      '[data-testid="approval-request-approve-req-pending"]',
+    );
+
+    expect(row?.className).toContain("grid-cols-[auto_minmax(0,1fr)_auto]");
+    expect(row?.className).toContain("md:table-row");
+    expect(toolCell?.className).toContain("col-span-full");
+    expect(toolCell?.className).toContain("row-start-2");
+    expect(toolCell?.querySelectorAll("wbr")).toHaveLength(2);
+    expect(toolCell?.querySelector("p")?.getAttribute("aria-label")).toBe(
+      "slack.post_message",
+    );
+    expect(toolCell?.textContent).toContain("post message");
+    expect(approveButton).toBeTruthy();
+    expect(container.textContent).toContain("Invocation identity");
+    expect(container.textContent).toContain("Requested");
+    expect(container.textContent).toContain("Duration");
+    expect(container.textContent).toContain("Scopes");
+  });
 });

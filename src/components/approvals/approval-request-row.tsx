@@ -1,5 +1,5 @@
 import { ArrowRight, Check, X } from "lucide-react";
-import type { MouseEvent } from "react";
+import { Fragment, type MouseEvent } from "react";
 
 import {
   formatApprovalIdentityValue,
@@ -22,11 +22,56 @@ const approvalRowIconActionClassName = cn(
 const tableCellClassName =
   "max-w-0 px-2 py-2.5 align-middle text-xs text-[var(--oh-text-secondary)]";
 
-function approvalToolColumnClassName(showSelectionColumn: boolean): string {
+const mobileFullWidthCellClassName =
+  "col-span-full max-w-none p-0 md:max-w-0 md:px-2 md:py-2.5";
+
+function ApprovalMobileFieldLabel({ children }: { children: string }) {
+  return (
+    <span className="mb-1 block text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--oh-muted)] md:hidden">
+      {children}
+    </span>
+  );
+}
+
+function approvalToolColumnClassName(
+  showSelectionColumn: boolean,
+  showActionsColumn: boolean,
+): string {
+  const hasMobileControls = showSelectionColumn || showActionsColumn;
+
   return cn(
     tableCellClassName,
-    "break-words",
+    "max-w-none break-words p-0 md:max-w-0 md:px-2 md:py-2.5",
+    hasMobileControls
+      ? "col-span-full row-start-2"
+      : "col-start-1 row-start-1",
     showSelectionColumn ? undefined : "pl-4 pr-2",
+  );
+}
+
+function ApprovalToolLabel({
+  integrationKey,
+  toolName,
+}: {
+  integrationKey: string;
+  toolName: string;
+}) {
+  const segments = toolName.split("_");
+
+  return (
+    <>
+      {integrationKey}.<wbr />
+      {segments.map((segment, index) => (
+        <Fragment key={`${segment}-${index}`}>
+          {segment}
+          {index < segments.length - 1 ? (
+            <>
+              _<wbr />
+            </>
+          ) : null}
+        </Fragment>
+      ))}
+    </>
   );
 }
 
@@ -82,7 +127,6 @@ export function ApprovalRequestRow({
   onApprove,
   onDeny,
 }: ApprovalRequestRowProps) {
-  const toolLabel = `${request.integrationKey}.${request.toolName}`;
   const isRowSelectable =
     showSelectionColumn && request.status === "pending" && !requestActionPending;
 
@@ -100,7 +144,14 @@ export function ApprovalRequestRow({
       data-testid={`approval-request-row-${request.id}`}
       onClick={handleRowClick}
       className={cn(
-        "align-middle",
+        "grid items-start gap-x-3 gap-y-3 px-4 py-4 align-middle md:table-row md:px-0 md:py-0",
+        showSelectionColumn && showActionsColumn
+          ? "grid-cols-[auto_minmax(0,1fr)_auto]"
+          : showSelectionColumn
+            ? "grid-cols-[auto_minmax(0,1fr)]"
+            : showActionsColumn
+              ? "grid-cols-[minmax(0,1fr)_auto]"
+              : "grid-cols-[minmax(0,1fr)]",
         formControlTransitionClassName,
         isRowSelectable && settingsListRowHoverClassName,
         isRowSelectable && "cursor-pointer",
@@ -108,7 +159,12 @@ export function ApprovalRequestRow({
       )}
     >
       {showSelectionColumn ? (
-        <td className={cn(tableCellClassName, "w-12 max-w-none align-middle pl-4 pr-2")}>
+        <td
+          className={cn(
+            tableCellClassName,
+            "col-start-1 row-start-1 w-auto max-w-none p-0 align-middle md:w-12 md:pl-4 md:pr-2 md:py-2.5",
+          )}
+        >
           {request.status === "pending" ? (
             <Checkbox
               aria-label={`Select request ${request.id}`}
@@ -127,7 +183,10 @@ export function ApprovalRequestRow({
 
       <td
         data-testid={`approval-request-tool-${request.id}`}
-        className={approvalToolColumnClassName(showSelectionColumn)}
+        className={approvalToolColumnClassName(
+          showSelectionColumn,
+          showActionsColumn,
+        )}
       >
         <div className="flex min-w-0 items-start gap-2.5">
           <span
@@ -141,7 +200,26 @@ export function ApprovalRequestRow({
             />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white">{toolLabel}</p>
+            <p
+              aria-label={`${request.integrationKey}.${request.toolName}`}
+              title={`${request.integrationKey}.${request.toolName}`}
+              className="text-sm font-semibold text-white"
+            >
+              <span aria-hidden className="md:hidden">
+                <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--oh-muted)]">
+                  {request.integrationKey}
+                </span>
+                <span className="mt-0.5 block">
+                  {request.toolName.replaceAll("_", " ")}
+                </span>
+              </span>
+              <span aria-hidden className="hidden md:inline">
+                <ApprovalToolLabel
+                  integrationKey={request.integrationKey}
+                  toolName={request.toolName}
+                />
+              </span>
+            </p>
             {request.justification ? (
               <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--oh-text-secondary)]">
                 {request.justification}
@@ -151,9 +229,12 @@ export function ApprovalRequestRow({
         </div>
       </td>
 
-      <td className={cn(tableCellClassName, "break-words")}>
+      <td className={cn(tableCellClassName, mobileFullWidthCellClassName, "break-words")}>
+        <ApprovalMobileFieldLabel>
+          {APPROVALS_PAGE_COPY.tableColumnInvocationIdentity}
+        </ApprovalMobileFieldLabel>
         <p className="text-white">
-          <span>Invocation identity: </span>
+          <span className="hidden md:inline">Invocation identity: </span>
           {formatApprovalIdentityValue(request.agentId)}
           <span className="text-[var(--oh-muted)]"> · </span>
           {formatApprovalIdentityValue(request.agentClass)}
@@ -166,7 +247,10 @@ export function ApprovalRequestRow({
       </td>
 
       {showConversationColumn ? (
-        <td className={cn(tableCellClassName, "break-words")}>
+        <td className={cn(tableCellClassName, mobileFullWidthCellClassName, "break-words")}>
+          <ApprovalMobileFieldLabel>
+            {APPROVALS_PAGE_COPY.tableColumnConversation}
+          </ApprovalMobileFieldLabel>
           {request.agentData?.conversationLink ? (
             <a
               href={request.agentData.conversationLink}
@@ -183,38 +267,84 @@ export function ApprovalRequestRow({
         </td>
       ) : null}
 
-      <td className={cn(tableCellClassName, "w-[108px] max-w-none")}>
+      <td
+        className={cn(
+          tableCellClassName,
+          mobileFullWidthCellClassName,
+          "w-auto md:w-[108px] md:max-w-none",
+        )}
+      >
+        <ApprovalMobileFieldLabel>
+          {APPROVALS_PAGE_COPY.tableColumnRequested}
+        </ApprovalMobileFieldLabel>
         <ApprovalTimestamp value={request.createdAt} />
       </td>
 
       <td
         className={cn(
           tableCellClassName,
-          "w-20 max-w-none whitespace-nowrap text-white",
+          mobileFullWidthCellClassName,
+          "w-auto whitespace-nowrap text-white md:w-20 md:max-w-none",
         )}
       >
+        <ApprovalMobileFieldLabel>
+          {APPROVALS_PAGE_COPY.tableColumnRequestedDuration}
+        </ApprovalMobileFieldLabel>
         {formatRequestedDurationHours(request.requestedMinutes)}
       </td>
 
       {showDecisionColumns ? (
         <>
-          <td className={cn(tableCellClassName, "break-words text-white")}>
+          <td
+            className={cn(
+              tableCellClassName,
+              mobileFullWidthCellClassName,
+              "break-words text-white",
+            )}
+          >
+            <ApprovalMobileFieldLabel>
+              {APPROVALS_PAGE_COPY.tableColumnDecidedBy}
+            </ApprovalMobileFieldLabel>
             {request.decidedBy ?? "—"}
           </td>
-          <td className={cn(tableCellClassName, "w-[108px] max-w-none")}>
+          <td
+            className={cn(
+              tableCellClassName,
+              mobileFullWidthCellClassName,
+              "w-auto md:w-[108px] md:max-w-none",
+            )}
+          >
+            <ApprovalMobileFieldLabel>
+              {APPROVALS_PAGE_COPY.tableColumnDecidedAt}
+            </ApprovalMobileFieldLabel>
             <ApprovalTimestamp value={request.decidedAt} />
           </td>
         </>
       ) : null}
 
-      <td className={cn(tableCellClassName, "max-w-none break-words text-white")}>
+      <td
+        className={cn(
+          tableCellClassName,
+          mobileFullWidthCellClassName,
+          "break-words text-white md:max-w-none",
+        )}
+      >
+        <ApprovalMobileFieldLabel>
+          {APPROVALS_PAGE_COPY.tableColumnScopes}
+        </ApprovalMobileFieldLabel>
         {request.scopes.length > 0
           ? request.scopes.join(", ")
           : APPROVALS_PAGE_COPY.tableDefaultScopes}
       </td>
 
       {showActionsColumn ? (
-        <td className={cn(tableCellClassName, "w-[72px] max-w-none align-middle")}>
+        <td
+          className={cn(
+            tableCellClassName,
+            "row-start-1 w-auto max-w-none p-0 align-middle md:w-[72px] md:px-2 md:py-2.5",
+            showSelectionColumn ? "col-start-3" : "col-start-2",
+          )}
+        >
           <div className="flex items-center justify-end gap-1">
             <button
               type="button"

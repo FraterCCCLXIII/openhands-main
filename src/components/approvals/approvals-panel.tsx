@@ -12,6 +12,7 @@ import {
   DEFAULT_CASE_BY_CASE_APPROVAL_HOURS,
   normalizeApprovalDurationHours,
 } from "@/src/lib/access-requests";
+import { cn } from "@/src/lib/utils";
 import type { AccessRequest } from "@/src/types/integrations-hub";
 
 interface ApprovalCounts {
@@ -64,13 +65,16 @@ export function ApprovalsPanel({
 
   return (
     <div data-testid="approvals-panel" className="flex flex-col gap-6">
-      <div className="flex items-end justify-between gap-4">
+      <div
+        data-testid="approvals-filter-toolbar"
+        className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between md:gap-4"
+      >
         <SettingsTabList
           testId="approvals-filter"
           ariaLabel="Filter approvals by status"
           value={approvalFilter}
           onChange={onApprovalFilterChange}
-          className="min-w-0 flex-1"
+          className="w-full min-w-0 justify-between gap-0 md:flex-1 md:justify-start md:gap-2"
           options={[
             {
               value: "pending",
@@ -89,7 +93,12 @@ export function ApprovalsPanel({
             },
           ]}
         />
-        <div className="shrink-0 pb-2">
+        <div
+          className={cn(
+            "self-end pb-0 md:shrink-0 md:pb-2",
+            !canUseBulkActions && "hidden md:block",
+          )}
+        >
           <ApprovalsDecisionMenu
             isDisabled={!canUseBulkActions || requestActionPending}
             onApprove={() => void onApproveRequests(selectedIds, currentDurationHours())}

@@ -94,18 +94,21 @@ export const ApprovalsSection = ({
 
   return (
     <div data-testid="approvals-page" className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
+      <div
+        data-testid="approvals-controls"
+        className="flex flex-wrap items-center gap-2"
+      >
         <IntegrationsSearchInput
           testId="approvals-search"
           value={approvalSearch}
           onChange={setApprovalSearch}
           placeholder={APPROVALS_PAGE_COPY.searchPlaceholder}
           ariaLabel={APPROVALS_PAGE_COPY.searchPlaceholder}
-          className="min-w-0 flex-1"
+          className="w-full flex-none md:min-w-0 md:flex-1"
         />
         <button
           type="button"
-          className="rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50"
+          className="hidden h-9 items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50 md:inline-flex"
           disabled={!canSelectAll}
           onClick={() =>
             setSelectedStateForApprovalRequests(
@@ -118,7 +121,7 @@ export const ApprovalsSection = ({
         </button>
         <button
           type="button"
-          className="rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50"
+          className="hidden h-9 items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50 md:inline-flex"
           disabled={!canDeselect}
           onClick={() =>
             setSelectedStateForApprovalRequests(selectedApprovalRequestIds, false)
@@ -126,18 +129,23 @@ export const ApprovalsSection = ({
         >
           Deselect matches
         </button>
-        <ApprovalsMatchSelectionMenu
-          isDisabled={!canSelectAll && !canDeselect}
-          onSelectAll={() =>
-            setSelectedStateForApprovalRequests(
-              filteredAccessRequests.map((request) => request.id),
-              true,
-            )
-          }
-          onDeselect={() =>
-            setSelectedStateForApprovalRequests(selectedApprovalRequestIds, false)
-          }
-        />
+        <div className="md:hidden">
+          <ApprovalsMatchSelectionMenu
+            isDisabled={!canSelectAll && !canDeselect}
+            onSelectAll={() =>
+              setSelectedStateForApprovalRequests(
+                filteredAccessRequests.map((request) => request.id),
+                true,
+              )
+            }
+            onDeselect={() =>
+              setSelectedStateForApprovalRequests(
+                selectedApprovalRequestIds,
+                false,
+              )
+            }
+          />
+        </div>
         <div className="flex items-center gap-1.5">
           <input
             type="number"
@@ -161,7 +169,7 @@ export const ApprovalsSection = ({
         </div>
         <button
           type="button"
-          className="cursor-pointer rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="hidden h-9 cursor-pointer items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
           disabled={!canApprove}
           onClick={() =>
             void handleApproveRequests(
@@ -174,7 +182,7 @@ export const ApprovalsSection = ({
         </button>
         <button
           type="button"
-          className="cursor-pointer rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="hidden h-9 cursor-pointer items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
           disabled={
             approvalFilter !== "pending" ||
             selectedApprovalRequestCount === 0 ||
