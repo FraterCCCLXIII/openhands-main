@@ -78,6 +78,10 @@ export const IntegrationWizard = ({
     staleTime: 15_000,
   });
 
+  const oauthReturnIntegrationKey = searchParams.get("integrationKey")?.trim() || "";
+  const oauthReturnConnectorSlug =
+    searchParams.get("managedConnector")?.trim() || "";
+
   const state = useWizardState({
     existingIntegrationKeys,
     managedConnectors,
@@ -86,13 +90,32 @@ export const IntegrationWizard = ({
   });
 
   const effectiveSelectedConnection = useMemo(
-    () =>
-      connectionStatusesQuery.data?.find(
-        (connection) =>
-          connection.integrationKey ===
-          (state.draft.key.trim() || state.draft.managedConnectorSlug),
-      ) ?? null,
-    [connectionStatusesQuery.data, state.draft.managedConnectorSlug, state.draft.key],
+    () => {
+      const draftIntegrationKey =
+        state.draft.key.trim() || state.draft.managedConnectorSlug;
+      return (
+        connectionStatusesQuery.data?.find(
+          (connection) => connection.integrationKey === draftIntegrationKey,
+        ) ??
+        // The OAuth callback keeps the key used to connect in the URL. Use it
+        // as a stable fallback so editing the draft key does not discard the
+        // saved connection before discovery can bind its connectionId.
+        connectionStatusesQuery.data?.find(
+          (connection) =>
+            !!oauthReturnIntegrationKey &&
+            state.draft.managedConnectorSlug === oauthReturnConnectorSlug &&
+            connection.integrationKey === oauthReturnIntegrationKey,
+        ) ??
+        null
+      );
+    },
+    [
+      connectionStatusesQuery.data,
+      oauthReturnConnectorSlug,
+      oauthReturnIntegrationKey,
+      state.draft.managedConnectorSlug,
+      state.draft.key,
+    ],
   );
 
   useEffect(() => {

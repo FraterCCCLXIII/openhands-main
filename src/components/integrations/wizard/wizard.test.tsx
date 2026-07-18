@@ -548,6 +548,120 @@ describe("IntegrationWizard", () => {
     expect(container.textContent).toContain("searchPages");
   });
 
+  it("keeps the OAuth connection when the integration key is renamed", async () => {
+    let discoverPayload: Record<string, unknown> | null = null;
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+
+      if (url === "/api/integrations?filter=enabled") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "notion",
+              name: "Notion",
+              description: "Notion connector",
+              categories: ["Knowledge base"],
+              authModes: ["oauth2"],
+              authStrategy: "oauth2",
+              oauthConfigured: true,
+              credentialLabel: "Connect Notion",
+              credentialPlaceholder: "Connect Notion",
+              credentialHelp: "Connect Notion.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/oauth/connections") {
+        return new Response(
+          JSON.stringify([
+            {
+              connectionId: "conn_notion",
+              integrationKey: "notion",
+              provider: "notion",
+              authStrategy: "oauth2",
+              scopes: [],
+              metadata: {},
+              displayName: "Connected Notion workspace",
+              resources: [],
+              createdAt: "2026-03-09T00:00:00.000Z",
+              updatedAt: "2026-03-09T00:00:00.000Z",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      if (url === "/api/integrations/discover") {
+        discoverPayload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            provider: "mcp",
+            authStrategy: "oauth2",
+            config: {
+              managedConnectorSlug: "notion",
+              connectionId: "conn_notion",
+            },
+            credentials: {},
+            tools: {},
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams("managedConnector=notion&integrationKey=notion"),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const integrationKeyInput = container.querySelector(
+      'input[placeholder="github"]',
+    ) as HTMLInputElement | null;
+    expect(integrationKeyInput?.value).toBe("notion");
+
+    await act(async () => {
+      setInputValue(integrationKeyInput ?? undefined, "team-notion");
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(container.textContent).toContain("Connected Notion workspace");
+    expect(container.textContent).toContain("Reconnect");
+    const discoverButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Discover tools"),
+    );
+    expect(discoverButton?.hasAttribute("disabled")).toBe(false);
+
+    await act(async () => {
+      discoverButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
+
+    expect(discoverPayload).toMatchObject({
+      key: "team-notion",
+      config: {
+        managedConnectorSlug: "notion",
+        connectionId: "conn_notion",
+      },
+    });
+  });
+
   it("renders searchable bulk access controls with alphabetized compact review rows", async () => {
     const onCreated = vi.fn(async () => {});
     let createPayload: Record<string, unknown> | null = null;
