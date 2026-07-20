@@ -6,6 +6,7 @@ import { IntegrationCatalogCard } from "@/src/components/integrations/integratio
 import { SectionCountBadge } from "@/src/components/integrations/section-count-badge";
 import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { cn } from "@/src/lib/utils";
+import { uiPath } from "@/src/shared/paths";
 import {
   extensionModuleCardGridClassName,
   extensionModuleCardGridContainerClassName,
@@ -55,7 +56,7 @@ export function IntegrationCatalogSection({
       </div>
       <p className="mt-1 text-xs text-tertiary-light">
         {INTEGRATIONS_PAGE_COPY.cantFindPrompt}{" "}
-        <a href="/admin-integrations" className="text-white underline-offset-4 hover:underline">
+        <a href={uiPath("/admin-integrations")} className="text-white underline-offset-4 hover:underline">
           {INTEGRATIONS_PAGE_COPY.cantFindLink}
         </a>
       </p>

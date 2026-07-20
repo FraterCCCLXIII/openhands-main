@@ -11,6 +11,7 @@ import type { ApprovalRequestFilter } from "@/src/components/dashboard/utils";
 import type { AccessRequest } from "@/src/types/integrations-hub";
 import { normalizeApprovalDurationHours } from "@/src/lib/access-requests";
 import { cn } from "@/src/lib/utils";
+import { uiPath } from "@/src/shared/paths";
 import { formControlFieldClassName } from "@/src/styles/form-control-classes";
 
 interface ApprovalsSectionProps {
@@ -200,7 +201,7 @@ export const ApprovalsSection = ({
           APPROVAL_DURATION.maxHours,
         )}{" "}
         {APPROVALS_PAGE_COPY.longDurationHintPrefix}{" "}
-        <a href="/integrations" className="text-white hover:opacity-80">
+        <a href={uiPath("/integrations")} className="text-white hover:opacity-80">
           {APPROVALS_PAGE_COPY.longDurationHintLink}
         </a>
         {APPROVALS_PAGE_COPY.longDurationHintSuffix}

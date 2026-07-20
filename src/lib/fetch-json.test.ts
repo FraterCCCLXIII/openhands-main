@@ -2,17 +2,14 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { clearStoredOpenHandsToken, setStoredOpenHandsToken } from "@/src/lib/cloud-auth-storage";
 import { fetchJson } from "@/src/lib/fetch-json";
 
 describe("fetchJson", () => {
   afterEach(() => {
-    clearStoredOpenHandsToken();
     vi.restoreAllMocks();
   });
 
-  it("adds the OpenHands bearer token to same-origin API requests", async () => {
-    setStoredOpenHandsToken("oh-token");
+  it("uses same-origin credentials for internal API requests", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
@@ -22,11 +19,11 @@ describe("fetchJson", () => {
     await expect(fetchJson("/api/integrations")).resolves.toEqual({ ok: true });
 
     const [, init] = fetchMock.mock.calls[0] ?? [];
-    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer oh-token");
+    expect(init?.credentials).toBe("same-origin");
+    expect(new Headers(init?.headers).has("Authorization")).toBe(false);
   });
 
-  it("does not add auth headers to external URLs", async () => {
-    setStoredOpenHandsToken("oh-token");
+  it("does not add auth options to external URLs", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
@@ -36,6 +33,7 @@ describe("fetchJson", () => {
     await fetchJson("https://example.com/api/integrations");
 
     const [, init] = fetchMock.mock.calls[0] ?? [];
+    expect(init?.credentials).toBeUndefined();
     expect(new Headers(init?.headers).has("Authorization")).toBe(false);
   });
 });

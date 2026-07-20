@@ -1939,9 +1939,9 @@ def test_dashboard_integrations_use_the_openhands_session_owner(
         ),
     )
 
-    response = TestClient(app).get(
-        "/api/integrations", headers={"Authorization": "Bearer cloud-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "cloud-cookie")
+    response = client.get("/api/integrations")
 
     assert response.status_code == 200
     assert [integration["key"] for integration in response.json()] == ["visible"]
@@ -1959,7 +1959,7 @@ def test_dashboard_integrations_reject_a_spoofed_owner_without_a_session(
     assert response.status_code == 401
 
 
-def test_dashboard_key_routes_accept_openhands_bearer_token(
+def test_dashboard_key_routes_accept_openhands_cookie(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("PYTEST_INTHUB_AUTH_BYPASS")
@@ -1976,19 +1976,99 @@ def test_dashboard_key_routes_accept_openhands_bearer_token(
     )
 
     client = TestClient(app)
-    response = client.get(
-        "/api/user/agent-key",
-        headers={"Authorization": "Bearer valid-openhands-token"},
-    )
+    client.cookies.set("keycloak_auth", "valid-openhands-cookie")
+    response = client.get("/api/user/agent-key")
 
     assert response.status_code == 200
     assert response.json()["ownerId"] == "user-1:org-1"
     assert calls == [
         {
             "url": "https://staging.all-hands.dev/api/v1/users/me",
-            "headers": {"Authorization": "Bearer valid-openhands-token"},
+            "headers": {"Cookie": "keycloak_auth=valid-openhands-cookie"},
         }
     ]
+
+
+def test_auth_session_accepts_chunked_openhands_cookie(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    calls = _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-1",
+            "org_id": "org-1",
+            "email": "user@example.com",
+            "role": "member",
+            "permissions": [],
+        },
+    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "cookie-part-0")
+    client.cookies.set("keycloak_auth_1", "cookie-part-1")
+
+    response = client.get("/api/auth/session")
+
+    assert response.status_code == 200
+    assert response.json()["user"]["ownerId"] == "user-1:org-1"
+    assert calls == [
+        {
+            "url": "https://staging.all-hands.dev/api/v1/users/me",
+            "headers": {"Cookie": "keycloak_auth=cookie-part-0cookie-part-1"},
+        }
+    ]
+
+
+def test_cookie_authenticated_mutations_require_same_origin(
+    config_env: ConfigEnvFixture, monkeypatch
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
+    config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
+    _patch_openhands_user_me(
+        monkeypatch,
+        {
+            "id": "user-1",
+            "org_id": "org-1",
+            "email": "user@example.com",
+            "role": "member",
+            "permissions": [],
+        },
+    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "session-cookie")
+
+    rejected = client.post("/api/user/agent-key")
+    rejected_cross_origin = client.post(
+        "/api/user/agent-key",
+        headers={"Origin": "https://evil.example"},
+    )
+    allowed_configured_origin = client.post(
+        "/api/user/agent-key",
+        headers={"Origin": "https://staging.all-hands.dev"},
+    )
+    allowed_same_origin = client.post(
+        "/api/user/agent-key",
+        headers={"Origin": "http://testserver"},
+    )
+
+    assert rejected.status_code == 403
+    assert "same-origin" in rejected.json()["detail"]
+    assert rejected_cross_origin.status_code == 403
+    assert "same-origin" in rejected_cross_origin.json()["detail"]
+    assert allowed_configured_origin.status_code == 200
+    assert allowed_same_origin.status_code == 200
+
+
+def test_configured_public_api_prefix_routes_to_internal_api(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("INTHUB_API_ROOT_PATH", "/api/integrations-hub")
+
+    response = TestClient(app).get("/api/integrations-hub/auth/config")
+
+    assert response.status_code == 200
+    assert "openhandsBaseUrl" in response.json()
 
 
 def test_auth_session_reports_openhands_admin_flag(
@@ -2009,10 +2089,8 @@ def test_auth_session_reports_openhands_admin_flag(
     )
 
     client = TestClient(app)
-    response = client.get(
-        "/api/auth/session",
-        headers={"Authorization": "Bearer admin-openhands-token"},
-    )
+    client.cookies.set("keycloak_auth", "admin-openhands-cookie")
+    response = client.get("/api/auth/session")
 
     assert response.status_code == 200
     assert response.json()["user"] == {
@@ -2045,9 +2123,9 @@ def test_personal_org_normalizes_to_null_and_uses_env_admins(
         },
     )
 
-    response = TestClient(app).get(
-        "/api/auth/session", headers={"Authorization": "Bearer personal-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "personal-cookie")
+    response = client.get("/api/auth/session")
 
     assert response.status_code == 200
     assert response.json()["user"]["ownerId"] == "user-personal:null"
@@ -2072,9 +2150,9 @@ def test_personal_org_owner_is_not_admin_without_env_allowlist(
         },
     )
 
-    response = TestClient(app).get(
-        "/api/admin/overview", headers={"Authorization": "Bearer personal-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "personal-cookie")
+    response = client.get("/api/admin/overview")
 
     assert response.status_code == 403
 
@@ -2095,9 +2173,9 @@ def test_non_null_org_member_is_not_admin(
         },
     )
 
-    response = TestClient(app).get(
-        "/api/admin/overview", headers={"Authorization": "Bearer member-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "member-cookie")
+    response = client.get("/api/admin/overview")
 
     assert response.status_code == 403
 
@@ -2119,13 +2197,14 @@ def test_x_org_id_is_forwarded_and_varies_auth_cache(
     )
     client = TestClient(app)
 
+    client.cookies.set("keycloak_auth", "session-cookie")
     first = client.get(
         "/api/auth/session",
-        headers={"Authorization": "Bearer token", "X-Org-Id": "org-1"},
+        headers={"X-Org-Id": "org-1"},
     )
     second = client.get(
         "/api/auth/session",
-        headers={"Authorization": "Bearer token", "X-Org-Id": "org-2"},
+        headers={"X-Org-Id": "org-2"},
     )
 
     assert first.status_code == 200
@@ -2133,11 +2212,11 @@ def test_x_org_id_is_forwarded_and_varies_auth_cache(
     assert calls == [
         {
             "url": "https://staging.all-hands.dev/api/v1/users/me",
-            "headers": {"Authorization": "Bearer token", "X-Org-Id": "org-1"},
+            "headers": {"Cookie": "keycloak_auth=session-cookie", "X-Org-Id": "org-1"},
         },
         {
             "url": "https://staging.all-hands.dev/api/v1/users/me",
-            "headers": {"Authorization": "Bearer token", "X-Org-Id": "org-2"},
+            "headers": {"Cookie": "keycloak_auth=session-cookie", "X-Org-Id": "org-2"},
         },
     ]
 
@@ -2149,7 +2228,7 @@ def test_auth_session_returns_503_on_transient_network_error(
 
     Regression for #295: previously a transient RequestError collapsed to
     None and the dashboard returned 401, which made the frontend delete the
-    stored long-lived API key and force a re-login.
+    browser session and force a re-login.
     """
     config_env("PYTEST_INTHUB_AUTH_BYPASS")
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
@@ -2157,9 +2236,9 @@ def test_auth_session_returns_503_on_transient_network_error(
         monkeypatch, httpx.ConnectError("DNS not ready")
     )
 
-    response = TestClient(app).get(
-        "/api/auth/session", headers={"Authorization": "Bearer still-valid-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "still-valid-cookie")
+    response = client.get("/api/auth/session")
 
     assert response.status_code == 503
     assert "temporarily unavailable" in response.json()["detail"].lower()
@@ -2177,14 +2256,14 @@ def test_dashboard_route_returns_503_on_openhands_5xx(
         status_code=503,
     )
 
-    response = TestClient(app).get(
-        "/api/user/key", headers={"Authorization": "Bearer still-valid-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "still-valid-cookie")
+    response = client.get("/api/user/key")
 
     assert response.status_code == 503
 
 
-def test_auth_session_returns_401_on_invalid_token(
+def test_auth_session_returns_401_on_invalid_cookie(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     """A genuine 401/403 from OpenHands Cloud must still clear the session (401)."""
@@ -2192,9 +2271,9 @@ def test_auth_session_returns_401_on_invalid_token(
     config_env("INTHUB_OPENHANDS_BASE_URL", "https://staging.all-hands.dev")
     _patch_openhands_user_me(monkeypatch, {"error": "invalid_token"}, status_code=401)
 
-    response = TestClient(app).get(
-        "/api/auth/session", headers={"Authorization": "Bearer revoked-token"}
-    )
+    client = TestClient(app)
+    client.cookies.set("keycloak_auth", "revoked-cookie")
+    response = client.get("/api/auth/session")
 
     assert response.status_code == 401
 
@@ -3218,14 +3297,14 @@ def test_case_by_case_approvals_accept_openhands_cloud_bearer_token(
         status="pending",
     )
 
-    cloud_headers = {"Authorization": "Bearer valid-openhands-token"}
-    listed = client.get("/api/case-by-case-approvals", headers=cloud_headers).json()
+    client.cookies.set("keycloak_auth", "valid-openhands-cookie")
+    listed = client.get("/api/case-by-case-approvals").json()
     assert [request["id"] for request in listed] == ["req-cloud"]
 
     assert (
         client.post(
             "/api/case-by-case-approvals/req-cloud/approve",
-            headers=cloud_headers,
+            headers={"Origin": "https://staging.all-hands.dev"},
         ).status_code
         == 200
     )

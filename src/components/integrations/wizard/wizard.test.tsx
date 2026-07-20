@@ -111,7 +111,7 @@ describe("IntegrationWizard", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/integrations?filter=enabled",
-      {},
+      { credentials: "same-origin" },
     );
 
     const options = Array.from(container.querySelectorAll("datalist option")).map(
@@ -431,7 +431,7 @@ describe("IntegrationWizard", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/integrations?filter=enabled",
-      {},
+      { credentials: "same-origin" },
     );
 
     const options = Array.from(container.querySelectorAll("datalist option")).map(

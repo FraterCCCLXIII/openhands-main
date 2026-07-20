@@ -16,6 +16,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
+import { apiPath } from "@/src/shared/paths";
 import type { AdminOperationalOverview } from "@/src/types/integrations-hub";
 
 const pluralize = (count: number, singular: string, plural = `${singular}s`) =>
@@ -122,7 +123,7 @@ export function ClientAdminOverviewPage() {
               Back to integrations
             </Link>
             <Link
-              href="/api/admin/openapi"
+              href={apiPath("/api/admin/openapi")}
               className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
             >
               Admin OpenAPI schema

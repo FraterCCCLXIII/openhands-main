@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,6 +8,7 @@ import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { useAuth } from "@/src/components/auth/auth-context";
 import { fetchJson } from "@/src/lib/fetch-json";
+import { currentBrowserPath, redirectToMainAppLogin } from "@/src/lib/main-app-auth";
 import type {
   AdminApiKeyStatus,
   UserApiKeyStatus,
@@ -38,7 +38,6 @@ interface InitialDataResponse {
  * This replaces the server component version for SPA mode.
  */
 export function ClientDashboardPage() {
-  const router = useRouter();
   const {
     user,
     isAdmin,
@@ -49,15 +48,11 @@ export function ClientDashboardPage() {
     retrySession,
   } = useAuth();
 
-  // Redirect to signin only on a definitive auth failure (no token / 401-403).
-  // A transient sessionError (503 / network) must NOT redirect — the stored
-  // long-lived token is still valid and the user should retry instead of
-  // being forced to log in again.
   useEffect(() => {
     if (!authLoading && !isAuthenticated && !authDisabled && !sessionError) {
-      router.push("/signin");
+      redirectToMainAppLogin(currentBrowserPath());
     }
-  }, [authLoading, isAuthenticated, authDisabled, sessionError, router]);
+  }, [authLoading, isAuthenticated, authDisabled, sessionError]);
 
   // Fetch API key status only. Integrations and access-requests are owned by
   // the workspace/section queries (same keys) so we don't double-fetch them.
@@ -100,9 +95,8 @@ export function ClientDashboardPage() {
     return <LoadingSpinner label="Loading dashboard..." />;
   }
 
-  // Transient session failure (503 / network): the stored token is preserved,
-  // so offer a retry instead of bouncing to /signin (which would force a
-  // re-login for a still-valid long-lived API key).
+  // Transient session failure (503 / network): offer a retry instead of
+  // bouncing through the main app login for a still-valid browser session.
   if (!authDisabled && sessionError && !isAuthenticated) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 py-12">

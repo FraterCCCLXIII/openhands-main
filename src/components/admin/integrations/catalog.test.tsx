@@ -274,6 +274,7 @@ describe("IntegrationsCatalog", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith("/api/admin/modify-integrations/google-calendar", {
+      credentials: "same-origin",
       method: "DELETE",
     });
 

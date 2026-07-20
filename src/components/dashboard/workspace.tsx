@@ -26,6 +26,7 @@ import {
   type AdminSection,
 } from "@/src/lib/admin-routes";
 import { buildAgentConnectionGuide, OPENHANDS_AGENT_KEY_ENV } from "@/src/shared/agent-connection";
+import { apiUrl } from "@/src/shared/paths";
 import type {
   AccessRequest,
   AdminApiKeyStatus,
@@ -235,8 +236,8 @@ export const DashboardWorkspace = ({
     [agentApiBaseUrl, integrations],
   );
   const normalizedBaseUrl = agentApiBaseUrl.replace(/\/$/, "");
-  const userOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/user/openapi`;
-  const adminOpenApiSchemaEndpoint = `${normalizedBaseUrl}/api/admin/openapi`;
+  const userOpenApiSchemaEndpoint = apiUrl(normalizedBaseUrl, "/api/user/openapi");
+  const adminOpenApiSchemaEndpoint = apiUrl(normalizedBaseUrl, "/api/admin/openapi");
   const agentRestPromptExample =
     "I have provided you with an API key in $OPENHANDS_INTEGRATIONS_HUB_KEY, and you can see the API schema at " +
     `${agentConnectionGuide.openApiSchemaEndpoint}, feel free to access any tools there.`;

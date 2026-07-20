@@ -5,10 +5,6 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConnectStep } from "@/src/components/integrations/wizard/connect-step";
-import {
-  clearStoredOpenHandsToken,
-  setStoredOpenHandsToken,
-} from "@/src/lib/cloud-auth-storage";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
@@ -241,7 +237,6 @@ describe("ConnectStep", () => {
   });
 
   afterEach(() => {
-    clearStoredOpenHandsToken();
     vi.unstubAllGlobals();
     Object.defineProperty(window, "location", {
       configurable: true,
@@ -412,8 +407,7 @@ describe("ConnectStep", () => {
     await enabled.cleanup();
   });
 
-  it("starts the per-user OAuth flow with the stored OpenHands token", async () => {
-    setStoredOpenHandsToken("cloud-token-123");
+  it("starts the per-user OAuth flow with the inherited OpenHands cookie", async () => {
     const fetchMock = mockOAuthStartResponse(
       "https://auth.example/authorize?state=oauth-state",
     );
@@ -444,11 +438,11 @@ describe("ConnectStep", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/oauth/notion/start?integrationKey=notion-workspace&redirectTo=%2Fintegrations%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion%26integrationKey%3Dnotion-workspace",
-      expect.objectContaining({ headers: expect.any(Headers) }),
+      expect.objectContaining({ credentials: "same-origin" }),
     );
-    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers;
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
     expect(headers.get("Accept")).toBe("application/json");
-    expect(headers.get("Authorization")).toBe("Bearer cloud-token-123");
+    expect(headers.get("Authorization")).toBeNull();
     expect(window.location.href).toBe("https://auth.example/authorize?state=oauth-state");
 
     await cleanup();
@@ -531,7 +525,6 @@ describe("ConnectStep", () => {
   });
 
   it("shows connected OAuth state, expiry details, and reconnects with the connector slug fallback", async () => {
-    setStoredOpenHandsToken("cloud-token-456");
     const fetchMock = mockOAuthStartResponse(
       "https://auth.example/authorize?state=reconnect-state",
     );
@@ -573,7 +566,7 @@ describe("ConnectStep", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/oauth/notion/start?integrationKey=notion&redirectTo=%2Fprofile%3FshowIntegrationWizard%3D1%26managedConnector%3Dnotion%26integrationKey%3Dnotion",
-      expect.objectContaining({ headers: expect.any(Headers) }),
+      expect.objectContaining({ credentials: "same-origin" }),
     );
     expect(window.location.href).toBe(
       "https://auth.example/authorize?state=reconnect-state",

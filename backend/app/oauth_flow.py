@@ -27,6 +27,7 @@ from .models import (
     OAuthProtectedResourceMetadata,
     OAuthTokenResponse,
 )
+from .public_paths import public_api_path, public_ui_path
 from .repository import repository
 from .url_security import urlopen_no_redirect, validate_external_url
 
@@ -186,8 +187,12 @@ def join_oauth_scopes(scopes: list[str], separator: str | None = None) -> str:
 def oauth_callback_base_url(request: Request) -> str:
     proxy = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
     if proxy:
-        return f"{urllib.parse.urlparse(proxy).scheme}://{urllib.parse.urlparse(proxy).netloc}/api/oauth"
-    return f"{request.url.scheme}://{request.url.netloc}/api/oauth"
+        origin = (
+            f"{urllib.parse.urlparse(proxy).scheme}://"
+            f"{urllib.parse.urlparse(proxy).netloc}"
+        )
+        return f"{origin}{public_api_path('/api/oauth')}"
+    return f"{request.url.scheme}://{request.url.netloc}{public_api_path('/api/oauth')}"
 
 
 _PREVIEW_PROXY_STATE_PREFIX = "oh_preview_v1"
@@ -545,18 +550,19 @@ def is_expired(expires_at: str | None) -> bool:
 
 
 def configured_oauth_callback_url(provider: str) -> str:
+    callback_path = public_api_path(f"/api/oauth/{provider}/callback")
     proxy = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
     if proxy:
         parsed = urllib.parse.urlparse(proxy)
-        return f"{parsed.scheme}://{parsed.netloc}/api/oauth/{provider}/callback"
+        return f"{parsed.scheme}://{parsed.netloc}{callback_path}"
     explicit = (os.getenv("AUTH_URL") or "").strip().rstrip("/")
     if explicit:
-        return f"{explicit}/api/oauth/{provider}/callback"
+        return f"{explicit}{callback_path}"
     vercel_url = (os.getenv("VERCEL_URL") or "").strip().rstrip("/")
     if vercel_url:
         host = re.sub(r"^https?://", "", vercel_url)
-        return f"https://{host}/api/oauth/{provider}/callback"
-    return f"http://localhost:3000/api/oauth/{provider}/callback"
+        return f"https://{host}{callback_path}"
+    return f"http://localhost:3000{callback_path}"
 
 
 def register_dynamic_oauth_client(connector: ManagedConnector) -> ManagedConnector:
@@ -717,7 +723,7 @@ def start_oauth_redirect(
     # Defense-in-depth: reject external/protocol-relative redirect targets at
     # ingest so obviously-bad rows never enter oauth_states. The callback
     # also validates before issuing the 302.
-    redirect_to = (
+    redirect_to = public_ui_path(
         raw_redirect_to
         if raw_redirect_to.startswith("/") and not raw_redirect_to.startswith("//")
         else f"/integrations?showIntegrationWizard=1&managedConnector={provider}"
@@ -874,6 +880,7 @@ def build_oauth_callback_redirect(
     target = base_redirect_to.strip()
     if not target or not target.startswith("/") or target.startswith("//"):
         target = "/integrations"
+    target = public_ui_path(target)
     parsed = urllib.parse.urlparse(target)
     params = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
     # Remove any existing integrationKey so we don't duplicate it when the

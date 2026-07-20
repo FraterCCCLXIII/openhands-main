@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildAgentSkillMarkdown } from "@/src/lib/agent-skill";
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
@@ -73,6 +73,11 @@ const integrations: IntegrationSpec[] = [
 ];
 
 describe("agent-skill", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
   it("renders a SKILL.md document for enabled tools only", () => {
     const markdown = buildAgentSkillMarkdown({
       baseUrl: "https://integrations-hub.example.com/",
@@ -113,5 +118,25 @@ describe("agent-skill", () => {
     expect(markdown).toContain("## Available tools (0)");
     expect(markdown).toContain("No enabled tools are available yet.");
     expect(markdown).toContain("populate this generated tool catalog.");
+  });
+
+  it("renders the configured public API prefix", async () => {
+    vi.stubEnv("NEXT_PUBLIC_INTHUB_API_BASE_PATH", "/api/integrations-hub");
+    vi.resetModules();
+    const { buildAgentSkillMarkdown: buildPrefixedSkill } = await import(
+      "@/src/lib/agent-skill"
+    );
+
+    const markdown = buildPrefixedSkill({
+      baseUrl: "https://staging.all-hands.dev",
+      integrations,
+    });
+
+    expect(markdown).toContain(
+      "Endpoint pattern: `POST https://staging.all-hands.dev/api/integrations-hub/agent/{integrationKey}/{toolName}`",
+    );
+    expect(markdown).toContain(
+      "Invoke with: `POST https://staging.all-hands.dev/api/integrations-hub/agent/github/search_repositories`",
+    );
   });
 });

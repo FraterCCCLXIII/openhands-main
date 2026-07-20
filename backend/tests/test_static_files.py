@@ -48,6 +48,7 @@ def test_mount_static_files_succeeds_with_valid_directory() -> None:
 
         with patch("app.static_files.get_default_config") as mock_config:
             mock_config.return_value.static_dir = tmpdir
+            mock_config.return_value.root_path = ""
             result = mount_static_files(app)
 
         assert result is True
@@ -74,6 +75,7 @@ def test_api_routes_take_precedence_over_static_mount() -> None:
 
         with patch("app.static_files.get_default_config") as mock_config:
             mock_config.return_value.static_dir = tmpdir
+            mock_config.return_value.root_path = ""
             result = mount_static_files(app)
 
         assert result is True
@@ -89,3 +91,44 @@ def test_api_routes_take_precedence_over_static_mount() -> None:
         static_response = client.get("/")
         assert static_response.status_code == 200
         assert "SPA" in static_response.text
+
+
+def test_static_files_mount_at_configured_ui_prefix() -> None:
+    app = FastAPI()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        Path(tmpdir, "index.html").write_text("<html><body>Prefixed SPA</body></html>")
+
+        with patch("app.static_files.get_default_config") as mock_config:
+            mock_config.return_value.static_dir = tmpdir
+            mock_config.return_value.root_path = "/integrations-hub"
+            assert mount_static_files(app)
+
+        client = TestClient(app)
+        response = client.get("/integrations-hub/")
+
+        assert response.status_code == 200
+        assert "Prefixed SPA" in response.text
+        assert client.get("/").status_code == 404
+
+
+def test_static_html_responses_are_revalidated() -> None:
+    app = FastAPI()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        Path(tmpdir, "index.html").write_text("<html><body>Fresh SPA</body></html>")
+        Path(tmpdir, "app.js").write_text("console.log('asset')")
+
+        with patch("app.static_files.get_default_config") as mock_config:
+            mock_config.return_value.static_dir = tmpdir
+            mock_config.return_value.root_path = "/integrations-hub"
+            assert mount_static_files(app)
+
+        client = TestClient(app)
+        html_response = client.get("/integrations-hub/")
+        asset_response = client.get("/integrations-hub/app.js")
+
+        assert html_response.status_code == 200
+        assert html_response.headers["cache-control"] == "no-cache"
+        assert asset_response.status_code == 200
+        assert "cache-control" not in asset_response.headers

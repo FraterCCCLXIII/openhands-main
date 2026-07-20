@@ -24,8 +24,8 @@ class AuthUnavailable(Exception):
     Raised (and surfaced as HTTP 503) when a session check fails for reasons
     other than an invalid token — e.g. network blip, DNS not ready, or a 5xx
     from OpenHands Cloud. Distinct from "token invalid" (401/403) so the
-    dashboard does not delete the stored long-lived API key and force a
-    re-login on transient failures.
+    dashboard treats transient failures as retryable instead of forcing
+    a trip through login.
     """
 
 
@@ -134,14 +134,17 @@ def _parse_user(payload: object) -> OpenHandsUser | None:
 
 
 def _call_openhands_users_me(
-    token: str, requested_org_id: str | None = None
+    credential: str,
+    requested_org_id: str | None = None,
+    *,
+    cookie_name: str | None = None,
 ) -> OpenHandsUser | None:
-    """Resolve a bearer token to an OpenHands user.
+    """Resolve a bearer token or browser cookie to an OpenHands user.
 
     Returns ``None`` only when the token is definitively invalid (401/403).
     Raises :class:`AuthUnavailable` for transient/infrastructure failures
     (network errors, 5xx) so callers can surface 503 instead of 401 and
-    avoid destroying a still-valid long-lived API key.
+    avoid forcing a new login for a still-valid browser session.
     """
     cfg = get_default_config()
     if not cfg.openhands_base_url:
@@ -149,7 +152,11 @@ def _call_openhands_users_me(
             "OpenHands auth requested but INTHUB_OPENHANDS_BASE_URL is unset"
         )
         raise AuthUnavailable("OpenHands auth base URL is not configured")
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = (
+        {"Cookie": f"{cookie_name}={credential}"}
+        if cookie_name
+        else {"Authorization": f"Bearer {credential}"}
+    )
     if requested_org_id:
         headers["X-Org-Id"] = requested_org_id
     try:
@@ -170,23 +177,48 @@ def _call_openhands_users_me(
         raise AuthUnavailable("OpenHands Cloud returned an invalid response") from exc
 
 
-def authenticate_token(
-    token: str, requested_org_id: str | None = None
+def _authenticate_credential(
+    credential: str,
+    requested_org_id: str | None = None,
+    *,
+    cookie_name: str | None = None,
 ) -> OpenHandsUser | None:
-    token = token.strip()
+    credential = credential.strip()
     org_key = (requested_org_id or "").strip().lower()
-    if not token:
+    if not credential:
         return None
-    cache_key = f"{token}\0{org_key}"
+    auth_kind = f"cookie:{cookie_name}" if cookie_name else "bearer"
+    cache_key = f"{auth_kind}\0{credential}\0{org_key}"
     cached = _cache_lookup(cache_key)
     if cached is not _MISS:
         if cached is _UNAVAILABLE:
             raise AuthUnavailable("OpenHands Cloud is temporarily unreachable")
         return cached if isinstance(cached, OpenHandsUser) else None
     try:
-        user = _call_openhands_users_me(token, requested_org_id)
+        user = _call_openhands_users_me(
+            credential,
+            requested_org_id,
+            cookie_name=cookie_name,
+        )
     except AuthUnavailable:
         _cache_store(cache_key, _UNAVAILABLE, ttl=_AUTH_UNAVAILABLE_CACHE_TTL_SECONDS)
         raise
     _cache_store(cache_key, user)
     return user
+
+
+def authenticate_token(
+    token: str, requested_org_id: str | None = None
+) -> OpenHandsUser | None:
+    return _authenticate_credential(token, requested_org_id)
+
+
+def authenticate_cookie(
+    cookie: str,
+    requested_org_id: str | None = None,
+) -> OpenHandsUser | None:
+    return _authenticate_credential(
+        cookie,
+        requested_org_id,
+        cookie_name=get_default_config().openhands_auth_cookie_name,
+    )

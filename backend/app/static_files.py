@@ -14,6 +14,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 
 from .config import get_default_config
 
@@ -21,12 +22,21 @@ from .config import get_default_config
 logger = logging.getLogger(__name__)
 
 
+class HubStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope: dict) -> Response:
+        response = await super().get_response(path, scope)
+        content_type = response.headers.get("content-type", "")
+        if content_type.startswith("text/html"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def mount_static_files(app: FastAPI) -> bool:
     """Mount static file serving if INTHUB_STATIC_DIR is configured.
 
-    Uses FastAPI's StaticFiles with html=True for SPA-style routing.
-    The mount is registered at "/" which acts as a catch-all for unmatched
-    routes, so API routes registered before this call take precedence.
+    Uses FastAPI's StaticFiles with html=True for SPA-style routing. The mount
+    follows INTHUB_ROOT_PATH when configured, matching the base path baked into
+    the Kubernetes SPA image.
     """
     config = get_default_config()
     static_dir = config.static_dir
@@ -39,10 +49,15 @@ def mount_static_files(app: FastAPI) -> bool:
         logger.warning("INTHUB_STATIC_DIR=%s is not a valid directory", static_dir)
         return False
 
-    logger.info("Mounting static files from %s", static_dir)
+    mount_path = config.root_path or "/"
+    logger.info("Mounting static files from %s at %s", static_dir, mount_path)
 
     # Mount the entire static directory with html=True for SPA routing
     # This automatically serves index.html for directories
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="spa")
+    app.mount(
+        mount_path,
+        HubStaticFiles(directory=static_dir, html=True),
+        name="integrations-hub-spa",
+    )
 
     return True

@@ -75,7 +75,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
 - Next.js App Router
 - React 19 + TypeScript
 - Tailwind CSS 4
-- OpenHands Cloud OAuth device flow
+- OpenHands same-origin cookie authentication
 - Neon serverless Postgres driver
 - TanStack Query + Zustand
 - Vitest + PGlite-backed repository tests
@@ -165,7 +165,7 @@ truth — no generated snapshot is needed.
 Core variables:
 
 - `INTHUB_POSTGRES_URL` — database connection URL for the backend runtime
-- `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud device-flow login and token validation
+- `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud cookie validation
 - `INTHUB_POSTHOG_CLIENT_KEY` to enable explicit, privacy-safe product analytics events (analytics is disabled when unset)
 - `INTHUB_CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
 - `INTHUB_CRON_SECRET`
@@ -201,7 +201,7 @@ See [`.env.example`](./.env.example) for the full template.
 
 ## OpenHands Cloud sign-in setup
 
-Set `INTHUB_OPENHANDS_BASE_URL` to the OpenHands Cloud deployment users should authenticate against. The dashboard starts the OpenHands OAuth device flow from `/signin`, stores the returned OpenHands API key in browser storage, and sends it as `Authorization: Bearer <token>` to FastAPI. FastAPI validates each dashboard request with `GET <INTHUB_OPENHANDS_BASE_URL>/api/v1/users/me`.
+Set `INTHUB_OPENHANDS_BASE_URL` to the OpenHands Cloud deployment users authenticate against. The dashboard inherits the main app browser session cookie and sends same-origin requests to FastAPI. FastAPI validates dashboard sessions with `GET <INTHUB_OPENHANDS_BASE_URL>/api/v1/users/me`.
 
 For local development, sign in through the configured OpenHands Cloud base URL and open `/integrations`.
 
@@ -211,6 +211,12 @@ Managed provider callbacks use the pattern:
 
 - `https://<your-host>/api/oauth/<provider>/callback`
 - `http://localhost:3000/api/oauth/<provider>/callback` for local development
+
+The Kubernetes image is built for same-origin mounting beneath
+`/integrations-hub`, with APIs and OAuth callbacks beneath
+`/api/integrations-hub`. Root-hosted Next.js/Vercel deployments retain the
+unprefixed URLs above. Configure `INTHUB_ROOT_PATH` and
+`INTHUB_API_ROOT_PATH` to match the image and ingress paths.
 
 Examples:
 

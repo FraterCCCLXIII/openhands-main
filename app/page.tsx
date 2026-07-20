@@ -1,11 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, DatabaseZap, KeyRound, ShieldCheck, Waypoints } from "lucide-react";
+import { useEffect } from "react";
+import {
+  ArrowRight,
+  DatabaseZap,
+  KeyRound,
+  ShieldCheck,
+  Waypoints,
+} from "lucide-react";
 
 import { useAuth } from "@/src/components/auth/auth-context";
+import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import {
+  currentBrowserPath,
+  redirectToMainAppLogin,
+} from "@/src/lib/main-app-auth";
+import { uiPath } from "@/src/shared/paths";
 import { Card } from "@/src/components/ui/card";
 
 const features = [
@@ -32,11 +44,17 @@ const features = [
 ];
 
 export default function HomePage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, authDisabled, sessionError } = useAuth();
 
-  // Use "#" while loading to prevent flash of wrong destination
-  const ctaHref = isLoading ? "#" : isAuthenticated ? "/integrations" : "/signin";
-  const ctaText = isAuthenticated ? "Open dashboard" : "Sign in to configure";
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && !authDisabled && !sessionError) {
+      redirectToMainAppLogin(currentBrowserPath());
+    }
+  }, [authDisabled, isAuthenticated, isLoading, sessionError]);
+
+  if (isLoading || (!isAuthenticated && !authDisabled && !sessionError)) {
+    return <LoadingSpinner label="Redirecting to OpenHands sign-in..." />;
+  }
 
   return (
     <main className="min-h-screen px-6 py-12">
@@ -51,18 +69,23 @@ export default function HomePage() {
               OpenHands Integrations Hub
             </h1>
             <p className="text-lg leading-8 text-[var(--color-text-base)]">
-              A unified endpoint and admin workspace for AI agents to access APIs and MCP tools with temporary approvals, permission profiles, and persistent integration storage.
+              A unified endpoint and admin workspace for AI agents to access
+              APIs and MCP tools with temporary approvals, permission profiles,
+              and persistent integration storage.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href={ctaHref}>
-              <Button className="gap-2" disabled={isLoading}>
-                {isLoading ? "Loading..." : ctaText}
-                {!isLoading && <ArrowRight className="h-4 w-4" />}
-              </Button>
-            </Link>
+            {isAuthenticated || authDisabled ? (
+              <a href={uiPath("/integrations")}>
+                <Button className="gap-2">
+                  Open dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </a>
+            ) : null}
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2 text-sm text-[var(--color-text-base)]">
-              Unified route: <code>POST /api/agent/[integration]/[function]</code>
+              Unified route:{" "}
+              <code>POST /api/agent/[integration]/[function]</code>
             </div>
           </div>
         </header>
@@ -71,8 +94,12 @@ export default function HomePage() {
           {features.map((item) => (
             <Card key={item.title} className="p-6">
               <item.icon className="mb-4 h-8 w-8 text-[var(--color-accent)]" />
-              <h2 className="mb-2 text-lg font-semibold text-white">{item.title}</h2>
-              <p className="text-sm leading-7 text-[var(--color-text-base)]">{item.body}</p>
+              <h2 className="mb-2 text-lg font-semibold text-white">
+                {item.title}
+              </h2>
+              <p className="text-sm leading-7 text-[var(--color-text-base)]">
+                {item.body}
+              </p>
             </Card>
           ))}
         </section>

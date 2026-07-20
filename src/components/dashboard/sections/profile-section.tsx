@@ -4,6 +4,7 @@ import {
   CompactPanel,
   KeyValueRow,
 } from "@/src/components/dashboard/shared";
+import { apiUrl } from "@/src/shared/paths";
 
 interface ProfileSectionProps {
   userName: string;
@@ -56,7 +57,7 @@ export const ProfileSection = ({
           label="Endpoint pattern"
           value={
             <code className="break-all text-xs text-[var(--color-text-active)]">
-              {`${agentApiBaseUrl}/api/agent/{integrationKey}/{toolName}`}
+              {`${apiUrl(agentApiBaseUrl, "/api/agent")}/{integrationKey}/{toolName}`}
             </code>
           }
         />

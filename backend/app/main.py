@@ -39,7 +39,7 @@ from pydantic import ValidationError
 from .auth import (
     AuthUnavailable,
     OpenHandsUser,
-    authenticate_token,
+    authenticate_cookie,
     is_admin_owner,
 )
 from .config import get_default_config
@@ -84,6 +84,12 @@ from .oauth_flow import (
     start_oauth_redirect,
 )
 from .openapi_tools import generate_openapi_tools
+from .public_paths import (
+    internal_api_path,
+    public_api_path,
+    public_openapi_paths,
+    public_ui_path,
+)
 from .repository import repository
 from .route_manifest import ROUTES
 from .static_files import mount_static_files
@@ -156,7 +162,7 @@ def request_log_fields(
         "request_id": request.state.request_id,
         "http.method": request.method,
         "http.route": route.path if isinstance(route, APIRoute) else request.url.path,
-        "http.url": request.url.path,
+        "http.url": getattr(request.state, "public_path", request.url.path),
     }
     if status_code is not None:
         fields["http.status_code"] = status_code
@@ -195,6 +201,91 @@ async def log_request(request: Request, call_next):
             },
         )
     return response
+
+
+_UNSAFE_BROWSER_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_MAX_SESSION_COOKIE_CHUNKS = 8
+
+
+def extract_session_cookie(request: Request) -> str:
+    """Read OpenHands' bounded, possibly chunked browser session cookie."""
+    cookie_name = get_default_config().openhands_auth_cookie_name
+    first = request.cookies.get(cookie_name)
+    if not first:
+        return ""
+    parts = [first]
+    for index in range(1, _MAX_SESSION_COOKIE_CHUNKS):
+        part = request.cookies.get(f"{cookie_name}_{index}")
+        if part is None:
+            break
+        parts.append(part)
+    return "".join(parts)
+
+
+def normalized_origin(value: str) -> str | None:
+    parsed = urllib.parse.urlsplit(value.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+
+
+def cookie_request_origin_is_allowed(request: Request) -> bool:
+    supplied = normalized_origin(request.headers.get("origin", ""))
+    if not supplied:
+        return False
+    allowed: set[str] = set()
+    configured = normalized_origin(get_default_config().openhands_base_url or "")
+    if configured:
+        allowed.add(configured)
+    forwarded_proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    forwarded_host = request.headers.get(
+        "x-forwarded-host", request.headers.get("host", "")
+    )
+    request_origin = normalized_origin(f"{forwarded_proto}://{forwarded_host}")
+    if request_origin:
+        allowed.add(request_origin)
+    return supplied in allowed
+
+
+@app.middleware("http")
+async def apply_public_paths_and_cookie_csrf(request: Request, call_next):
+    public_path = request.scope.get("path", "")
+    request.state.public_path = public_path
+
+    credential = extract_api_key(request)
+    session_cookie = extract_session_cookie(request)
+    if (
+        request.method in _UNSAFE_BROWSER_METHODS
+        and not credential
+        and session_cookie
+        and not cookie_request_origin_is_allowed(request)
+    ):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "detail": "Cookie-authenticated mutations require a same-origin request."
+            },
+        )
+
+    rewritten_path = internal_api_path(public_path)
+    if rewritten_path:
+        request.scope["path"] = rewritten_path
+        request.scope["raw_path"] = rewritten_path.encode()
+    else:
+        cfg = get_default_config()
+        if (
+            cfg.static_dir
+            and cfg.root_path
+            and not public_path.startswith("/api")
+            and public_path != cfg.root_path
+            and not public_path.startswith(f"{cfg.root_path}/")
+        ):
+            target = public_ui_path(public_path)
+            if request.url.query:
+                target = f"{target}?{request.url.query}"
+            return RedirectResponse(target)
+
+    return await call_next(request)
 
 
 @app.exception_handler(RequestValidationError)
@@ -282,7 +373,7 @@ def base_url(request: Request) -> str:
 
 
 def case_by_case_approval_url(request: Request) -> str:
-    return f"{base_url(request)}{CASE_BY_CASE_APPROVAL_PATH}"
+    return f"{base_url(request)}{public_ui_path(CASE_BY_CASE_APPROVAL_PATH)}"
 
 
 def human_approval_required_detail(
@@ -341,7 +432,7 @@ def agent_openapi(
         "openapi": "3.0.3",
         "info": {"title": "OpenHands Integrations Hub Agent API", "version": "0.1.0"},
         "servers": [{"url": base_url(request)}],
-        "paths": paths,
+        "paths": public_openapi_paths(paths),
         "components": {
             "securitySchemes": {"AgentApiKey": {"type": "http", "scheme": "bearer"}},
             "schemas": {
@@ -549,7 +640,7 @@ def user_openapi(request: Request, is_admin: bool) -> dict[str, Any]:
             {"name": "Case-by-case approvals"},
             {"name": "API keys"},
         ],
-        "paths": paths,
+        "paths": public_openapi_paths(paths),
         "components": {
             "securitySchemes": {"UserApiKey": {"type": "http", "scheme": "bearer"}},
             "schemas": {
@@ -568,7 +659,7 @@ def user_openapi(request: Request, is_admin: bool) -> dict[str, Any]:
 
 def managed_openapi(request: Request) -> dict[str, Any]:
     json_content = {"application/json": {"schema": {"type": "object"}}}
-    return {
+    document = {
         "openapi": "3.0.3",
         "info": {
             "title": "Modify Integrations API",
@@ -670,6 +761,8 @@ def managed_openapi(request: Request) -> dict[str, Any]:
             },
         },
     }
+    document["paths"] = public_openapi_paths(document["paths"])
+    return document
 
 
 def admin_openapi(request: Request) -> dict[str, Any]:
@@ -715,6 +808,7 @@ def admin_openapi(request: Request) -> dict[str, Any]:
             },
         }
     )
+    doc["paths"] = public_openapi_paths(doc["paths"])
     return doc
 
 
@@ -1546,12 +1640,11 @@ def requested_org_id_from_request(request: Request) -> str | None:
 
 
 def openhands_user_from_request(request: Request) -> OpenHandsUser | None:
-    token = extract_api_key(request)
-    return (
-        authenticate_token(token, requested_org_id_from_request(request))
-        if token
-        else None
-    )
+    requested_org_id = requested_org_id_from_request(request)
+    cookie = extract_session_cookie(request)
+    if cookie:
+        return authenticate_cookie(cookie, requested_org_id)
+    return None
 
 
 def authorize_dashboard_user(request: Request) -> OpenHandsUser:
@@ -1618,14 +1711,8 @@ def authorize_user_api_owner_or_session(request: Request) -> str:
 
     * a personal integrations-hub **user API key** (bearer / ``X-API-Key``),
       validated against the stored user keys; or
-    * an OpenHands Cloud bearer token / dashboard session, when the supplied
+    * an OpenHands Cloud cookie-backed dashboard session, when the supplied
       credential is not a stored user key.
-
-    A bearer ``Authorization`` header can carry either an integrations-hub
-    user key or an OpenHands Cloud token (the dashboard UI sends the latter),
-    so when a credential is present we first try the user-key table and then
-    fall back to Cloud-token authentication instead of assuming every bearer
-    token is a user key.
 
     When no stored user key is supplied, a valid OpenHands Cloud session is
     required. Raises HTTP 401 when a credential matches neither a user key nor
@@ -2776,7 +2863,7 @@ def dispatch_fastapi_request(request: Request, body: Any):
                 list(request.query_params.multi_items())
             )
             return RedirectResponse(
-                f"{preview_target}/api/oauth/{provider}/callback?{callback_query}"
+                f"{preview_target}{public_api_path(f'/api/oauth/{provider}/callback')}?{callback_query}"
             )
         code = request.query_params.get("code", "")
         error = request.query_params.get("error")

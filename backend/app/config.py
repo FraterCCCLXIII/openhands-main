@@ -13,7 +13,14 @@ import json
 from typing import ClassVar
 
 from openhands.agent_server.env_parser import from_env
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 
 
 # Environment variable prefix for all config fields
@@ -46,11 +53,14 @@ class Config(BaseModel):
     Environment variables:
         INTHUB_POSTGRES_URL: Database connection URL
         INTHUB_OPENHANDS_BASE_URL: OpenHands base URL for session validation
+        INTHUB_OPENHANDS_AUTH_COOKIE_NAME: OpenHands browser session cookie name
         INTHUB_POSTHOG_CLIENT_KEY: Public PostHog project key for product analytics
         INTHUB_CRON_SECRET: Secret for cron job authentication
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
         INTHUB_CREDENTIAL_ENCRYPTION_KEY: Key for encrypting stored credentials
         INTHUB_STATIC_DIR: Directory for pre-built SPA files (K8s mode only)
+        INTHUB_ROOT_PATH: Public UI prefix for the K8s SPA
+        INTHUB_API_ROOT_PATH: Public API prefix for the K8s service
         INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS: Worker limit for sync backend work
         INTHUB_READINESS_TIMEOUT_SECONDS: Readiness database-check deadline
     """
@@ -69,6 +79,13 @@ class Config(BaseModel):
         description=(
             "OpenHands base URL used to validate session cookies and API keys. "
             "Reads from INTHUB_OPENHANDS_BASE_URL."
+        ),
+    )
+    openhands_auth_cookie_name: str = Field(
+        default="keycloak_auth",
+        description=(
+            "OpenHands browser session cookie forwarded for same-origin auth. "
+            "Reads from INTHUB_OPENHANDS_AUTH_COOKIE_NAME."
         ),
     )
     posthog_client_key: str | None = Field(
@@ -122,6 +139,19 @@ class Config(BaseModel):
             "Leave unset on Vercel where CDN handles static files."
         ),
     )
+    root_path: str = Field(
+        default="",
+        description=(
+            "Public path prefix used to serve the SPA. Reads from INTHUB_ROOT_PATH."
+        ),
+    )
+    api_root_path: str = Field(
+        default="",
+        description=(
+            "Public path prefix translated to the backend's internal /api routes. "
+            "Reads from INTHUB_API_ROOT_PATH."
+        ),
+    )
 
     # Blocking I/O compatibility boundary
     max_concurrent_blocking_requests: int = Field(
@@ -152,6 +182,24 @@ class Config(BaseModel):
         "cron_secret",
         "credential_encryption_key",
     )
+
+    @field_validator("root_path", "api_root_path", mode="before")
+    @classmethod
+    def _normalize_path_prefix(cls, value: object) -> str:
+        raw = str(value or "").strip()
+        if not raw or raw == "/":
+            return ""
+        if not raw.startswith("/"):
+            raise ValueError("path prefixes must start with /")
+        return raw.rstrip("/")
+
+    @field_validator("openhands_auth_cookie_name", mode="before")
+    @classmethod
+    def _validate_auth_cookie_name(cls, value: object) -> str:
+        name = str(value or "").strip()
+        if not name or any(character in name for character in ";=\r\n"):
+            raise ValueError("auth cookie name must be a non-empty cookie token")
+        return name
 
     @model_validator(mode="before")
     @classmethod

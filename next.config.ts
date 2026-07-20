@@ -17,6 +17,9 @@ import type { NextConfig } from "next";
  * This eliminates the need for CORS configuration since everything is same-origin.
  */
 const isSpaMode = process.env.SPA_MODE === "true";
+const uiBasePath = (process.env.NEXT_PUBLIC_INTHUB_UI_BASE_PATH ?? "")
+  .trim()
+  .replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
   // Allow local dev access via 127.0.0.1 and LAN IPs, not just "localhost".
@@ -24,6 +27,7 @@ const nextConfig: NextConfig = {
   // origins, which leaves the client un-hydrated (stuck on the
   // server-rendered loading spinner).
   allowedDevOrigins: ["127.0.0.1", "0.0.0.0", "10.0.0.150"],
+  ...(uiBasePath ? { basePath: uiBasePath } : {}),
   ...(isSpaMode
     ? {
         output: "export",

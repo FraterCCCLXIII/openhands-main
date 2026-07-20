@@ -6,6 +6,7 @@ import {
   selectExampleIntegration,
 } from "@/src/lib/tool-examples";
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
+import { apiUrl } from "@/src/shared/paths";
 
 export const OPENHANDS_AGENT_KEY_ENV = "$OPENHANDS_AGENT_KEY";
 
@@ -39,7 +40,7 @@ export const buildAgentConnectionGuide = ({
   const integrationKey = sampleIntegration?.key ?? "your-integration";
   const toolName = sampleTool?.name ?? "your-tool";
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-  const mcpEndpoint = `${normalizedBaseUrl}/api/mcp`;
+  const mcpEndpoint = apiUrl(normalizedBaseUrl, "/api/mcp");
   const mcpToolName = buildIntegrationsHubMcpToolName(integrationKey, toolName);
   const mcpConfigExample = JSON.stringify(
     {
@@ -56,7 +57,7 @@ export const buildAgentConnectionGuide = ({
     null,
     2,
   );
-  const openApiSchemaEndpoint = `${normalizedBaseUrl}/api/agent/openapi`;
+  const openApiSchemaEndpoint = apiUrl(normalizedBaseUrl, "/api/agent/openapi");
 
   return {
     mcpEndpoint,

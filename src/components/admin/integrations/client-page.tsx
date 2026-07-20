@@ -14,6 +14,7 @@ import { useAuth } from "@/src/components/auth/auth-context";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
+import { apiPath } from "@/src/shared/paths";
 import { catalogOptionToConnectorOption } from "@/src/lib/catalog-mappers";
 import type {
   IntegrationConnectionStatus,
@@ -98,7 +99,9 @@ export function ClientAdminIntegrationsPage() {
   }, [searchParams]);
 
   const oauthCallbackBaseUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/api/oauth` : "";
+    typeof window !== "undefined"
+      ? `${window.location.origin}${apiPath("/api/oauth")}`
+      : "";
 
   if (authLoading) {
     return <LoadingSpinner label="Loading admin integrations..." />;

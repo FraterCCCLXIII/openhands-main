@@ -1,4 +1,5 @@
 import { OPENHANDS_AGENT_KEY_ENV } from "@/src/shared/agent-connection";
+import { apiUrl } from "@/src/shared/paths";
 import type {
   ToolAccessMode,
   ToolSpec,
@@ -35,6 +36,7 @@ export const buildAgentSkillMarkdown = ({
   integrations: IntegrationSpec[];
 }) => {
   const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
+  const agentApiBaseUrl = apiUrl(normalizedBaseUrl, "/api/agent");
   const availableIntegrations = integrations
     .filter((integration) => integration.enabled)
     .map((integration) => ({
@@ -62,7 +64,7 @@ export const buildAgentSkillMarkdown = ({
     `- Store the personal integrations-hub API key in ${OPENHANDS_AGENT_KEY_ENV}.`,
     `- Send \`Authorization: Bearer ${OPENHANDS_AGENT_KEY_ENV}\`.`,
     `- Base URL: \`${normalizedBaseUrl}\``,
-    `- Endpoint pattern: \`POST ${normalizedBaseUrl}/api/agent/{integrationKey}/{toolName}\``,
+    `- Endpoint pattern: \`POST ${agentApiBaseUrl}/{integrationKey}/{toolName}\``,
     "",
     "## Request body",
     "",
@@ -100,7 +102,7 @@ export const buildAgentSkillMarkdown = ({
           `#### \`${integration.key}.${toolSpec.name}\``,
           "",
           `- Description: ${toolSpec.description || "No description provided."}`,
-          `- Invoke with: \`POST ${normalizedBaseUrl}/api/agent/${integration.key}/${toolSpec.name}\``,
+          `- Invoke with: \`POST ${agentApiBaseUrl}/${integration.key}/${toolSpec.name}\``,
           `- Default scopes: ${renderScopes(toolSpec.defaultScopes)}`,
           `- Access: ${renderAccessMode(toolSpec)}`,
           "",

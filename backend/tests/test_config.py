@@ -14,6 +14,9 @@ def test_config_reads_only_prefixed_environment(monkeypatch) -> None:
     )
     monkeypatch.setenv("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "prefixed-key")
     monkeypatch.setenv("INTHUB_POSTHOG_CLIENT_KEY", "phc_test")
+    monkeypatch.setenv("INTHUB_OPENHANDS_AUTH_COOKIE_NAME", "custom_session")
+    monkeypatch.setenv("INTHUB_ROOT_PATH", "/integrations-hub/")
+    monkeypatch.setenv("INTHUB_API_ROOT_PATH", "/api/integrations-hub/")
     monkeypatch.setenv("INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS", "3")
     monkeypatch.setenv("INTHUB_READINESS_TIMEOUT_SECONDS", "7.5")
     reset_config()
@@ -28,6 +31,9 @@ def test_config_reads_only_prefixed_environment(monkeypatch) -> None:
     assert config.require_credential_encryption_key() == "prefixed-key"
     assert config.require_cron_secret() == "prefixed-cron-secret"
     assert config.posthog_client_key == "phc_test"
+    assert config.openhands_auth_cookie_name == "custom_session"
+    assert config.root_path == "/integrations-hub"
+    assert config.api_root_path == "/api/integrations-hub"
     assert config.max_concurrent_blocking_requests == 3
     assert config.readiness_timeout_seconds == 7.5
 

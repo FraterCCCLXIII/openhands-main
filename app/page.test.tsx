@@ -2,7 +2,15 @@
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
 
 import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
@@ -15,6 +23,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   authDisabled: boolean;
+  sessionError: Error | null;
 }
 
 const { useAuthMock } = vi.hoisted(() => ({
@@ -43,6 +52,7 @@ describe("HomePage", () => {
       isLoading: false,
       isAuthenticated: true,
       authDisabled: false,
+      sessionError: null,
     });
   });
 
@@ -63,7 +73,18 @@ describe("HomePage", () => {
     expect(dashboardLink?.textContent).toContain("Open dashboard");
   });
 
-  it("links non-authenticated users to /signin", async () => {
+  it("immediately redirects non-authenticated users to the main app login", async () => {
+    const originalLocation = window.location;
+    const replaceMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: {
+        ...originalLocation,
+        pathname: "/integrations-hub",
+        search: "",
+        replace: replaceMock,
+      },
+    });
     useAuthMock.mockReturnValue({
       user: null,
       ownerId: null,
@@ -71,15 +92,22 @@ describe("HomePage", () => {
       isLoading: false,
       isAuthenticated: false,
       authDisabled: false,
+      sessionError: null,
     });
 
     await act(async () => {
       root.render(<HomePage />);
     });
 
-    const signInLink = container.querySelector('a[href="/signin"]');
-    expect(signInLink).toBeTruthy();
-    expect(signInLink?.textContent).toContain("Sign in to configure");
+    expect(replaceMock).toHaveBeenCalledWith(
+      "/login?returnTo=%2Fintegrations-hub",
+    );
+    expect(container.textContent).toContain("Redirecting to OpenHands sign-in");
+
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 
   it("shows loading state while auth is loading", async () => {
@@ -90,13 +118,14 @@ describe("HomePage", () => {
       isLoading: true,
       isAuthenticated: false,
       authDisabled: false,
+      sessionError: null,
     });
 
     await act(async () => {
       root.render(<HomePage />);
     });
 
-    const button = container.querySelector("button");
-    expect(button?.textContent).toContain("Loading...");
+    expect(container.textContent).toContain("Redirecting to OpenHands sign-in");
+    expect(container.querySelector("button")).toBeNull();
   });
 });

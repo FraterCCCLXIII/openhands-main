@@ -10,6 +10,10 @@ COPY public/ public/
 COPY scripts/ scripts/
 COPY src/ src/
 COPY next.config.ts postcss.config.mjs tsconfig.json ./
+ARG NEXT_PUBLIC_INTHUB_UI_BASE_PATH=/integrations-hub
+ARG NEXT_PUBLIC_INTHUB_API_BASE_PATH=/api/integrations-hub
+ENV NEXT_PUBLIC_INTHUB_UI_BASE_PATH=${NEXT_PUBLIC_INTHUB_UI_BASE_PATH} \
+    NEXT_PUBLIC_INTHUB_API_BASE_PATH=${NEXT_PUBLIC_INTHUB_API_BASE_PATH}
 RUN npm run build:spa
 
 # Stage 2: Python/FastAPI application serving the SPA and API.
@@ -17,7 +21,9 @@ FROM python:3.12-slim-bookworm
 
 WORKDIR /app
 ENV PYTHONPATH=/app \
-    INTHUB_STATIC_DIR=/app/out
+    INTHUB_STATIC_DIR=/app/out \
+    INTHUB_ROOT_PATH=/integrations-hub \
+    INTHUB_API_ROOT_PATH=/api/integrations-hub
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git libpq5 && \

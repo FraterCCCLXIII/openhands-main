@@ -2,6 +2,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
+import { uiPath } from "@/src/shared/paths";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
@@ -149,7 +150,7 @@ export const ConnectStep = ({
             <span className="text-xs leading-5 text-[var(--color-text-base)]">
               Don&apos;t see a connector you want?{" "}
               <a
-                href="/admin-integrations"
+                href={uiPath("/admin-integrations")}
                 className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
               >
                 Click here.

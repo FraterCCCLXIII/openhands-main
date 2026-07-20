@@ -1,20 +1,16 @@
-import { getStoredOpenHandsToken } from "@/src/lib/cloud-auth-storage";
+import { apiPath } from "@/src/shared/paths";
 
 export type ApiDebugDetails = Record<string, unknown>;
 
 export function apiFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
   const nextInit: RequestInit = { ...init };
+  const isInternalApiPath = typeof input === "string" && input.startsWith("/api/");
 
-  if (typeof input === "string" && input.startsWith("/api/")) {
-    const token = getStoredOpenHandsToken();
-    if (token) {
-      const headers = new Headers(init?.headers);
-      headers.set("Authorization", `Bearer ${token}`);
-      nextInit.headers = headers;
-    }
+  if (isInternalApiPath) {
+    nextInit.credentials = init?.credentials ?? "same-origin";
   }
 
-  return fetch(input, nextInit);
+  return fetch(isInternalApiPath ? apiPath(input as string) : input, nextInit);
 }
 
 export class ApiRequestError extends Error {
