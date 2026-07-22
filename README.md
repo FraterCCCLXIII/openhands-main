@@ -244,18 +244,6 @@ npm run test:coverage
 
 Vitest is configured to emit text, HTML, LCOV, `coverage-summary.json`, and `coverage-final.json` outputs for the main frontend and backend codepaths under `app/`, `src/components/`, and `src/lib/`. Coverage runs include branch coverage, even for files that were not imported during the test run.
 
-To print the branch-gap summary used in CI after the coverage run completes, use:
-
-```bash
-npm run coverage:branches
-```
-
-Or run both steps together:
-
-```bash
-npm run test:coverage:report
-```
-
 For an interactive HTML report, open `coverage/index.html` in your browser after the run finishes.
 
 ## Contributing

@@ -1610,7 +1610,7 @@ def mcp_call(
     )
 
 
-def requires_dashboard_session(path: str, method: str) -> bool:
+def requires_dashboard_session(path: str) -> bool:
     if path in {
         "/api/user/key",
         "/api/user/agent-key",
@@ -1625,8 +1625,6 @@ def requires_dashboard_session(path: str, method: str) -> bool:
     if path.startswith("/api/integrations"):
         return True
     if path == "/api/oauth/{provider}/start":
-        return True
-    if path.startswith("/api/admin/modify-integrations") and method != "GET":
         return True
     return False
 
@@ -2908,7 +2906,7 @@ def dispatch_fastapi_request(request: Request, body: Any):
 
     owner: str | None = None
     user_api_is_admin = False
-    if requires_dashboard_session(path, method):
+    if requires_dashboard_session(path):
         session_user = authorize_dashboard_user(request)
         owner = session_user.owner_id
         user_api_is_admin = session_user.is_admin

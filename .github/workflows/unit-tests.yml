@@ -34,12 +34,6 @@ jobs:
         env:
           NODE_ENV: test
 
-      - name: Summarize branch coverage gaps
-        run: |
-          echo "## Branch coverage gap summary" >> "$GITHUB_STEP_SUMMARY"
-          npm run coverage:branches -- --format=markdown | tee coverage/branch-gaps.md
-          cat coverage/branch-gaps.md >> "$GITHUB_STEP_SUMMARY"
-
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:

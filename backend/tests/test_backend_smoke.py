@@ -2414,6 +2414,29 @@ def test_admin_api_key_authorizes_admin_routes(
     assert "duplicateExternalAccounts" in response.json()
 
 
+def test_admin_api_key_authorizes_managed_connector_writes(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS")
+    config_env("INTHUB_APP_ADMIN_EMAILS", "admin@example.com")
+    repository.save_key("admin@example.com", "admin", "clad_test_admin_key")
+
+    response = TestClient(app).post(
+        "/api/admin/modify-integrations",
+        headers={"Authorization": "Bearer clad_test_admin_key"},
+        json={
+            "slug": "sample",
+            "name": "Sample",
+            "description": "Sample connector",
+            "provider": "http",
+            "authStrategy": "none",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["slug"] == "sample"
+
+
 def test_non_admin_dashboard_routes_reject_privileged_api_calls_in_dev_mode(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
