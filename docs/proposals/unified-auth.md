@@ -422,10 +422,10 @@ the user's reported bug (mid-session 401 / repeated login).
    server.** If refresh tokens are unsupported, Phase 1 must instead do silent
    re-authorization (re-run device flow in an iframe / web flow) — the web
    auth-code flow in §3.4 becomes mandatory rather than optional.
-2. Serverless constraint: on Vercel, is Postgres reachable for the `sessions`
-   table on every request, or should sessions be encrypted-into-cookie
-   (stateless) to avoid a DB hop per call? Prefer Postgres for revocation; fall
-   back to encrypted-cookie only if latency/blocking is unacceptable.
+2. Deployment constraint: is Postgres reachable for the `sessions` table on
+   every request, or should sessions be encrypted-into-cookie (stateless) to
+   avoid a DB hop per call? Prefer Postgres for revocation; fall back to
+   encrypted-cookie only if latency/blocking is unacceptable.
 3. Should the session cookie be per-deployment (`integrations.dev.` vs prod)?
    Yes — scope cookies to the deployment origin (already the default) so dev
    sessions don't leak to prod and vice versa.

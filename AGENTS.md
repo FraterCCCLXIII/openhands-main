@@ -14,15 +14,10 @@ The root `LICENSE` is proprietary: `Copyright All Hands AI, Inc. All rights rese
 - Client-side auth state is managed via `useAuth()` from `src/components/auth/auth-context.tsx`, backed by OpenHands Cloud OAuth device flow and a stored OpenHands bearer token.
 - `Providers` only supplies React Query and `AuthProvider`; there is no legacy auth provider layer.
 
-## Deployment Architecture (Vercel + K8s)
+## Deployment Architecture (Docker/K8s)
 
-The repository supports deployment to both Vercel and self-hosted K8s environments:
-
-### Vercel Deployment (Standard Next.js)
-- Uses standard Next.js build (`npm run build`) with SSR capabilities
-- Vercel handles page routing and static file serving via CDN
-- All `/api/*` routes, including `/api/auth/config` and `/api/auth/session`, rewrite to the FastAPI backend at `api/index.py`
-- The dashboard uses OpenHands Cloud OAuth device flow; do not reintroduce legacy dashboard auth providers or Next.js auth routes
+The repository supports containerized Docker/Kubernetes deployments where
+FastAPI serves both the API and the statically exported dashboard.
 
 ### Local Docker Run (CI image from GHCR)
 
@@ -53,7 +48,7 @@ docker run -d --name integrations-hub -p 8080:8000 \
 Verify: `curl http://127.0.0.1:8080/api/health` → `{"status":"ok","backend":"fastapi"}`.
 
 ### K8s/Docker Deployment (SPA Mode)
-- `npm run build:spa` builds a static export to `out/` for K8s deployments
+- `npm run build:spa` builds a static export to `out/` for container deployments
 - Set `STATIC_DIR` (or `INTHUB_STATIC_DIR`) to the path containing the pre-built `out/` directory
 - FastAPI serves both the SPA static files and all API routes from a single container
 - `backend/app/static_files.py` implements static file serving with appropriate caching headers:
@@ -62,12 +57,11 @@ Verify: `curl http://127.0.0.1:8080/api/health` → `{"status":"ok","backend":"f
   - SPA catch-all route returns `index.html` for client-side routing
 
 ### Build Commands
-- `npm run build` - Standard Next.js build (for Vercel)
+- `npm run build` - Standard Next.js build check
 - `npm run build:spa` - Static export for K8s deployments (outputs to `out/`)
 
 ### Environment Variables for K8s
 - `STATIC_DIR=/app/out` - Path to pre-built SPA files (enables FastAPI static serving)
-- Leave `STATIC_DIR` unset on Vercel (uses standard Next.js integration)
 
 ## Common commands
 
@@ -156,12 +150,12 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - `/api/mcp` now exposes the same per-user integrations hub as an MCP Streamable HTTP server authenticated by the restricted agent/runtime integrations-hub API key. Tool names are namespaced as `<integration>__<function>`, enabled plus `approval_required` functions are listed, MCP URL query params for `agentId` / `agentClass` are optional initial defaults, and callers can also set session-scoped defaults with the managed `set_agent_id` / `set_agent_class` tools or override per call with `agentId` / `agentClass` plus optional `scopes`.
 - Case-by-case MCP approvals now support session-scoped agent metadata via `set_agent_data` (currently `conversationLink`). Approval-required MCP tools should refuse to create a pending request until that conversation link is set, so the approvals page can link humans back to the originating conversation.
 - User automation keys are now separate hashed-at-rest `clu_...` keys managed through the signed-in dashboard/API (`/api/user/key`) and authenticated against dedicated `/api/user/*` routes. Keep least privilege explicit: `cla_...` agent keys remain for runtime tool invocation only, `/api/user/integrations*` stays scoped to the authenticated owner, and `/api/user/access-requests*` lets that owner review only their own agents' case-by-case requests.
-- MCP sessions must survive serverless request fan-out on Vercel. `/api/mcp` now persists session records (owner + session agent defaults) outside process memory and rebuilds a fresh `WebStandardStreamableHTTPServerTransport` per request instead of caching live transport objects in-memory.
+- MCP sessions must survive request fan-out across horizontally scaled runtimes. `/api/mcp` now persists session records (owner + session agent defaults) outside process memory and rebuilds a fresh `WebStandardStreamableHTTPServerTransport` per request instead of caching live transport objects in-memory.
 - Agent-facing usage guidance is generated from `src/shared/agent-connection.ts`. Keep REST/MCP examples aligned with runtime behavior: `agentId` / `agentClass` are optional and default to `null` when omitted, while MCP tool schemas should expose real top-level connector arguments (for example `body` or path params) instead of only the agent identity override fields.
 - Client-safe cross-layer helpers should live in `src/shared/`. `npm run lint` runs ESLint on the frontend.
-- The Python/FastAPI backend lives in `backend/`, owns the `/api/...` route surface, and is configured for a separate Vercel project rooted at `backend/`. Keep `backend/app/route_manifest.py` and `backend/tests/test_route_parity.py` aligned when adding/removing backend API routes.
+- The Python/FastAPI backend lives in `backend/` and owns the `/api/...` route surface. Keep `backend/app/route_manifest.py` and `backend/tests/test_route_parity.py` aligned when adding/removing backend API routes.
 - Root docs now include `README.md`, `ARCHITECTURE.md`, `API.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, and `LICENSE`; `ARCHITECTURE.md` is the canonical contributor reference for the security model, testing strategy, and glossary. Keep README/API route references aligned with the canonical dashboard pages (`/integrations`, `/agent-connection`, `/profile`, `/case-by-case-approvals`, `/admin-overview`, `/admin-integrations`) and generated OpenAPI endpoints.
-- `/api/mcp` now pre-validates obvious Streamable HTTP protocol mismatches before handing requests to the MCP SDK transport: session GETs must accept `text/event-stream`, POSTs must advertise both `application/json` and `text/event-stream` plus JSON bodies, and any request with `mcp-session-id` must include `mcp-protocol-version`. This helps turn bad-client/Vercel timeout scenarios into fast 4xx responses with clearer diagnostics.
+- `/api/mcp` now pre-validates obvious Streamable HTTP protocol mismatches before handing requests to the MCP SDK transport: session GETs must accept `text/event-stream`, POSTs must advertise both `application/json` and `text/event-stream` plus JSON bodies, and any request with `mcp-session-id` must include `mcp-protocol-version`. This helps turn bad-client transport failures into fast 4xx responses with clearer diagnostics.
 - Service OAuth callbacks can use the stable-domain preview proxy pattern: when `INTHUB_OAUTH_REDIRECT_PROXY_URL` is configured, provider auth flows register and exchange against `<stable-origin>/api/oauth/<provider>/callback`, and the stable callback forwards back to the preview deployment callback URL stored in OAuth state before finishing the token exchange.
 - Managed connector registration defaults should prefer the most reliable official surface for each provider: remote MCP when that is stable, otherwise a managed HTTP connector generated from an official OpenAPI schema. Notion now follows the latter path via `https://developers.notion.com/openapi.json` instead of the hosted Notion MCP.
 - Webflow remains a managed oauth-ready connector backed by the official hosted MCP server at `https://mcp.webflow.com/mcp`, but the hosted MCP endpoint expects tokens from its own OAuth server (`https://mcp.webflow.com/oauth/*`), not Webflow Data API app tokens. The admin registration flow now creates a deployment-scoped public PKCE client automatically via `https://mcp.webflow.com/oauth/register`, then each user authorizes their own sites/workspaces through that MCP OAuth flow.
@@ -205,7 +199,7 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 
 - `src/components/admin/integrations/provider-catalog.tsx` renders the `/admin-integrations` researched provider catalog as a compact searchable vertical list; entries are collapsed by default, expand inline, and only show the managed-connector registration form to signed-in users whose email is allowlisted in `INTHUB_APP_ADMIN_EMAILS`.
 
-- `app/admin-integrations/page.tsx` is the canonical user/admin-facing connector request page: regular users see only the “For users” request guidance, admins see only the “For admins” setup guidance plus the registered-connector management panel. In-app admin actions are gated by `INTHUB_APP_ADMIN_EMAILS` from Vercel environment variables.
+- `app/admin-integrations/page.tsx` is the canonical user/admin-facing connector request page: regular users see only the “For users” request guidance, admins see only the “For admins” setup guidance plus the registered-connector management panel. In-app admin actions are gated by `INTHUB_APP_ADMIN_EMAILS`.
 - `app/admin-integrations/page.tsx` should keep the same sidebar/header chrome and overall card density as the main integrations dashboard, while `src/components/admin/integrations/managed-connector-list.tsx` should keep mirroring the compact integration-card treatment with visible delete actions and logo/avatar tiles.
 - `app/admin-overview/page.tsx` is the admin-only operational dashboard for the deployment-wide snapshot exposed by `GET /api/admin/overview`; admins should see a single full-width expandable user browser card that reuses shared dashboard card styling and surfaces per-user saved identities, approval/notification counts, and duplicate external-account groups, while non-admins should only see a gated explanatory card with no cross-owner metrics.
 
@@ -246,7 +240,7 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 
 - `MemoryRepository` and the TypeScript DB layer have been completely removed. The Python backend (`backend/app/repository.py`) owns all DB access via `PostgresRepository`. If `INTHUB_POSTGRES_URL` is missing at runtime, signed-in users see a service-unavailable screen; admins see setup instructions for configuring Postgres, and normal users see a generic unavailable message.
 - All backend tests run via `cd backend && uv run pytest tests -q` using the real `PostgresRepository` against an in-process test DB (no PGlite needed). Frontend component tests run via `npx vitest run` using jsdom with mocked `fetch`.
-- `backend/app/repository.py` bootstraps schema lazily on first use. On Neon/Vercel, concurrent serverless requests can race on `CREATE TABLE IF NOT EXISTS`, so schema initialization runs inside a single transaction guarded by `pg_advisory_xact_lock(...)`, plus an in-process promise dedupe to avoid duplicate work within one runtime instance.
+- `backend/app/repository.py` bootstraps schema lazily on first use. Concurrent application replicas can race on `CREATE TABLE IF NOT EXISTS`, so schema initialization runs inside a single transaction guarded by `pg_advisory_xact_lock(...)`, plus an in-process promise dedupe to avoid duplicate work within one runtime instance.
 - MCP transport handling is centralized in `backend/app/main.py` (`discover_mcp_tools`, `invoke_mcp_tool`, `mcp_call`). Discovery and runtime invocation enforce a 10s timeout for MCP connect/operation calls and log transport failures server-side, while any optional retry policy is metadata-driven via ordered `config.mcpTransportOrder` entries rather than hardcoded provider checks in the generic client.
 - MCP client/runtime tests should model multi-transport retries by passing explicit `transportOrder` entries. Do not rely on legacy provider-specific fallback assumptions (for example, implicit Notion SSE retries) or deprecated debug fields like `fallbackUrl`.
 - `backend/app/main.py` should preserve numeric SDK transport error codes (for example hosted MCP 401/403 responses) when wrapping failures into `HTTPException`, so routes return the real auth/scope status instead of collapsing everything to 502. Provider-specific hints, if added, must stay sanitized and avoid echoing secrets.
@@ -257,10 +251,9 @@ The `.openhands/pre-commit.sh` script runs these Python checks alongside the Typ
 - Local QA can be exercised with `npm run dev` on localhost plus a tiny localhost proxy that forwards `http://127.0.0.1:12001/` to GitHub's hosted MCP using `GITHUB_TOKEN`; the dashboard provisions a per-user agent API key server-side, and agents cannot call `/api/agent/*` until a user has opened `/integrations` once to provision that key.
 - `ToolSpec.accessMode` now supports `enabled`, `disabled`, and `approval_required`; `approval_required` bypasses agent-class policy and requires a temporary grant, while `enabled` functions are callable by default unless a matching agent-class policy is configured to narrow access.
 - Stored provider credentials require a dedicated `INTHUB_CREDENTIAL_ENCRYPTION_KEY` in every environment; there is no baked-in local-development encryption fallback.
-- FastAPI `/api/cron/expire-grants` is intended for a Vercel cron job to purge expired temporary grants, and it must fail closed unless `INTHUB_CRON_SECRET` is configured and presented as a bearer token.
+- FastAPI `/api/cron/expire-grants` is intended for an external scheduler to purge expired temporary grants, and it must fail closed unless `INTHUB_CRON_SECRET` is configured and presented as a bearer token.
 - `.github/workflows/` now includes the OpenHands PR review pair (`pr-review.yml`, `pr-review-evaluation.yml`) plus the vulnerability remediation wrapper (`vulnerability-scan.yml`) copied from `OpenHands/extensions` plugins.
 - The app favicon mirrors agent-canvas: `public/favicon.svg`, referenced via `app/layout.tsx` metadata.
 
 - `app/globals.css` plus `src/components/ui/{button,badge,card}.tsx` now mirror the OpenHands frontend palette more closely: gold primary accents (`#c9b974`/`#cfb755`), flatter dark surfaces, system sans body text, and IBM Plex Mono for code; admin/dashboard styling should stay aligned with those shared primitives.
 - Enabled dashboard/admin `<button>` controls should include pointer-cursor affordances. The shared `Button` primitive now carries `cursor-pointer`, but raw `<button>` wrappers (marketplace cards, kind selectors, segmented controls, disclosure rows) still need explicit `cursor-pointer` classes when added outside that primitive.
-

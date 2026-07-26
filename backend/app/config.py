@@ -135,8 +135,7 @@ class Config(BaseModel):
         default=None,
         description=(
             "Directory containing pre-built Next.js SPA static files. When set, "
-            "FastAPI serves the SPA directly (for K8s/Docker deployments). "
-            "Leave unset on Vercel where CDN handles static files."
+            "FastAPI serves the SPA directly (for K8s/Docker deployments)."
         ),
     )
     root_path: str = Field(

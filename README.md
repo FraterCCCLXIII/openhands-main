@@ -121,7 +121,7 @@ For a fuller route map and auth breakdown, see [API.md](./API.md).
    <details>
    <summary>Option B: Use Neon's free tier</summary>
 
-   For cloud-hosted Postgres (required for Vercel deployments):
+   For cloud-hosted Postgres:
 
    1. Create a free account at [neon.tech](https://neon.tech)
    2. Create a new project and database
@@ -214,8 +214,7 @@ Managed provider callbacks use the pattern:
 
 The Kubernetes image is built for same-origin mounting beneath
 `/integrations-hub`, with APIs and OAuth callbacks beneath
-`/api/integrations-hub`. Root-hosted Next.js/Vercel deployments retain the
-unprefixed URLs above. Configure `INTHUB_ROOT_PATH` and
+`/api/integrations-hub`. Configure `INTHUB_ROOT_PATH` and
 `INTHUB_API_ROOT_PATH` to match the image and ingress paths.
 
 Examples:

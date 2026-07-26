@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Run Alembic migrations for integrations-hub
 #
-# This script is intended to be run during deploy (e.g., Vercel build) or
-# manually before deploying. It requires INTHUB_POSTGRES_URL to be set.
+# This script is intended to be run during deploy or manually before deploying.
+# It requires INTHUB_POSTGRES_URL to be set.
 #
 # Usage:
 #   ./scripts/run-migrations.sh          # Run migrations

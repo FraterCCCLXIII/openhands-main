@@ -23,12 +23,11 @@
     "test:mutation:all": "node ./scripts/run-mutation.mjs --all --soft-fail",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:python": "cd backend && uv run ruff format --check . && uv run ruff check . && uv run pycodestyle --max-line-length=88 --ignore=E203,E501,W503,E704 app api tests",
+    "lint:python": "cd backend && uv run ruff format --check . && uv run ruff check . && uv run pycodestyle --max-line-length=88 --ignore=E203,E501,W503,E704 app tests",
     "lint:python:fix": "cd backend && uv run ruff format . && uv run ruff check --fix .",
     "typecheck:python": "cd backend && uv run pyright",
     "audit": "npm audit --audit-level=moderate",
-    "test:backend:python": "cd backend && uv run pytest tests -q",
-    "python:export-requirements": "uv export --project backend --no-dev --format requirements-txt --no-hashes --output-file requirements.txt"
+    "test:backend:python": "cd backend && uv run pytest tests -q"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
@@ -37,20 +36,20 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
-    "next": "^16.2.6",
+    "next": "^16.2.12",
     "posthog-js": "^1.372.6",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.23",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^16.2.3",
+    "@next/eslint-plugin-next": "^16.2.12",
     "@stryker-mutator/core": "^9.6.0",
     "@stryker-mutator/typescript-checker": "^9.6.0",
     "@stryker-mutator/vitest-runner": "^9.6.0",
-    "@tailwindcss/postcss": "^4.2.2",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -59,19 +58,18 @@
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "jsdom": "^29.0.1",
-    "tailwindcss": "^4.2.2",
+    "tailwindcss": "^4.3.3",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.16",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.2"
   },
   "overrides": {
     "hono": "4.12.27",
     "@hono/node-server": "2.0.10",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.23",
     "qs": ">=6.15.2",
-    "brace-expansion": "5.0.7",
+    "brace-expansion": "5.0.8",
     "fast-uri": "3.1.4",
     "sharp": "0.35.0"
   }

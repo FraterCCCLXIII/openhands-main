@@ -15,6 +15,6 @@ cd "$ROOT_DIR/backend" || exit 1
 echo "Running Python lint checks..."
 uv run ruff format --check . || exit 1
 uv run ruff check . || exit 1
-uv run pycodestyle --max-line-length=88 --ignore=E203,E501,W503,E704 app api tests || exit 1
+uv run pycodestyle --max-line-length=88 --ignore=E203,E501,W503,E704 app tests || exit 1
 uv run pyright || exit 1
 echo "Python checks passed."

@@ -31,13 +31,12 @@ cd backend
 uv run pytest tests/ -v
 ```
 
-## Vercel deployment
+## Container deployment
 
-Vercel natively supports uv and will automatically use it to install dependencies from `pyproject.toml` and `uv.lock`. Builds are 30-65% faster compared to pip-based installs.
-
-## Vercel deployment
-
-For the combined preview app, the root `vercel.json` rewrites `/api/:path*` to the root Python entrypoint `api/index.py`, which exports the FastAPI `app` and keeps dashboard button actions on the same origin. You can also deploy `backend/` as a separate Vercel project/root directory; `backend/vercel.json` routes all requests to its own `api/index.py` and preserves the existing `/api/cron/expire-grants` schedule.
+The root `containers/Dockerfile` builds the dashboard as a static SPA, installs
+the Python dependencies from `pyproject.toml` and `uv.lock`, and runs FastAPI
+through `backend.app.server`. FastAPI serves both the static dashboard and API
+routes from the resulting image.
 
 Required/optional environment variables use explicit `INTHUB_*` names. The backend reads only `INTHUB_*` names and never falls back to the root Next.js environment variable names.
 
@@ -49,5 +48,3 @@ Required/optional environment variables use explicit `INTHUB_*` names. The backe
 - `INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS` — bounded worker limit (default `10`) for legacy synchronous connector, database, and auth work.
 - `INTHUB_READINESS_TIMEOUT_SECONDS` — deadline (default `5`) for the database readiness check.
 - Authenticated local development uses `INTHUB_OPENHANDS_BASE_URL` and OpenHands Cloud bearer tokens; no runtime auth bypass is available.
-
-The first FastAPI stack uses an in-process repository to make route behavior testable and deployable. Persistent Postgres-backed storage can be added behind `backend/app/repository.py` without changing route contracts.

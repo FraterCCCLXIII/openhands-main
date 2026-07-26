@@ -558,10 +558,6 @@ def configured_oauth_callback_url(provider: str) -> str:
     explicit = (os.getenv("AUTH_URL") or "").strip().rstrip("/")
     if explicit:
         return f"{explicit}{callback_path}"
-    vercel_url = (os.getenv("VERCEL_URL") or "").strip().rstrip("/")
-    if vercel_url:
-        host = re.sub(r"^https?://", "", vercel_url)
-        return f"https://{host}{callback_path}"
     return f"http://localhost:3000{callback_path}"
 
 

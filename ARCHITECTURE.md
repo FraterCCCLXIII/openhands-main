@@ -26,7 +26,7 @@ The codebase keeps frontend, shared, and backend concerns separate by convention
 - `src/components/` contains React UI. Files marked `"use client"` must not import server-only modules, even transitively.
 - `src/shared/` contains browser-safe helpers and constants that can be imported by both client UI and server/runtime code.
 - `src/lib/` contains frontend utility modules (text utils, fetch helpers, type helpers, access-request constants, HTTP request template helpers). New client-safe cross-layer helpers should prefer `src/shared/` so browser bundles stay small.
-- `backend/` contains the Python/FastAPI backend and owns the `/api/...` route surface. It can be deployed as its own Vercel project rooted at `backend/`.
+- `backend/` contains the Python/FastAPI backend and owns the `/api/...` route surface served by the application container.
 
 `npm run lint` runs ESLint on the frontend. Python route parity is covered by `backend/tests/test_route_parity.py`, which compares registered FastAPI routes against `backend/app/route_manifest.py`.
 

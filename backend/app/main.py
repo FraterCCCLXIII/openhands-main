@@ -103,11 +103,11 @@ _executor_init_lock = threading.Lock()
 
 
 def request_executors(application: FastAPI) -> BlockingExecutors:
-    """Return the process-local executors, creating a test/serverless fallback.
+    """Return the process-local executors, creating a test/runtime fallback.
 
     Production Uvicorn processes initialize this service during FastAPI's
-    lifespan. The lazy path keeps Vercel request reuse and direct ASGI tests
-    safe when a host does not run lifespan hooks.
+    lifespan. The lazy path keeps direct ASGI tests and hosts that do not run
+    lifespan hooks safe.
     """
     executors = getattr(application.state, "request_executors", None)
     if isinstance(executors, BlockingExecutors):
@@ -3343,5 +3343,5 @@ for auth_path in ["/api/auth/config", "/api/auth/session"]:
 # Mount static files for SPA serving (K8s/Docker mode only).
 # This must be called AFTER all API routes are registered, as it includes
 # a catch-all route for SPA client-side routing.
-# On Vercel, STATIC_DIR is not set, so this is a no-op.
+# When STATIC_DIR is not set, this is a no-op.
 mount_static_files(app)

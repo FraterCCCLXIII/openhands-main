@@ -12,7 +12,6 @@ reports/
 .env.production
 .env.test
 .env.*.local
-.vercel
 *.log
 *.tsbuildinfo
 
@@ -20,6 +19,3 @@ __pycache__/
 .pytest_cache/
 .venv/
 .vscode/launch.json
-.spa-build-backup/
-# Generated from backend/pyproject.toml for Vercel Python runtime installs.
-/requirements.txt

@@ -1,7 +1,6 @@
-"""Static file serving for SPA mode (K8s/Docker deployments).
+"""Static file serving for SPA mode deployments.
 
 When INTHUB_STATIC_DIR is set, FastAPI serves the pre-built Next.js SPA.
-On Vercel, leave this unset since Vercel's CDN handles static files.
 
 Usage:
     INTHUB_STATIC_DIR=/app/out uvicorn backend.app.main:app
