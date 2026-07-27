@@ -217,7 +217,7 @@ describe("ConversationPanel list loading", () => {
     vi.spyOn(
       AgentServerConversationService,
       "searchConversations",
-    ).mockImplementation(async (_limit, pageId) =>
+    ).mockImplementation(async ({ pageId } = {}) =>
       pageId === "page-2"
         ? { items: page2, next_page_id: null }
         : { items: page1, next_page_id: "page-2" },
@@ -250,7 +250,7 @@ describe("ConversationPanel list loading", () => {
     vi.spyOn(
       AgentServerConversationService,
       "searchConversations",
-    ).mockImplementation(async (_limit, pageId) => {
+    ).mockImplementation(async ({ pageId } = {}) => {
       if (pageId === "page-2") {
         return { items: page2, next_page_id: null };
       }

@@ -17,6 +17,7 @@ interface ConversationCardHeaderProps {
    * sandbox status.
    */
   isArchived?: boolean;
+  searchQuery?: string;
 }
 
 export function ConversationCardHeader({
@@ -26,6 +27,7 @@ export function ConversationCardHeader({
   executionStatus,
   sandboxStatus,
   isArchived,
+  searchQuery,
 }: ConversationCardHeaderProps) {
   const archived = isArchived ?? isMissingSandboxStatus(sandboxStatus);
   return (
@@ -45,6 +47,7 @@ export function ConversationCardHeader({
         titleMode={titleMode}
         onSave={onTitleSave}
         isConversationArchived={archived}
+        searchQuery={searchQuery}
       />
     </div>
   );
