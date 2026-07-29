@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from typing import ClassVar
+from urllib.parse import urlsplit, urlunsplit
 
 from openhands.agent_server.env_parser import from_env
 from pydantic import (
@@ -44,6 +45,37 @@ def _parse_email_list(value: str) -> list[str]:
     return [email.strip().lower() for email in raw.split(",") if email.strip()]
 
 
+def normalize_public_base_url(value: object) -> str:
+    """Normalize an externally visible HTTP(S) site URL."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    parsed = urlsplit(raw)
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("public base URL has an invalid port") from exc
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.netloc
+        or not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError(
+            "public base URL must be an absolute HTTP(S) URL without "
+            "credentials, query parameters, or a fragment"
+        )
+    host = parsed.hostname.lower()
+    if ":" in host:
+        host = f"[{host}]"
+    netloc = host if port is None else f"{host}:{port}"
+    path = parsed.path.rstrip("/")
+    return urlunsplit((parsed.scheme.lower(), netloc, path, "", ""))
+
+
 class Config(BaseModel):
     """Immutable configuration for the Integrations Hub backend.
 
@@ -59,6 +91,7 @@ class Config(BaseModel):
         INTHUB_APP_ADMIN_EMAILS: Comma-separated admin email addresses
         INTHUB_CREDENTIAL_ENCRYPTION_KEY: Key for encrypting stored credentials
         INTHUB_STATIC_DIR: Directory for pre-built SPA files (K8s mode only)
+        INTHUB_PUBLIC_BASE_URL: Externally visible Integrations Hub site URL
         INTHUB_ROOT_PATH: Public UI prefix for the K8s SPA
         INTHUB_API_ROOT_PATH: Public API prefix for the K8s service
         INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS: Worker limit for sync backend work
@@ -138,6 +171,13 @@ class Config(BaseModel):
             "FastAPI serves the SPA directly (for K8s/Docker deployments)."
         ),
     )
+    public_base_url: str = Field(
+        default="",
+        description=(
+            "Externally visible Integrations Hub site URL, including root_path. "
+            "Reads from INTHUB_PUBLIC_BASE_URL."
+        ),
+    )
     root_path: str = Field(
         default="",
         description=(
@@ -192,6 +232,11 @@ class Config(BaseModel):
             raise ValueError("path prefixes must start with /")
         return raw.rstrip("/")
 
+    @field_validator("public_base_url", mode="before")
+    @classmethod
+    def _normalize_public_base_url(cls, value: object) -> str:
+        return normalize_public_base_url(value)
+
     @field_validator("openhands_auth_cookie_name", mode="before")
     @classmethod
     def _validate_auth_cookie_name(cls, value: object) -> str:
@@ -222,6 +267,20 @@ class Config(BaseModel):
                 # (None) instead of an empty SecretStr.
                 del data[field_name]
         return data
+
+    @model_validator(mode="after")
+    def _public_base_path_matches_root_path(self) -> Config:
+        if not self.public_base_url:
+            return self
+        public_path = urlsplit(self.public_base_url).path.rstrip("/")
+        if public_path != self.root_path:
+            expected = self.root_path or "/"
+            actual = public_path or "/"
+            raise ValueError(
+                "INTHUB_PUBLIC_BASE_URL path must match INTHUB_ROOT_PATH "
+                f"(expected {expected!r}, got {actual!r})"
+            )
+        return self
 
     @property
     def admin_email_list(self) -> list[str]:

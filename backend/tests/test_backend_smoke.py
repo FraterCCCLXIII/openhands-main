@@ -1011,6 +1011,7 @@ def test_oauth_start_uses_proxy_scopes_and_additional_params(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_PUBLIC_BASE_URL", "https://stable.example.dev")
     config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -1072,6 +1073,7 @@ def test_oauth_callback_returns_to_requested_duplicate_integration_key(
     config_env: ConfigEnvFixture, monkeypatch
 ) -> None:
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_PUBLIC_BASE_URL", "https://hub.example.dev")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -1110,9 +1112,13 @@ def test_oauth_callback_returns_to_requested_duplicate_integration_key(
         follow_redirects=False,
     )
     assert start.status_code == 307
-    state = urllib.parse.parse_qs(
+    start_query = urllib.parse.parse_qs(
         urllib.parse.urlparse(start.headers["location"]).query
-    )["state"][0]
+    )
+    assert start_query["redirect_uri"] == [
+        "https://hub.example.dev/api/oauth/linear/callback"
+    ]
+    state = start_query["state"][0]
 
     callback = client.get(
         f"/api/oauth/linear/callback?state={state}&code=oauth-code",
@@ -1135,6 +1141,7 @@ def test_multiple_oauth_accounts_same_connector_coexist(
     """Installing the same managed OAuth connector twice with different
     integration keys should create two independent connections that coexist."""
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_PUBLIC_BASE_URL", "http://testserver")
     config_env("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "test-credential-key")
     client = TestClient(app)
     admin_key = client.post("/api/admin/key").json()["apiKey"]
@@ -1214,7 +1221,7 @@ def test_stable_oauth_proxy_forwards_callbacks_to_the_originating_preview(
     config_env: ConfigEnvFixture,
 ) -> None:
     config_env("INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://stable.example.dev")
-    config_env("AUTH_URL", "https://integrations-pr-215.example.dev")
+    config_env("INTHUB_PUBLIC_BASE_URL", "https://integrations-pr-215.example.dev")
     config_env(
         "INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX",
         r"integrations-pr-[0-9]+\.example\.dev",
@@ -1295,6 +1302,7 @@ def test_dynamic_oauth_client_registration_for_public_clients(
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    config_env("INTHUB_PUBLIC_BASE_URL", "https://hub.example.dev")
     client = TestClient(app)
     registrations: list[dict[str, object]] = []
 
@@ -1338,6 +1346,9 @@ def test_dynamic_oauth_client_registration_for_public_clients(
         assert response.status_code == 200
         assert response.json()["oauthConfigured"] is True
         assert registrations[0]["token_endpoint_auth_method"] == "none"
+        assert registrations[0]["redirect_uris"] == [
+            "https://hub.example.dev/api/oauth/dynamic-oauth/callback"
+        ]
         connector = repository.get_managed_connector("dynamic-oauth")
         assert connector is not None
         assert connector.oauthClientId == "dynamic-client"
@@ -1425,6 +1436,7 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
 
     config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
     config_env("INTHUB_DISABLE_AUTH", "true")
+    config_env("INTHUB_PUBLIC_BASE_URL", "http://testserver")
     client = TestClient(app)
 
     metadata = {
@@ -1545,6 +1557,12 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         assert "code_challenge" in query  # PKCE
         assert len(registrations) == 1
         assert registrations[0]["token_endpoint_auth_method"] == "none"
+        assert registrations[0]["redirect_uris"] == [
+            "http://testserver/api/oauth/dyn-oauth-flow/callback"
+        ]
+        assert query["redirect_uri"] == [
+            "http://testserver/api/oauth/dyn-oauth-flow/callback"
+        ]
         assert (
             metadata_requests
             == [

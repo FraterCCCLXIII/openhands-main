@@ -15,6 +15,8 @@ from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
+from .config import get_default_config, normalize_public_base_url
+from .deprecations import warn_deprecated
 from .managed_connectors import get_managed_connector
 from .models import (
     ConnectionResourceInput,
@@ -184,17 +186,6 @@ def join_oauth_scopes(scopes: list[str], separator: str | None = None) -> str:
     return ("," if separator == "comma" else " ").join(scopes)
 
 
-def oauth_callback_base_url(request: Request) -> str:
-    proxy = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
-    if proxy:
-        origin = (
-            f"{urllib.parse.urlparse(proxy).scheme}://"
-            f"{urllib.parse.urlparse(proxy).netloc}"
-        )
-        return f"{origin}{public_api_path('/api/oauth')}"
-    return f"{request.url.scheme}://{request.url.netloc}{public_api_path('/api/oauth')}"
-
-
 _PREVIEW_PROXY_STATE_PREFIX = "oh_preview_v1"
 
 
@@ -220,6 +211,64 @@ def _https_origin(value: str) -> str | None:
     return f"https://{parsed.hostname}"
 
 
+def _site_origin(value: str) -> str:
+    normalized = normalize_public_base_url(value)
+    parsed = urllib.parse.urlsplit(normalized)
+    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
+
+
+def _configured_proxy_origin() -> str | None:
+    raw = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip()
+    if not raw:
+        return None
+    origin = _https_origin(raw)
+    if not origin:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "INTHUB_OAUTH_REDIRECT_PROXY_URL must be an HTTPS origin "
+                "without credentials, a custom port, path, query, or fragment."
+            ),
+        )
+    return origin
+
+
+def configured_public_base_url() -> str:
+    """Return the configured Hub site URL, honoring one scheduled legacy key."""
+    configured = get_default_config().public_base_url
+    if configured:
+        return configured
+    legacy = (os.getenv("AUTH_URL") or "").strip()
+    if legacy:
+        warn_deprecated(
+            "AUTH_URL",
+            deprecated_in="0.7.1",
+            removed_in="0.12.0",
+            replacement="INTHUB_PUBLIC_BASE_URL",
+            stacklevel=3,
+        )
+        try:
+            return normalize_public_base_url(legacy)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"AUTH_URL is invalid: {exc}",
+            ) from exc
+    raise HTTPException(
+        status_code=500,
+        detail=(
+            "OAuth callback URL is not configured. Set INTHUB_PUBLIC_BASE_URL "
+            "to the externally visible Integrations Hub site URL."
+        ),
+    )
+
+
+def oauth_callback_base_url() -> str:
+    public_base_url = configured_public_base_url()
+    origin = _configured_proxy_origin() or _site_origin(public_base_url)
+    return f"{origin}{public_api_path('/api/oauth')}"
+
+
 def oauth_state_with_preview_target() -> str:
     """Create OAuth state, carrying the safe return origin for a stable proxy.
 
@@ -231,9 +280,19 @@ def oauth_state_with_preview_target() -> str:
     against its explicit hostname allowlist before redirecting.
     """
     state = secrets.token_urlsafe(24)
-    proxy = _https_origin(os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "")
-    target = _https_origin(os.getenv("AUTH_URL") or "")
-    if not proxy or not target or proxy == target:
+    proxy = _configured_proxy_origin()
+    if not proxy:
+        return state
+    target = _https_origin(_site_origin(configured_public_base_url()))
+    if not target:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "INTHUB_PUBLIC_BASE_URL must use HTTPS when "
+                "INTHUB_OAUTH_REDIRECT_PROXY_URL is configured."
+            ),
+        )
+    if proxy == target:
         return state
     return f"{_PREVIEW_PROXY_STATE_PREFIX}.{b64url(target.encode())}.{state}"
 
@@ -247,7 +306,7 @@ def oauth_proxy_callback_target(request: Request, state: str) -> str | None:
     untrusted state deliberately falls through to normal callback handling,
     where it cannot consume a preview's OAuth state.
     """
-    proxy = _https_origin(os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "")
+    proxy = _configured_proxy_origin()
     pattern = (
         os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_ALLOWED_TARGET_HOST_REGEX") or ""
     ).strip()
@@ -550,15 +609,7 @@ def is_expired(expires_at: str | None) -> bool:
 
 
 def configured_oauth_callback_url(provider: str) -> str:
-    callback_path = public_api_path(f"/api/oauth/{provider}/callback")
-    proxy = (os.getenv("INTHUB_OAUTH_REDIRECT_PROXY_URL") or "").strip().rstrip("/")
-    if proxy:
-        parsed = urllib.parse.urlparse(proxy)
-        return f"{parsed.scheme}://{parsed.netloc}{callback_path}"
-    explicit = (os.getenv("AUTH_URL") or "").strip().rstrip("/")
-    if explicit:
-        return f"{explicit}{callback_path}"
-    return f"http://localhost:3000{callback_path}"
+    return f"{oauth_callback_base_url()}/{provider}/callback"
 
 
 def register_dynamic_oauth_client(connector: ManagedConnector) -> ManagedConnector:
@@ -725,7 +776,7 @@ def start_oauth_redirect(
         else f"/integrations?showIntegrationWizard=1&managedConnector={provider}"
     )
     integration_key = request.query_params.get("integrationKey") or provider
-    redirect_uri = f"{oauth_callback_base_url(request)}/{provider}/callback"
+    redirect_uri = configured_oauth_callback_url(provider)
     query = {
         "response_type": "code",
         "client_id": client["clientId"],

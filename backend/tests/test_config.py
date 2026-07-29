@@ -15,6 +15,9 @@ def test_config_reads_only_prefixed_environment(monkeypatch) -> None:
     monkeypatch.setenv("INTHUB_CREDENTIAL_ENCRYPTION_KEY", "prefixed-key")
     monkeypatch.setenv("INTHUB_POSTHOG_CLIENT_KEY", "phc_test")
     monkeypatch.setenv("INTHUB_OPENHANDS_AUTH_COOKIE_NAME", "custom_session")
+    monkeypatch.setenv(
+        "INTHUB_PUBLIC_BASE_URL", "https://hub.example.com/integrations-hub/"
+    )
     monkeypatch.setenv("INTHUB_ROOT_PATH", "/integrations-hub/")
     monkeypatch.setenv("INTHUB_API_ROOT_PATH", "/api/integrations-hub/")
     monkeypatch.setenv("INTHUB_MAX_CONCURRENT_BLOCKING_REQUESTS", "3")
@@ -32,10 +35,37 @@ def test_config_reads_only_prefixed_environment(monkeypatch) -> None:
     assert config.require_cron_secret() == "prefixed-cron-secret"
     assert config.posthog_client_key == "phc_test"
     assert config.openhands_auth_cookie_name == "custom_session"
+    assert config.public_base_url == "https://hub.example.com/integrations-hub"
     assert config.root_path == "/integrations-hub"
     assert config.api_root_path == "/api/integrations-hub"
     assert config.max_concurrent_blocking_requests == 3
     assert config.readiness_timeout_seconds == 7.5
+
+
+@pytest.mark.parametrize(
+    "public_base_url",
+    [
+        "ftp://hub.example.com/integrations-hub",
+        "https://user@hub.example.com/integrations-hub",
+        "https://hub.example.com/integrations-hub?source=bad",
+    ],
+)
+def test_public_base_url_rejects_unsafe_shapes(
+    config_env, public_base_url: str
+) -> None:
+    config_env("INTHUB_ROOT_PATH", "/integrations-hub")
+    config_env("INTHUB_PUBLIC_BASE_URL", public_base_url)
+
+    with pytest.raises(ValueError, match="public base URL"):
+        get_default_config()
+
+
+def test_public_base_url_path_must_match_root_path(config_env) -> None:
+    config_env("INTHUB_ROOT_PATH", "/integrations-hub")
+    config_env("INTHUB_PUBLIC_BASE_URL", "https://hub.example.com/wrong-path")
+
+    with pytest.raises(ValueError, match="INTHUB_ROOT_PATH"):
+        get_default_config()
 
 
 def test_config_ignores_unprefixed_legacy_env_names(monkeypatch) -> None:

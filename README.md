@@ -166,6 +166,7 @@ Core variables:
 
 - `INTHUB_POSTGRES_URL` — database connection URL for the backend runtime
 - `INTHUB_OPENHANDS_BASE_URL` for OpenHands Cloud cookie validation
+- `INTHUB_PUBLIC_BASE_URL` for the externally visible Integrations Hub site URL, including `INTHUB_ROOT_PATH`
 - `INTHUB_POSTHOG_CLIENT_KEY` to enable explicit, privacy-safe product analytics events (analytics is disabled when unset)
 - `INTHUB_CREDENTIAL_ENCRYPTION_KEY` for stored third-party provider credentials
 - `INTHUB_CRON_SECRET`
@@ -210,12 +211,15 @@ For local development, sign in through the configured OpenHands Cloud base URL a
 Managed provider callbacks use the pattern:
 
 - `https://<your-host>/api/oauth/<provider>/callback`
-- `http://localhost:3000/api/oauth/<provider>/callback` for local development
+- `http://localhost:3000/api/oauth/<provider>/callback` for local development when `INTHUB_PUBLIC_BASE_URL=http://localhost:3000`
 
 The Kubernetes image is built for same-origin mounting beneath
 `/integrations-hub`, with APIs and OAuth callbacks beneath
 `/api/integrations-hub`. Configure `INTHUB_ROOT_PATH` and
-`INTHUB_API_ROOT_PATH` to match the image and ingress paths.
+`INTHUB_API_ROOT_PATH` to match the image and ingress paths, and set
+`INTHUB_PUBLIC_BASE_URL` to the externally visible site URL (for example,
+`https://example.com/integrations-hub`). `AUTH_URL` remains a deprecated
+compatibility fallback through version `0.11.x` and is removed in `0.12.0`.
 
 Examples:
 

@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import pytest
+from fastapi import HTTPException
+
 from backend.app.oauth_flow import (
     build_oauth_callback_redirect,
     configured_oauth_callback_url,
+    oauth_callback_base_url,
 )
 from backend.app.public_paths import (
     internal_api_path,
@@ -38,6 +42,10 @@ def test_public_paths_use_configured_prefixes(config_env) -> None:
 def test_oauth_urls_use_configured_public_prefixes(config_env, monkeypatch) -> None:
     config_env("INTHUB_ROOT_PATH", "/integrations-hub")
     config_env("INTHUB_API_ROOT_PATH", "/api/integrations-hub")
+    config_env(
+        "INTHUB_PUBLIC_BASE_URL",
+        "https://staging.all-hands.dev/integrations-hub",
+    )
     monkeypatch.setenv(
         "INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://staging.all-hands.dev"
     )
@@ -50,3 +58,63 @@ def test_oauth_urls_use_configured_public_prefixes(config_env, monkeypatch) -> N
         oauth_status="connected",
         oauth_provider="linear",
     ).startswith("/integrations-hub/integrations?")
+
+
+def test_oauth_callback_uses_configured_public_site(config_env) -> None:
+    config_env("INTHUB_ROOT_PATH", "/integrations-hub")
+    config_env("INTHUB_API_ROOT_PATH", "/api/integrations-hub")
+    config_env(
+        "INTHUB_PUBLIC_BASE_URL",
+        "https://dev.all-hands.dev/integrations-hub",
+    )
+
+    assert oauth_callback_base_url() == (
+        "https://dev.all-hands.dev/api/integrations-hub/oauth"
+    )
+    assert configured_oauth_callback_url("linear") == (
+        "https://dev.all-hands.dev/api/integrations-hub/oauth/linear/callback"
+    )
+
+
+def test_oauth_callback_proxy_overrides_public_site(config_env, monkeypatch) -> None:
+    config_env("INTHUB_ROOT_PATH", "/integrations-hub")
+    config_env("INTHUB_API_ROOT_PATH", "/api/integrations-hub")
+    config_env(
+        "INTHUB_PUBLIC_BASE_URL",
+        "https://pr-394.staging.all-hands.dev/integrations-hub",
+    )
+    monkeypatch.setenv(
+        "INTHUB_OAUTH_REDIRECT_PROXY_URL", "https://staging.all-hands.dev"
+    )
+
+    assert configured_oauth_callback_url("linear") == (
+        "https://staging.all-hands.dev/api/integrations-hub/oauth/linear/callback"
+    )
+
+
+def test_auth_url_is_the_only_deprecated_callback_fallback(
+    config_env, monkeypatch
+) -> None:
+    config_env("INTHUB_PUBLIC_BASE_URL")
+    monkeypatch.setenv("AUTH_URL", "https://legacy.example.dev/")
+
+    with pytest.warns(
+        DeprecationWarning,
+        match="AUTH_URL.*INTHUB_PUBLIC_BASE_URL",
+    ):
+        assert configured_oauth_callback_url("linear") == (
+            "https://legacy.example.dev/api/oauth/linear/callback"
+        )
+
+
+def test_oauth_callback_requires_explicit_configuration(
+    config_env, monkeypatch
+) -> None:
+    config_env("INTHUB_PUBLIC_BASE_URL")
+    monkeypatch.delenv("AUTH_URL", raising=False)
+    monkeypatch.delenv("INTHUB_OAUTH_REDIRECT_PROXY_URL", raising=False)
+
+    with pytest.raises(HTTPException, match="INTHUB_PUBLIC_BASE_URL") as exc_info:
+        configured_oauth_callback_url("linear")
+
+    assert exc_info.value.status_code == 500

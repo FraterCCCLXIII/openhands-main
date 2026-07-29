@@ -42,6 +42,7 @@ Required/optional environment variables use explicit `INTHUB_*` names. The backe
 
 - `INTHUB_POSTGRES_URL` — database connection URL for backend persistence.
 - `INTHUB_OPENHANDS_BASE_URL` — OpenHands Cloud base URL used to validate dashboard session tokens.
+- `INTHUB_PUBLIC_BASE_URL` — externally visible Integrations Hub site URL, including `INTHUB_ROOT_PATH`; required for OAuth callbacks. `AUTH_URL` remains a deprecated fallback through version `0.11.x`.
 - `INTHUB_CRON_SECRET` — bearer secret for cron routes.
 - `INTHUB_APP_ADMIN_EMAILS` — comma-separated allowlist for admin-only backend routes.
 - `INTHUB_CREDENTIAL_ENCRYPTION_KEY` — encryption key for stored provider credentials.

@@ -26,6 +26,7 @@
     "lint:python": "cd backend && uv run ruff format --check . && uv run ruff check . && uv run pycodestyle --max-line-length=88 --ignore=E203,E501,W503,E704 app tests",
     "lint:python:fix": "cd backend && uv run ruff format . && uv run ruff check --fix .",
     "typecheck:python": "cd backend && uv run pyright",
+    "check:deprecations": "uv run --with packaging python .github/scripts/check_deprecations.py",
     "audit": "npm audit --audit-level=moderate",
     "test:backend:python": "cd backend && uv run pytest tests -q"
   },

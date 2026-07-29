@@ -9,6 +9,7 @@ cd "$ROOT_DIR" || exit 1
 npm run typecheck || exit 1
 npm run lint || exit 1
 NODE_ENV=test npm test || exit 1
+npm run check:deprecations || exit 1
 
 # Backend Python checks
 cd "$ROOT_DIR/backend" || exit 1
