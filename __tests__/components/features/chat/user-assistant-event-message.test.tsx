@@ -1,22 +1,23 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, onTestFinished } from "vitest";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderWithProviders } from "test-utils";
 import type { MessageEvent } from "#/types/agent-server/core";
 import { I18nKey } from "#/i18n/declaration";
 import { UserAssistantEventMessage } from "#/components/conversation-events/chat/event-message-components/user-assistant-event-message";
-import { CustomChatInput } from "#/components/features/chat/custom-chat-input";
+import { usePopoutStore } from "#/stores/popout-store";
 import { getConversationState } from "#/utils/conversation-local-storage";
 import ConversationService from "#/api/conversation-service/conversation-service.api";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import type { DirectConversationInfo } from "#/api/agent-server-adapter";
 
-const { useActiveBackendMock, useOptionalConversationIdMock, navigateMock } =
-  vi.hoisted(() => ({
-    useActiveBackendMock: vi.fn(),
-    useOptionalConversationIdMock: vi.fn(),
-    navigateMock: vi.fn(),
-  }));
+const {
+  useActiveBackendMock,
+  useOptionalConversationIdMock,
+} = vi.hoisted(() => ({
+  useActiveBackendMock: vi.fn(),
+  useOptionalConversationIdMock: vi.fn(),
+}));
 
 // These provide test context (backend kind, conversation id, navigation); the
 // fork behaviour is exercised through the real hook against a mocked service
@@ -27,11 +28,6 @@ vi.mock("#/hooks/use-conversation-id", () => ({
 
 vi.mock("#/contexts/active-backend-context", () => ({
   useActiveBackend: () => useActiveBackendMock(),
-}));
-
-vi.mock("#/context/navigation-context", async (importActual) => ({
-  ...(await importActual<object>()),
-  useNavigation: () => ({ navigate: navigateMock }),
 }));
 
 // test-utils re-inits i18n with empty resources, so `t()` returns the key —
@@ -76,24 +72,20 @@ const renderMessage = (event: MessageEvent) =>
     />,
   );
 
-// The fork's saved composer draft, which its composer restores on open.
-const forkDraft = () => getConversationState(forkResult.id).draftMessage;
-
 describe("UserAssistantEventMessage — branch action", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     useActiveBackendMock.mockReset();
     useOptionalConversationIdMock.mockReset();
-    navigateMock.mockReset();
-    localStorage.clear();
-
     useActiveBackendMock.mockReturnValue({
       backend: { kind: "local" },
       orgId: null,
     });
     useOptionalConversationIdMock.mockReturnValue({ conversationId: "conv-1" });
 
+    usePopoutStore.setState({ popouts: [] });
     ConversationService.setCurrentConversation(null);
+    window.localStorage.clear();
 
     forkSpy = vi
       .spyOn(AgentServerConversationService, "forkConversation")
@@ -120,58 +112,33 @@ describe("UserAssistantEventMessage — branch action", () => {
     fireEvent.click(screen.getByRole("button", { name: BRANCH_LABEL }));
 
     await waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith("/conversations/fork-123"),
+      expect(usePopoutStore.getState().popouts).toEqual([
+        expect.objectContaining({ conversationId: "fork-123" }),
+      ]),
     );
     expect(parentSpy).not.toHaveBeenCalled();
     expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-agent", undefined);
-    expect(forkDraft()).toBeNull();
+    expect(getConversationState("fork-123").draftMessage).toBeNull();
   });
 
-  it("edits a user message: branches at its parent and the fork's composer opens with its text", async () => {
-    // jsdom has no innerText, which the composer reads its text from.
-    Object.defineProperty(HTMLElement.prototype, "innerText", {
-      configurable: true,
-      get(this: HTMLElement) {
-        return this.textContent ?? "";
-      },
-    });
-    onTestFinished(() => {
-      Reflect.deleteProperty(HTMLElement.prototype, "innerText");
-    });
-    const onSubmit = vi.fn();
-    // The real composer stays mounted across the route change, as in the app.
-    const page = () => (
-      <>
-        <UserAssistantEventMessage
-          event={makeEvent("user", "evt-user")}
-          isLastMessage={false}
-          isFromPlanningAgent={false}
-        />
-        <CustomChatInput onSubmit={onSubmit} />
-      </>
-    );
-    const { rerender } = renderWithProviders(page());
+  it("edits a user message: branches at its parent and loads its text into the composer", async () => {
+    renderMessage(makeEvent("user", "evt-user"));
 
     fireEvent.mouseEnter(screen.getByTestId("user-message"));
     fireEvent.click(screen.getByRole("button", { name: BRANCH_LABEL }));
 
     await waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith("/conversations/fork-123"),
+      expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-parent", undefined),
     );
     expect(parentSpy).toHaveBeenCalledWith("conv-1", "evt-user");
-    expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-parent", undefined);
-
-    // The router commits the new route after the click handler's own tasks.
-    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
-    useOptionalConversationIdMock.mockReturnValue({
-      conversationId: "fork-123",
-    });
-    rerender(page());
-
     await waitFor(() =>
-      expect(screen.getByTestId("chat-input").textContent).toBe("Hello world"),
+      expect(usePopoutStore.getState().popouts).toEqual([
+        expect.objectContaining({ conversationId: "fork-123" }),
+      ]),
     );
-    expect(onSubmit).not.toHaveBeenCalled();
+    expect(getConversationState("fork-123").draftMessage).toEqual(
+      expect.stringContaining("Hello world"),
+    );
   });
 
   it("does not prefill the composer when the message has no parent (inclusive fallback)", async () => {
@@ -182,10 +149,9 @@ describe("UserAssistantEventMessage — branch action", () => {
     fireEvent.click(screen.getByRole("button", { name: BRANCH_LABEL }));
 
     await waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith("/conversations/fork-123"),
+      expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-user", undefined),
     );
-    expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-user", undefined);
-    expect(forkDraft()).toBeNull();
+    expect(getConversationState("fork-123").draftMessage).toBeNull();
   });
 
   it("titles the fork distinctly from its source conversation", async () => {
@@ -222,9 +188,11 @@ describe("UserAssistantEventMessage — branch action", () => {
     fireEvent.click(screen.getByRole("button", { name: BRANCH_LABEL }));
 
     await waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith("/conversations/fork-123"),
+      expect(usePopoutStore.getState().popouts).toEqual([
+        expect.objectContaining({ conversationId: "fork-123" }),
+      ]),
     );
-    expect(forkDraft()).toBeNull();
+    expect(getConversationState("fork-123").draftMessage).toBeNull();
   });
 
   it("branches an image-only user message inclusively (keeps the image, no prefill)", async () => {
@@ -236,11 +204,10 @@ describe("UserAssistantEventMessage — branch action", () => {
     // No text to edit → branch at the message (inclusive), no parent lookup,
     // no prefill, so the image is not dropped.
     await waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith("/conversations/fork-123"),
+      expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-img", undefined),
     );
-    expect(forkSpy).toHaveBeenCalledWith("conv-1", "evt-img", undefined);
     expect(parentSpy).not.toHaveBeenCalled();
-    expect(forkDraft()).toBeNull();
+    expect(getConversationState("fork-123").draftMessage).toBeNull();
   });
 
   it("omits the fork title when the tracked conversation is a different one", async () => {
@@ -286,9 +253,7 @@ describe("UserAssistantEventMessage — branch action", () => {
   });
 
   it("hides the branch action outside of a conversation", () => {
-    useOptionalConversationIdMock.mockReturnValue({
-      conversationId: undefined,
-    });
+    useOptionalConversationIdMock.mockReturnValue({ conversationId: undefined });
 
     renderMessage(makeEvent("agent", "evt-agent"));
 

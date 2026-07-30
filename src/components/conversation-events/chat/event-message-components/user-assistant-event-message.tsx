@@ -1,6 +1,5 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigation } from "#/context/navigation-context";
 import { MessageEvent } from "#/types/agent-server/core";
 import { ChatMessage } from "../../../features/chat/chat-message";
 import { ImageCarousel } from "../../../features/images/image-carousel";
@@ -17,6 +16,7 @@ import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useForkConversation } from "#/hooks/mutation/use-fork-conversation";
 import { setConversationState } from "#/utils/conversation-local-storage";
+import { usePopoutStore } from "#/stores/popout-store";
 import ConversationService from "#/api/conversation-service/conversation-service.api";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 
@@ -31,11 +31,11 @@ function UserAssistantEventMessageComponent({
   isFromPlanningAgent,
 }: UserAssistantEventMessageProps) {
   const { t } = useTranslation("openhands");
-  const { navigate } = useNavigation();
   const { conversationId } = useOptionalConversationId();
   const isCloud = useActiveBackend().backend.kind === "cloud";
   const { mutate: forkConversation, isPending: isForking } =
     useForkConversation();
+  const openPopout = usePopoutStore((state) => state.openPopout);
   // Blocks a same-tick double-click, before `isForking` flips.
   const forkInFlightRef = React.useRef(false);
 
@@ -94,14 +94,16 @@ function UserAssistantEventMessageComponent({
       },
       {
         onSuccess: ({ info, excluded }) => {
-          // Prefill only when excluded (else the send duplicates it). Seed the
-          // fork's saved draft before navigating: the composer clears itself
-          // on the conversation switch and then restores that draft, so text
-          // pushed into it before the route settles would be wiped.
+          // Prefill via the per-conversation draft so only the popout's
+          // composer picks it up (the global messageToSend would also hit the
+          // primary chat). Draft restore runs on ChatInterface mount.
           if (excluded) {
             setConversationState(info.id, { draftMessage: message });
           }
-          navigate(`/conversations/${info.id}`);
+          openPopout({
+            conversationId: info.id,
+            title: info.title || branchTitle || t(I18nKey.POPOUT$DEFAULT_TITLE),
+          });
         },
         onError: (error) =>
           displayErrorToast(error instanceof Error ? error.message : null),

@@ -25,6 +25,7 @@ import type { Backend } from "#/api/backend-registry/types";
 import { ActiveBackendProvider } from "#/contexts/active-backend-context";
 import { useFreeModelsStore } from "#/stores/free-models-store";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
+import { usePopoutStore } from "#/stores/popout-store";
 
 // We'll use the actual i18next implementation but override the translation function
 
@@ -83,6 +84,7 @@ describe("ConversationCard", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    usePopoutStore.setState({ popouts: [] });
   });
 
   afterAll(() => {
@@ -473,6 +475,35 @@ describe("ConversationCard", () => {
     await vi.waitFor(() =>
       expect(onContextMenuToggle).toHaveBeenCalledWith(false),
     );
+  });
+
+  it("should open the conversation in a popout window from the context menu", async () => {
+    const user = userEvent.setup();
+    const onContextMenuToggle = vi.fn();
+    renderWithProviders(
+      <ConversationCard
+        onDelete={onDelete}
+        onChangeTitle={onChangeTitle}
+        title="Conversation 1"
+        selectedRepository={null}
+        lastUpdatedAt="2021-10-01T12:00:00Z"
+        conversationId="conversation-1"
+        contextMenuOpen
+        onContextMenuToggle={onContextMenuToggle}
+      />,
+    );
+
+    const menu = screen.getByTestId("context-menu");
+    await user.click(within(menu).getByTestId("open-in-popout-button"));
+
+    expect(usePopoutStore.getState().popouts).toEqual([
+      expect.objectContaining({
+        conversationId: "conversation-1",
+        title: "Conversation 1",
+        mode: "expanded",
+      }),
+    ]);
+    expect(onContextMenuToggle).toHaveBeenCalledWith(false);
   });
 
   test("clicking the selectedRepository should not trigger the onClick handler", async () => {

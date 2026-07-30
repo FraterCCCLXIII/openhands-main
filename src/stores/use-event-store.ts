@@ -15,6 +15,32 @@ import type {
 
 export type OHEvent = UIEvent;
 
+/**
+ * One conversation's event stream. Buckets are keyed by conversation id so a
+ * secondary conversation (e.g. a fork rendered in a floating window) can stream
+ * alongside the routed one without either clearing the other's history.
+ */
+export interface ConversationEventBucket {
+  events: OHEvent[];
+  eventIds: Set<string | number>;
+  uiEvents: OHEvent[];
+}
+
+/**
+ * Shared frozen empties. Selectors for a conversation with no bucket yet must
+ * return a stable reference — a fresh `[]` per call would change identity on
+ * every render and spin Zustand subscribers into an infinite update loop.
+ */
+export const EMPTY_EVENTS: OHEvent[] = Object.freeze(
+  [] as OHEvent[],
+) as unknown as OHEvent[];
+
+const EMPTY_BUCKET: ConversationEventBucket = Object.freeze({
+  events: EMPTY_EVENTS,
+  eventIds: Object.freeze(new Set<string | number>()) as Set<string | number>,
+  uiEvents: EMPTY_EVENTS,
+});
+
 const getEventId = (event: OHEvent): string | number | undefined =>
   "id" in event ? event.id : undefined;
 
@@ -57,40 +83,32 @@ const needsSorting = (events: OHEvent[], newEvent: OHEvent): boolean => {
 };
 
 export interface EventState {
-  events: OHEvent[];
-  eventIds: Set<string | number>;
-  uiEvents: OHEvent[];
   /**
-   * The conversation whose events currently populate the store. The store is
-   * global (not keyed by conversation), so the conversation route uses this to
-   * tell a genuine conversation switch apart from a remount of the *same*
-   * conversation (e.g. navigating to Settings and back) — only the former
-   * should clear the accumulated events.
+   * Event buckets keyed by conversation id. A key is present once the
+   * conversation has been loaded, which is how callers distinguish a genuine
+   * conversation switch from a remount of the same conversation (e.g.
+   * navigating to Settings and back) — only the former should reset events.
    */
-  loadedConversationId: string | null;
-  addEvent: (event: OHEvent) => void;
+  byConversation: Record<string, ConversationEventBucket>;
+  addEvent: (conversationId: string, event: OHEvent) => void;
   /**
    * Bulk-insert events. Used for the initial REST history load and for
    * "scroll up to load older" pagination. Newly-added events are de-duped
-   * against the existing store and the combined list is re-sorted by
+   * against the existing bucket and the combined list is re-sorted by
    * timestamp so older pages drop into the correct position.
    */
-  addEvents: (events: OHEvent[]) => void;
+  addEvents: (conversationId: string, events: OHEvent[]) => void;
   /**
-   * Clear all events. Also resets `loadedConversationId` to `null` so the
-   * store never claims to hold a conversation whose events have been wiped —
-   * the invariant (`loadedConversationId` reflects the conversation whose
-   * events are in the arrays) holds even for a standalone clear.
-   */
-  clearEvents: () => void;
-  /**
-   * Atomically clear all events and record which conversation is now loaded.
+   * Start (or restart) a conversation with an empty bucket, marking it loaded.
    * Collapsing the reset and the bookkeeping into a single `set` keeps the
    * store invariant enforced at the boundary, rather than relying on every
-   * call-site to invoke a clear and a `loadedConversationId` setter in the
-   * right order.
+   * call-site to clear and register in the right order.
    */
-  clearEventsForConversation: (conversationId: string | null) => void;
+  loadConversation: (conversationId: string) => void;
+  /** Drop a single conversation's bucket, e.g. when its window is closed. */
+  clearConversation: (conversationId: string) => void;
+  /** Drop every conversation's events. */
+  clearEvents: () => void;
   /**
    * Streaming slots. They live only in `uiEvents`: nothing reads `events` for
    * provisional text, and keeping them out means their id — which is the id
@@ -98,74 +116,111 @@ export interface EventState {
    * and dedupe the real message away.
    */
   openStreamingSlot: (
+    conversationId: string,
     frame: ItemStartedFrame,
     meta?: StreamingSlotMeta,
   ) => void;
   appendStreamingDeltas: (
+    conversationId: string,
     frames: DeltaFrame[],
     meta?: StreamingSlotMeta,
   ) => void;
-  abortStreamingSlot: (itemId: string, attempt?: number) => void;
+  abortStreamingSlot: (
+    conversationId: string,
+    itemId: string,
+    attempt?: number,
+  ) => void;
   /** Discard every open slot for one socket (on connect and disconnect). */
-  clearStreamingSlots: (isFromPlanningAgent?: boolean) => void;
+  clearStreamingSlots: (
+    conversationId: string,
+    isFromPlanningAgent?: boolean,
+  ) => void;
+  isConversationLoaded: (conversationId: string) => boolean;
 }
 
-const appendEvent = (state: EventState, event: OHEvent): EventState => {
-  const eventId = getEventId(event);
+const getBucket = (
+  state: EventState,
+  conversationId: string,
+): ConversationEventBucket =>
+  state.byConversation[conversationId] ?? EMPTY_BUCKET;
 
+const withBucket = (
+  state: EventState,
+  conversationId: string,
+  bucket: ConversationEventBucket,
+): EventState => ({
+  ...state,
+  byConversation: { ...state.byConversation, [conversationId]: bucket },
+});
+
+const appendEvent = (
+  bucket: ConversationEventBucket,
+  event: OHEvent,
+): ConversationEventBucket => {
   // Deduplicate: skip if event with same id already exists (O(1) lookup)
-  if (eventId !== undefined && state.eventIds.has(eventId)) {
-    return state;
+  const eventId = getEventId(event);
+  if (eventId !== undefined && bucket.eventIds.has(eventId)) {
+    return bucket;
   }
 
   const newEventIds =
     eventId !== undefined
-      ? new Set(state.eventIds).add(eventId)
-      : state.eventIds;
+      ? new Set(bucket.eventIds).add(eventId)
+      : bucket.eventIds;
 
   return {
-    ...state,
-    events: [...state.events, event],
+    events: [...bucket.events, event],
     eventIds: newEventIds,
-    uiEvents: handleEventForUI(event, state.uiEvents),
+    uiEvents: handleEventForUI(event, bucket.uiEvents),
   };
 };
 
-const sortEventState = (state: EventState): EventState => ({
-  ...state,
-  events: [...state.events].sort(compareEventsByTimestamp),
-  uiEvents: [...state.uiEvents].sort(compareEventsByTimestamp),
+const sortBucket = (
+  bucket: ConversationEventBucket,
+): ConversationEventBucket => ({
+  ...bucket,
+  events: [...bucket.events].sort(compareEventsByTimestamp),
+  uiEvents: [...bucket.uiEvents].sort(compareEventsByTimestamp),
 });
 
-const applyAddEvent = (state: EventState, event: OHEvent): EventState => {
-  const next = appendEvent(state, event);
-  if (next === state) {
-    return state;
+const applyAddEvent = (
+  bucket: ConversationEventBucket,
+  event: OHEvent,
+): ConversationEventBucket => {
+  const next = appendEvent(bucket, event);
+  if (next === bucket) {
+    return bucket;
   }
 
   if (
-    !needsSorting(state.events, event) &&
-    !needsSorting(state.uiEvents, event)
+    !needsSorting(bucket.events, event) &&
+    !needsSorting(bucket.uiEvents, event)
   ) {
     return next;
   }
 
-  return sortEventState(next);
+  return sortBucket(next);
 };
 
-export const useEventStore = create<EventState>()((set) => ({
-  events: [],
-  eventIds: new Set(),
-  uiEvents: [],
-  loadedConversationId: null,
-  addEvent: (event: OHEvent) => set((state) => applyAddEvent(state, event)),
-  addEvents: (incoming: OHEvent[]) =>
+export const useEventStore = create<EventState>()((set, get) => ({
+  byConversation: {},
+  addEvent: (conversationId: string, event: OHEvent) =>
+    set((state) => {
+      const bucket = getBucket(state, conversationId);
+      const next = applyAddEvent(bucket, event);
+      if (next === bucket && state.byConversation[conversationId]) {
+        return state;
+      }
+      return withBucket(state, conversationId, next);
+    }),
+  addEvents: (conversationId: string, incoming: OHEvent[]) =>
     set((state) => {
       if (incoming.length === 0) return state;
 
-      const eventIds = new Set(state.eventIds);
-      const events = [...state.events];
-      let uiEvents = [...state.uiEvents];
+      const bucket = getBucket(state, conversationId);
+      const eventIds = new Set(bucket.eventIds);
+      const events = [...bucket.events];
+      let uiEvents = [...bucket.uiEvents];
       let added = false;
 
       for (const event of incoming) {
@@ -177,69 +232,118 @@ export const useEventStore = create<EventState>()((set) => ({
           if (eventId !== undefined) {
             eventIds.add(eventId);
           }
+
           events.push(event);
           uiEvents = handleEventForUI(event, uiEvents);
         }
       }
 
-      if (!added) {
+      if (!added && state.byConversation[conversationId]) {
         return state;
       }
 
-      return sortEventState({
-        ...state,
-        events,
-        eventIds,
-        uiEvents,
-      });
+      return withBucket(
+        state,
+        conversationId,
+        sortBucket({ events, eventIds, uiEvents }),
+      );
     }),
-  clearEvents: () =>
-    set(() => ({
-      events: [],
-      eventIds: new Set(),
-      uiEvents: [],
-      loadedConversationId: null,
-    })),
-  clearEventsForConversation: (conversationId: string | null) =>
-    set(() => ({
-      events: [],
-      eventIds: new Set(),
-      uiEvents: [],
-      loadedConversationId: conversationId,
-    })),
-  openStreamingSlot: (frame: ItemStartedFrame, meta: StreamingSlotMeta = {}) =>
+  loadConversation: (conversationId: string) =>
+    set((state) =>
+      withBucket(state, conversationId, {
+        events: [],
+        eventIds: new Set(),
+        uiEvents: [],
+      }),
+    ),
+  clearConversation: (conversationId: string) =>
     set((state) => {
+      if (!state.byConversation[conversationId]) return state;
+      const byConversation = { ...state.byConversation };
+      delete byConversation[conversationId];
+      return { ...state, byConversation };
+    }),
+  clearEvents: () => set((state) => ({ ...state, byConversation: {} })),
+  openStreamingSlot: (
+    conversationId: string,
+    frame: ItemStartedFrame,
+    meta: StreamingSlotMeta = {},
+  ) =>
+    set((state) => {
+      const bucket = getBucket(state, conversationId);
       // Symmetric with `appendStreamingDeltas`: the durable event being in
       // the store means the stream is over, and a slot opened now could never
       // be retired — `appendEvent` dedupes the durable frame before
       // `handleEventForUI` could replace it.
-      if (state.eventIds.has(frame.item_id)) {
+      if (bucket.eventIds.has(frame.item_id)) {
         return state;
       }
-      const uiEvents = openStreamingSlot(frame, state.uiEvents, meta);
-      return uiEvents === state.uiEvents ? state : { ...state, uiEvents };
+      const uiEvents = openStreamingSlot(frame, bucket.uiEvents, meta);
+      return uiEvents === bucket.uiEvents
+        ? state
+        : withBucket(state, conversationId, { ...bucket, uiEvents });
     }),
-  appendStreamingDeltas: (frames: DeltaFrame[], meta: StreamingSlotMeta = {}) =>
+  appendStreamingDeltas: (
+    conversationId: string,
+    frames: DeltaFrame[],
+    meta: StreamingSlotMeta = {},
+  ) =>
     set((state) => {
-      const uiEvents = appendStreamingDeltas(frames, state.uiEvents, {
+      const bucket = getBucket(state, conversationId);
+      const uiEvents = appendStreamingDeltas(frames, bucket.uiEvents, {
         ...meta,
         // The durable event carries the item's id, so seeing it means the
         // stream is over and a straggling delta must not reopen it.
-        isFinished: (itemId) => state.eventIds.has(itemId),
+        isFinished: (itemId) => bucket.eventIds.has(itemId),
       });
-      return uiEvents === state.uiEvents ? state : { ...state, uiEvents };
+      return uiEvents === bucket.uiEvents
+        ? state
+        : withBucket(state, conversationId, { ...bucket, uiEvents });
     }),
-  abortStreamingSlot: (itemId: string, attempt?: number) =>
+  abortStreamingSlot: (
+    conversationId: string,
+    itemId: string,
+    attempt?: number,
+  ) =>
     set((state) => {
-      const uiEvents = abortStreamingSlot(itemId, state.uiEvents, attempt);
-      return uiEvents === state.uiEvents ? state : { ...state, uiEvents };
+      const bucket = getBucket(state, conversationId);
+      const uiEvents = abortStreamingSlot(itemId, bucket.uiEvents, attempt);
+      return uiEvents === bucket.uiEvents
+        ? state
+        : withBucket(state, conversationId, { ...bucket, uiEvents });
     }),
-  clearStreamingSlots: (isFromPlanningAgent = false) =>
+  clearStreamingSlots: (
+    conversationId: string,
+    isFromPlanningAgent = false,
+  ) =>
     set((state) => {
-      const uiEvents = clearStreamingSlots(state.uiEvents, isFromPlanningAgent);
-      return uiEvents === state.uiEvents ? state : { ...state, uiEvents };
+      const bucket = getBucket(state, conversationId);
+      const uiEvents = clearStreamingSlots(bucket.uiEvents, isFromPlanningAgent);
+      return uiEvents === bucket.uiEvents
+        ? state
+        : withBucket(state, conversationId, { ...bucket, uiEvents });
     }),
+  isConversationLoaded: (conversationId: string) =>
+    !!get().byConversation[conversationId],
 }));
+
+/** Read a conversation's events outside React (effects, imperative helpers). */
+export const getConversationEvents = (
+  conversationId: string | null | undefined,
+): OHEvent[] =>
+  conversationId
+    ? (useEventStore.getState().byConversation[conversationId]?.events ??
+      EMPTY_EVENTS)
+    : EMPTY_EVENTS;
+
+/** Read a conversation's UI events outside React. */
+export const getConversationUiEvents = (
+  conversationId: string | null | undefined,
+): OHEvent[] =>
+  conversationId
+    ? (useEventStore.getState().byConversation[conversationId]?.uiEvents ??
+      EMPTY_EVENTS)
+    : EMPTY_EVENTS;
 
 // In dev builds, expose the store on `window` so that fixture/preview
 // scripts (e.g. .pr/issue-132 demo capture) can inject synthetic events

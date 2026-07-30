@@ -5,7 +5,8 @@ import XCircle from "#/icons/x-circle-solid.svg?react";
 import { I18nKey } from "#/i18n/declaration";
 import { GoalStatus } from "#/types/agent-server/core/events/conversation-state-event";
 import { useGoalStore } from "#/stores/goal-store";
-import { useEventStore, type OHEvent } from "#/stores/use-event-store";
+import { type OHEvent } from "#/stores/use-event-store";
+import { useConversationEvents } from "#/hooks/use-conversation-events";
 import {
   isConversationStateUpdateEvent,
   isGoalConversationStateUpdateEvent,
@@ -86,9 +87,10 @@ export function GoalStatusContent({
   // Read from the event list rather than the goal store: the store is only fed
   // by live WebSocket events, so after a reload it is empty while the history
   // (REST) still holds the newer running/capped/complete status.
-  const isLatestGoalStatus = useEventStore(
-    (s) => eventId === undefined || findLatestGoalEventId(s.events) === eventId,
-  );
+  const conversationEvents = useConversationEvents(conversationId);
+  const isLatestGoalStatus =
+    eventId === undefined ||
+    findLatestGoalEventId(conversationEvents) === eventId;
   const [pending, setPending] = useState(false);
   const {
     active,

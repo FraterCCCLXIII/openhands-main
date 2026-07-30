@@ -15,6 +15,7 @@ import { useSubConversationTaskPolling } from "#/hooks/query/use-sub-conversatio
 import { partitionImagesForUpload } from "#/components/features/chat/utils/chat-input.utils";
 import { isTaskPolling } from "#/utils/utils";
 import { setConversationState } from "#/utils/conversation-local-storage";
+import { useConversationRenderScope } from "#/contexts/conversation-render-scope";
 
 interface InteractiveChatBoxProps {
   onSubmit: (message: string, images: File[], files: File[]) => void;
@@ -34,6 +35,7 @@ export function InteractiveChatBox({
   placeholder,
   persistDraft = true,
 }: InteractiveChatBoxProps) {
+  const { isPrimary } = useConversationRenderScope();
   const {
     images,
     files,
@@ -112,7 +114,7 @@ export function InteractiveChatBox({
         onSubmit={handleSubmit}
         onFilesPaste={handleUpload}
       />
-      {showGitControlBar ? (
+      {showGitControlBar && isPrimary ? (
         <div className="mt-3" data-testid="chat-git-control-bar">
           <GitControlBar onSuggestionsClick={handleSuggestionsClick} />
         </div>

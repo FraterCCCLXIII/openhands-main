@@ -85,7 +85,9 @@ export function useCompactContextAction(perTurnToken: number = 0) {
     // The condense POST can return only after the server already emitted its
     // Condensation event, so the await baseline must be captured *before* the
     // request fires, not when the post-ack effect starts.
-    baselineEventIdsRef.current = new Set(useEventStore.getState().eventIds);
+    baselineEventIdsRef.current = new Set(
+      useEventStore.getState().byConversation[conversation.id]?.eventIds,
+    );
 
     condense(
       {

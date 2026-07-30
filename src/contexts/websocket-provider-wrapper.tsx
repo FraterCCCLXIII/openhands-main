@@ -11,12 +11,21 @@ import { isRuntimeUnavailableSandboxStatus } from "#/utils/conversation-archive-
 interface WebSocketProviderWrapperProps {
   children: React.ReactNode;
   conversationId: string;
+  /**
+   * When false, this tree is a secondary conversation (e.g. a popout):
+   * it streams into its own event-store bucket and does not claim the process-
+   * wide current-conversation singleton or shared chrome stores.
+   */
+  sharedSideEffects?: boolean;
 }
 
 export function WebSocketProviderWrapper({
   children,
   conversationId,
+  sharedSideEffects = true,
 }: WebSocketProviderWrapperProps) {
+  // claimCurrentConversation follows ConversationRenderScope (false inside
+  // popouts), so we don't need to pass it explicitly here.
   const { data: conversation } = useActiveConversation();
   const { backend } = useActiveBackend();
   const isLocalBackend = backend.kind !== "cloud";
@@ -57,8 +66,9 @@ export function WebSocketProviderWrapper({
     conversation?.sub_conversation_ids,
     trustedLocalPlanningConversationId,
   ]);
+  // Popouts are chat-only — skip the planning-agent sub-conversation.
   const { data: subConversations } = useSubConversations(
-    candidateConversationIds,
+    sharedSideEffects ? candidateConversationIds : [],
   );
 
   // Identify the planner via the `plannerparent` tag rather than list
@@ -107,8 +117,13 @@ export function WebSocketProviderWrapper({
       conversationId={conversationId}
       conversationUrl={conversationUrl}
       sessionApiKey={conversation?.session_api_key}
-      subConversationIds={planningConversationIds}
-      subConversations={filteredSubConversations}
+      subConversationIds={
+        sharedSideEffects ? planningConversationIds : undefined
+      }
+      subConversations={
+        sharedSideEffects ? filteredSubConversations : undefined
+      }
+      sharedSideEffects={sharedSideEffects}
     >
       {children}
     </ConversationWebSocketProvider>
