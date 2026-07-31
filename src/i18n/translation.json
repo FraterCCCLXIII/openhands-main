@@ -52684,5 +52684,23 @@
     "tr": "Aç",
     "uk": "Відкрити",
     "id": "Buka"
+  },
+  "COMMAND_MENU$SHOWING_FIRST_N": {
+    "ar": "عرض أول {{count}}",
+    "ca": "Es mostren els primers {{count}}",
+    "de": "Zeigt die ersten {{count}}",
+    "en": "Showing first {{count}}",
+    "es": "Mostrando los primeros {{count}}",
+    "fr": "Affiche les {{count}} premiers",
+    "it": "Mostra i primi {{count}}",
+    "ja": "最初の{{count}}件を表示",
+    "ko-KR": "처음 {{count}}개 표시",
+    "no": "Viser de første {{count}}",
+    "pt": "Mostrando os primeiros {{count}}",
+    "tr": "İlk {{count}} sonuç gösteriliyor",
+    "uk": "Показано перші {{count}}",
+    "zh-CN": "显示前 {{count}} 条",
+    "zh-TW": "顯示前 {{count}} 筆",
+    "id": "Menampilkan {{count}} pertama"
   }
 }
