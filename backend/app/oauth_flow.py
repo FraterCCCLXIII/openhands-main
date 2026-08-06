@@ -743,24 +743,26 @@ def start_oauth_redirect(
         connector = enrich_dynamic_oauth_config(connector, metadata)
         oauth_config = connector.oauthConfig or OAuthConfig()
         discovered_token_url = metadata.tokenUrl
+    # For dynamic OAuth with a discovered registration endpoint and public
+    # clients (no secret), re-register on every start so the redirect_uri
+    # always matches the current hub configuration.  When the hub's public
+    # URL or api_root_path changes after an initial registration, the
+    # provider still has the old redirect_uri on file and rejects the
+    # authorization request with "redirect URI provided for the application
+    # was invalid."  Re-registering refreshes it.
+    if (
+        is_dynamic_oauth(connector)
+        and oauth_config.clientAuthentication == "none"
+        and oauth_config.registrationUrl
+    ):
+        connector = register_dynamic_oauth_client(connector)
+        repository.save_managed_connector(connector)
     client = repository.read_oauth_client(connector)
     if not client:
-        # For dynamic OAuth with a discovered registration endpoint, register
-        # a client on the fly so default (non-admin-saved) connectors can
-        # start the OAuth flow without a prior admin save.
-        if (
-            is_dynamic_oauth(connector)
-            and oauth_config.clientAuthentication == "none"
-            and oauth_config.registrationUrl
-        ):
-            connector = register_dynamic_oauth_client(connector)
-            repository.save_managed_connector(connector)
-            client = repository.read_oauth_client(connector)
-        if not client:
-            raise HTTPException(
-                status_code=500,
-                detail=f"{connector.name} is missing stored OAuth client credentials.",
-            )
+        raise HTTPException(
+            status_code=500,
+            detail=f"{connector.name} is missing stored OAuth client credentials.",
+        )
     state = oauth_state_with_preview_target()
     verifier = secrets.token_urlsafe(48) if oauth_config.pkce else None
     raw_redirect_to = (

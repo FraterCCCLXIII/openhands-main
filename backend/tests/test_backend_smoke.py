@@ -1555,7 +1555,10 @@ def test_dynamic_oauth_start_and_callback_with_metadata_discovery(
         assert query["client_id"] == ["discovered-client"]
         assert query["response_type"] == ["code"]
         assert "code_challenge" in query  # PKCE
-        assert len(registrations) == 1
+        # Dynamic OAuth public clients re-register on every start so the
+        # redirect_uri always matches the current hub configuration (first
+        # registration happened during admin save, second during start).
+        assert len(registrations) == 2
         assert registrations[0]["token_endpoint_auth_method"] == "none"
         assert registrations[0]["redirect_uris"] == [
             "http://testserver/api/oauth/dyn-oauth-flow/callback"
