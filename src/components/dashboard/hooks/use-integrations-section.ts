@@ -81,6 +81,7 @@ export const useIntegrationsSection = ({
       queryClient.invalidateQueries({ queryKey: ["integrations"] }),
       queryClient.invalidateQueries({ queryKey: ["access-requests"] }),
       queryClient.invalidateQueries({ queryKey: ["permission-profiles"] }),
+      queryClient.invalidateQueries({ queryKey: ["oauth-connections"] }),
     ]);
   };
 
