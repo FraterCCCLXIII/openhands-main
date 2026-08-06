@@ -640,7 +640,8 @@ describe("IntegrationWizard", () => {
     });
 
     expect(container.textContent).toContain("Connected Notion workspace");
-    expect(container.textContent).toContain("Reconnect");
+    expect(container.textContent).toContain("Connect");
+    expect(container.textContent).not.toContain("Reconnect");
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent?.includes("Discover tools"),
     );
@@ -1234,5 +1235,225 @@ describe("IntegrationWizard", () => {
     expect(container.textContent).toContain("Connect an integration");
   });
 
+  it("uses the draft display name instead of the connector name when customised", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url === "/api/integrations?filter=enabled") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "elevenlabs",
+              name: "ElevenLabs",
+              description: "ElevenLabs connector",
+              toolCount: 0,
+              categories: ["Audio", "AI"],
+              authModes: ["api_key"],
+              authStrategy: "api_key",
+              oauthConfigured: true,
+              credentialLabel: "ElevenLabs API key",
+              credentialPlaceholder: "Paste your ElevenLabs API key",
+              credentialHelp: "Personal or workspace ElevenLabs API key sent in the xi-api-key header.",
+              apiKeyHeaderName: "xi-api-key",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url === "/api/oauth/connections") {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url === "/api/integrations/discover") {
+        return new Response(
+          JSON.stringify({
+            provider: "http",
+            authStrategy: "api_key",
+            config: {
+              managedConnectorSlug: "elevenlabs",
+              apiBaseUrl: "https://api.elevenlabs.io",
+            },
+            credentials: {
+              headerName: "xi-api-key",
+              secret: "eleven-secret",
+            },
+            tools: {
+              list_models: {
+                name: "list_models",
+                description: "List models",
+                enabled: true,
+                accessMode: "enabled",
+                fineGrainedPermissions: true,
+                defaultScopes: [],
+                executionMode: "provider",
+                config: { request: { method: "GET", path: "/v1/models" } },
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url === "/api/integrations" && init?.method === "POST") {
+        const body = JSON.parse(String(init?.body));
+        expect(body.name).toBe("My Custom Voice");
+        return new Response("{}", {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    useSearchParamsMock.mockReturnValue(new URLSearchParams("managedConnector=elevenlabs"));
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    // The integration key and display name are now always visible
+    // (not collapsed in a <details> section). Find the display name
+    // input and customise it, skipping any disabled inputs.
+    const nameInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.placeholder === "GitHub" && !input.disabled,
+    ) as HTMLInputElement | undefined;
+    expect(nameInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(nameInput, "My Custom Voice");
+    });
+
+    // Enter API key so discovery can proceed.
+    const apiKeyInput = Array.from(container.querySelectorAll("input")).find(
+      (input) => input.getAttribute("placeholder") === "Paste your ElevenLabs API key",
+    ) as HTMLInputElement | undefined;
+    expect(apiKeyInput).toBeTruthy();
+
+    await act(async () => {
+      setInputValue(apiKeyInput, "eleven-secret");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const discoverButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Discover tools"),
+    );
+    expect(discoverButton).toBeTruthy();
+
+    await act(async () => {
+      discoverButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    });
+
+    // The review step should show the custom display name, not "ElevenLabs".
+    expect(container.textContent).toContain("My Custom Voice");
+  });
+
+  it("does not surface a stale OAuth connection after the user changes the integration key", async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url === "/api/integrations?filter=enabled") {
+        return new Response(
+          JSON.stringify([
+            {
+              slug: "notion",
+              name: "Notion",
+              description: "Notion connector",
+              categories: ["Knowledge base"],
+              authModes: ["oauth2"],
+              authStrategy: "oauth2",
+              oauthConfigured: true,
+              credentialLabel: "Connect Notion",
+              credentialPlaceholder: "Connect Notion",
+              credentialHelp: "Connect Notion.",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url === "/api/oauth/connections") {
+        return new Response(
+          JSON.stringify([
+            {
+              connectionId: "conn_notion_primary",
+              integrationKey: "notion",
+              provider: "notion",
+              authStrategy: "oauth2",
+              scopes: [],
+              resources: [],
+              metadata: {},
+              displayName: "Primary Notion workspace",
+              createdAt: "2026-07-10T00:00:00Z",
+              updatedAt: "2026-07-10T00:00:00Z",
+            },
+          ]),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    // Simulate returning from OAuth with the original key, then the user
+    // changes the key to something else.
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams("managedConnector=notion&integrationKey=notion"),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <IntegrationWizard onCreated={async () => {}} onStatus={() => {}} />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    // Initially the button should say "Reconnect" because a connection
+    // exists for key "notion".
+    let oauthButton = Array.from(container.querySelectorAll("button")).find(
+      (button) =>
+        button.textContent === "Reconnect" || button.textContent === "Connect",
+    );
+    expect(oauthButton?.textContent).toBe("Reconnect");
+
+    // Now the user changes the integration key to "notion-secondary".
+    const keyInput = container.querySelector(
+      'input[placeholder="github"]',
+    ) as HTMLInputElement | null;
+    expect(keyInput).toBeTruthy();
+    expect(keyInput?.value).toBe("notion");
+
+    await act(async () => {
+      setInputValue(keyInput, "notion-secondary");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    // The button should now say "Connect" (not "Reconnect") because no
+    // direct connection exists for "notion-secondary".
+    oauthButton = Array.from(container.querySelectorAll("button")).find(
+      (button) =>
+        button.textContent === "Reconnect" || button.textContent === "Connect",
+    );
+    expect(oauthButton?.textContent).toBe("Connect");
+  });
 
 });

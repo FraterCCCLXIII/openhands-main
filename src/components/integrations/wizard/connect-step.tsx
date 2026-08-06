@@ -31,6 +31,7 @@ interface ConnectStepProps {
   redirectSection: AdminSection;
   requiresOAuthConnection: boolean;
   selectedConnection: IntegrationConnectionStatus | null;
+  hasDirectConnection: boolean;
   selectedConnector: ManagedConnectorOption | null;
   setDraft: React.Dispatch<React.SetStateAction<WizardDraft>>;
   onConnectorSearchChange: (value: string) => void;
@@ -103,6 +104,7 @@ export const ConnectStep = ({
   redirectSection,
   requiresOAuthConnection,
   selectedConnection,
+  hasDirectConnection,
   selectedConnector,
   setDraft,
   onConnectorSearchChange,
@@ -175,6 +177,46 @@ export const ConnectStep = ({
                 {selectedConnector.description ||
                   "This managed connector is registered for the current deployment."}
               </p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm text-white">
+                  <span className="font-medium">Integration key</span>
+                  <input
+                    className={integrationWizardInputClassName}
+                    placeholder="github"
+                    value={draft.key}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        key: event.target.value,
+                      }))
+                    }
+                    disabled={
+                      !draft.managedConnectorSlug.trim() ||
+                      hasDirectConnection
+                    }
+                  />
+                  <span className="text-xs leading-5 text-[var(--color-text-base)]">
+                    {hasDirectConnection
+                      ? "The key is locked because an OAuth connection already exists for it. Delete the integration to use a different key."
+                      : "Edit this if you want more than one saved connection for the same managed connector."}
+                  </span>
+                </label>
+                <label className="grid gap-1.5 text-sm text-white">
+                  <span className="font-medium">Display name</span>
+                  <input
+                    className={integrationWizardInputClassName}
+                    placeholder="GitHub"
+                    value={draft.name}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                    disabled={!draft.managedConnectorSlug.trim()}
+                  />
+                </label>
+              </div>
               {requiresOAuthConnection ? (
                 <div className="mt-3 flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
                   <div className="space-y-0.5">
@@ -206,7 +248,7 @@ export const ConnectStep = ({
                     disabled={!draft.managedConnectorSlug.trim() || !oauthConnectionEnabled}
                     onClick={() => {
                       const connectorSlug = selectedConnector.slug;
-                      const action = selectedConnection ? "reconnect" : "connect";
+                      const action = hasDirectConnection ? "reconnect" : "connect";
                       void startOAuthConnection({
                         provider: selectedConnector.slug,
                         integrationKey: draft.key.trim() || selectedConnector.slug,
@@ -237,7 +279,7 @@ export const ConnectStep = ({
                   >
                     {!oauthConnectionEnabled
                       ? "Contact admin"
-                      : selectedConnection
+                      : hasDirectConnection
                         ? "Reconnect"
                         : "Connect"}
                   </Button>
@@ -281,52 +323,6 @@ export const ConnectStep = ({
                 </a>
               ) : null}
             </div>
-          ) : null}
-
-          {selectedConnector ? (
-            <details className="group rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3.5 py-2.5 text-sm">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-white">
-                <span>Integration key &amp; display name</span>
-                <span className="text-xs text-[var(--color-text-base)] group-open:hidden">Edit</span>
-                <span className="hidden text-xs text-[var(--color-text-base)] group-open:inline">Hide</span>
-              </summary>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <label className="grid gap-1.5 text-sm text-white">
-                  <span className="font-medium">Integration key</span>
-                  <input
-                    className={integrationWizardInputClassName}
-                    placeholder="github"
-                    value={draft.key}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        key: event.target.value,
-                      }))
-                    }
-                    disabled={!draft.managedConnectorSlug.trim()}
-                  />
-                  <span className="text-xs leading-5 text-[var(--color-text-base)]">
-                    Edit this if you want more than one saved connection for the same
-                    managed connector.
-                  </span>
-                </label>
-                <label className="grid gap-1.5 text-sm text-white">
-                  <span className="font-medium">Display name</span>
-                  <input
-                    className={integrationWizardInputClassName}
-                    placeholder="GitHub"
-                    value={draft.name}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        name: event.target.value,
-                      }))
-                    }
-                    disabled={!draft.managedConnectorSlug.trim()}
-                  />
-                </label>
-              </div>
-            </details>
           ) : null}
 
           {requiresOAuthConnection ? (

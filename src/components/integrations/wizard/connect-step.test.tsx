@@ -126,6 +126,7 @@ type RenderOptions = {
   draft?: WizardDraft;
   selectedConnector?: ManagedConnectorOption | null;
   selectedConnection?: IntegrationConnectionStatus | null;
+  hasDirectConnection?: boolean;
   requiresOAuthConnection?: boolean;
   oauthConnectionEnabled?: boolean;
   discoverFeedback?: DiscoverFeedback | null;
@@ -179,6 +180,7 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
           redirectSection={options.redirectSection ?? "integrations"}
           requiresOAuthConnection={options.requiresOAuthConnection ?? false}
           selectedConnection={options.selectedConnection ?? null}
+          hasDirectConnection={options.hasDirectConnection ?? !!options.selectedConnection}
           selectedConnector={options.selectedConnector ?? null}
           setDraft={appliedSetDraft}
           onConnectorSearchChange={onConnectorSearchChange}
@@ -571,6 +573,60 @@ describe("ConnectStep", () => {
     expect(window.location.href).toBe(
       "https://auth.example/authorize?state=reconnect-state",
     );
+
+    await cleanup();
+  });
+
+  it("disables the integration key input after an OAuth connection exists", async () => {
+    const { container, cleanup } = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        key: "notion-workspace",
+        name: "Notion Workspace",
+        managedConnectorSlug: "notion",
+      },
+      selectedConnector: notionConnector,
+      selectedConnection: {
+        integrationKey: "notion-workspace",
+        provider: "notion",
+        authStrategy: "oauth2",
+        scopes: [],
+        displayName: "Acme Workspace",
+        metadata: {},
+        createdAt: "2026-04-07T12:00:00.000Z",
+        updatedAt: "2026-04-07T12:00:00.000Z",
+      },
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: true,
+    });
+
+    const keyInput = container.querySelector(
+      'input[placeholder="github"]',
+    ) as HTMLInputElement | null;
+    expect(keyInput?.disabled).toBe(true);
+    expect(container.textContent).toContain("The key is locked");
+
+    await cleanup();
+  });
+
+  it("leaves the integration key input editable before any OAuth connection", async () => {
+    const { container, cleanup } = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        key: "notion-workspace",
+        name: "Notion Workspace",
+        managedConnectorSlug: "notion",
+      },
+      selectedConnector: notionConnector,
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: true,
+    });
+
+    const keyInput = container.querySelector(
+      'input[placeholder="github"]',
+    ) as HTMLInputElement | null;
+    expect(keyInput?.disabled).toBe(false);
+    expect(container.textContent).toContain("Edit this if you want");
 
     await cleanup();
   });

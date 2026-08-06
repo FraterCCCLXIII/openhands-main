@@ -173,6 +173,16 @@ export const IntegrationWizard = ({
     state.setDraft,
   ]);
 
+  const hasDirectConnection = useMemo(
+    () => {
+      const draftKey = state.draft.key.trim() || state.draft.managedConnectorSlug;
+      return !!connectionStatusesQuery.data?.some(
+        (connection) => connection.integrationKey === draftKey,
+      );
+    },
+    [connectionStatusesQuery.data, state.draft.key, state.draft.managedConnectorSlug],
+  );
+
   const requiresResourceSelection =
     state.selectedConnector?.connectionModel?.selectionMode === "post_auth";
 
@@ -308,7 +318,10 @@ export const IntegrationWizard = ({
 
   const integrationDisplayName =
     state.draft.kind === "managed"
-      ? (state.selectedConnector?.name ?? state.draft.name.trim()) || state.draft.key.trim()
+      ? (state.draft.name.trim() &&
+        state.draft.name.trim() !== state.draft.managedConnectorSlug.trim()
+          ? state.draft.name.trim()
+          : state.selectedConnector?.name ?? state.draft.key.trim())
       : state.draft.name.trim() || state.draft.key.trim();
 
   return (
@@ -336,6 +349,7 @@ export const IntegrationWizard = ({
           redirectSection={redirectSection}
           requiresOAuthConnection={state.requiresOAuthConnection}
           selectedConnection={effectiveSelectedConnection}
+          hasDirectConnection={hasDirectConnection}
           selectedConnector={state.selectedConnector}
           setDraft={state.setDraft}
           onConnectorSearchChange={state.handleConnectorSearchChange}
