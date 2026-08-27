@@ -5,7 +5,7 @@ export const HUB_PAGE_COPY = {
       "Connect managed services so agents can use approved tools with scoped permissions.",
   },
   approvals: {
-    title: "Case-by-case Approvals",
+    title: "Integration requests",
     subtitle:
       "Pending requests are auto-created when an agent attempts to call a case-by-case tool without an active temporary grant.",
   },

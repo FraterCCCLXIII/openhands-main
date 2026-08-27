@@ -60,7 +60,7 @@ export const getDashboardSections = (
 }> =>
   [
     { id: "integrations" as const, label: "Integrations" },
-    { id: "caseByCaseApprovals" as const, label: "Case-by-case Approvals" },
+    { id: "caseByCaseApprovals" as const, label: "Integration requests" },
     { id: "apiKeys" as const, label: "Agent Connection" },
     { id: "permissionProfiles" as const, label: "Permission Profiles" },
   ].filter((item) => showApprovalsLink || item.id !== "caseByCaseApprovals");
@@ -421,7 +421,7 @@ function DashboardSidebarRailBody({
           <DashboardNavLink
             href={getAdminSectionPath("caseByCaseApprovals")}
             icon={CircleCheck}
-            label="Case-by-case Approvals"
+            label="Integration requests"
             active={isNavItemActive(activeItem, "caseByCaseApprovals")}
             collapsed={collapsed}
             trailingCount={pendingApprovalsCount}

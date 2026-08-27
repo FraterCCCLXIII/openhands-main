@@ -54,7 +54,7 @@ const sectionCopy: Record<AdminSection, { title: string; description: ReactNode 
     description: "Copy API keys, schemas, and prompts for connecting OpenHands agents to this hub.",
   },
   caseByCaseApprovals: {
-    title: "Case-by-case Approvals",
+    title: "Integration requests",
     description: "Review temporary tool-access requests and approve only the work you trust.",
   },
 };
