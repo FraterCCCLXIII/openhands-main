@@ -92,11 +92,15 @@ export const DashboardShell = ({
         <PageHeader
           title={copy.title}
           description={copy.description}
-          pills={[
-            `${integrationCount} integrations`,
-            `${enabledIntegrationCount} enabled`,
-            `${pendingAccessRequestCount} pending approvals`,
-          ]}
+          pills={
+            activeSection === "caseByCaseApprovals"
+              ? undefined
+              : [
+                  `${integrationCount} integrations`,
+                  `${enabledIntegrationCount} enabled`,
+                  `${pendingAccessRequestCount} pending approvals`,
+                ]
+          }
           actions={
             activeSection === "integrations" && isAdmin ? (
               <Link
