@@ -15,8 +15,6 @@ interface DashboardShellProps {
   userEmail: string;
   enabledIntegrationCount: number;
   discoveredToolCount: number;
-  pendingAccessRequestCount: number;
-  integrationCount: number;
   statusMessage: string | null;
   oauthStatusMessage: string | null;
   showOAuthStatus: boolean;
@@ -66,8 +64,6 @@ export const DashboardShell = ({
   userEmail,
   enabledIntegrationCount,
   discoveredToolCount,
-  pendingAccessRequestCount,
-  integrationCount,
   statusMessage,
   oauthStatusMessage,
   showOAuthStatus,
