@@ -1,356 +1,230 @@
-import {
-  CircleCheck,
-  CircleX,
-  Copy,
-  KeyRound,
-  ShieldCheck,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+"use client";
 
-import { DashboardApiKeyCard } from "@/src/components/dashboard/api-key-card";
-import { PermissionProfileAgentKeyCard } from "@/src/components/dashboard/permission-profile-agent-key-card";
 import {
-  CompactPanel,
-  KeyValueRow,
-  dashboardInputClassName,
-} from "@/src/components/dashboard/shared";
-import { copyTextToClipboard } from "@/src/components/dashboard/utils";
-import { Badge } from "@/src/components/ui/badge";
+  CheckCircle2,
+  Copy,
+  Eye,
+  EyeOff,
+  RotateCw,
+} from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+
+import { AgentConnectionDetailsModal } from "@/src/components/agent-connection/agent-connection-details-modal";
+import {
+  copyTextToClipboard,
+  maskApiKey,
+} from "@/src/components/dashboard/utils";
+import { SelectDropdown } from "@/src/components/ui/select-dropdown";
+import {
+  AGENT_CONNECTION_PAGE_COPY,
+  permissionProfilesCountAriaLabel,
+} from "@/src/constants/agent-connection-page";
+import { fetchJson } from "@/src/lib/fetch-json";
+import { cn } from "@/src/lib/utils";
 import type { PermissionProfile } from "@/src/types/integrations-hub";
 import {
-  useTracking,
-  type AnalyticsEventProperties,
-} from "@/src/hooks/use-tracking";
-
-type ConnectionArtifact =
-  AnalyticsEventProperties["agent_connection_copied"]["artifact_type"];
-
-interface CopyableFieldProps {
-  artifactType?: ConnectionArtifact;
-  label?: string;
-  render: () => ReactNode;
-  value: string;
-}
-
-type CopyStatus = "idle" | "copied" | "error";
-
-const CopyableField = ({ artifactType, label, render, value }: CopyableFieldProps) => {
-  const { track } = useTracking();
-  const [status, setStatus] = useState<CopyStatus>("idle");
-  const timerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, []);
-
-  const scheduleReset = () => {
-    timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
-      setStatus("idle");
-    }, 2000);
-  };
-
-  const handleCopy = async () => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    try {
-      await copyTextToClipboard(value);
-      if (artifactType) {
-        track("agent_connection_copied", { artifact_type: artifactType });
-      }
-      setStatus("copied");
-      scheduleReset();
-    } catch (errorValue) {
-      console.error("Failed to copy to clipboard", errorValue);
-      setStatus("error");
-      scheduleReset();
-    }
-  };
-
-  const ariaLabel = status === "error"
-    ? `${label ?? "Copy to clipboard"} (failed)`
-    : label ?? "Copy to clipboard";
-
-  return (
-    <div className="group relative">
-      {render()}
-      <button
-        type="button"
-        onClick={handleCopy}
-        aria-label={ariaLabel}
-        data-copied={status === "copied"}
-        data-error={status === "error"}
-        className="absolute right-1.5 top-1.5 cursor-pointer rounded border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-1 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[copied=true]:opacity-100 data-[error=true]:opacity-100 data-[copied=false]:data-[error=false]:opacity-0"
-      >
-        {status === "error" ? (
-          <CircleX className="h-3.5 w-3.5 text-red-400" />
-        ) : status === "copied" ? (
-          <CircleCheck className="h-3.5 w-3.5 text-green-400" />
-        ) : (
-          <Copy className="h-3.5 w-3.5 text-[var(--color-text-base)]" />
-        )}
-      </button>
-    </div>
-  );
-};
-
-interface ConnectionDetailCardProps {
-  body: string;
-  label: string;
-  promptArtifactType: ConnectionArtifact;
-  promptExample: string;
-  schemaArtifactType: ConnectionArtifact;
-  schemaEndpoint: string;
-}
-
-const ConnectionDetailCard = ({
-  body,
-  label,
-  promptArtifactType,
-  promptExample,
-  schemaArtifactType,
-  schemaEndpoint,
-}: ConnectionDetailCardProps) => (
-  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-    <h3 className="text-sm font-semibold text-white">{label}</h3>
-    <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">{body}</p>
-    <div className="mt-3 divide-y divide-[var(--color-border)]">
-      <KeyValueRow
-        label="OpenAPI schema"
-        value={
-          <CopyableField
-            artifactType={schemaArtifactType}
-            value={schemaEndpoint}
-            label={`Copy ${label} OpenAPI schema URL`}
-            render={() => (
-              <code className="block break-all pr-7 text-xs text-[var(--color-text-active)]">{schemaEndpoint}</code>
-            )}
-          />
-        }
-      />
-    </div>
-    <CopyableField
-      artifactType={promptArtifactType}
-      value={promptExample}
-      label={`Copy ${label} example agent prompt`}
-      render={() => (
-        <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-          <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-            Example agent prompt
-          </div>
-          <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 pr-9 text-xs leading-6 text-[var(--color-text-base)]">
-            {promptExample}
-          </pre>
-        </div>
-      )}
-    />
-  </div>
-);
-
-interface DashboardConnectionDetailsProps {
-  adminPromptExample?: string;
-  adminSchemaEndpoint?: string;
-  agentMcpConfigExample: string;
-  agentMcpEndpoint: string;
-  agentMcpToolName: string;
-  agentOpenApiSchemaEndpoint: string;
-  agentRestPromptExample: string;
-  isAdmin: boolean;
-  userOpenApiSchemaEndpoint: string;
-  userRestPromptExample: string;
-}
-
-const DashboardConnectionDetails = ({
-  adminPromptExample,
-  adminSchemaEndpoint,
-  agentMcpConfigExample,
-  agentMcpEndpoint,
-  agentMcpToolName,
-  agentOpenApiSchemaEndpoint,
-  agentRestPromptExample,
-  isAdmin,
-  userOpenApiSchemaEndpoint,
-  userRestPromptExample,
-}: DashboardConnectionDetailsProps) => (
-  <CompactPanel title="Connection details" icon={ShieldCheck}>
-    <div className="space-y-3">
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-        <h3 className="text-sm font-semibold text-white">Agent MCP</h3>
-        <p className="mt-1 text-sm leading-6 text-[var(--color-text-base)]">
-          Connect your MCP client to the streamable HTTP endpoint below and
-          authenticate with the agent key.
-        </p>
-        <div className="mt-3 divide-y divide-[var(--color-border)]">
-          <KeyValueRow
-            label="Endpoint"
-            value={
-              <CopyableField
-                artifactType="mcp_endpoint"
-                value={agentMcpEndpoint}
-                label="Copy MCP endpoint"
-                render={() => (
-                  <code className="block break-all pr-7 text-xs text-[var(--color-text-active)]">{agentMcpEndpoint}</code>
-                )}
-              />
-            }
-          />
-          <KeyValueRow
-            label="Example tool"
-            value={
-              <CopyableField
-                artifactType="mcp_tool_name"
-                value={agentMcpToolName}
-                label="Copy example tool name"
-                render={() => (
-                  <code className="block break-all pr-7 text-xs text-[var(--color-text-active)]">{agentMcpToolName}</code>
-                )}
-              />
-            }
-          />
-        </div>
-        <CopyableField
-          artifactType="mcp_config"
-          value={agentMcpConfigExample}
-          label="Copy MCP config example"
-          render={() => (
-            <div className="mt-3 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
-              <div className="border-b border-[var(--color-border)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-                MCP config example
-              </div>
-              <pre className="overflow-x-auto whitespace-pre-wrap px-3 py-3 pr-9 text-xs leading-6 text-[var(--color-text-base)]">
-                {agentMcpConfigExample}
-              </pre>
-            </div>
-          )}
-        />
-      </div>
-
-      <ConnectionDetailCard
-        label="Agent REST API"
-        body="Give your agent the agent key and the OpenAPI schema for the tool surface."
-        promptArtifactType="agent_prompt"
-        promptExample={agentRestPromptExample}
-        schemaArtifactType="agent_openapi_schema"
-        schemaEndpoint={agentOpenApiSchemaEndpoint}
-      />
-      <ConnectionDetailCard
-        label="User REST API"
-        body="Use the user automation key with the dashboard-equivalent OpenAPI schema."
-        promptArtifactType="user_prompt"
-        promptExample={userRestPromptExample}
-        schemaArtifactType="user_openapi_schema"
-        schemaEndpoint={userOpenApiSchemaEndpoint}
-      />
-      {isAdmin && adminPromptExample && adminSchemaEndpoint ? (
-        <ConnectionDetailCard
-          label="Admin REST API"
-          body="Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA."
-          promptArtifactType="admin_prompt"
-          promptExample={adminPromptExample}
-          schemaArtifactType="admin_openapi_schema"
-          schemaEndpoint={adminSchemaEndpoint}
-        />
-      ) : null}
-    </div>
-  </CompactPanel>
-);
+  settingsListContainerClassName,
+  settingsListDividerClassName,
+  settingsListIconActionButtonClassName,
+  settingsListRowClassName,
+} from "@/src/styles/settings-list-classes";
 
 const profileLabel = (profile: PermissionProfile) =>
   profile.name ?? "Default profile";
 
-const AgentKeyProfileSelector = ({
-  profiles,
-  isLoading,
-  error,
-}: {
-  profiles: PermissionProfile[];
-  isLoading: boolean;
-  error: string | null;
-}) => {
-  const defaultProfileId = useMemo(
-    () => profiles.find((profile) => profile.name === null)?.id ?? profiles[0]?.id ?? "",
-    [profiles],
-  );
-  const [selectedProfileId, setSelectedProfileId] = useState(defaultProfileId);
+interface ApiKeyListRowProps {
+  badgeLabel: string;
+  copied: boolean;
+  label: string;
+  maskedValue: string;
+  onCopy: () => void | Promise<void>;
+  onRevealToggle: () => void | Promise<void>;
+  onRotate?: () => void | Promise<void>;
+  revealDisabled?: boolean;
+  revealed: boolean;
+  rotateDisabled?: boolean;
+  rotateLabel?: string;
+  testId: string;
+}
 
-  useEffect(() => {
-    if (!defaultProfileId) {
-      setSelectedProfileId("");
-      return;
-    }
-
-    const selectedProfileExists = profiles.some(
-      (profile) => profile.id === selectedProfileId,
-    );
-    if (!selectedProfileId || !selectedProfileExists) {
-      setSelectedProfileId(defaultProfileId);
-    }
-  }, [defaultProfileId, profiles, selectedProfileId]);
-
-  const selectedProfile =
-    profiles.find((profile) => profile.id === selectedProfileId) ??
-    profiles.find((profile) => profile.id === defaultProfileId);
-
-  if (!selectedProfile) {
-    return (
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-        <h3 className="text-sm font-semibold text-white">Agent key</h3>
-        <p className="mt-1 text-sm text-[var(--color-text-base)]">
-          {error
-            ? `Unable to load agent key: ${error}`
-            : isLoading
-              ? "Loading agent key…"
-              : "No agent key available. Save a permission profile to provision one."}
-        </p>
-      </div>
-    );
-  }
-
+function ApiKeyListRow({
+  badgeLabel,
+  copied,
+  label,
+  maskedValue,
+  onCopy,
+  onRevealToggle,
+  onRotate,
+  revealDisabled = false,
+  revealed,
+  rotateDisabled = false,
+  rotateLabel = "Rotate",
+  testId,
+}: ApiKeyListRowProps) {
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-white">Agent key</h3>
-          <p className="mt-1 text-sm text-[var(--color-text-base)]">
-            Give your agent the key for the permission profile it should use.
-          </p>
-        </div>
-        <Badge>{profiles.length} profiles</Badge>
-      </div>
-      <label className="mt-4 block space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-base)]">
-          Permission profile
+    <div
+      data-testid={testId}
+      className={cn(settingsListRowClassName, "justify-between gap-3")}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="min-w-0 truncate text-sm font-medium text-white">
+          {label}
         </span>
-        <select
-          className={`${dashboardInputClassName} w-full`}
-          value={selectedProfile.id}
-          onChange={(event) => setSelectedProfileId(event.target.value)}
+        <span className="shrink-0 rounded-md border border-[var(--oh-border)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.04em] text-tertiary-light">
+          {badgeLabel}
+        </span>
+        <code className="min-w-0 flex-1 truncate font-mono text-xs text-tertiary-light">
+          {maskedValue}
+        </code>
+      </div>
+      <div className="flex shrink-0 items-center gap-0.5">
+        <button
+          type="button"
+          data-testid={`${testId}-reveal`}
+          aria-label={revealed ? `Hide ${label.toLowerCase()}` : `Reveal ${label.toLowerCase()}`}
+          className={settingsListIconActionButtonClassName}
+          disabled={revealDisabled}
+          onClick={() => void onRevealToggle()}
         >
-          {profiles.map((profile) => (
-            <option key={profile.id} value={profile.id}>
-              {profileLabel(profile)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="mt-4">
-        <PermissionProfileAgentKeyCard
-          key={selectedProfile.id}
-          profile={selectedProfile}
-          variant="inline"
-        />
+          {revealed ? (
+            <EyeOff width={16} height={16} aria-hidden />
+          ) : (
+            <Eye width={16} height={16} aria-hidden />
+          )}
+        </button>
+        <button
+          type="button"
+          data-testid={`${testId}-copy`}
+          aria-label={`Copy ${label.toLowerCase()}`}
+          className={settingsListIconActionButtonClassName}
+          disabled={revealDisabled}
+          onClick={() => void onCopy()}
+        >
+          {copied ? (
+            <CheckCircle2 width={16} height={16} aria-hidden />
+          ) : (
+            <Copy width={16} height={16} aria-hidden />
+          )}
+        </button>
+        {onRotate ? (
+          <button
+            type="button"
+            data-testid={`${testId}-rotate`}
+            aria-label={`${rotateLabel} ${label.toLowerCase()}`}
+            className={settingsListIconActionButtonClassName}
+            disabled={rotateDisabled}
+            onClick={() => void onRotate()}
+          >
+            <RotateCw width={16} height={16} aria-hidden />
+          </button>
+        ) : null}
       </div>
     </div>
   );
-};
+}
+
+function ProfileAgentKeyListRow({
+  profile,
+}: {
+  profile: PermissionProfile;
+}) {
+  const label = `${profileLabel(profile)} agent key`;
+  const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [agentApiKey, setAgentApiKey] = useState(
+    profile.agentApiKey?.trim() ?? "",
+  );
+  const [keyActionPending, setKeyActionPending] = useState(false);
+  const [keyActionError, setKeyActionError] = useState<string | null>(null);
+  const hasKey = agentApiKey.length > 0;
+
+  useEffect(() => {
+    setAgentApiKey(profile.agentApiKey?.trim() ?? "");
+    setRevealed(false);
+    setCopied(false);
+    setKeyActionError(null);
+  }, [profile.agentApiKey, profile.id]);
+
+  useEffect(() => {
+    if (!copied) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [copied]);
+
+  const handleCopy = async () => {
+    if (!hasKey) {
+      return;
+    }
+
+    await copyTextToClipboard(agentApiKey);
+    setCopied(true);
+  };
+
+  const handleRotate = async () => {
+    if (keyActionPending) {
+      return;
+    }
+
+    setKeyActionPending(true);
+    setKeyActionError(null);
+
+    try {
+      const updatedProfile = await fetchJson<PermissionProfile>(
+        `/api/permission-profiles/${profile.id}/agent-key`,
+        { method: "POST" },
+      );
+      const nextKey = updatedProfile.agentApiKey?.trim() ?? "";
+      setAgentApiKey(nextKey);
+      setRevealed(nextKey.length > 0);
+      setCopied(false);
+    } catch {
+      setKeyActionError(
+        hasKey
+          ? "Unable to rotate the agent key right now."
+          : "Unable to provision the agent key right now.",
+      );
+    } finally {
+      setKeyActionPending(false);
+    }
+  };
+
+  return (
+    <ApiKeyListRow
+      testId="agent-connection-agent-key-row"
+      label={label}
+      badgeLabel={profile.name ? "Named" : "Default"}
+      maskedValue={
+        hasKey
+          ? maskApiKey(agentApiKey, revealed)
+          : keyActionError ?? AGENT_CONNECTION_PAGE_COPY.noProfileAgentKey
+      }
+      copied={copied}
+      revealed={revealed}
+      revealDisabled={!hasKey}
+      onCopy={handleCopy}
+      onRevealToggle={() => setRevealed((current) => !current)}
+      onRotate={handleRotate}
+      rotateDisabled={keyActionPending}
+      rotateLabel={
+        keyActionPending
+          ? hasKey
+            ? "Rotating"
+            : "Provisioning"
+          : hasKey
+            ? "Rotate"
+            : "Provision"
+      }
+    />
+  );
+}
 
 interface AgentConnectionSectionProps {
   adminKey: {
@@ -373,7 +247,6 @@ interface AgentConnectionSectionProps {
   permissionProfiles: PermissionProfile[];
   permissionProfilesLoading: boolean;
   permissionProfilesError: string | null;
-
   userKey: {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
@@ -385,6 +258,8 @@ interface AgentConnectionSectionProps {
   };
   userOpenApiSchemaEndpoint: string;
   userRestPromptExample: string;
+  connectionDetailsOpen?: boolean;
+  onConnectionDetailsOpenChange?: (open: boolean) => void;
 }
 
 export const AgentConnectionSection = ({
@@ -403,57 +278,154 @@ export const AgentConnectionSection = ({
   userKey,
   userOpenApiSchemaEndpoint,
   userRestPromptExample,
-}: AgentConnectionSectionProps) => (
-  <section className="space-y-3">
-    <CompactPanel title="API keys" icon={KeyRound}>
-      <div className="space-y-3">
-        <AgentKeyProfileSelector
-          profiles={permissionProfiles}
-          isLoading={permissionProfilesLoading}
-          error={permissionProfilesError}
-        />
-        <DashboardApiKeyCard
-          label="User automation key"
-          description="Use this key to programmatically manage user-scoped integrations-hub settings."
-          maskedValue={userKey.maskedValue || "No user automation key yet. Reveal or copy to create one."}
-          badgeTone={userKey.hasKey ? "warning" : "default"}
-          badgeLabel="user"
+  connectionDetailsOpen,
+  onConnectionDetailsOpenChange,
+}: AgentConnectionSectionProps) => {
+  const [uncontrolledDetailsOpen, setUncontrolledDetailsOpen] = useState(false);
+  const detailsOpen = connectionDetailsOpen ?? uncontrolledDetailsOpen;
+  const setDetailsOpen =
+    onConnectionDetailsOpenChange ?? setUncontrolledDetailsOpen;
+  const defaultProfileId = useMemo(
+    () =>
+      permissionProfiles.find((profile) => profile.name === null)?.id ??
+      permissionProfiles[0]?.id ??
+      "",
+    [permissionProfiles],
+  );
+  const [selectedProfileId, setSelectedProfileId] = useState(defaultProfileId);
+
+  useEffect(() => {
+    if (!defaultProfileId) {
+      setSelectedProfileId("");
+      return;
+    }
+
+    const selectedProfileExists = permissionProfiles.some(
+      (profile) => profile.id === selectedProfileId,
+    );
+    if (!selectedProfileId || !selectedProfileExists) {
+      setSelectedProfileId(defaultProfileId);
+    }
+  }, [defaultProfileId, permissionProfiles, selectedProfileId]);
+
+  const selectedProfile =
+    permissionProfiles.find((profile) => profile.id === selectedProfileId) ??
+    permissionProfiles.find((profile) => profile.id === defaultProfileId);
+
+  const profileOptions = permissionProfiles.map((profile) => ({
+    value: profile.id,
+    label: profileLabel(profile),
+  }));
+
+  let agentKeyRow: ReactNode;
+  if (selectedProfile) {
+    agentKeyRow = (
+      <ProfileAgentKeyListRow key={selectedProfile.id} profile={selectedProfile} />
+    );
+  } else {
+    agentKeyRow = (
+      <div
+        data-testid="agent-connection-agent-key-empty"
+        className={cn(settingsListRowClassName, "text-sm text-tertiary-light")}
+      >
+        {permissionProfilesError
+          ? `Unable to load agent key: ${permissionProfilesError}`
+          : permissionProfilesLoading
+            ? "Loading agent key…"
+            : "No agent key available. Save a permission profile to provision one."}
+      </div>
+    );
+  }
+
+  return (
+    <section data-testid="agent-connection-page" className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-medium text-white">
+          {AGENT_CONNECTION_PAGE_COPY.apiKeysTitle}
+        </h2>
+        <p className="text-sm leading-5 text-tertiary-light">
+          {AGENT_CONNECTION_PAGE_COPY.apiKeysDescription}
+        </p>
+      </div>
+
+      {permissionProfiles.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-tertiary-light">
+            {AGENT_CONNECTION_PAGE_COPY.permissionProfileLabel}
+          </span>
+          <SelectDropdown
+            testId="agent-connection-permission-profile-select"
+            ariaLabel={AGENT_CONNECTION_PAGE_COPY.permissionProfileLabel}
+            value={selectedProfile?.id ?? ""}
+            options={profileOptions}
+            onChange={setSelectedProfileId}
+            variant="filter"
+            className="min-w-[12rem]"
+          />
+          <span
+            className="text-xs text-tertiary-light"
+            aria-label={permissionProfilesCountAriaLabel(permissionProfiles.length)}
+          >
+            {permissionProfiles.length}{" "}
+            {AGENT_CONNECTION_PAGE_COPY.profilesCountLabel.toLowerCase()}
+          </span>
+        </div>
+      ) : null}
+
+      <div
+        className={cn(settingsListContainerClassName, settingsListDividerClassName)}
+      >
+        {agentKeyRow}
+        <ApiKeyListRow
+          testId="agent-connection-user-key-row"
+          label={AGENT_CONNECTION_PAGE_COPY.userAutomationKeyTitle}
+          badgeLabel={AGENT_CONNECTION_PAGE_COPY.userAutomationKeyBadge}
+          maskedValue={
+            userKey.maskedValue || AGENT_CONNECTION_PAGE_COPY.noUserAutomationKey
+          }
           copied={userKey.copied}
-          onRevealToggle={userKey.handleReveal}
-          onCopy={userKey.handleCopy}
-          onRotate={userKey.handleRotate}
           revealed={userKey.revealed}
+          revealDisabled={false}
+          onCopy={userKey.handleCopy}
+          onRevealToggle={userKey.handleReveal}
+          onRotate={userKey.handleRotate}
           rotateLabel={userKey.hasKey ? "Rotate" : "Create"}
         />
         {isAdmin ? (
-          <DashboardApiKeyCard
-            label="Admin automation key"
-            description="Use this key for admin-only QA and operational automation surfaces."
-            maskedValue={adminKey.maskedValue || "No admin automation key yet. Reveal or copy to create one."}
-            badgeTone={adminKey.hasKey ? "warning" : "default"}
-            badgeLabel="admin"
+          <ApiKeyListRow
+            testId="agent-connection-admin-key-row"
+            label={AGENT_CONNECTION_PAGE_COPY.adminAutomationKeyTitle}
+            badgeLabel={AGENT_CONNECTION_PAGE_COPY.adminAutomationKeyBadge}
+            maskedValue={
+              adminKey.maskedValue ||
+              AGENT_CONNECTION_PAGE_COPY.noAdminAutomationKey
+            }
             copied={adminKey.copied}
-            onRevealToggle={adminKey.handleReveal}
-            onCopy={adminKey.handleCopy}
-            onRotate={adminKey.handleRotate}
             revealed={adminKey.revealed}
+            revealDisabled={false}
+            onCopy={adminKey.handleCopy}
+            onRevealToggle={adminKey.handleReveal}
+            onRotate={adminKey.handleRotate}
             rotateLabel={adminKey.hasKey ? "Rotate" : "Create"}
           />
         ) : null}
       </div>
-    </CompactPanel>
 
-    <DashboardConnectionDetails
-      adminPromptExample={adminPromptExample}
-      adminSchemaEndpoint={adminSchemaEndpoint}
-      agentMcpConfigExample={agentMcpConfigExample}
-      agentMcpEndpoint={agentMcpEndpoint}
-      agentMcpToolName={agentMcpToolName}
-      agentOpenApiSchemaEndpoint={agentOpenApiSchemaEndpoint}
-      agentRestPromptExample={agentRestPromptExample}
-      isAdmin={isAdmin}
-      userOpenApiSchemaEndpoint={userOpenApiSchemaEndpoint}
-      userRestPromptExample={userRestPromptExample}
-    />
-  </section>
-);
+      {detailsOpen ? (
+        <AgentConnectionDetailsModal
+          onClose={() => setDetailsOpen(false)}
+          adminPromptExample={adminPromptExample}
+          adminSchemaEndpoint={adminSchemaEndpoint}
+          agentMcpConfigExample={agentMcpConfigExample}
+          agentMcpEndpoint={agentMcpEndpoint}
+          agentMcpToolName={agentMcpToolName}
+          agentOpenApiSchemaEndpoint={agentOpenApiSchemaEndpoint}
+          agentRestPromptExample={agentRestPromptExample}
+          isAdmin={isAdmin}
+          userOpenApiSchemaEndpoint={userOpenApiSchemaEndpoint}
+          userRestPromptExample={userRestPromptExample}
+        />
+      ) : null}
+    </section>
+  );
+};

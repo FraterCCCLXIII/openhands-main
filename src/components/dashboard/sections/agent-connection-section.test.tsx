@@ -9,7 +9,6 @@ import { AgentConnectionSection } from "@/src/components/dashboard/sections/agen
 import {
   enableReactActEnvironment,
   selectDropdownOption,
-  setInputValue,
 } from "@/src/test-utils/jsdom-helpers";
 
 enableReactActEnvironment();
@@ -83,10 +82,11 @@ describe("AgentConnectionSection", () => {
       root.unmount();
     });
     container.remove();
+    document.body.replaceChildren();
     vi.restoreAllMocks();
   });
 
-  it("renders non-admin fallback states and disables the agent key controls until provisioned", async () => {
+  it("renders a keys list without inline connection details", async () => {
     const props = createDefaultProps();
 
     await act(async () => {
@@ -106,15 +106,16 @@ describe("AgentConnectionSection", () => {
       );
     });
 
+    expect(container.textContent).toContain("API keys");
     expect(container.textContent).toContain("Loading agent key…");
     expect(container.textContent).toContain(
       "No user automation key yet. Reveal or copy to create one.",
     );
     expect(container.textContent).not.toContain("Admin automation key");
-    expect(container.textContent).not.toContain("Admin REST API");
+    expect(container.textContent).not.toContain("Agent MCP");
   });
 
-  it("surfaces a permission-profile fetch error on the agent key card", async () => {
+  it("surfaces a permission-profile fetch error on the agent key row", async () => {
     const props = createDefaultProps();
 
     await act(async () => {
@@ -128,17 +129,13 @@ describe("AgentConnectionSection", () => {
       );
     });
 
-    expect(container.textContent).toContain("Unable to load agent key: Network error");
+    expect(container.textContent).toContain(
+      "Unable to load agent key: Network error",
+    );
   });
 
-  it("renders admin connection details and forwards reveal/copy actions for every key card", async () => {
+  it("renders key rows and forwards reveal/copy/rotate actions", async () => {
     const props = createDefaultProps();
-    const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", {
-      clipboard: {
-        writeText: writeTextMock,
-      },
-    });
 
     await act(async () => {
       root.render(
@@ -161,66 +158,66 @@ describe("AgentConnectionSection", () => {
     });
 
     expect(container.textContent).toContain("Admin automation key");
-    expect(container.textContent).toContain("Admin REST API");
-    expect(container.textContent).toContain("Agent MCP");
-    expect(container.textContent).toContain("github__list_issues");
-    expect(container.textContent).toContain("https://example.com/api/admin/openapi");
-    expect(container.textContent).toContain("https://example.com/api/user/openapi");
-    expect(container.textContent).toContain("https://example.com/api/agent/openapi");
-
-    const buttons = Array.from(container.querySelectorAll("button"));
-    expect(container.textContent).toContain("Agent key");
-    expect(container.textContent).not.toContain("Permission profile key");
+    expect(container.textContent).toContain("User automation key");
     expect(container.textContent).toContain("Default profile agent key");
     expect(container.textContent).not.toContain("Research assistant agent key");
     expect(container.textContent).not.toContain("cla_default_profile_key");
-    expect(container.textContent).not.toContain("cla_research_profile_key");
 
     const profileSelectTrigger = container.querySelector(
       '[data-testid="agent-connection-permission-profile-select-trigger"]',
     );
     expect(profileSelectTrigger?.textContent).toContain("Default profile");
 
-    const revealButtons = buttons.filter((button) => button.textContent?.includes("Reveal"));
-    const copyUserButton = container.querySelector(
-      'button[aria-label="Copy user automation key"]',
-    ) as HTMLButtonElement | null;
-    const copyAdminButton = container.querySelector(
-      'button[aria-label="Copy admin automation key"]',
-    ) as HTMLButtonElement | null;
-    const copyDefaultProfileButton = container.querySelector(
-      'button[aria-label="Copy default profile agent key"]',
-    ) as HTMLButtonElement | null;
-    const rotateUserButton = container.querySelector(
-      'button[aria-label="Rotate user automation key"]',
-    ) as HTMLButtonElement | null;
-    const rotateAdminButton = container.querySelector(
-      'button[aria-label="Rotate admin automation key"]',
-    ) as HTMLButtonElement | null;
-    const rotateDefaultProfileButton = container.querySelector(
-      'button[aria-label="Rotate default profile agent key"]',
-    ) as HTMLButtonElement | null;
+    const revealAgent = container.querySelector(
+      '[data-testid="agent-connection-agent-key-row-reveal"]',
+    ) as HTMLButtonElement;
+    const copyAgent = container.querySelector(
+      '[data-testid="agent-connection-agent-key-row-copy"]',
+    ) as HTMLButtonElement;
+    const revealUser = container.querySelector(
+      '[data-testid="agent-connection-user-key-row-reveal"]',
+    ) as HTMLButtonElement;
+    const copyUser = container.querySelector(
+      '[data-testid="agent-connection-user-key-row-copy"]',
+    ) as HTMLButtonElement;
+    const rotateUser = container.querySelector(
+      '[data-testid="agent-connection-user-key-row-rotate"]',
+    ) as HTMLButtonElement;
+    const revealAdmin = container.querySelector(
+      '[data-testid="agent-connection-admin-key-row-reveal"]',
+    ) as HTMLButtonElement;
+    const copyAdmin = container.querySelector(
+      '[data-testid="agent-connection-admin-key-row-copy"]',
+    ) as HTMLButtonElement;
+    const rotateAdmin = container.querySelector(
+      '[data-testid="agent-connection-admin-key-row-rotate"]',
+    ) as HTMLButtonElement;
 
-    expect(rotateDefaultProfileButton?.disabled).toBe(false);
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
 
     await act(async () => {
-      revealButtons[0]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      copyDefaultProfileButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      copyUserButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      rotateUserButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      revealButtons[1]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      copyAdminButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      rotateAdminButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      revealButtons[2]?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      revealAgent.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      copyAgent.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      revealUser.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      copyUser.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      rotateUser.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      revealAdmin.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      copyAdmin.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      rotateAdmin.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       await Promise.resolve();
     });
 
     expect(container.textContent).toContain("cla_default_profile_key");
-    expect(props.userKey.handleReveal).toHaveBeenCalledTimes(1);
-    expect(props.adminKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(writeTextMock).toHaveBeenCalledWith("cla_default_profile_key");
+    expect(props.userKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(props.userKey.handleCopy).toHaveBeenCalledTimes(1);
     expect(props.userKey.handleRotate).toHaveBeenCalledTimes(1);
+    expect(props.adminKey.handleReveal).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleCopy).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleRotate).toHaveBeenCalledTimes(1);
 
@@ -234,285 +231,33 @@ describe("AgentConnectionSection", () => {
 
     expect(container.textContent).toContain("Research assistant agent key");
     expect(container.textContent).not.toContain("cla_research_profile_key");
-    expect(container.textContent).not.toContain("cla_default_profile_key");
+  });
+
+  it("opens connection details in a modal when requested", async () => {
+    const props = createDefaultProps();
+    const onConnectionDetailsOpenChange = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <AgentConnectionSection
+          {...props}
+          connectionDetailsOpen
+          onConnectionDetailsOpenChange={onConnectionDetailsOpenChange}
+        />,
+      );
+    });
+
+    const modal = document.body.querySelector(
+      '[data-testid="agent-connection-details-modal"]',
+    );
+    expect(modal).toBeTruthy();
+    expect(modal?.textContent).toContain("Agent MCP");
+    expect(modal?.textContent).toContain("Admin REST API");
     expect(
-      container.querySelector(
-        'button[aria-label="Rotate research assistant agent key"]',
+      document.body.querySelector(
+        '[data-testid="agent-connection-mcp-endpoint"]',
       ),
-    ).not.toBeNull();
-  });
-
-  it("renders copy buttons for connection detail fields and copies correct values on click", async () => {
-    const props = createDefaultProps();
-    const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", {
-      clipboard: {
-        writeText: writeTextMock,
-      },
-    });
-
-    await act(async () => {
-      root.render(<AgentConnectionSection {...props} permissionProfiles={[]} />);
-    });
-
-    const copyMcpEndpointButton = container.querySelector(
-      'button[aria-label="Copy MCP endpoint"]',
-    ) as HTMLButtonElement | null;
-    const copyExampleToolButton = container.querySelector(
-      'button[aria-label="Copy example tool name"]',
-    ) as HTMLButtonElement | null;
-    const copyMcpConfigButton = container.querySelector(
-      'button[aria-label="Copy MCP config example"]',
-    ) as HTMLButtonElement | null;
-    const copyAgentSchemaButton = container.querySelector(
-      'button[aria-label="Copy Agent REST API OpenAPI schema URL"]',
-    ) as HTMLButtonElement | null;
-    const copyAgentPromptButton = container.querySelector(
-      'button[aria-label="Copy Agent REST API example agent prompt"]',
-    ) as HTMLButtonElement | null;
-    const copyUserSchemaButton = container.querySelector(
-      'button[aria-label="Copy User REST API OpenAPI schema URL"]',
-    ) as HTMLButtonElement | null;
-    const copyUserPromptButton = container.querySelector(
-      'button[aria-label="Copy User REST API example agent prompt"]',
-    ) as HTMLButtonElement | null;
-
-    expect(copyMcpEndpointButton).not.toBeNull();
-    expect(copyExampleToolButton).not.toBeNull();
-    expect(copyMcpConfigButton).not.toBeNull();
-    expect(copyAgentSchemaButton).not.toBeNull();
-    expect(copyAgentPromptButton).not.toBeNull();
-    expect(copyUserSchemaButton).not.toBeNull();
-    expect(copyUserPromptButton).not.toBeNull();
-
-    await act(async () => {
-      copyMcpEndpointButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("https://example.com/api/mcp");
-
-    await act(async () => {
-      copyExampleToolButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("github__list_issues");
-
-    await act(async () => {
-      copyMcpConfigButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith('{"transport":"streamable-http"}');
-
-    await act(async () => {
-      copyAgentSchemaButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("https://example.com/api/agent/openapi");
-
-    await act(async () => {
-      copyAgentPromptButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("Use the agent REST API.");
-
-    await act(async () => {
-      copyUserSchemaButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("https://example.com/api/user/openapi");
-
-    await act(async () => {
-      copyUserPromptButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("Use the user REST API.");
-
-    expect(writeTextMock).toHaveBeenCalledTimes(7);
-  });
-
-  it("shows the copied confirmation icon after a successful click and reverts after 2s", async () => {
-    vi.useFakeTimers();
-    try {
-      const props = createDefaultProps();
-      const writeTextMock = vi.fn().mockResolvedValue(undefined);
-      vi.stubGlobal("navigator", {
-        clipboard: {
-          writeText: writeTextMock,
-        },
-      });
-
-      await act(async () => {
-        root.render(<AgentConnectionSection {...props} permissionProfiles={[]} />);
-      });
-
-      const copyMcpEndpointButton = container.querySelector(
-        'button[aria-label="Copy MCP endpoint"]',
-      ) as HTMLButtonElement | null;
-      expect(copyMcpEndpointButton).not.toBeNull();
-      expect(
-        copyMcpEndpointButton?.querySelector("svg")?.getAttribute("class"),
-      ).toContain("lucide-copy");
-
-      await act(async () => {
-        copyMcpEndpointButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(copyMcpEndpointButton?.getAttribute("data-copied")).toBe("true");
-      expect(
-        copyMcpEndpointButton?.querySelector("svg")?.getAttribute("class"),
-      ).toContain("lucide-circle-check");
-
-      await act(async () => {
-        vi.advanceTimersByTime(2000);
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(copyMcpEndpointButton?.getAttribute("data-copied")).toBe("false");
-      expect(
-        copyMcpEndpointButton?.querySelector("svg")?.getAttribute("class"),
-      ).toContain("lucide-copy");
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("surfaces an error state when the clipboard write rejects", async () => {
-    vi.useFakeTimers();
-    try {
-      const props = createDefaultProps();
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-      const writeTextMock = vi.fn().mockRejectedValue(new Error("denied"));
-      vi.stubGlobal("navigator", {
-        clipboard: {
-          writeText: writeTextMock,
-        },
-      });
-
-      await act(async () => {
-        root.render(<AgentConnectionSection {...props} permissionProfiles={[]} />);
-      });
-
-      const copyMcpEndpointButton = container.querySelector(
-        'button[aria-label="Copy MCP endpoint"]',
-      ) as HTMLButtonElement | null;
-
-      await act(async () => {
-        copyMcpEndpointButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(writeTextMock).toHaveBeenCalledTimes(1);
-      expect(copyMcpEndpointButton?.getAttribute("data-error")).toBe("true");
-      expect(
-        copyMcpEndpointButton?.querySelector("svg")?.getAttribute("class"),
-      ).toContain("lucide-circle-x");
-      expect(copyMcpEndpointButton?.getAttribute("aria-label")).toBe(
-        "Copy MCP endpoint (failed)",
-      );
-      expect(consoleErrorSpy).toHaveBeenCalled();
-
-      await act(async () => {
-        vi.advanceTimersByTime(2000);
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(copyMcpEndpointButton?.getAttribute("data-error")).toBe("false");
-      consoleErrorSpy.mockRestore();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("does not leak the copied-reset timeout when unmounted during the pending window", async () => {
-    vi.useFakeTimers();
-    const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
-    try {
-      const props = createDefaultProps();
-      const writeTextMock = vi.fn().mockResolvedValue(undefined);
-      vi.stubGlobal("navigator", {
-        clipboard: {
-          writeText: writeTextMock,
-        },
-      });
-
-      await act(async () => {
-        root.render(<AgentConnectionSection {...props} permissionProfiles={[]} />);
-      });
-
-      const copyMcpEndpointButton = container.querySelector(
-        'button[aria-label="Copy MCP endpoint"]',
-      ) as HTMLButtonElement | null;
-
-      await act(async () => {
-        copyMcpEndpointButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(copyMcpEndpointButton?.getAttribute("data-copied")).toBe("true");
-
-      const clearTimeoutCallsBefore = clearTimeoutSpy.mock.calls.length;
-
-      await act(async () => {
-        root.unmount();
-      });
-
-      // The cleanup effect must have cleared the pending timer; no React
-      // state update should fire on the now-unmounted component.
-      expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(
-        clearTimeoutCallsBefore,
-      );
-
-      expect(() =>
-        vi.advanceTimersByTime(2000),
-      ).not.toThrow();
-    } finally {
-      clearTimeoutSpy.mockRestore();
-      vi.useRealTimers();
-    }
-  });
-
-  it("shows admin connection detail copy buttons when isAdmin is true", async () => {
-    const props = createDefaultProps();
-    const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("navigator", {
-      clipboard: {
-        writeText: writeTextMock,
-      },
-    });
-
-    await act(async () => {
-      root.render(<AgentConnectionSection {...props} permissionProfiles={[]} isAdmin={true} />);
-    });
-
-    const copyAdminSchemaButton = container.querySelector(
-      'button[aria-label="Copy Admin REST API OpenAPI schema URL"]',
-    ) as HTMLButtonElement | null;
-    const copyAdminPromptButton = container.querySelector(
-      'button[aria-label="Copy Admin REST API example agent prompt"]',
-    ) as HTMLButtonElement | null;
-
-    expect(copyAdminSchemaButton).not.toBeNull();
-    expect(copyAdminPromptButton).not.toBeNull();
-
-    await act(async () => {
-      copyAdminSchemaButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("https://example.com/api/admin/openapi");
-
-    await act(async () => {
-      copyAdminPromptButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-    expect(writeTextMock).toHaveBeenLastCalledWith("Use the admin key for QA.");
+    ).toBeTruthy();
   });
 
   it("shows profile key provisioning on the agent connection page even before the legacy agent key is ready", async () => {

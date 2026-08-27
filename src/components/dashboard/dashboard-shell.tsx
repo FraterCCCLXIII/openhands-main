@@ -19,6 +19,7 @@ interface DashboardShellProps {
   oauthStatusMessage: string | null;
   showOAuthStatus: boolean;
   agentApiReady: boolean;
+  headerDescription?: ReactNode;
   children: ReactNode;
 }
 
@@ -49,7 +50,8 @@ const sectionCopy: Record<AdminSection, { title: string; description: ReactNode 
   },
   apiKeys: {
     title: "Agent Connection",
-    description: "Copy API keys, schemas, and prompts for connecting OpenHands agents to this hub.",
+    description:
+      "Manage API keys for agents and automations. Open connection details for endpoints and schemas.",
   },
   caseByCaseApprovals: {
     title: "Integration requests",
@@ -68,6 +70,7 @@ export const DashboardShell = ({
   oauthStatusMessage,
   showOAuthStatus,
   agentApiReady,
+  headerDescription,
   children,
 }: DashboardShellProps) => {
   const copy = sectionCopy[activeSection];
@@ -87,7 +90,7 @@ export const DashboardShell = ({
       <div className={hubPageShellClassName}>
         <PageHeader
           title={copy.title}
-          description={copy.description}
+          description={headerDescription ?? copy.description}
           actions={
             activeSection === "integrations" && isAdmin ? (
               <Link

@@ -26,6 +26,7 @@ import {
   type AdminSection,
 } from "@/src/lib/admin-routes";
 import { buildAgentConnectionGuide, OPENHANDS_AGENT_KEY_ENV } from "@/src/shared/agent-connection";
+import { AGENT_CONNECTION_PAGE_COPY } from "@/src/constants/agent-connection-page";
 import { apiUrl } from "@/src/shared/paths";
 import type {
   AccessRequest,
@@ -71,6 +72,7 @@ export const DashboardWorkspace = ({
   );
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
+  const [connectionDetailsOpen, setConnectionDetailsOpen] = useState(false);
 
   const oauthStatus = useMemo(() => {
     const oauthStatusValue = searchParams.get("oauth_status");
@@ -304,6 +306,21 @@ export const DashboardWorkspace = ({
       oauthStatusMessage={oauthStatusMessage}
       showOAuthStatus={!showIntegrationWizard}
       agentApiReady={agentApiReady}
+      headerDescription={
+        activeSection === "apiKeys" ? (
+          <>
+            Manage API keys for agents and automations.{" "}
+            <button
+              type="button"
+              data-testid="agent-connection-details-link"
+              onClick={() => setConnectionDetailsOpen(true)}
+              className="cursor-pointer border-0 bg-transparent p-0 text-sm text-white underline-offset-2 hover:underline"
+            >
+              {AGENT_CONNECTION_PAGE_COPY.connectionDetailsLink}
+            </button>
+          </>
+        ) : undefined
+      }
     >
       {activeSection === "profile" ? (
         <ProfileSection
@@ -343,6 +360,8 @@ export const DashboardWorkspace = ({
 
       {activeSection === "apiKeys" ? (
         <AgentConnectionSection
+          connectionDetailsOpen={connectionDetailsOpen}
+          onConnectionDetailsOpenChange={setConnectionDetailsOpen}
           adminKey={{
             copied: adminKey.copied,
             handleCopy: adminKey.handleCopy,
