@@ -20,6 +20,8 @@ interface ApprovalsSectionProps {
   approvalFilter: ApprovalRequestFilter;
   approvalSearch: string;
   allVisibleApprovalRequestsSelected: boolean;
+  /** When false, the page is view-only: search + list, no approve/deny. */
+  canDecide?: boolean;
   filteredAccessRequests: AccessRequest[];
   handleAccessRequestDecision: (
     requestIds: string[],
@@ -47,6 +49,7 @@ export const ApprovalsSection = ({
   approvalFilter,
   approvalSearch,
   allVisibleApprovalRequestsSelected,
+  canDecide = true,
   filteredAccessRequests,
   handleAccessRequestDecision,
   handleApprovalDurationBlur,
@@ -65,11 +68,12 @@ export const ApprovalsSection = ({
   };
 
   const canSelectAll =
+    canDecide &&
     approvalFilter === "pending" &&
     hasVisibleApprovalRequests &&
     !allVisibleApprovalRequestsSelected;
 
-  const canDeselect = selectedApprovalRequestCount > 0;
+  const canDeselect = canDecide && selectedApprovalRequestCount > 0;
 
   const handleApproveRequests = async (
     requestIds: string[],
@@ -89,6 +93,7 @@ export const ApprovalsSection = ({
   };
 
   const canApprove =
+    canDecide &&
     approvalFilter === "pending" &&
     selectedApprovalRequestCount > 0 &&
     !requestActionPending;
@@ -107,117 +112,131 @@ export const ApprovalsSection = ({
           ariaLabel={APPROVALS_PAGE_COPY.searchPlaceholder}
           className="w-full flex-none md:min-w-0 md:flex-1"
         />
-        <button
-          type="button"
-          className="hidden h-9 items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50 md:inline-flex"
-          disabled={!canSelectAll}
-          onClick={() =>
-            setSelectedStateForApprovalRequests(
-              filteredAccessRequests.map((request) => request.id),
-              true,
-            )
-          }
-        >
-          Select all matches
-        </button>
-        <button
-          type="button"
-          className="hidden h-9 items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50 md:inline-flex"
-          disabled={!canDeselect}
-          onClick={() =>
-            setSelectedStateForApprovalRequests(selectedApprovalRequestIds, false)
-          }
-        >
-          Deselect matches
-        </button>
-        <div className="md:hidden">
-          <ApprovalsMatchSelectionMenu
-            isDisabled={!canSelectAll && !canDeselect}
-            onSelectAll={() =>
-              setSelectedStateForApprovalRequests(
-                filteredAccessRequests.map((request) => request.id),
-                true,
-              )
-            }
-            onDeselect={() =>
-              setSelectedStateForApprovalRequests(
-                selectedApprovalRequestIds,
-                false,
-              )
-            }
-          />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <input
-            type="number"
-            min={APPROVAL_DURATION.minHours}
-            max={APPROVAL_DURATION.maxHours}
-            step={1}
-            value={approvalDurationHours}
-            aria-label={APPROVALS_PAGE_COPY.durationAriaLabel}
-            data-testid="approvals-duration-hours"
-            disabled={approvalFilter !== "pending"}
-            onChange={(event) => setApprovalDurationHours(event.target.value)}
-            onBlur={handleApprovalDurationBlur}
-            className={cn(
-              formControlFieldClassName,
-              "h-9 w-20 px-2 py-1 text-xs tabular-nums",
-            )}
-          />
-          <span className="shrink-0 text-xs text-tertiary-light">
-            {APPROVALS_PAGE_COPY.hoursLabel}
-          </span>
-        </div>
-        <button
-          type="button"
-          className="hidden h-9 cursor-pointer items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
-          disabled={!canApprove}
-          onClick={() =>
-            void handleApproveRequests(
-              selectedApprovalRequestIds,
-              currentDurationHours(),
-            )
-          }
-        >
-          Approve selected
-        </button>
-        <button
-          type="button"
-          className="hidden h-9 cursor-pointer items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
-          disabled={
-            approvalFilter !== "pending" ||
-            selectedApprovalRequestCount === 0 ||
-            requestActionPending
-          }
-          onClick={() => void handleAccessRequestDecision(selectedApprovalRequestIds, "deny")}
-        >
-          Deny selected
-        </button>
+        {canDecide ? (
+          <>
+            <button
+              type="button"
+              className="hidden h-9 items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50 md:inline-flex"
+              disabled={!canSelectAll}
+              onClick={() =>
+                setSelectedStateForApprovalRequests(
+                  filteredAccessRequests.map((request) => request.id),
+                  true,
+                )
+              }
+            >
+              Select all matches
+            </button>
+            <button
+              type="button"
+              className="hidden h-9 items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:opacity-50 md:inline-flex"
+              disabled={!canDeselect}
+              onClick={() =>
+                setSelectedStateForApprovalRequests(
+                  selectedApprovalRequestIds,
+                  false,
+                )
+              }
+            >
+              Deselect matches
+            </button>
+            <div className="md:hidden">
+              <ApprovalsMatchSelectionMenu
+                isDisabled={!canSelectAll && !canDeselect}
+                onSelectAll={() =>
+                  setSelectedStateForApprovalRequests(
+                    filteredAccessRequests.map((request) => request.id),
+                    true,
+                  )
+                }
+                onDeselect={() =>
+                  setSelectedStateForApprovalRequests(
+                    selectedApprovalRequestIds,
+                    false,
+                  )
+                }
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={APPROVAL_DURATION.minHours}
+                max={APPROVAL_DURATION.maxHours}
+                step={1}
+                value={approvalDurationHours}
+                aria-label={APPROVALS_PAGE_COPY.durationAriaLabel}
+                data-testid="approvals-duration-hours"
+                disabled={approvalFilter !== "pending"}
+                onChange={(event) => setApprovalDurationHours(event.target.value)}
+                onBlur={handleApprovalDurationBlur}
+                className={cn(
+                  formControlFieldClassName,
+                  "h-9 w-20 px-2 py-1 text-xs tabular-nums",
+                )}
+              />
+              <span className="shrink-0 text-xs text-tertiary-light">
+                {APPROVALS_PAGE_COPY.hoursLabel}
+              </span>
+            </div>
+            <button
+              type="button"
+              className="hidden h-9 cursor-pointer items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
+              disabled={!canApprove}
+              onClick={() =>
+                void handleApproveRequests(
+                  selectedApprovalRequestIds,
+                  currentDurationHours(),
+                )
+              }
+            >
+              Approve selected
+            </button>
+            <button
+              type="button"
+              className="hidden h-9 cursor-pointer items-center rounded-md border border-[var(--oh-border)] px-3 text-xs text-tertiary-light hover:text-white disabled:cursor-not-allowed disabled:opacity-50 md:inline-flex"
+              disabled={
+                approvalFilter !== "pending" ||
+                selectedApprovalRequestCount === 0 ||
+                requestActionPending
+              }
+              onClick={() =>
+                void handleAccessRequestDecision(selectedApprovalRequestIds, "deny")
+              }
+            >
+              Deny selected
+            </button>
+          </>
+        ) : null}
       </div>
 
-      <p className="text-xs text-[var(--oh-muted)]">
-        {APPROVALS_PAGE_COPY.decideSelectedDescription(
-          APPROVAL_DURATION.defaultHours,
-          APPROVAL_DURATION.maxHours,
-        )}{" "}
-        {APPROVALS_PAGE_COPY.longDurationHintPrefix}{" "}
-        <a href={uiPath("/integrations")} className="text-white hover:opacity-80">
-          {APPROVALS_PAGE_COPY.longDurationHintLink}
-        </a>
-        {APPROVALS_PAGE_COPY.longDurationHintSuffix}
-      </p>
+      {canDecide ? (
+        <p className="text-xs text-[var(--oh-muted)]">
+          {APPROVALS_PAGE_COPY.decideSelectedDescription(
+            APPROVAL_DURATION.defaultHours,
+            APPROVAL_DURATION.maxHours,
+          )}{" "}
+          {APPROVALS_PAGE_COPY.longDurationHintPrefix}{" "}
+          <a href={uiPath("/integrations")} className="text-white hover:opacity-80">
+            {APPROVALS_PAGE_COPY.longDurationHintLink}
+          </a>
+          {APPROVALS_PAGE_COPY.longDurationHintSuffix}
+        </p>
+      ) : null}
 
       <ApprovalsPanel
         approvalFilter={approvalFilter}
         approvalCounts={approvalCounts}
         approvalDurationHours={approvalDurationHours}
+        canDecide={canDecide}
         filteredAccessRequests={filteredAccessRequests}
         requestActionPending={requestActionPending}
         selectedApprovalRequestCount={selectedApprovalRequestCount}
         selectedApprovalRequests={selectedApprovalRequests}
         onApprovalFilterChange={setApprovalFilter}
         onApproveRequests={handleApproveRequests}
-        onDenyRequests={(requestIds) => handleAccessRequestDecision(requestIds, "deny")}
+        onDenyRequests={(requestIds) =>
+          handleAccessRequestDecision(requestIds, "deny")
+        }
         onToggleSelected={handleToggleSelected}
       />
     </div>

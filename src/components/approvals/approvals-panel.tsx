@@ -23,6 +23,7 @@ interface ApprovalsPanelProps {
   approvalFilter: ApprovalStatusFilter;
   approvalCounts: ApprovalCounts;
   approvalDurationHours: string;
+  canDecide?: boolean;
   filteredAccessRequests: AccessRequest[];
   requestActionPending: boolean;
   selectedApprovalRequestCount: number;
@@ -37,6 +38,7 @@ export function ApprovalsPanel({
   approvalFilter,
   approvalCounts,
   approvalDurationHours,
+  canDecide = true,
   filteredAccessRequests,
   requestActionPending,
   selectedApprovalRequestCount,
@@ -52,7 +54,8 @@ export function ApprovalsPanel({
   >([]);
 
   const hasSelection = selectedApprovalRequestCount > 0;
-  const canUseBulkActions = approvalFilter === "pending" && hasSelection;
+  const canUseBulkActions =
+    canDecide && approvalFilter === "pending" && hasSelection;
 
   const openApproveModal = (requestIds: string[]) => {
     setApproveModalRequestIds(requestIds);
@@ -95,13 +98,15 @@ export function ApprovalsPanel({
             },
           ]}
         />
-        <div className="shrink-0 pb-2">
-          <ApprovalsDecisionMenu
-            isDisabled={!canUseBulkActions || requestActionPending}
-            onApprove={() => openApproveModal(selectedIds)}
-            onDeny={() => void onDenyRequests(selectedIds)}
-          />
-        </div>
+        {canDecide ? (
+          <div className="shrink-0 pb-2">
+            <ApprovalsDecisionMenu
+              isDisabled={!canUseBulkActions || requestActionPending}
+              onApprove={() => openApproveModal(selectedIds)}
+              onDeny={() => void onDenyRequests(selectedIds)}
+            />
+          </div>
+        ) : null}
       </div>
 
       {filteredAccessRequests.length > 0 ? (
@@ -109,7 +114,8 @@ export function ApprovalsPanel({
           requests={filteredAccessRequests}
           approvalFilter={approvalFilter}
           selectedRequests={selectedApprovalRequests}
-          showRowActions={approvalFilter === "pending"}
+          showSelection={canDecide}
+          showRowActions={canDecide && approvalFilter === "pending"}
           requestActionPending={requestActionPending}
           onToggleSelected={onToggleSelected}
           onApproveRequest={(requestId) => openApproveModal([requestId])}
@@ -126,7 +132,7 @@ export function ApprovalsPanel({
         </div>
       )}
 
-      {isApproveModalOpen ? (
+      {canDecide && isApproveModalOpen ? (
         <ApproveSelectedModal
           selectedCount={approveModalRequestIds.length}
           initialDurationHours={approvalDurationHours}

@@ -55,7 +55,7 @@ const sectionCopy: Record<AdminSection, { title: string; description: ReactNode 
   },
   caseByCaseApprovals: {
     title: "Integration requests",
-    description: "Review temporary tool-access requests and approve only the work you trust.",
+    description: "Review temporary tool-access requests from your agents.",
   },
 };
 

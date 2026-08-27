@@ -15,6 +15,7 @@ interface ApprovalsListProps {
   requests: AccessRequest[];
   approvalFilter: ApprovalStatusFilter;
   selectedRequests: Record<string, boolean>;
+  showSelection?: boolean;
   showRowActions?: boolean;
   requestActionPending: boolean;
   onToggleSelected: (requestId: string, selected: boolean) => void;
@@ -31,13 +32,14 @@ export function ApprovalsList({
   requests,
   approvalFilter,
   selectedRequests,
+  showSelection = true,
   showRowActions = false,
   requestActionPending,
   onToggleSelected,
   onApproveRequest,
   onDenyRequest,
 }: ApprovalsListProps) {
-  const showSelectionColumn = approvalFilter === "pending";
+  const showSelectionColumn = showSelection && approvalFilter === "pending";
   const showDecisionColumns = approvalFilter !== "pending";
   const showActionsColumn = showRowActions;
   const showConversationColumn = requests.some(

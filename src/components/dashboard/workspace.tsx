@@ -320,7 +320,7 @@ export const DashboardWorkspace = ({
       ) : null}
 
       {activeSection === "caseByCaseApprovals" ? (
-        <ApprovalsSection {...approvalsSection} />
+        <ApprovalsSection {...approvalsSection} canDecide={isAdmin} />
       ) : null}
 
       {activeSection === "permissionProfiles" ? (
