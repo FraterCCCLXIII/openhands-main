@@ -166,7 +166,7 @@ const StepCard = ({ stepNumber, title, description, completed, disabled, disable
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-[var(--color-text-muted)]">Step {stepNumber}</span>
-            {completed ? <Badge tone="success">Done</Badge> : null}
+            {completed ? <Badge size="sm" tone="success">Done</Badge> : null}
             {completed && children ? (
               <button
                 type="button"
@@ -436,7 +436,7 @@ export const ConnectorSetupProgress = ({
             {configForm.indexing ? "Indexing…" : "Index Tools"}
           </StepButton>
           {toolsIndexed ? (
-            <Badge tone="success">{connector.tools.length} tools indexed</Badge>
+            <Badge size="sm" tone="success">{connector.tools.length} tools indexed</Badge>
           ) : null}
         </div>
 

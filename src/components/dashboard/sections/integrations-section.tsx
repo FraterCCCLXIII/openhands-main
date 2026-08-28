@@ -435,11 +435,7 @@ export const IntegrationsSection = ({
           connectors={marketplaceConnectors}
           isPending={managedConnectorsPending}
           errorMessage={managedConnectorsError}
-          isAdmin={isAdmin}
           onConnect={handleOpenIntegrationWizard}
-          onUseCustomMcp={
-            isAdmin ? () => handleOpenIntegrationWizard() : undefined
-          }
         />
       </div>
 

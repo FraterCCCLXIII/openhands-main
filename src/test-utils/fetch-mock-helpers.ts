@@ -16,6 +16,8 @@ import { vi } from "vitest";
 
 import type {
   AccessRequest,
+  IntegrationCatalogOption,
+  IntegrationRequest,
   IntegrationSpec,
   ManagedConnectorOption,
   NotificationRecord,
@@ -45,7 +47,9 @@ const jsonResponse = (payload: unknown): Response =>
 interface DashboardFetchMockOverrides {
   integrations?: IntegrationSpec[] | (() => IntegrationSpec[]);
   managedConnectors?: ManagedConnectorOption[];
+  catalog?: IntegrationCatalogOption[];
   accessRequests?: AccessRequest[];
+  integrationRequests?: IntegrationRequest[];
   notifications?: NotificationRecord[];
   routeHandler?: (
     url: string,
@@ -56,9 +60,10 @@ interface DashboardFetchMockOverrides {
 
 /**
  * Build a vitest fetch mock that returns standard dashboard JSON for the
- * four common routes (`/api/integrations`, `/api/integrations?filter=enabled`,
- * `/api/case-by-case-approvals`, `/api/notifications`) and throws for any
- * unexpected request so tests can't silently drift into untested routes.
+ * common dashboard routes (`/api/integrations`, `/api/integrations?filter=enabled`,
+ * `/api/integrations?filter=all`, `/api/case-by-case-approvals`, `/api/notifications`)
+ * and throws for any unexpected request so tests can't silently drift into
+ * untested routes.
  */
 export const createDashboardFetchMock = (
   overrides: DashboardFetchMockOverrides = {},
@@ -86,8 +91,16 @@ export const createDashboardFetchMock = (
       return jsonResponse(overrides.managedConnectors ?? []);
     }
 
+    if (url === "/api/integrations?filter=all") {
+      return jsonResponse(overrides.catalog ?? []);
+    }
+
     if (url === "/api/case-by-case-approvals" && method === "GET") {
       return jsonResponse(overrides.accessRequests ?? []);
+    }
+
+    if (url === "/api/admin/integration-requests" && method === "GET") {
+      return jsonResponse(overrides.integrationRequests ?? []);
     }
 
     if (url === "/api/notifications" && method === "GET") {

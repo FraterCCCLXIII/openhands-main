@@ -7,14 +7,44 @@ export const INTEGRATIONS_PAGE_COPY = {
   searchPlaceholder: "Search integrations",
   searchClearAriaLabel: "Clear search",
   yourIntegrationsTitle: "Your integrations",
-  addIntegrationTitle: "Add integration",
+  addIntegrationTitle: "Available integrations",
   installedEmptyTitle: "No integrations activated yet",
   installedEmptyHint:
     "Browse the catalog below to connect your first integration.",
   searchEmpty: "No integrations match your search.",
-  requestIntegration: "Add Integration",
-  cantFindPrompt: "Can't find an integration you want?",
-  cantFindLink: "Click here.",
+  requestIntegration: "Request integration",
+  cantFindPrompt: "Can't find an integration?",
+  cantFindLink: "Request one",
+  requestIntegrationModalAriaLabel: "Request an integration",
+  requestIntegrationTitle: "Request an integration",
+  requestIntegrationDescription:
+    "Choose one or more providers that are not in your catalog yet, or describe a custom integration for your admin.",
+  requestIntegrationCatalogTab: "Catalog",
+  requestIntegrationCustomTab: "Custom",
+  requestIntegrationSearchPlaceholder: "Search providers",
+  requestIntegrationSearchEmpty: "No requestable integrations match your search.",
+  requestIntegrationCatalogEmpty:
+    "Every cataloged provider is already available in your integrations catalog.",
+  requestIntegrationNotesLabel: "Notes for your admin",
+  requestIntegrationNotesPlaceholder:
+    "Why you need this integration, and any setup details that would help an admin register it.",
+  requestIntegrationNameLabel: "Name",
+  requestIntegrationNamePlaceholder: "Acme CRM",
+  requestIntegrationDescriptionLabel: "Description",
+  requestIntegrationDescriptionPlaceholder: "What this integration should do",
+  requestIntegrationDocsUrlLabel: "Docs or website URL",
+  requestIntegrationDocsUrlPlaceholder: "https://example.com/docs",
+  requestIntegrationSubmit: "Send request",
+  requestIntegrationSubmitting: "Sending…",
+  requestIntegrationCancel: "Cancel",
+  requestIntegrationSuccess:
+    "Request sent. An admin can register this integration for the deployment.",
+  requestIntegrationNameRequired: "Enter a name.",
+  requestIntegrationSelectRequired: "Select at least one integration to request.",
+  requestIntegrationDocsUrlInvalid:
+    "Enter a valid URL starting with http:// or https://.",
+  requestIntegrationLoading: "Loading requestable integrations...",
+  requestIntegrationLoadError: "Unable to load requestable integrations.",
   catalogAddLabel: "Add integration",
   catalogAddTooltip: "Add integration",
   catalogRemoveTooltip: "Remove",
@@ -33,7 +63,6 @@ export const INTEGRATIONS_PAGE_COPY = {
   installedDisableLabel: "Disable integration",
   installedEnableTooltip: "Enable",
   installedDisableTooltip: "Disable",
-  installedStatusDisabled: "Disabled",
   installedDeleteLabel: "Delete",
   installedDeleteTooltip:
     "Remove this integration and any saved connection details from your personal dashboard.",
@@ -76,7 +105,7 @@ export const INTEGRATIONS_PAGE_COPY = {
   wizardManagedConnectorHint:
     "Use the dropdown and start typing to filter the managed connectors registered for this deployment. Selecting one auto-fills a name and key you can change to save another connection.",
   wizardManagedConnectorMissingPrefix: "Don't see a connector you want?",
-  wizardAdvancedLabel: "Advanced settings",
+  wizardAdvancedLabel: "Advanced",
   wizardIntegrationKeyLabel: "Integration key",
   wizardIntegrationKeyHint:
     "Edit this if you want more than one saved connection for the same managed connector.",
@@ -143,6 +172,14 @@ export function formatBulkDisableDescription(cutoffDateLabel: string): string {
 
 export function formatToolsMatchedLabel(count: number): string {
   return `${count} tool${count === 1 ? "" : "s"} matched`;
+}
+
+export function formatRequestIntegrationSelectedLabel(count: number): string {
+  return `${count} selected`;
+}
+
+export function formatRequestIntegrationSubmitLabel(count: number): string {
+  return count > 1 ? `Send ${count} requests` : INTEGRATIONS_PAGE_COPY.requestIntegrationSubmit;
 }
 
 export const AUTH_TYPE_LABELS: Record<AuthStrategy, string> = {

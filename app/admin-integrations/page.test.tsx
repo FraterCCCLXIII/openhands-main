@@ -38,6 +38,10 @@ vi.mock("@/src/hooks/use-pending-approvals-count", () => ({
   usePendingApprovalsCount: () => 0,
 }));
 
+vi.mock("@/src/hooks/use-pending-user-requests-count", () => ({
+  usePendingUserRequestsCount: () => 0,
+}));
+
 import { ClientAdminIntegrationsPage } from "@/src/components/admin/integrations/client-page";
 
 describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
@@ -209,7 +213,7 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
     });
 
     // Admins see the unified connector list. The registered connector
-    // (GitHub) shows "steps done" in its header. Expanding it reveals
+    // (GitHub) shows a Registered chip in its header. Expanding it reveals
     // the management controls (Delete).
     expect(container.textContent).toContain("GitHub");
     expect(container.textContent).toContain("ElevenLabs");

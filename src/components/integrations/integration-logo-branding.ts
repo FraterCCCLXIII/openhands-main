@@ -64,7 +64,21 @@ const OAUTH_PROVIDER_LOGO_BRANDING: Record<string, IntegrationLogoBranding> = {
 /** Overrides catalog defaults where the hub wants a stronger brand tile. */
 const INTEGRATION_LOGO_BRANDING_OVERRIDES: Record<string, IntegrationLogoBranding> = {
   github: { iconBg: "#6E40C9", iconColor: DEFAULT_INTEGRATION_LOGO_COLOR },
+  apify: { iconBg: "#111111", iconColor: DEFAULT_INTEGRATION_LOGO_COLOR },
+  "browser-mcp": { iconBg: "#0EA5E9", iconColor: DEFAULT_INTEGRATION_LOGO_COLOR },
+  exa: { iconBg: "#FFFFFF", iconColor: "#0143D9" },
+  firecrawl: { iconBg: "#1A1A1A", iconColor: "#FA5D19" },
+  huggingface: { iconBg: "#000000", iconColor: "#FFD21E" },
+  neon: { iconBg: "#000000", iconColor: "#12FFF7" },
+  playwright: { iconBg: "#FFFFFF", iconColor: "#2D4552" },
+  "superhuman-mail": { iconBg: "#FF5C28", iconColor: DEFAULT_INTEGRATION_LOGO_COLOR },
+  tavily: { iconBg: "#1F1E1E", iconColor: DEFAULT_INTEGRATION_LOGO_COLOR },
+  vanta: { iconBg: "#240642", iconColor: DEFAULT_INTEGRATION_LOGO_COLOR },
 };
+
+export function hasIntegrationLogoBrandingOverride(slug: string): boolean {
+  return slug in INTEGRATION_LOGO_BRANDING_OVERRIDES;
+}
 
 const buildIntegrationLogoBrandingMap = (): Record<string, IntegrationLogoBranding> => {
   const branding: Record<string, IntegrationLogoBranding> = {

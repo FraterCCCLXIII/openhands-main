@@ -24,5 +24,5 @@ def fastapi_routes() -> set[tuple[str, str]]:
 
 
 def test_fastapi_backend_matches_manifest_route_surface() -> None:
-    assert len(ROUTES) == 62
+    assert len(ROUTES) == 66
     assert manifest_routes() - fastapi_routes() == set()

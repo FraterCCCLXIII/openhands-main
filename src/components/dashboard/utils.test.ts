@@ -15,6 +15,7 @@ import {
   countApprovalRequestsByStatus,
   filterIntegrationsForDisplay,
   formatApprovalIdentityValue,
+  formatConversationLinkLabel,
   formatTimestamp,
   formatTrackedUsage,
   hasMissingApprovalIdentity,
@@ -312,6 +313,12 @@ describe("dashboard-workspace-utils", () => {
     expect(hasMissingApprovalIdentity(approvedRequest)).toBe(false);
     expect(formatApprovalIdentityValue(null)).toBe("Not provided");
     expect(formatApprovalIdentityValue("assistant")).toBe("assistant");
+    expect(
+      formatConversationLinkLabel(
+        "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
+      ),
+    ).toBe("app.all-hands.dev");
+    expect(formatConversationLinkLabel("not-a-url")).toBe("not-a-url");
     expect(countApprovalRequestsByStatus([accessRequest, approvedRequest, deniedRequest])).toEqual({
       pending: 1,
       approved: 1,

@@ -1,22 +1,5 @@
 import { createElement, type ReactNode } from "react";
-import {
-  BookOpen,
-  Bot,
-  Brain,
-  Clock,
-  Database,
-  Flame,
-  Folder,
-  GitBranch,
-  Globe,
-  ListTree,
-  MousePointerClick,
-  Plug,
-  Search,
-  Sparkles,
-  Telescope,
-  TestTube,
-} from "lucide-react";
+import { BookOpen, Bot, Plug } from "lucide-react";
 import {
   SiAirtable,
   SiAtlassian,
@@ -25,10 +8,12 @@ import {
   SiCloudflare,
   SiElevenlabs,
   SiFigma,
+  SiGit,
   SiGithub,
   SiHuggingface,
   SiKagi,
   SiLinear,
+  SiModelcontextprotocol,
   SiMongodb,
   SiNotion,
   SiObsidian,
@@ -41,6 +26,7 @@ import {
   SiSupabase,
 } from "react-icons/si";
 
+import { CUSTOM_CATALOG_LOGOS } from "@/src/components/integrations/custom-catalog-logos";
 import { OAUTH_PROVIDER_LOGOS } from "@/src/components/integrations/oauth-provider-logos";
 
 const LOGO_CLASS_NAME = "h-5 w-5";
@@ -53,13 +39,15 @@ const lucideLogo = (Icon: typeof Plug) =>
 
 export const INTEGRATION_FALLBACK_LOGO = lucideLogo(Bot);
 
+const MCP_REFERENCE_LOGO = simpleIcon(SiModelcontextprotocol);
+
 const MCP_CATALOG_LOGOS: Record<string, ReactNode> = {
   github: simpleIcon(SiGithub),
   slack: simpleIcon(SiSlack),
-  tavily: createElement(Search, { className: LOGO_CLASS_NAME, strokeWidth: 2.5 }),
   linear: simpleIcon(SiLinear),
   notion: simpleIcon(SiNotion),
   atlassian: simpleIcon(SiAtlassian),
+  "atlassian-rovo": simpleIcon(SiAtlassian),
   sentry: simpleIcon(SiSentry),
   stripe: simpleIcon(SiStripe),
   paypal: simpleIcon(SiPaypal),
@@ -68,23 +56,17 @@ const MCP_CATALOG_LOGOS: Record<string, ReactNode> = {
   "cloudflare-observability": simpleIcon(SiCloudflare),
   huggingface: simpleIcon(SiHuggingface),
   deepwiki: lucideLogo(BookOpen),
-  git: lucideLogo(GitBranch),
+  git: simpleIcon(SiGit),
   "brave-search": simpleIcon(SiBrave),
-  exa: lucideLogo(Telescope),
-  firecrawl: lucideLogo(Flame),
-  apify: lucideLogo(Bot),
-  fetch: lucideLogo(Globe),
-  "browser-mcp": lucideLogo(MousePointerClick),
-  playwright: lucideLogo(TestTube),
   supabase: simpleIcon(SiSupabase),
-  neon: lucideLogo(Database),
   mongodb: simpleIcon(SiMongodb),
   redis: simpleIcon(SiRedis),
-  filesystem: lucideLogo(Folder),
-  memory: lucideLogo(Brain),
-  "sequential-thinking": lucideLogo(ListTree),
-  time: lucideLogo(Clock),
-  everything: lucideLogo(Sparkles),
+  fetch: MCP_REFERENCE_LOGO,
+  filesystem: MCP_REFERENCE_LOGO,
+  memory: MCP_REFERENCE_LOGO,
+  "sequential-thinking": MCP_REFERENCE_LOGO,
+  time: MCP_REFERENCE_LOGO,
+  everything: MCP_REFERENCE_LOGO,
   figma: simpleIcon(SiFigma),
   airtable: simpleIcon(SiAirtable),
   obsidian: simpleIcon(SiObsidian),
@@ -94,6 +76,7 @@ const MCP_CATALOG_LOGOS: Record<string, ReactNode> = {
   "cloudflare-browser-rendering": simpleIcon(SiCloudflare),
   kagi: simpleIcon(SiKagi),
   clickhouse: simpleIcon(SiClickhouse),
+  ...CUSTOM_CATALOG_LOGOS,
 };
 
 export const INTEGRATION_LOGOS: Record<string, ReactNode> = {

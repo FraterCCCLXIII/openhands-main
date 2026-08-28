@@ -13,6 +13,7 @@ IntegrationKind = Literal["api", "mcp"]
 IntegrationProvider = Literal["mcp", "mock", "http"]
 ToolAccessMode = Literal["enabled", "disabled", "approval_required"]
 AccessRequestStatus = Literal["pending", "approved", "rejected", "expired"]
+IntegrationRequestStatus = Literal["pending", "added", "dismissed"]
 HttpRequestContentType = Literal[
     "json", "form_urlencoded", "multipart_form_data", "text"
 ]
@@ -358,6 +359,32 @@ class DisableUnusedToolsRequest(BaseModel):
 
     thresholdValue: int = Field(default=30, gt=0)
     thresholdUnit: Literal["days", "weeks", "months"] = "days"
+
+
+class IntegrationRequestCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source: Literal["catalog", "custom"]
+    slug: str | None = None
+    name: str = ""
+    description: str = ""
+    docsUrl: str = ""
+    notes: str = ""
+
+
+class IntegrationRequestRecord(BaseModel):
+    id: str
+    source: Literal["catalog", "custom"]
+    slug: str | None = None
+    name: str
+    description: str = ""
+    docsUrl: str = ""
+    notes: str = ""
+    requestedBy: str
+    status: IntegrationRequestStatus = "pending"
+    decidedBy: str | None = None
+    decidedAt: str | None = None
+    createdAt: str = Field(default_factory=now_iso)
 
 
 class PermissionProfileCreateRequest(BaseModel):

@@ -3,9 +3,11 @@ import { cn } from "@/src/lib/utils";
 export const Badge = ({
   children,
   tone = "default",
+  size = "default",
 }: {
   children: React.ReactNode;
   tone?: "default" | "success" | "warning" | "danger";
+  size?: "default" | "sm";
 }) => {
   const toneClass = {
     default:
@@ -21,7 +23,10 @@ export const Badge = ({
   return (
     <span
       className={cn(
-        "inline-flex rounded-md px-2.5 py-1 text-[11px] font-medium tracking-[0.01em]",
+        "inline-flex rounded-md font-medium tracking-[0.01em]",
+        size === "sm"
+          ? "px-1.5 py-0.5 text-[10px] leading-4"
+          : "px-2.5 py-1 text-[11px]",
         toneClass,
       )}
     >

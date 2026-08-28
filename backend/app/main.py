@@ -59,10 +59,13 @@ from .models import (
     DisableUnusedToolsRequest,
     HttpRequestTemplate,
     IntegrationDiscoveryRequest,
+    IntegrationRequestCreate,
+    IntegrationRequestRecord,
     IntegrationSpec,
     IntegrationToggleRequest,
     ManagedConnector,
     ManagedConnectorTool,
+    NotificationRecord,
     OAuthConnection,
     PermissionProfile,
     PermissionProfileApplyResult,
@@ -790,6 +793,28 @@ def admin_openapi(request: Request) -> dict[str, Any]:
                 "get": {
                     "summary": "List access requests across owners",
                     "responses": {"200": {"description": "Access requests"}},
+                }
+            },
+            "/api/admin/integration-requests": {
+                "get": {
+                    "summary": "List user integration requests",
+                    "responses": {"200": {"description": "Integration requests"}},
+                }
+            },
+            "/api/admin/integration-requests/{requestId}/add": {
+                "post": {
+                    "summary": "Mark a user integration request as added",
+                    "responses": {
+                        "200": {"description": "Updated integration request"}
+                    },
+                }
+            },
+            "/api/admin/integration-requests/{requestId}/dismiss": {
+                "post": {
+                    "summary": "Dismiss a user integration request",
+                    "responses": {
+                        "200": {"description": "Updated integration request"}
+                    },
                 }
             },
             "/api/admin/key": {
@@ -2148,6 +2173,116 @@ def _catalog_entry(
     }
 
 
+def _slug_from_integration_name(name: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", name.strip().lower())
+    return slug.strip("-")
+
+
+def _optional_http_url(value: str, field_name: str) -> str:
+    trimmed = value.strip()
+    if not trimmed:
+        return ""
+    parsed = urllib.parse.urlparse(trimmed)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{field_name} must be an http(s) URL.",
+        )
+    return trimmed
+
+
+def create_integration_request(
+    owner: str, payload: IntegrationRequestCreate
+) -> dict[str, Any]:
+    name = payload.name.strip()
+    description = payload.description.strip()
+    notes = payload.notes.strip()
+    docs_url = _optional_http_url(payload.docsUrl, "docsUrl")
+    slug = (payload.slug or "").strip().lower()
+
+    if payload.source == "catalog":
+        if not slug:
+            raise HTTPException(
+                status_code=400,
+                detail="slug is required for catalog requests.",
+            )
+        enabled_slugs = {
+            str(entry["slug"]) for entry in integration_catalog(filter="enabled")
+        }
+        if slug in enabled_slugs:
+            raise HTTPException(
+                status_code=409,
+                detail="This integration is already available in the catalog.",
+            )
+        catalog_entry = next(
+            (
+                entry
+                for entry in integration_catalog(filter="all")
+                if str(entry["slug"]) == slug
+            ),
+            None,
+        )
+        if catalog_entry is None:
+            raise HTTPException(status_code=404, detail="Unknown catalog integration.")
+        name = name or str(catalog_entry.get("name") or slug)
+        description = description or str(catalog_entry.get("description") or "")
+        docs_url = docs_url or str(
+            catalog_entry.get("docsUrl") or catalog_entry.get("appUrl") or ""
+        )
+    else:
+        if not name:
+            raise HTTPException(status_code=400, detail="Enter a name.")
+        slug = slug or _slug_from_integration_name(name)
+        if not slug:
+            raise HTTPException(status_code=400, detail="Enter a name.")
+
+    record = IntegrationRequestRecord(
+        id=str(uuid.uuid4()),
+        source=payload.source,
+        slug=slug or None,
+        name=name,
+        description=description,
+        docsUrl=docs_url,
+        notes=notes,
+        requestedBy=owner,
+        status="pending",
+    )
+    repository.create_notification(
+        NotificationRecord(
+            id=record.id,
+            channel="in_app",
+            recipient="admins",
+            subject=f"Integration request: {record.name}",
+            body=notes or description or f"{owner} requested {record.name}.",
+            metadata={
+                "type": "integration_request",
+                "source": record.source,
+                "slug": record.slug,
+                "name": record.name,
+                "description": record.description,
+                "docsUrl": record.docsUrl,
+                "notes": record.notes,
+                "requestedBy": owner,
+                "status": record.status,
+            },
+            createdAt=record.createdAt,
+        )
+    )
+    return record.model_dump()
+
+
+def decide_integration_request(
+    request_id: str, status: str, reviewer: str
+) -> dict[str, Any]:
+    try:
+        record = repository.decide_integration_request(request_id, status, reviewer)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if not record:
+        raise HTTPException(status_code=404, detail="Integration request not found.")
+    return record
+
+
 def approve_access_request(
     owner: str | None,
     request_id: str,
@@ -3122,6 +3257,22 @@ def dispatch_fastapi_request(request: Request, body: Any):
             owner,
             allow_catalog_defaults=path.startswith("/api/admin/"),
         )
+
+    if path == "/api/integrations/requests":
+        if method != "POST":
+            raise HTTPException(status_code=405, detail="Method not allowed.")
+        return create_integration_request(
+            owner, IntegrationRequestCreate.model_validate(body)
+        )
+
+    if path == "/api/admin/integration-requests":
+        return repository.list_integration_requests()
+
+    if path == "/api/admin/integration-requests/{requestId}/add":
+        return decide_integration_request(params["requestId"], "added", owner)
+
+    if path == "/api/admin/integration-requests/{requestId}/dismiss":
+        return decide_integration_request(params["requestId"], "dismissed", owner)
 
     if path == "/api/integrations/disable-unused":
         result = disable_unused_tools(

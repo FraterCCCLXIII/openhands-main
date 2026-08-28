@@ -26,6 +26,7 @@ from .models import (
     ConnectionResourceInput,
     ConnectionSummary,
     DuplicateExternalAccount,
+    IntegrationRequestRecord,
     IntegrationSpec,
     KeyStatus,
     ManagedConnector,
@@ -42,6 +43,47 @@ from .models import (
     ToolUsageSummary,
     now_iso,
 )
+
+
+INTEGRATION_REQUEST_METADATA_TYPE = "integration_request"
+
+
+def _metadata_text(metadata: dict[str, Any], key: str, default: str = "") -> str:
+    value = metadata.get(key)
+    if value is None:
+        return default
+    return str(value)
+
+
+def integration_request_from_notification(
+    notification: dict[str, Any],
+) -> IntegrationRequestRecord | None:
+    metadata = notification.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    if metadata.get("type") != INTEGRATION_REQUEST_METADATA_TYPE:
+        return None
+    source = metadata.get("source")
+    if source not in {"catalog", "custom"}:
+        return None
+    status = metadata.get("status") or "pending"
+    if status not in {"pending", "added", "dismissed"}:
+        status = "pending"
+    slug = _metadata_text(metadata, "slug").strip()
+    return IntegrationRequestRecord(
+        id=str(notification.get("id") or ""),
+        source=source,
+        slug=slug or None,
+        name=_metadata_text(metadata, "name") or "Integration",
+        description=_metadata_text(metadata, "description"),
+        docsUrl=_metadata_text(metadata, "docsUrl"),
+        notes=_metadata_text(metadata, "notes"),
+        requestedBy=_metadata_text(metadata, "requestedBy"),
+        status=status,
+        decidedBy=_metadata_text(metadata, "decidedBy") or None,
+        decidedAt=_metadata_text(metadata, "decidedAt") or None,
+        createdAt=str(notification.get("createdAt") or now_iso()),
+    )
 
 
 @dataclass
@@ -189,6 +231,7 @@ class Repository:
         default_factory=dict
     )
     profile_agent_keys: dict[str, str] = field(default_factory=dict)
+    notifications: list[dict[str, Any]] = field(default_factory=list)
 
     @staticmethod
     def legacy_credentials(row: dict[str, Any]) -> dict[str, Any]:
@@ -1245,7 +1288,108 @@ class Repository:
                 ).model_dump()
                 for row in rows
             ]
-        return []
+        return list(self.notifications)
+
+    def create_notification(self, record: NotificationRecord) -> dict[str, Any]:
+        payload = record.model_dump()
+        if self.database_url:
+            self.execute_db(
+                """
+                INSERT INTO notifications (
+                    id, channel, recipient, subject, body, metadata, created_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    record.id,
+                    record.channel,
+                    record.recipient,
+                    record.subject,
+                    record.body,
+                    Jsonb(record.metadata),
+                    record.createdAt,
+                ),
+            )
+            return payload
+        self.notifications.append(payload)
+        return payload
+
+    def update_notification_metadata(
+        self, notification_id: str, updates: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        if self.database_url:
+            rows = self.db_rows(
+                "SELECT * FROM notifications WHERE id = %s",
+                (notification_id,),
+            )
+            if not rows:
+                return None
+            metadata = dict(rows[0].get("metadata") or {})
+            metadata.update(updates)
+            self.execute_db(
+                "UPDATE notifications SET metadata = %s WHERE id = %s",
+                (Jsonb(metadata), notification_id),
+            )
+            record = NotificationRecord(
+                id=str(rows[0]["id"]),
+                channel=str(rows[0]["channel"]),
+                recipient=str(rows[0]["recipient"]),
+                subject=str(rows[0]["subject"]),
+                body=str(rows[0]["body"]),
+                metadata=metadata,
+                createdAt=self.iso(rows[0].get("created_at")) or now_iso(),
+            )
+            return record.model_dump()
+        for index, item in enumerate(self.notifications):
+            if item.get("id") != notification_id:
+                continue
+            metadata = dict(item.get("metadata") or {})
+            metadata.update(updates)
+            updated = {**item, "metadata": metadata}
+            self.notifications[index] = updated
+            return updated
+        return None
+
+    def list_integration_requests(self) -> list[dict[str, Any]]:
+        return [
+            record.model_dump()
+            for notification in self.list_notifications()
+            if (record := integration_request_from_notification(notification))
+        ]
+
+    def decide_integration_request(
+        self,
+        request_id: str,
+        status: str,
+        reviewer: str,
+    ) -> dict[str, Any] | None:
+        notification = next(
+            (
+                item
+                for item in self.list_notifications()
+                if item.get("id") == request_id
+            ),
+            None,
+        )
+        if not notification:
+            return None
+        current = integration_request_from_notification(notification)
+        if current is None:
+            return None
+        if current.status != "pending":
+            raise ValueError("This request has already been decided.")
+        updated = self.update_notification_metadata(
+            request_id,
+            {
+                "status": status,
+                "decidedBy": reviewer,
+                "decidedAt": now_iso(),
+            },
+        )
+        if not updated:
+            return None
+        decided = integration_request_from_notification(updated)
+        return decided.model_dump() if decided else None
 
     def read_oauth_client(self, connector: ManagedConnector) -> dict[str, str] | None:
         if connector.oauthClientId:

@@ -258,6 +258,24 @@ export interface NotificationRecord {
   createdAt: string;
 }
 
+export type IntegrationRequestSource = "catalog" | "custom";
+export type IntegrationRequestStatus = "pending" | "added" | "dismissed";
+
+export interface IntegrationRequest {
+  id: string;
+  source: IntegrationRequestSource;
+  slug?: string;
+  name: string;
+  description?: string;
+  docsUrl?: string;
+  notes?: string;
+  requestedBy: string;
+  status?: IntegrationRequestStatus;
+  decidedBy?: string;
+  decidedAt?: string;
+  createdAt: string;
+}
+
 export interface UserApiKeyStatus {
   keyPrefix: string;
   keySuffix: string;

@@ -4,8 +4,8 @@ import { ChevronRight } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 
-import { isOAuthMcpConnector } from "@/src/components/admin/integrations/connector-predicates";
 import { ConnectorSetupProgress, type ConfigFormState, createConfigForm, buildConfigPayload } from "@/src/components/admin/integrations/connector-setup-progress";
+import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
 import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-button";
 import { Badge } from "@/src/components/ui/badge";
 import { BrandButton } from "@/src/components/ui/brand-button";
@@ -135,24 +135,21 @@ const matchesSearch = (connector: { name: string; slug: string; description: str
 
 // ── types ────────────────────────────────────────────────────────────────
 
-// ── avatar ───────────────────────────────────────────────────────────────
-
-const ConnectorAvatar = ({ name, logoUrl, iconBg, iconColor }: { name: string; logoUrl?: string | null; iconBg?: string | null; iconColor?: string | null }) => {
-  const style = { backgroundColor: iconBg ?? undefined, color: iconColor ?? undefined };
-  if (logoUrl?.trim()) {
-    return (
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]" style={style} aria-hidden="true">
-        <img src={logoUrl} alt={`${name} logo`} className="h-full w-full object-contain p-2" />
-      </span>
-    );
-  }
-  const initials = name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
-  return (
-    <span role="img" aria-label={`${name} logo`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] text-xs font-semibold tracking-[0.14em] text-white" style={style}>
-      {initials}
-    </span>
-  );
-};
+const ConnectorLogo = ({
+  slug,
+  name,
+  logoUrl,
+}: {
+  slug: string;
+  name: string;
+  logoUrl?: string | null;
+}) => (
+  <IntegrationLogoBadge
+    slug={slug}
+    name={name}
+    logoUrl={logoUrl ?? undefined}
+  />
+);
 
 // ── details modal ────────────────────────────────────────────────────────
 
@@ -179,11 +176,10 @@ const ConnectorDetailsModal = ({ catalog, children, onClose }: ConnectorDetailsM
 
       <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-4 pt-7">
         <div className="flex items-start gap-3 pr-6">
-          <ConnectorAvatar
+          <ConnectorLogo
+            slug={catalog.slug}
             name={catalog.name}
             logoUrl={catalog.logoUrl}
-            iconBg={catalog.iconBg}
-            iconColor={catalog.iconColor}
           />
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-white">{catalog.name}</h2>
@@ -220,6 +216,8 @@ export interface UnifiedConnectorListProps {
   oauthCallbackBaseUrl: string;
   canRegisterManagedConnectors: boolean;
   initialExpandedSlug?: string | null;
+  hideList?: boolean;
+  onModalClose?: () => void;
   onConnectorRegistered?: (connector: ManagedConnectorDefinition) => void;
   onConnectorUpdated?: (connector: ManagedConnectorDefinition) => void;
   onConnectorDeleted?: (connector: ManagedConnectorDefinition) => void;
@@ -235,6 +233,8 @@ export function UnifiedConnectorList({
   oauthCallbackBaseUrl,
   canRegisterManagedConnectors,
   initialExpandedSlug = null,
+  hideList = false,
+  onModalClose,
   onConnectorRegistered,
   onConnectorUpdated,
   onConnectorDeleted,
@@ -499,7 +499,7 @@ export function UnifiedConnectorList({
 
   // ── render ────────────────────────────────────────────────────────────
 
-  if (unifiedList.length === 0) {
+  if (!hideList && unifiedList.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-[var(--color-border)] px-4 py-6 text-sm text-[var(--color-text-base)]">
         No connectors matched the current search.
@@ -508,7 +508,9 @@ export function UnifiedConnectorList({
   }
 
   const selectedCatalog = selectedSlug
-    ? unifiedList.find((entry) => entry.catalog.slug === selectedSlug)?.catalog ?? null
+    ? unifiedList.find((entry) => entry.catalog.slug === selectedSlug)?.catalog ??
+      integrationCatalog.find((entry) => entry.slug === selectedSlug) ??
+      null
     : null;
   const selectedManaged = selectedSlug ? managedBySlug.get(selectedSlug) ?? null : null;
   const selectedConnection = selectedManaged
@@ -517,67 +519,71 @@ export function UnifiedConnectorList({
   const selectedAuthStrategy = selectedCatalog ? getProviderAuthStrategy(selectedCatalog) : null;
   const selectedIsRegistered = selectedManaged !== null;
 
+  const closeModal = () => {
+    setSelectedSlug(null);
+    onModalClose?.();
+  };
+
   return (
     <>
-      <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
-        {unifiedList.map(({ catalog, managed }) => {
-          const isOpen = selectedSlug === catalog.slug;
-          const isRegistered = managed !== null;
-          const connection = managed ? connectionByKey.get(managed.slug) ?? null : null;
-          const stepsCompleted = managed
-            ? [
-                isOAuthMcpConnector(managed)
-                  ? Boolean(managed.oauthConfigured) || Boolean(connection) || managed.tools.length > 0
-                  : true,
-                isOAuthMcpConnector(managed) ? Boolean(connection) : true,
-                managed.tools.length > 0,
-              ].filter(Boolean).length
-            : 0;
+      {hideList ? null : (
+        <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
+          {unifiedList.map(({ catalog, managed }) => {
+            const isOpen = selectedSlug === catalog.slug;
+            const isRegistered = managed !== null;
+            const toolCount = managed?.tools.length ?? 0;
 
-          return (
-            <div key={catalog.slug} data-connector-slug={catalog.slug} data-connector-registered={isRegistered}>
-              <button
-                type="button"
-                onClick={() => setSelectedSlug(catalog.slug)}
-                aria-expanded={isOpen}
-                aria-haspopup="dialog"
-                className={cn(
-                  "flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-3 text-left text-sm transition-colors hover:bg-[var(--color-interactive-hover)]",
-                  isOpen && "bg-[var(--color-interactive-hover)]",
-                )}
-              >
-                <ConnectorAvatar name={catalog.name} logoUrl={catalog.logoUrl} iconBg={catalog.iconBg} iconColor={catalog.iconColor} />
-                <span className="shrink-0 font-medium text-white">{catalog.name}</span>
-                {isRegistered ? (
-                  <span className="shrink-0 text-[var(--color-text-base)]">
-                    {stepsCompleted} steps done
-                  </span>
-                ) : (
-                  <Badge>{integrationStatusLabel(catalog)}</Badge>
-                )}
-                {isRegistered && managed?.tools.length ? (
-                  <span className="shrink-0 text-[var(--color-accent)]">— {managed.tools.length} tools</span>
-                ) : null}
-                <span className="min-w-0 flex-1 truncate text-[var(--color-text-base)]">{catalog.description}</span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
-              </button>
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div key={catalog.slug} data-connector-slug={catalog.slug} data-connector-registered={isRegistered}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSlug(catalog.slug)}
+                  aria-expanded={isOpen}
+                  aria-haspopup="dialog"
+                  className={cn(
+                    "flex w-full min-w-0 cursor-pointer items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-[var(--color-interactive-hover)]",
+                    isOpen && "bg-[var(--color-interactive-hover)]",
+                  )}
+                >
+                  <ConnectorLogo slug={catalog.slug} name={catalog.name} logoUrl={catalog.logoUrl} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
+                      <span className="shrink-0 font-medium text-white">{catalog.name}</span>
+                      {isRegistered ? (
+                        <Badge size="sm" tone="success">Registered</Badge>
+                      ) : (
+                        <Badge size="sm">{integrationStatusLabel(catalog)}</Badge>
+                      )}
+                      {isRegistered && toolCount > 0 ? (
+                        <Badge size="sm">
+                          {toolCount} {toolCount === 1 ? "tool" : "tools"}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    {catalog.description ? (
+                      <span className="mt-0.5 block truncate text-xs text-[var(--color-text-base)]">{catalog.description}</span>
+                    ) : null}
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {selectedCatalog ? (
         <ConnectorDetailsModal
           catalog={selectedCatalog}
-          onClose={() => setSelectedSlug(null)}
+          onClose={closeModal}
         >
           {selectedCatalog.notes ? <p className="mb-3">{selectedCatalog.notes}</p> : null}
           <div className={`${selectedCatalog.notes ? "mt-3" : ""} mb-4 flex flex-wrap gap-2`}>
             {selectedCatalog.categories.map((cat) => (
-              <Badge key={`${selectedCatalog.slug}-${cat}`}>{cat}</Badge>
+              <Badge key={`${selectedCatalog.slug}-${cat}`} size="sm">{cat}</Badge>
             ))}
-            {selectedAuthStrategy ? <Badge>{selectedAuthStrategy}</Badge> : null}
-            {selectedIsRegistered ? <Badge tone="success">Registered</Badge> : <Badge tone="warning">Not registered</Badge>}
+            {selectedAuthStrategy ? <Badge size="sm">{selectedAuthStrategy}</Badge> : null}
+            {selectedIsRegistered ? <Badge size="sm" tone="success">Registered</Badge> : <Badge size="sm" tone="warning">Not registered</Badge>}
           </div>
 
           {canRegisterManagedConnectors ? (

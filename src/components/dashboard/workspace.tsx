@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchJson } from "@/src/lib/fetch-json";
 import { DashboardShell } from "@/src/components/dashboard/dashboard-shell";
+import { RequestIntegrationModal } from "@/src/components/integrations/request-integration-modal";
 import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
 import { ApprovalsSection } from "@/src/components/dashboard/sections/approvals-section";
 import { IntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
@@ -26,6 +27,7 @@ import {
 } from "@/src/lib/admin-routes";
 import { buildAgentConnectionGuide, OPENHANDS_AGENT_KEY_ENV } from "@/src/shared/agent-connection";
 import { AGENT_CONNECTION_PAGE_COPY } from "@/src/constants/agent-connection-page";
+import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { apiUrl } from "@/src/shared/paths";
 import type {
   AccessRequest,
@@ -71,6 +73,7 @@ export const DashboardWorkspace = ({
     getAdminSectionFromPath(pathname),
   );
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
+  const [showRequestIntegration, setShowRequestIntegration] = useState(false);
   const [connectionDetailsOpen, setConnectionDetailsOpen] = useState(false);
 
   const oauthStatus = useMemo(() => {
@@ -113,7 +116,7 @@ export const DashboardWorkspace = ({
   // marks the seed as stale so a background refetch fires immediately on
   // mount — otherwise the empty production seed would suppress the fetch for
   // `staleTime` and already-installed integrations would render only in the
-  // "Add integration" marketplace until a manual action invalidated the query.
+  // "Available integrations" marketplace until a manual action invalidated the query.
   const integrationsQuery = useQuery({
     queryKey: ["integrations"],
     queryFn: () => fetchJson<IntegrationSpec[]>("/api/integrations"),
@@ -305,6 +308,7 @@ export const DashboardWorkspace = ({
       oauthStatusMessage={oauthStatusMessage}
       showOAuthStatus={!showIntegrationWizard}
       agentApiReady={agentApiReady}
+      onRequestIntegration={() => setShowRequestIntegration(true)}
       headerDescription={
         activeSection === "apiKeys" ? (
           <>
@@ -350,6 +354,16 @@ export const DashboardWorkspace = ({
           onOpenIntegrationWizard={openIntegrationWizard}
           onStatus={reportStatusMessage}
           showIntegrationWizard={showIntegrationWizard}
+        />
+      ) : null}
+
+      {showRequestIntegration ? (
+        <RequestIntegrationModal
+          onClose={() => setShowRequestIntegration(false)}
+          onSubmitted={() => {
+            setShowRequestIntegration(false);
+            reportStatusMessage(INTEGRATIONS_PAGE_COPY.requestIntegrationSuccess);
+          }}
         />
       ) : null}
 

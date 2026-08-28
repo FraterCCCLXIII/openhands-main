@@ -128,4 +128,30 @@ export const HUB_PAGE_COPY = {
     adminGuidanceAccessNoteEnvVar: "APP_ADMIN_EMAILS",
     adminGuidanceAccessNoteSuffix: "environment variable.",
   },
+  adminUserRequests: {
+    title: "User requests",
+    subtitle:
+      "Review integrations users asked to add, then register a connector or dismiss the request.",
+    empty: "No pending user integration requests.",
+    tableColumnIntegration: "Integration",
+    tableColumnRequestedBy: "Requested by",
+    tableColumnRequested: "Requested",
+    tableColumnNotes: "Notes",
+    tableColumnActions: "Actions",
+    sourceCatalog: "Catalog",
+    sourceCustom: "Custom",
+    notesAriaLabel: "View request notes",
+    addLabel: "Add",
+    dismissLabel: "Dismiss",
+    addAriaLabel: (name: string) => `Add ${name}`,
+    dismissAriaLabel: (name: string) => `Dismiss ${name}`,
+    adminAccessRequiredDescription:
+      "User integration requests are only available to app administrators.",
+    adminAccessGateBodyPrefix: "Only app administrators listed in the",
+    adminAccessGateBodySuffix:
+      "environment variable can review and act on user integration requests.",
+    adminAccessRequiredPill: "Admin access required",
+    pendingCountLabel: (count: number) =>
+      `${count} pending request${count === 1 ? "" : "s"}`,
+  },
 } as const;

@@ -33,6 +33,7 @@ import { createDashboardFetchMock } from "@/src/test-utils/fetch-mock-helpers";
 import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom-helpers";
 import type {
   AccessRequest,
+  IntegrationCatalogOption,
   ManagedConnectorOption,
   IntegrationSpec,
 } from "@/src/types/integrations-hub";
@@ -237,12 +238,24 @@ describe("DashboardWorkspace", () => {
     });
 
     const adminOverviewLink = container.querySelector('a[href="/admin-overview"]');
+    const adminUserRequestsLink = container.querySelector('a[href="/admin-user-requests"]');
     const adminIntegrationsLink = container.querySelector('a[href="/admin-integrations"]');
 
     expect(adminOverviewLink).toBeTruthy();
     expect(adminOverviewLink?.textContent).toContain("Operational Overview");
+    expect(adminUserRequestsLink).toBeTruthy();
+    expect(adminUserRequestsLink?.textContent).toContain("User requests");
     expect(adminIntegrationsLink).toBeTruthy();
     expect(adminIntegrationsLink?.textContent).toContain("Admin Integrations");
+
+    const adminNavHrefs = Array.from(
+      container.querySelectorAll('nav[aria-label="Administration"] a'),
+    ).map((link) => link.getAttribute("href"));
+    expect(adminNavHrefs).toEqual([
+      "/admin-overview",
+      "/admin-integrations",
+      "/admin-user-requests",
+    ]);
   });
 
 
@@ -306,13 +319,13 @@ describe("DashboardWorkspace", () => {
       container.querySelectorAll('a[href="/admin-integrations"]'),
     );
     expect(container.querySelector('a[href="/admin-overview"]')).toBeFalsy();
+    expect(container.querySelector('a[href="/admin-user-requests"]')).toBeFalsy();
     expect(
       adminIntegrationLinks.some((link) => link.textContent?.includes("Admin Integrations")),
     ).toBe(false);
-    expect(
-      adminIntegrationLinks.some((link) => link.textContent?.includes("Click here")),
-    ).toBe(true);
-    expect(container.textContent).toContain("Add integration");
+    expect(container.querySelector('[data-testid="request-integration-button"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="integrations-request-link"]')).toBeTruthy();
+    expect(container.textContent).toContain("Available integrations");
     expect(container.textContent).toContain("Disable");
     expect(container.textContent).toContain("Delete");
     expect(container.textContent).toContain("enabled");
@@ -322,7 +335,7 @@ describe("DashboardWorkspace", () => {
     // Reproduces the production first-login path: ClientDashboardPage passes
     // no initialIntegrations, so the workspace must fetch /api/integrations
     // and render already-installed integrations under "Your integrations"
-    // rather than leaving them in the "Add integration" marketplace.
+    // rather than leaving them in the "Available integrations" marketplace.
     const installedIntegration: IntegrationSpec = {
       key: "slack",
       name: "Slack",
@@ -525,18 +538,114 @@ describe("DashboardWorkspace", () => {
     });
 
     expect(container.querySelector("h1")?.textContent).toBe("Integrations");
-    expect(container.textContent).toContain("Add integration");
+    expect(container.textContent).toContain("Available integrations");
     expect(container.textContent).toContain("GitHub");
     expect(container.textContent).toContain("Slack");
     expect(container.querySelector('input[aria-label="Search integrations"]')).toBeTruthy();
-    expect(
-      Array.from(container.querySelectorAll('a[href="/admin-integrations"]')).some(
-        (link) => link.textContent?.includes("Click here"),
-      ),
-    ).toBe(true);
+    expect(container.querySelector('[data-testid="request-integration-button"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="integrations-request-link"]')).toBeTruthy();
     expect(container.textContent).not.toContain("Home");
     expect(container.textContent).not.toContain("Getting started");
     expect(container.textContent).not.toContain("Search popular integrations");
+  });
+
+  it("opens a request modal with providers that are not already in the catalog", async () => {
+    const requestableCatalog: IntegrationCatalogOption[] = [
+      {
+        slug: "github",
+        name: "GitHub",
+        description: "Source control",
+        categories: ["Engineering"],
+        notes: "",
+        popularityRank: 1,
+        connectionDefaults: { authStrategy: "bearer" },
+      },
+      {
+        slug: "asana",
+        name: "Asana",
+        description: "Work management",
+        categories: ["Project management"],
+        notes: "",
+        popularityRank: 4,
+        connectionDefaults: { authStrategy: "oauth2" },
+      },
+    ];
+
+    fetchMock.mockImplementation(
+      createDashboardFetchMock({
+        managedConnectors,
+        catalog: requestableCatalog,
+        routeHandler: (url, method) => {
+          if (url === "/api/integrations/requests" && method === "POST") {
+            return new Response(
+              JSON.stringify({
+                id: "req-1",
+                source: "catalog",
+                slug: "asana",
+                name: "Asana",
+                requestedBy: "admin@example.com",
+                createdAt: "2026-08-27T00:00:00.000Z",
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            );
+          }
+          return null;
+        },
+      }),
+    );
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <DashboardWorkspace
+            initialIntegrations={[]}
+            initialAccessRequests={[]}
+            currentUser={{ name: "Admin User", email: "admin@example.com" }}
+            agentApiBaseUrl="https://example.com"
+            agentApiKey="test-key"
+          />
+        </QueryClientProvider>,
+      );
+    });
+
+    await act(async () => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="request-integration-button"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const modal = document.querySelector('[data-testid="request-integration-modal"]');
+    expect(modal).toBeTruthy();
+    expect(modal?.textContent).toContain("Asana");
+    expect(
+      document.querySelector('[data-testid="request-integration-option-asana"]'),
+    ).toBeTruthy();
+    expect(
+      document.querySelector('[data-testid="request-integration-option-github"]'),
+    ).toBeFalsy();
+
+    await act(async () => {
+      document
+        .querySelector<HTMLButtonElement>('[data-testid="request-integration-option-asana"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      document
+        .querySelector<HTMLFormElement>('[data-testid="request-integration-modal"] form')
+        ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/integrations/requests",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(reportStatusMessageMock).toHaveBeenCalledWith(
+      "Request sent. An admin can register this integration for the deployment.",
+    );
+    expect(document.querySelector('[data-testid="request-integration-modal"]')).toBeFalsy();
   });
 
   it("keeps installed connector types available for adding another account", async () => {
@@ -1097,15 +1206,12 @@ describe("DashboardWorkspace", () => {
     it("renders installed integrations with the GitHub catalog row and search input", async () => {
       await renderIntegrationCatalog();
 
-      expect(container.textContent).toContain("Add integration");
+      expect(container.textContent).toContain("Available integrations");
       expect(
         container.querySelector('input[type="search"][aria-label="Search integrations"]'),
       ).toBeTruthy();
-      expect(
-        Array.from(container.querySelectorAll('a[href="/admin-integrations"]')).some(
-          (link) => link.textContent?.includes("Click here"),
-        ),
-      ).toBe(true);
+      expect(container.querySelector('[data-testid="request-integration-button"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="integrations-request-link"]')).toBeTruthy();
       expect(
         container.querySelector('[data-integration-key="github"] img[alt="GitHub logo"]'),
       ).toBeTruthy();
@@ -1813,7 +1919,8 @@ describe("DashboardWorkspace", () => {
         'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
       ) as HTMLAnchorElement | null;
       expect(conversationLink).toBeTruthy();
-      expect(conversationLink?.textContent).toContain(
+      expect(conversationLink?.textContent).toContain("app.all-hands.dev");
+      expect(conversationLink?.getAttribute("title")).toBe(
         "https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e",
       );
       expect(container.textContent).not.toContain(

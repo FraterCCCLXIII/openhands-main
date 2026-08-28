@@ -164,6 +164,14 @@ export const hasMissingApprovalIdentity = (request: AccessRequest) =>
 export const formatApprovalIdentityValue = (value: string | null) =>
   value ?? "Not provided";
 
+export const formatConversationLinkLabel = (url: string) => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+};
+
 export const countApprovalRequestsByStatus = (requests: AccessRequest[]) => ({
   pending: requests.filter((request) => approvalStatusLabel(request.status) === "pending")
     .length,

@@ -6,6 +6,7 @@ import {
   DEFAULT_INTEGRATION_LOGO_BG,
   DEFAULT_INTEGRATION_LOGO_COLOR,
   getIntegrationLogoBranding,
+  hasIntegrationLogoBrandingOverride,
 } from "@/src/components/integrations/integration-logo-branding";
 import { getIntegrationLogo } from "@/src/components/integrations/integration-logos";
 import { cn } from "@/src/lib/utils";
@@ -34,10 +35,14 @@ export function IntegrationLogoBadge({
     setImageFailed(false);
   }, [logoUrl]);
 
-  const showRemoteLogo = Boolean(logoUrl) && !imageFailed;
-  const backgroundColor = iconBg ?? resolvedBranding.iconBg ?? DEFAULT_INTEGRATION_LOGO_BG;
-  const foregroundColor =
-    iconColor ?? resolvedBranding.iconColor ?? DEFAULT_INTEGRATION_LOGO_COLOR;
+  const brandingLocked = hasIntegrationLogoBrandingOverride(slug);
+  const showRemoteLogo = Boolean(logoUrl) && !imageFailed && !brandingLocked;
+  const backgroundColor = brandingLocked
+    ? resolvedBranding.iconBg
+    : (iconBg ?? resolvedBranding.iconBg ?? DEFAULT_INTEGRATION_LOGO_BG);
+  const foregroundColor = brandingLocked
+    ? resolvedBranding.iconColor
+    : (iconColor ?? resolvedBranding.iconColor ?? DEFAULT_INTEGRATION_LOGO_COLOR);
 
   return (
     <span

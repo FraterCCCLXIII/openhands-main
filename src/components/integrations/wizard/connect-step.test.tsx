@@ -16,6 +16,15 @@ import { enableReactActEnvironment, setInputValue } from "@/src/test-utils/jsdom
 
 enableReactActEnvironment();
 
+const openAdvanced = async (container: HTMLElement) => {
+  const advanced = Array.from(container.querySelectorAll("button")).find(
+    (button) => button.textContent === "Advanced",
+  );
+  expect(advanced).toBeTruthy();
+  await act(async () => {
+    advanced?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+};
 
 const baseManagedDraft: WizardDraft = {
   kind: "managed",
@@ -273,19 +282,21 @@ describe("ConnectStep", () => {
       container.querySelector('input[list="managed-connector-options"]'),
     ).toBeNull();
     expect(container.textContent).not.toContain("Don't see a connector you want?");
-    expect(container.textContent).toContain("Advanced settings");
+    expect(container.textContent).toContain("Advanced");
     expect(container.textContent).not.toContain(
       "Use a custom MCP server URL instead",
     );
 
-    const advanced = container.querySelector("details");
-    expect(advanced?.open).toBe(false);
-    expect(advanced?.textContent).toContain("Integration key");
+    const advanced = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "Advanced",
+    );
+    expect(advanced?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.textContent).not.toContain("Integration key");
 
     await cleanup();
   });
 
-  it("keeps integration key and display name collapsed under Advanced settings by default", async () => {
+  it("keeps integration key and display name collapsed under Advanced by default", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
         ...baseManagedDraft,
@@ -298,22 +309,18 @@ describe("ConnectStep", () => {
       oauthConnectionEnabled: true,
     });
 
-    const advanced = Array.from(container.querySelectorAll("details")).find(
-      (details) =>
-        details.querySelector("summary")?.textContent?.includes(
-          "Advanced settings",
-        ),
+    const advanced = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "Advanced",
     );
-    expect(advanced?.open).toBe(false);
+    expect(advanced?.getAttribute("aria-expanded")).toBe("false");
+    expect(container.textContent).not.toContain("Integration key");
 
     await act(async () => {
-      advanced?.querySelector("summary")?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
+      advanced?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(advanced?.open).toBe(true);
-    expect(advanced?.textContent).toContain("Integration key");
-    expect(advanced?.textContent).toContain("Display name");
+    expect(advanced?.getAttribute("aria-expanded")).toBe("true");
+    expect(container.textContent).toContain("Integration key");
+    expect(container.textContent).toContain("Display name");
 
     await cleanup();
   });
@@ -632,6 +639,8 @@ describe("ConnectStep", () => {
       oauthConnectionEnabled: true,
     });
 
+    await openAdvanced(container);
+
     const keyInput = container.querySelector(
       'input[placeholder="github"]',
     ) as HTMLInputElement | null;
@@ -653,6 +662,8 @@ describe("ConnectStep", () => {
       requiresOAuthConnection: true,
       oauthConnectionEnabled: true,
     });
+
+    await openAdvanced(container);
 
     const keyInput = container.querySelector(
       'input[placeholder="github"]',

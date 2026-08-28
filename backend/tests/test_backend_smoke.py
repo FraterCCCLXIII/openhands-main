@@ -53,6 +53,7 @@ def setup_function() -> None:
     repository.tool_invocations.clear()
     repository.permission_profiles.clear()
     repository.profile_agent_keys.clear()
+    repository.notifications.clear()
 
 
 def test_register_integration_and_invoke_mock_tool(
@@ -3409,6 +3410,105 @@ def test_disable_unused_tools_uses_invocation_history(
     assert updated is not None
     assert updated.tools["old"].accessMode == "disabled"
     assert updated.tools["never"].accessMode == "enabled"
+
+
+def test_user_can_request_catalog_or_custom_integration(
+    config_env: ConfigEnvFixture,
+) -> None:
+    config_env("PYTEST_INTHUB_AUTH_BYPASS", "true")
+    client = TestClient(app)
+
+    catalog = client.get("/api/integrations?filter=all").json()
+    enabled = client.get("/api/integrations?filter=enabled").json()
+    enabled_slugs = {entry["slug"] for entry in enabled}
+    requestable = next(entry for entry in catalog if entry["slug"] not in enabled_slugs)
+
+    catalog_response = client.post(
+        "/api/integrations/requests",
+        json={
+            "source": "catalog",
+            "slug": requestable["slug"],
+            "notes": "Need this for support tickets.",
+        },
+    )
+    assert catalog_response.status_code == 200
+    catalog_body = catalog_response.json()
+    assert catalog_body["source"] == "catalog"
+    assert catalog_body["slug"] == requestable["slug"]
+    assert catalog_body["name"] == requestable["name"]
+    assert catalog_body["notes"] == "Need this for support tickets."
+    assert catalog_body["requestedBy"] == "dev@localhost"
+
+    custom_response = client.post(
+        "/api/integrations/requests",
+        json={
+            "source": "custom",
+            "name": "Internal Wiki",
+            "description": "Company knowledge base",
+            "docsUrl": "https://wiki.example.com",
+            "notes": "Please add a read-only connector.",
+        },
+    )
+    assert custom_response.status_code == 200
+    custom_body = custom_response.json()
+    assert custom_body["source"] == "custom"
+    assert custom_body["slug"] == "internal-wiki"
+    assert custom_body["name"] == "Internal Wiki"
+    assert custom_body["docsUrl"] == "https://wiki.example.com"
+
+    if enabled_slugs:
+        already_available = client.post(
+            "/api/integrations/requests",
+            json={"source": "catalog", "slug": next(iter(enabled_slugs))},
+        )
+        assert already_available.status_code == 409
+
+    missing_name = client.post(
+        "/api/integrations/requests",
+        json={"source": "custom", "description": "No name"},
+    )
+    assert missing_name.status_code == 400
+
+    invalid_url = client.post(
+        "/api/integrations/requests",
+        json={
+            "source": "custom",
+            "name": "Broken Docs",
+            "docsUrl": "not-a-url",
+        },
+    )
+    assert invalid_url.status_code == 400
+
+    notifications = client.get("/api/notifications").json()
+    subjects = {item["subject"] for item in notifications}
+    assert "Integration request: Internal Wiki" in subjects
+    assert f"Integration request: {requestable['name']}" in subjects
+
+    listed = client.get("/api/admin/integration-requests").json()
+    assert {item["name"] for item in listed} >= {
+        requestable["name"],
+        "Internal Wiki",
+    }
+    catalog_request = next(item for item in listed if item["slug"] == requestable["slug"])
+    assert catalog_request["status"] == "pending"
+
+    added = client.post(
+        f"/api/admin/integration-requests/{catalog_request['id']}/add"
+    )
+    assert added.status_code == 200
+    assert added.json()["status"] == "added"
+
+    already_added = client.post(
+        f"/api/admin/integration-requests/{catalog_request['id']}/dismiss"
+    )
+    assert already_added.status_code == 409
+
+    custom_request = next(item for item in listed if item["slug"] == "internal-wiki")
+    dismissed = client.post(
+        f"/api/admin/integration-requests/{custom_request['id']}/dismiss"
+    )
+    assert dismissed.status_code == 200
+    assert dismissed.json()["status"] == "dismissed"
 
 
 def test_raw_mcp_discovery_lists_remote_tools(

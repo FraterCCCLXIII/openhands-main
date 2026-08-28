@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/src/components/ui/button";
 import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
@@ -88,6 +89,95 @@ const startOAuthConnection = async ({
   return response.redirectUrl;
 };
 
+const AdvancedFields = ({
+  draft,
+  hasDirectConnection,
+  setDraft,
+}: {
+  draft: WizardDraft;
+  hasDirectConnection: boolean;
+  setDraft: React.Dispatch<React.SetStateAction<WizardDraft>>;
+}) => (
+  <div className="grid gap-3 md:grid-cols-2 md:items-start">
+    <label className="grid gap-1.5 text-sm text-white">
+      <span className="font-medium">
+        {INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyLabel}
+      </span>
+      <input
+        className={integrationWizardInputClassName}
+        placeholder="github"
+        value={draft.key}
+        onChange={(event) =>
+          setDraft((current) => ({
+            ...current,
+            key: event.target.value,
+          }))
+        }
+        disabled={!draft.managedConnectorSlug.trim() || hasDirectConnection}
+      />
+      <span className="text-xs leading-5 text-[var(--color-text-base)]">
+        {hasDirectConnection
+          ? INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyLockedHint
+          : INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyHint}
+      </span>
+    </label>
+    <label className="grid gap-1.5 text-sm text-white">
+      <span className="font-medium">
+        {INTEGRATIONS_PAGE_COPY.wizardDisplayNameLabel}
+      </span>
+      <input
+        className={integrationWizardInputClassName}
+        placeholder="GitHub"
+        value={draft.name}
+        onChange={(event) =>
+          setDraft((current) => ({
+            ...current,
+            name: event.target.value,
+          }))
+        }
+        disabled={!draft.managedConnectorSlug.trim()}
+      />
+    </label>
+  </div>
+);
+
+const AdvancedDisclosure = ({
+  draft,
+  hasDirectConnection,
+  open,
+  onToggle,
+  setDraft,
+}: {
+  draft: WizardDraft;
+  hasDirectConnection: boolean;
+  open: boolean;
+  onToggle: () => void;
+  setDraft: React.Dispatch<React.SetStateAction<WizardDraft>>;
+}) => (
+  <div className="space-y-3">
+    <button
+      type="button"
+      aria-expanded={open}
+      className="inline-flex cursor-pointer items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-base)]"
+      onClick={onToggle}
+    >
+      {open ? (
+        <ChevronDown aria-hidden className="h-3.5 w-3.5" />
+      ) : (
+        <ChevronRight aria-hidden className="h-3.5 w-3.5" />
+      )}
+      {INTEGRATIONS_PAGE_COPY.wizardAdvancedLabel}
+    </button>
+    {open ? (
+      <AdvancedFields
+        draft={draft}
+        hasDirectConnection={hasDirectConnection}
+        setDraft={setDraft}
+      />
+    ) : null}
+  </div>
+);
+
 export const ConnectStep = ({
   managedConnectorsError,
   canDiscover,
@@ -106,7 +196,9 @@ export const ConnectStep = ({
   onSelectKind,
 }: ConnectStepProps) => {
   const { track } = useTracking();
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const managedConnectorAuthStrategy = selectedConnector?.authStrategy ?? null;
+  const showAdvancedToggle = draft.kind === "managed" && Boolean(selectedConnector);
   const selectedResource =
     selectedConnection?.resources?.find(
       (resource) => resource.id === draft.resourceId,
@@ -116,6 +208,10 @@ export const ConnectStep = ({
       : undefined);
   const requiresResourceSelection =
     selectedConnector?.connectionModel?.selectionMode === "post_auth";
+  const showConnectionCard =
+    Boolean(selectedConnector) &&
+    (requiresOAuthConnection || requiresResourceSelection);
+  const providerDocsUrl = selectedConnector?.appUrl ?? "";
 
   return (
     <div className="space-y-4">
@@ -127,11 +223,7 @@ export const ConnectStep = ({
             </div>
           ) : null}
 
-          {selectedConnector ? (
-            <div className="space-y-3">
-              {requiresOAuthConnection ||
-              requiresResourceSelection ||
-              selectedConnector.appUrl ? (
+          {selectedConnector && showConnectionCard ? (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3.5 text-sm text-[var(--color-text-base)]">
               {requiresOAuthConnection ? (
                 <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
@@ -228,76 +320,6 @@ export const ConnectStep = ({
                   </span>
                 </label>
               ) : null}
-              {selectedConnector.appUrl ? (
-                <a
-                  href={selectedConnector.appUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2.5 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-                >
-                  {INTEGRATIONS_PAGE_COPY.wizardOpenProviderDocs}
-                </a>
-              ) : null}
-            </div>
-              ) : null}
-
-              <details className="group text-sm">
-                <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-base)] [&::-webkit-details-marker]:hidden">
-                  <ChevronRight
-                    aria-hidden
-                    className="h-3.5 w-3.5 group-open:hidden"
-                  />
-                  <ChevronDown
-                    aria-hidden
-                    className="hidden h-3.5 w-3.5 group-open:inline"
-                  />
-                  {INTEGRATIONS_PAGE_COPY.wizardAdvancedLabel}
-                </summary>
-                <div className="mt-3 grid gap-3 md:grid-cols-2 md:items-start">
-                  <label className="grid gap-1.5 text-sm text-white">
-                    <span className="font-medium">
-                      {INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyLabel}
-                    </span>
-                    <input
-                      className={integrationWizardInputClassName}
-                      placeholder="github"
-                      value={draft.key}
-                      onChange={(event) =>
-                        setDraft((current) => ({
-                          ...current,
-                          key: event.target.value,
-                        }))
-                      }
-                      disabled={
-                        !draft.managedConnectorSlug.trim() ||
-                        hasDirectConnection
-                      }
-                    />
-                    <span className="text-xs leading-5 text-[var(--color-text-base)]">
-                      {hasDirectConnection
-                        ? INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyLockedHint
-                        : INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyHint}
-                    </span>
-                  </label>
-                  <label className="grid gap-1.5 text-sm text-white">
-                    <span className="font-medium">
-                      {INTEGRATIONS_PAGE_COPY.wizardDisplayNameLabel}
-                    </span>
-                    <input
-                      className={integrationWizardInputClassName}
-                      placeholder="GitHub"
-                      value={draft.name}
-                      onChange={(event) =>
-                        setDraft((current) => ({
-                          ...current,
-                          name: event.target.value,
-                        }))
-                      }
-                      disabled={!draft.managedConnectorSlug.trim()}
-                    />
-                  </label>
-                </div>
-              </details>
             </div>
           ) : null}
 
@@ -420,6 +442,16 @@ export const ConnectStep = ({
               </span>
             </label>
           )}
+
+          {showAdvancedToggle ? (
+            <AdvancedDisclosure
+              draft={draft}
+              hasDirectConnection={hasDirectConnection}
+              open={showAdvanced}
+              onToggle={() => setShowAdvanced((current) => !current)}
+              setDraft={setDraft}
+            />
+          ) : null}
 
           {isAdmin && !selectedConnector ? (
             <button
@@ -568,19 +600,37 @@ export const ConnectStep = ({
         </>
       )}
 
-      <div className={cn(modalFooterActionsClassName, "gap-3 pt-1")}>
-        {draft.kind === "mcp" ? (
-          <Button
-            variant="secondary"
-            type="button"
-            onClick={() => onSelectKind("managed")}
+      <div
+        className={cn(
+          modalFooterActionsClassName,
+          "gap-3 pt-1",
+          providerDocsUrl && "justify-between",
+        )}
+      >
+        {providerDocsUrl ? (
+          <a
+            href={providerDocsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
           >
-            Back
-          </Button>
+            {INTEGRATIONS_PAGE_COPY.wizardOpenProviderDocs}
+          </a>
         ) : null}
-        <Button type="button" disabled={!canDiscover || discoverPending} onClick={onDiscover}>
-          {discoverPending ? "Loading tools…" : "Review tools"}
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {draft.kind === "mcp" ? (
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => onSelectKind("managed")}
+            >
+              Back
+            </Button>
+          ) : null}
+          <Button type="button" disabled={!canDiscover || discoverPending} onClick={onDiscover}>
+            {discoverPending ? "Loading tools…" : "Review tools"}
+          </Button>
+        </div>
       </div>
 
       {discoverFeedback ? (

@@ -149,6 +149,24 @@ describe("AddCustomMcpModal", () => {
     expect(onRegistered).toHaveBeenCalledWith(registered);
   });
 
+  it("prefills the display name and slug from initialName", async () => {
+    await act(async () => {
+      root.render(
+        <AddCustomMcpModal
+          existingSlugs={[]}
+          initialName="Internal Wiki"
+          onClose={vi.fn()}
+          onRegistered={vi.fn()}
+        />,
+      );
+    });
+
+    const modal = document.querySelector('[data-testid="add-custom-mcp-modal"]');
+    const inputs = Array.from(modal?.querySelectorAll("input") ?? []);
+    expect((inputs[0] as HTMLInputElement).value).toBe("Internal Wiki");
+    expect((inputs[1] as HTMLInputElement).value).toBe("internal-wiki");
+  });
+
   it("rejects a slug that is already registered", async () => {
     await act(async () => {
       root.render(

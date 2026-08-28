@@ -25,7 +25,7 @@ interface ApprovalsListProps {
 
 const approvalsTableHeaderCellClassName = cn(
   settingsListTableHeaderCellClassName,
-  "text-xs font-medium text-tertiary-light whitespace-normal",
+  "whitespace-nowrap text-xs font-medium text-tertiary-light",
 );
 
 export function ApprovalsList({
@@ -50,25 +50,25 @@ export function ApprovalsList({
     <div data-testid="approvals-list" className={settingsListContainerClassName}>
       <table className="w-full table-fixed border-collapse text-left">
         <colgroup>
-          {showSelectionColumn ? <col className="w-12" /> : null}
-          <col className="w-[30%]" />
-          <col className="w-[18%]" />
-          {showConversationColumn ? <col className="w-[14%]" /> : null}
-          <col className="w-[108px]" />
-          <col className="w-20" />
+          {showSelectionColumn ? <col className="w-10" /> : null}
+          <col className="w-[32%]" />
+          <col className="w-[16%]" />
+          {showConversationColumn ? <col className="w-[12%]" /> : null}
+          <col className="w-[5.75rem]" />
+          <col className="w-14" />
           {showDecisionColumns ? (
             <>
               <col className="w-[14%]" />
-              <col className="w-[108px]" />
+              <col className="w-[5.75rem]" />
             </>
           ) : null}
-          <col className="w-[16%]" />
-          {showActionsColumn ? <col className="w-[72px]" /> : null}
+          <col className="w-[10%]" />
+          {showActionsColumn ? <col className="w-16" /> : null}
         </colgroup>
         <thead className={settingsListTableHeadClassName}>
           <tr>
             {showSelectionColumn ? (
-              <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-12 pl-4 pr-2")}>
+              <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-10 pl-4 pr-2")}>
                 <span className="sr-only">
                   {APPROVALS_PAGE_COPY.tableColumnSelect}
                 </span>
@@ -111,7 +111,7 @@ export function ApprovalsList({
               {APPROVALS_PAGE_COPY.tableColumnScopes}
             </th>
             {showActionsColumn ? (
-              <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-[72px]")}>
+              <th scope="col" className={cn(approvalsTableHeaderCellClassName, "w-16")}>
                 <span className="sr-only">
                   {APPROVALS_PAGE_COPY.tableColumnActions}
                 </span>

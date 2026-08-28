@@ -23,6 +23,10 @@ vi.mock("@/src/hooks/use-pending-approvals-count", () => ({
   usePendingApprovalsCount: usePendingApprovalsCountMock,
 }));
 
+vi.mock("@/src/hooks/use-pending-user-requests-count", () => ({
+  usePendingUserRequestsCount: () => 0,
+}));
+
 vi.mock("next-auth/react", () => ({
   signOut: vi.fn(),
 }));

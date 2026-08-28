@@ -37,6 +37,7 @@ These are the canonical top-level routes in the current app:
 - `/profile` — signed-in user profile details
 - `/case-by-case-approvals` — review pending approval-required tool requests
 - `/admin-integrations` — admin-only service-level managed connector and provider catalog management
+- `/admin-user-requests` — admin-only queue of user integration requests to add or dismiss
 
 Legacy compatibility routes still exist, but new docs and links should target the canonical routes above:
 

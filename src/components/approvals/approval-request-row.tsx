@@ -1,8 +1,9 @@
-import { ArrowRight, Check, X } from "lucide-react";
+import { Check, ExternalLink, X } from "lucide-react";
 import type { MouseEvent } from "react";
 
 import {
   formatApprovalIdentityValue,
+  formatConversationLinkLabel,
   formatTimestampParts,
   hasMissingApprovalIdentity,
 } from "@/src/components/dashboard/utils";
@@ -15,17 +16,16 @@ import { settingsListRowHoverClassName } from "@/src/styles/settings-list-classe
 import type { AccessRequest } from "@/src/types/integrations-hub";
 
 const approvalRowIconActionClassName = cn(
-  "inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full",
+  "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full",
   formControlTransitionClassName,
 );
 
 const tableCellClassName =
-  "max-w-0 px-2 py-2.5 align-middle text-xs text-[var(--oh-text-secondary)]";
+  "max-w-0 overflow-hidden px-2 py-2 align-middle text-xs text-[var(--oh-text-secondary)]";
 
 function approvalToolColumnClassName(showSelectionColumn: boolean): string {
   return cn(
     tableCellClassName,
-    "break-words",
     showSelectionColumn ? undefined : "pl-4 pr-2",
   );
 }
@@ -38,7 +38,7 @@ function ApprovalTimestamp({ value }: { value?: string }) {
   }
 
   return (
-    <div className="flex flex-col text-white">
+    <div className="flex flex-col whitespace-nowrap text-white">
       <span>{parts.date}</span>
       <span className="text-[var(--oh-text-secondary)]">{parts.time}</span>
     </div>
@@ -83,6 +83,11 @@ export function ApprovalRequestRow({
   onDeny,
 }: ApprovalRequestRowProps) {
   const toolLabel = `${request.integrationKey}.${request.toolName}`;
+  const identityLabel = `${formatApprovalIdentityValue(request.agentId)} · ${formatApprovalIdentityValue(request.agentClass)}`;
+  const scopesLabel =
+    request.scopes.length > 0
+      ? request.scopes.join(", ")
+      : APPROVALS_PAGE_COPY.tableDefaultScopes;
   const isRowSelectable =
     showSelectionColumn && request.status === "pending" && !requestActionPending;
 
@@ -108,7 +113,7 @@ export function ApprovalRequestRow({
       )}
     >
       {showSelectionColumn ? (
-        <td className={cn(tableCellClassName, "w-12 max-w-none align-middle pl-4 pr-2")}>
+        <td className={cn(tableCellClassName, "w-10 max-w-none align-middle pl-4 pr-2")}>
           {request.status === "pending" ? (
             <Checkbox
               aria-label={`Select request ${request.id}`}
@@ -129,7 +134,7 @@ export function ApprovalRequestRow({
         data-testid={`approval-request-tool-${request.id}`}
         className={approvalToolColumnClassName(showSelectionColumn)}
       >
-        <div className="flex min-w-0 items-start gap-2.5">
+        <div className="flex min-w-0 items-center gap-2">
           <span
             data-testid={`approval-request-logo-${request.id}`}
             className="shrink-0"
@@ -137,13 +142,18 @@ export function ApprovalRequestRow({
             <IntegrationLogoBadge
               slug={request.integrationKey}
               name={request.integrationKey}
-              className="h-7 w-7 rounded-md [&>svg]:max-h-3.5 [&>svg]:max-w-3.5 [&>img]:max-h-3.5 [&>img]:max-w-3.5"
+              className="h-5 w-5 rounded p-1 [&>svg]:max-h-3 [&>svg]:max-w-3 [&>img]:max-h-3 [&>img]:max-w-3"
             />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white">{toolLabel}</p>
+            <p className="truncate font-medium text-white" title={toolLabel}>
+              {toolLabel}
+            </p>
             {request.justification ? (
-              <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--oh-text-secondary)]">
+              <p
+                className="mt-0.5 truncate text-[var(--oh-text-secondary)]"
+                title={request.justification}
+              >
                 {request.justification}
               </p>
             ) : null}
@@ -151,30 +161,36 @@ export function ApprovalRequestRow({
         </div>
       </td>
 
-      <td className={cn(tableCellClassName, "break-words")}>
-        <p className="text-white">
+      <td className={tableCellClassName}>
+        <p className="truncate text-white" title={identityLabel}>
           {formatApprovalIdentityValue(request.agentId)}
           <span className="text-[var(--oh-muted)]"> · </span>
           {formatApprovalIdentityValue(request.agentClass)}
         </p>
         {hasMissingApprovalIdentity(request) ? (
-          <p className="mt-1 text-[var(--oh-muted)]">
+          <p className="mt-0.5 truncate text-[var(--oh-muted)]">
             {APPROVALS_PAGE_COPY.tableMissingIdentityHint}
           </p>
         ) : null}
       </td>
 
       {showConversationColumn ? (
-        <td className={cn(tableCellClassName, "break-words")}>
+        <td className={tableCellClassName}>
           {request.agentData?.conversationLink ? (
             <a
               href={request.agentData.conversationLink}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex max-w-full items-center gap-1 break-all text-[var(--oh-accent)] hover:text-[var(--oh-accent-hover)]"
+              title={request.agentData.conversationLink}
+              aria-label={APPROVALS_PAGE_COPY.tableConversationOpenAriaLabel(
+                request.agentData.conversationLink,
+              )}
+              className="flex min-w-0 items-center gap-1 text-[var(--oh-accent)] hover:text-[var(--oh-accent-hover)]"
             >
-              <span>{request.agentData.conversationLink}</span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">
+                {formatConversationLinkLabel(request.agentData.conversationLink)}
+              </span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
             </a>
           ) : (
             <span className="text-white">—</span>
@@ -182,38 +198,35 @@ export function ApprovalRequestRow({
         </td>
       ) : null}
 
-      <td className={cn(tableCellClassName, "w-[108px] max-w-none")}>
+      <td className={cn(tableCellClassName, "w-[5.75rem] max-w-none")}>
         <ApprovalTimestamp value={request.createdAt} />
       </td>
 
-      <td
-        className={cn(
-          tableCellClassName,
-          "w-20 max-w-none whitespace-nowrap text-white",
-        )}
-      >
+      <td className={cn(tableCellClassName, "w-14 max-w-none text-white")}>
         {formatRequestedDurationHours(request.requestedMinutes)}
       </td>
 
       {showDecisionColumns ? (
         <>
-          <td className={cn(tableCellClassName, "break-words text-white")}>
-            {request.decidedBy ?? "—"}
+          <td className={cn(tableCellClassName, "text-white")}>
+            <p className="truncate" title={request.decidedBy ?? undefined}>
+              {request.decidedBy ?? "—"}
+            </p>
           </td>
-          <td className={cn(tableCellClassName, "w-[108px] max-w-none")}>
+          <td className={cn(tableCellClassName, "w-[5.75rem] max-w-none")}>
             <ApprovalTimestamp value={request.decidedAt} />
           </td>
         </>
       ) : null}
 
-      <td className={cn(tableCellClassName, "max-w-none break-words text-white")}>
-        {request.scopes.length > 0
-          ? request.scopes.join(", ")
-          : APPROVALS_PAGE_COPY.tableDefaultScopes}
+      <td className={cn(tableCellClassName, "text-white")}>
+        <p className="truncate" title={scopesLabel}>
+          {scopesLabel}
+        </p>
       </td>
 
       {showActionsColumn ? (
-        <td className={cn(tableCellClassName, "w-[72px] max-w-none align-middle")}>
+        <td className={cn(tableCellClassName, "w-16 max-w-none align-middle pr-3")}>
           <div className="flex items-center justify-end gap-1">
             <button
               type="button"
@@ -232,7 +245,7 @@ export function ApprovalRequestRow({
                 "text-[var(--oh-success)] hover:bg-[color:rgba(165,231,94,0.12)] hover:text-[var(--oh-success)] disabled:cursor-not-allowed disabled:opacity-60",
               )}
             >
-              <Check className="size-4" aria-hidden strokeWidth={2} />
+              <Check className="size-3.5" aria-hidden strokeWidth={2} />
             </button>
             <button
               type="button"
@@ -251,7 +264,7 @@ export function ApprovalRequestRow({
                 "text-[var(--oh-danger)] hover:bg-[color:rgba(231,106,94,0.12)] hover:text-[var(--oh-danger)] disabled:cursor-not-allowed disabled:opacity-60",
               )}
             >
-              <X className="size-4" aria-hidden strokeWidth={2} />
+              <X className="size-3.5" aria-hidden strokeWidth={2} />
             </button>
           </div>
         </td>

@@ -42,8 +42,10 @@ describe("ApprovalRequestRow", () => {
   });
 
   const renderRow = async (overrides?: {
+    request?: AccessRequest;
     isSelected?: boolean;
     showSelectionColumn?: boolean;
+    showConversationColumn?: boolean;
     onToggleSelected?: ReturnType<typeof vi.fn>;
     onApprove?: ReturnType<typeof vi.fn>;
     onDeny?: ReturnType<typeof vi.fn>;
@@ -57,12 +59,12 @@ describe("ApprovalRequestRow", () => {
         <table>
           <tbody>
             <ApprovalRequestRow
-              request={pendingRequest}
+              request={overrides?.request ?? pendingRequest}
               isSelected={overrides?.isSelected ?? false}
               showSelectionColumn={overrides?.showSelectionColumn ?? true}
               showDecisionColumns={false}
               showActionsColumn
-              showConversationColumn={false}
+              showConversationColumn={overrides?.showConversationColumn ?? false}
               requestActionPending={false}
               onToggleSelected={onToggleSelected}
               onApprove={onApprove}
@@ -156,5 +158,39 @@ describe("ApprovalRequestRow", () => {
     expect(toolCell?.className).toContain("pl-4");
     expect(toolCell?.className).toContain("pr-2");
     expect(toolCell?.previousElementSibling).toBeNull();
+  });
+
+  it("keeps long tool names and conversation links on a single truncated line", async () => {
+    const conversationUrl =
+      "https://chat.example.com/thread/github-prs";
+
+    await renderRow({
+      showConversationColumn: true,
+      request: {
+        ...pendingRequest,
+        toolName: "create_pull_request",
+        integrationKey: "github",
+        agentData: { conversationLink: conversationUrl },
+      },
+    });
+
+    const toolName = container.querySelector(
+      '[data-testid="approval-request-tool-req-pending"] p',
+    );
+    const conversationLink = container.querySelector(
+      `a[href="${conversationUrl}"]`,
+    );
+
+    expect(toolName?.className).toContain("truncate");
+    expect(toolName?.className).not.toContain("text-sm");
+    expect(toolName?.textContent).toBe("github.create_pull_request");
+    expect(container.querySelector('[title="github"]')?.className).toContain(
+      "h-5",
+    );
+    expect(conversationLink?.textContent).toContain("chat.example.com");
+    expect(conversationLink?.querySelector("span")?.className).toContain(
+      "truncate",
+    );
+    expect(conversationLink?.getAttribute("title")).toBe(conversationUrl);
   });
 });

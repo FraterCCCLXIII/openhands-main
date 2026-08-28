@@ -1,6 +1,6 @@
 "use client";
 
-import { Blocks, ChevronLeft, ChevronRight, CircleCheck, Grid2x2, KeyRound, Target } from "lucide-react";
+import { Blocks, ChevronLeft, ChevronRight, CircleCheck, Grid2x2, Inbox, KeyRound, Target } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 
@@ -14,6 +14,7 @@ import { StatusPill } from "@/src/components/ui/status-pill";
 import { getAdminSectionPath, type AdminSection } from "@/src/lib/admin-routes";
 import { useEffectiveSidebarCollapsed } from "@/src/hooks/use-effective-sidebar-collapsed";
 import { usePendingApprovalsCount } from "@/src/hooks/use-pending-approvals-count";
+import { usePendingUserRequestsCount } from "@/src/hooks/use-pending-user-requests-count";
 import { cn } from "@/src/lib/utils";
 import { useSidebarStore } from "@/src/stores/sidebar-store";
 import {
@@ -44,7 +45,8 @@ import {
 export type DashboardSidebarItemId =
   | AdminSection
   | "adminOverview"
-  | "adminIntegrations";
+  | "adminIntegrations"
+  | "adminUserRequests";
 
 export interface DashboardSidebarStats {
   liveIntegrations: number;
@@ -300,6 +302,9 @@ function DashboardSidebarRailBody({
   const pendingApprovalsCount = usePendingApprovalsCount({
     enabled: showApprovalsLink,
   });
+  const pendingUserRequestsCount = usePendingUserRequestsCount({
+    enabled: showAdminOverviewLink,
+  });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -472,6 +477,16 @@ function DashboardSidebarRailBody({
                 active={isNavItemActive(activeItem, "adminIntegrations")}
                 accentWhenActive
                 collapsed={collapsed}
+              />
+            ) : null}
+            {showAdminOverviewLink ? (
+              <DashboardNavLink
+                href="/admin-user-requests"
+                icon={Inbox}
+                label={HUB_PAGE_COPY.adminUserRequests.title}
+                active={isNavItemActive(activeItem, "adminUserRequests")}
+                collapsed={collapsed}
+                trailingCount={pendingUserRequestsCount}
               />
             ) : null}
           </nav>

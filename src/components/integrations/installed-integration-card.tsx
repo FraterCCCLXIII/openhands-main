@@ -12,7 +12,6 @@ import {
 } from "@/src/constants/integrations-page";
 import { cn } from "@/src/lib/utils";
 import {
-  extensionModuleCardDisabledPillClassName,
   extensionModuleCardInteractiveClassName,
   extensionModuleCardPillClassName,
   extensionModuleCardSurfaceClassName,
@@ -85,22 +84,12 @@ export function InstalledIntegrationCard({
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <header className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 items-center gap-2">
-                <h3
-                  data-testid={`installed-integration-name-${integration.key}`}
-                  className="min-w-0 truncate text-sm font-semibold text-white"
-                >
-                  {integration.name}
-                </h3>
-                {!integration.enabled ? (
-                  <span
-                    data-testid={`installed-integration-disabled-${integration.key}`}
-                    className={extensionModuleCardDisabledPillClassName}
-                  >
-                    {INTEGRATIONS_PAGE_COPY.installedStatusDisabled}
-                  </span>
-                ) : null}
-              </div>
+              <h3
+                data-testid={`installed-integration-name-${integration.key}`}
+                className="truncate text-sm font-semibold text-white"
+              >
+                {integration.name}
+              </h3>
               <p
                 data-testid={`installed-integration-meta-${integration.key}`}
                 className="mt-0.5 text-xs text-tertiary-alt"

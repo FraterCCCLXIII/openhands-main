@@ -48,4 +48,5 @@ describe("integration-logo-branding", () => {
       iconColor: "#FFFFFF",
     });
   });
+
 });

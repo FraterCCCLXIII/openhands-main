@@ -19,6 +19,15 @@ import { enableReactActEnvironment, selectDropdownOption, setInputValue } from "
 
 enableReactActEnvironment();
 
+const openAdvanced = async (container: HTMLElement) => {
+  const advanced = Array.from(container.querySelectorAll("button")).find(
+    (button) => button.textContent === "Advanced",
+  );
+  expect(advanced).toBeTruthy();
+  await act(async () => {
+    advanced?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+};
 
 describe("IntegrationWizard", () => {
   let container: HTMLDivElement;
@@ -211,6 +220,8 @@ describe("IntegrationWizard", () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
+
+    await openAdvanced(container);
 
     expect(
       Array.from(container.querySelectorAll("input")).some(
@@ -637,6 +648,8 @@ describe("IntegrationWizard", () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
+
+    await openAdvanced(container);
 
     const integrationKeyInput = container.querySelector(
       'input[placeholder="github"]',
@@ -1347,9 +1360,8 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
-    // The integration key and display name are now always visible
-    // (not collapsed in a <details> section). Find the display name
-    // input and customise it, skipping any disabled inputs.
+    await openAdvanced(container);
+
     const nameInput = Array.from(container.querySelectorAll("input")).find(
       (input) => input.placeholder === "GitHub" && !input.disabled,
     ) as HTMLInputElement | undefined;
@@ -1461,6 +1473,8 @@ describe("IntegrationWizard", () => {
         button.textContent === "Reconnect" || button.textContent === "Connect",
     );
     expect(oauthButton?.textContent).toBe("Reconnect");
+
+    await openAdvanced(container);
 
     // Now the user changes the integration key to "notion-secondary".
     const keyInput = container.querySelector(

@@ -29,6 +29,10 @@ vi.mock("@/src/hooks/use-pending-approvals-count", () => ({
   usePendingApprovalsCount: () => 0,
 }));
 
+vi.mock("@/src/hooks/use-pending-user-requests-count", () => ({
+  usePendingUserRequestsCount: () => 0,
+}));
+
 vi.mock("@/src/components/auth/auth-context", () => ({
   useAuth: useAuthMock,
 }));

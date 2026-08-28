@@ -161,11 +161,12 @@ export function ClientAdminIntegrationsPage() {
           ) : null}
           <PageHeader
             title="Admin integrations"
-            description="Register integrations for the deployment. Admins can add a provider (OAuth or MCP) from the available list and manage the connectors that have already been added. Only connectors an admin has added are available to users."
+            description="Register providers for this deployment. Users can only connect connectors added here."
             pills={[
               ...(isAdmin ? [`${data.managedConnectors.length} added`] : []),
               `${data.integrationCatalog.length} available`,
             ]}
+            pillClassName="px-1.5 py-0.5 text-[10px] leading-4"
             actions={
               isAdmin ? (
                 <BrandButton

@@ -5,6 +5,7 @@ interface PageHeaderProps {
   title: string;
   description: React.ReactNode;
   pills?: string[];
+  pillClassName?: string;
   pillsAccessory?: React.ReactNode;
   titleAccessory?: React.ReactNode;
   actions?: React.ReactNode;
@@ -15,6 +16,7 @@ export function PageHeader({
   title,
   description,
   pills,
+  pillClassName,
   pillsAccessory,
   titleAccessory,
   actions,
@@ -45,7 +47,9 @@ export function PageHeader({
             {pills?.length ? (
               <div className="flex flex-wrap gap-2">
                 {pills.map((pill) => (
-                  <StatusPill key={pill}>{pill}</StatusPill>
+                  <StatusPill key={pill} className={pillClassName}>
+                    {pill}
+                  </StatusPill>
                 ))}
               </div>
             ) : null}

@@ -89,15 +89,17 @@ interface AddCustomMcpModalProps {
   existingSlugs: string[];
   onClose: () => void;
   onRegistered: (connector: ManagedConnectorDefinition) => void;
+  initialName?: string;
 }
 
 export function AddCustomMcpModal({
   existingSlugs,
   onClose,
   onRegistered,
+  initialName = "",
 }: AddCustomMcpModalProps) {
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
+  const [name, setName] = useState(initialName);
+  const [slug, setSlug] = useState(() => slugFromDisplayName(initialName));
   const [slugTouched, setSlugTouched] = useState(false);
   const [serverUrl, setServerUrl] = useState("");
   const [authStrategy, setAuthStrategy] = useState<CustomMcpAuthStrategy>("bearer");

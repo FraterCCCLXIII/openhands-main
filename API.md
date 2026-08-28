@@ -61,6 +61,19 @@ Legacy redirects:
   - `GET /api/admin/notifications`
   - `GET /api/admin/access-requests`
 
+## Integration requests
+
+- `POST /api/integrations/requests`
+- Auth: signed-in dashboard session
+- Body: `{ source: "catalog" | "custom", slug?, name?, description?, docsUrl?, notes? }`
+- Catalog requests must use a researched-provider slug that is not already in the enabled integrations catalog.
+- Custom requests require a name plus optional description, docs URL, and notes for the admin.
+- Stored as an in-app admin notification so deployment admins can register the connector.
+- Admins review pending requests on `/admin-user-requests`.
+- `GET /api/admin/integration-requests` lists stored requests (pending, added, and dismissed).
+- `POST /api/admin/integration-requests/{requestId}/add` marks a pending request as added.
+- `POST /api/admin/integration-requests/{requestId}/dismiss` marks a pending request as dismissed.
+
 ## Related generated docs
 
 - `src/lib/agent-connection.ts` builds the connection examples shown in the dashboard
