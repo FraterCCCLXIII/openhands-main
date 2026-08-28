@@ -1,7 +1,5 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,9 +7,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { HubAppShell } from "@/src/components/layout/hub-app-shell";
+import { PageHeader } from "@/src/components/layout/page-header";
 import { useAuth } from "@/src/components/auth/auth-context";
-import { Badge } from "@/src/components/ui/badge";
-import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { apiPath } from "@/src/shared/paths";
 import { catalogOptionToConnectorOption } from "@/src/lib/catalog-mappers";
@@ -42,13 +39,17 @@ export function ClientAdminIntegrationsPage() {
           : Promise.resolve([]),
         fetchJson<IntegrationCatalogOption[]>("/api/integrations?filter=all"),
       ]);
+      const managedConnectorList = Array.isArray(managedConnectors)
+        ? managedConnectors
+        : [];
+      const catalogList = Array.isArray(enabledCatalog) ? enabledCatalog : [];
 
       return {
-        managedConnectors,
-        readyConnectors: enabledCatalog
+        managedConnectors: managedConnectorList,
+        readyConnectors: catalogList
           .filter((entry) => entry.connectionDefaults?.oauthConfigured !== false)
           .map(catalogOptionToConnectorOption),
-        integrationCatalog: enabledCatalog,
+        integrationCatalog: catalogList,
       };
     },
     enabled: isAuthenticated,
@@ -153,38 +154,14 @@ export function ClientAdminIntegrationsPage() {
               {oauthStatusMessage.message}
             </div>
           ) : null}
-          <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
-                OpenHands Integrations Hub
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold text-white">Admin integrations</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--color-text-base)]">
-                Register integrations for the deployment. Admins can add a
-                provider (OAuth or MCP) from the available list and manage the
-                connectors that have already been added. Only connectors an
-                admin has added are available to users.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {isAdmin ? (
-                <Badge>{data.managedConnectors.length} added</Badge>
-              ) : null}
-              <Badge>{data.integrationCatalog.length} available</Badge>
-            </div>
-          </header>
-
-          <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--color-text-base)]">
-            <Link
-              href={buildAdminSectionHref("integrations", {
-                showIntegrationWizard: "1",
-              })}
-              className="inline-flex items-center gap-2 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to integrations
-            </Link>
-          </div>
+          <PageHeader
+            title="Admin integrations"
+            description="Register integrations for the deployment. Admins can add a provider (OAuth or MCP) from the available list and manage the connectors that have already been added. Only connectors an admin has added are available to users."
+            pills={[
+              ...(isAdmin ? [`${data.managedConnectors.length} added`] : []),
+              `${data.integrationCatalog.length} available`,
+            ]}
+          />
 
           <IntegrationsCatalog
             integrationCatalog={data.integrationCatalog}

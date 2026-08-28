@@ -1793,10 +1793,10 @@ describe("DashboardWorkspace", () => {
     it("renders pending requests sorted newest first with the conversation link", async () => {
       await renderApprovalsPage();
 
-      expect(container.querySelector("h1")?.textContent).toBe("Integration requests");
+      expect(container.querySelector("h1")?.textContent).toBe("Agent requests");
       expect(
         container.querySelector(
-          'input[type="search"][aria-label="Search integration requests"]',
+          'input[type="search"][aria-label="Search agent requests"]',
         ),
       ).toBeTruthy();
       expect(
@@ -1832,7 +1832,7 @@ describe("DashboardWorkspace", () => {
       await renderApprovalsPage();
 
       const searchInput = container.querySelector(
-        'input[type="search"][aria-label="Search integration requests"]',
+        'input[type="search"][aria-label="Search agent requests"]',
       ) as HTMLInputElement;
 
       await act(async () => {

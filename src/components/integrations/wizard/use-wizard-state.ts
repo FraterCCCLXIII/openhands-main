@@ -308,12 +308,23 @@ export const useWizardState = ({
   ]);
 
   const selectKind = (kind: WizardDraft["kind"]) => {
-    setDraft({ ...INITIAL_DRAFT, kind });
+    const connector =
+      kind === "managed" && initialManagedConnectorSlug
+        ? managedConnectors.find(
+            (candidate) => candidate.slug === initialManagedConnectorSlug,
+          ) ?? null
+        : null;
+
+    if (connector) {
+      handleConnectorSelect(connector, initialIntegrationKey || undefined);
+    } else {
+      setDraft({ ...INITIAL_DRAFT, kind });
+      setConnectorSearch("");
+    }
     setDiscovery(null);
     setToolModes({});
     setSelectedTools({});
     setExpandedTools({});
-    setConnectorSearch("");
     setToolSearch("");
     setDiscoverFeedback(null);
     onStatus(null);

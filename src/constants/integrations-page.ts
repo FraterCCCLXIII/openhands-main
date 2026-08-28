@@ -74,14 +74,15 @@ export const INTEGRATIONS_PAGE_COPY = {
   wizardManagedConnectorPlaceholder: "Choose GitHub, Notion, Slack...",
   wizardManagedConnectorLoadingPlaceholder: "Loading supported connectors...",
   wizardManagedConnectorHint:
-    "Use the dropdown and start typing to filter the managed connectors registered for this deployment. Selecting one auto-fills the key and display name below.",
+    "Use the dropdown and start typing to filter the managed connectors registered for this deployment. Selecting one auto-fills a name and key you can change to save another connection.",
   wizardManagedConnectorMissingPrefix: "Don't see a connector you want?",
+  wizardAdvancedLabel: "Advanced settings",
   wizardIntegrationKeyLabel: "Integration key",
   wizardIntegrationKeyHint:
     "Edit this if you want more than one saved connection for the same managed connector.",
+  wizardIntegrationKeyLockedHint:
+    "The key is locked because an OAuth connection already exists for it. Delete the integration to use a different key.",
   wizardDisplayNameLabel: "Display name",
-  wizardConnectBeforeDiscover: (name: string) =>
-    `Connect ${name} before reviewing tools.`,
   wizardConnectAccountTitle: (name: string) => `Connect your ${name} account`,
   wizardConnectAccountDescriptionOAuth: (name: string) =>
     `OAuth connection for ${name}.`,

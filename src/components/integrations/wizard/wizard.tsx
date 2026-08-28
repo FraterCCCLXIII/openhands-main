@@ -351,7 +351,7 @@ export const IntegrationWizard = ({
           aria-hidden={activePane !== "connect"}
           data-testid="integration-wizard-connect-pane"
         >
-          {wizardHeader}
+          {state.selectedConnector ? wizardHeader : null}
           {oauthStatus ? <OAuthReturnBanner status={oauthStatus} /> : null}
           <div className="mt-1">
             <ConnectStep
@@ -396,7 +396,7 @@ export const IntegrationWizard = ({
           aria-hidden={activePane !== "review"}
           data-testid="integration-wizard-review-pane"
         >
-          {wizardHeader}
+          {state.selectedConnector ? wizardHeader : null}
           {createFeedback ? (
             <div className="mb-4 shrink-0">
               <WizardFeedback tone={createFeedback.tone} testId="create-feedback">

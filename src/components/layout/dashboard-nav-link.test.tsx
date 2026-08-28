@@ -74,7 +74,7 @@ describe("DashboardNavLink collapsed tooltips", () => {
         <DashboardNavLink
           href="/case-by-case-approvals"
           icon={PlugZap}
-          label="Integration requests"
+          label="Agent requests"
           trailingCount={4}
         />,
       );
@@ -92,7 +92,7 @@ describe("DashboardNavLink collapsed tooltips", () => {
         <DashboardNavLink
           href="/case-by-case-approvals"
           icon={PlugZap}
-          label="Integration requests"
+          label="Agent requests"
           collapsed
           trailingCount={4}
         />,
@@ -112,7 +112,7 @@ describe("DashboardNavLink collapsed tooltips", () => {
         <DashboardNavLink
           href="/case-by-case-approvals"
           icon={PlugZap}
-          label="Integration requests"
+          label="Agent requests"
           trailingCount={0}
         />,
       );

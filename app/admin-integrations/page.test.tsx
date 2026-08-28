@@ -156,7 +156,7 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
     });
 
     expect(container.textContent).toContain("Admin integrations");
-    expect(container.textContent).toContain("OpenHands Integrations Hub");
+    expect(container.textContent).not.toContain("OpenHands Integrations Hub");
   });
 
   it("renders the available providers (OAuth and MCP) for non-admin users", async () => {

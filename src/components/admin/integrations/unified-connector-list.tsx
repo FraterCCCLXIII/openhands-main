@@ -150,18 +150,22 @@ export function UnifiedConnectorList({
 }: UnifiedConnectorListProps) {
   const [expandedSlug, setExpandedSlug] = useState<string | null>(initialExpandedSlug);
   const [configForms, setConfigForms] = useState<Record<string, ConfigFormState>>({});
-  const [localManagedConnectors, setLocalManagedConnectors] = useState(managedConnectors);
+  const [localManagedConnectors, setLocalManagedConnectors] = useState(
+    () => (Array.isArray(managedConnectors) ? managedConnectors : []),
+  );
 
   // Sync when the parent refetches (e.g. after registration or deletion)
   const [prevManagedConnectors, setPrevManagedConnectors] = useState(managedConnectors);
   if (managedConnectors !== prevManagedConnectors) {
     setPrevManagedConnectors(managedConnectors);
-    setLocalManagedConnectors(managedConnectors);
+    setLocalManagedConnectors(
+      Array.isArray(managedConnectors) ? managedConnectors : [],
+    );
   }
 
   const connectionByKey = useMemo(() => {
     const map = new Map<string, IntegrationConnectionStatus>();
-    for (const conn of connections) {
+    for (const conn of Array.isArray(connections) ? connections : []) {
       map.set(conn.integrationKey, conn);
     }
     return map;

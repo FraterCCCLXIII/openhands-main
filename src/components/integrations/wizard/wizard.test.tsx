@@ -214,6 +214,9 @@ describe("IntegrationWizard", () => {
       ),
     ).toBe(true);
     expect(container.textContent).toContain("Connect your Slack account");
+    expect(container.textContent).not.toContain(
+      "Use a custom MCP server URL instead",
+    );
   });
 
   it("discovers default API-key connectors with their configured header name", async () => {

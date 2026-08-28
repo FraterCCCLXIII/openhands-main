@@ -302,7 +302,9 @@ describe("IntegrationsCatalog", () => {
       );
     });
 
-    expect(container.textContent).toContain("Integrations");
+    expect(
+      container.querySelector('input[aria-label="Search integrations"]'),
+    ).toBeTruthy();
     const toggle = findConnectorToggle(container, "Google Calendar");
     expect(toggle).toBeTruthy();
 

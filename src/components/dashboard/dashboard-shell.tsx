@@ -58,7 +58,7 @@ const sectionCopy: Record<AdminSection, { title: string; description: ReactNode 
       "Manage API keys for agents and automations. Open connection details for endpoints and schemas.",
   },
   caseByCaseApprovals: {
-    title: "Integration requests",
+    title: "Agent requests",
     description: (
       <>
         {APPROVALS_PAGE_COPY.decideSelectedDescription(

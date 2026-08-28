@@ -9,7 +9,7 @@ export const APPROVALS_PAGE_COPY = {
   filterPending: "pending",
   filterApproved: "approved",
   filterDenied: "denied",
-  searchPlaceholder: "Search integration requests",
+  searchPlaceholder: "Search agent requests",
   searchClearAriaLabel: "Clear search",
   selectAllMatches: "Select all matches",
   deselectMatches: "Deselect matches",

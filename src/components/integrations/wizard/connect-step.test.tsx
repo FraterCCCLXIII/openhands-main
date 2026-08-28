@@ -283,12 +283,27 @@ describe("ConnectStep", () => {
 
     expect(onConnectorSearchChange).toHaveBeenCalledWith("Notion");
     expect(container.textContent).toContain("Click here.");
+    expect(container.textContent).not.toContain(
+      "Use a custom MCP server URL instead",
+    );
 
     await cleanup();
   });
 
+  it("shows the custom MCP escape hatch only on the generic admin add flow", async () => {
+    const generic = await renderConnectStep({
+      isAdmin: true,
+      showConnectorPicker: true,
+    });
+    expect(generic.container.textContent).toContain(
+      "Use a custom MCP server URL instead",
+    );
+    await generic.cleanup();
+  });
+
   it("hides the connector search when opened from a single catalog integration", async () => {
     const { container, cleanup } = await renderConnectStep({
+      isAdmin: true,
       showConnectorPicker: false,
       connectorSearch: "DeepWiki (deepwiki)",
       draft: {
@@ -308,8 +323,47 @@ describe("ConnectStep", () => {
       container.querySelector('input[list="managed-connector-options"]'),
     ).toBeNull();
     expect(container.textContent).not.toContain("Don't see a connector you want?");
-    expect(container.textContent).toContain("DeepWiki");
-    expect(container.textContent).toContain("Integration key");
+    expect(container.textContent).toContain("Advanced settings");
+    expect(container.textContent).not.toContain(
+      "Use a custom MCP server URL instead",
+    );
+
+    const advanced = container.querySelector("details");
+    expect(advanced?.open).toBe(false);
+    expect(advanced?.textContent).toContain("Integration key");
+
+    await cleanup();
+  });
+
+  it("keeps integration key and display name collapsed under Advanced settings by default", async () => {
+    const { container, cleanup } = await renderConnectStep({
+      draft: {
+        ...baseManagedDraft,
+        key: "notion",
+        name: "Notion",
+        managedConnectorSlug: "notion",
+      },
+      selectedConnector: notionConnector,
+      requiresOAuthConnection: true,
+      oauthConnectionEnabled: true,
+    });
+
+    const advanced = Array.from(container.querySelectorAll("details")).find(
+      (details) =>
+        details.querySelector("summary")?.textContent?.includes(
+          "Advanced settings",
+        ),
+    );
+    expect(advanced?.open).toBe(false);
+
+    await act(async () => {
+      advanced?.querySelector("summary")?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+    expect(advanced?.open).toBe(true);
+    expect(advanced?.textContent).toContain("Integration key");
+    expect(advanced?.textContent).toContain("Display name");
 
     await cleanup();
   });
@@ -506,7 +560,7 @@ describe("ConnectStep", () => {
   });
 
   it("renders manual MCP fields, forwards discover actions, and shows admin diagnostics", async () => {
-    const { container, cleanup, onDiscover } = await renderConnectStep({
+    const { container, cleanup, onDiscover, onSelectKind } = await renderConnectStep({
       draft: {
         ...baseManagedDraft,
         kind: "mcp",
@@ -525,8 +579,18 @@ describe("ConnectStep", () => {
     });
 
     expect(container.textContent).toContain("The dashboard connects to your MCP server and calls listTools.");
+    expect(container.textContent).not.toContain("Browse the connector catalog");
     expect(container.textContent).toContain("Admin diagnostics");
     expect(container.textContent).toContain("streamable_http");
+
+    const backButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "Back",
+    );
+    expect(backButton).toBeTruthy();
+    await act(async () => {
+      backButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(onSelectKind).toHaveBeenCalledWith("managed");
 
     await act(async () => {
       setInputValue(
@@ -768,7 +832,7 @@ describe("ConnectStep", () => {
     await cleanup();
   });
 
-  it("shows no-auth guidance without additional credential fields", async () => {
+  it("omits credential fields for no-auth connectors", async () => {
     const { container, cleanup } = await renderConnectStep({
       draft: {
         ...baseManagedDraft,
@@ -779,8 +843,8 @@ describe("ConnectStep", () => {
       selectedConnector: noAuthConnector,
     });
 
-    expect(container.textContent).toContain(
-      "No provider credential is required for Public Feed. Click Review tools to load the available tools.",
+    expect(container.textContent).not.toContain(
+      "No provider credential is required",
     );
     expect(container.textContent).not.toContain("Access token");
     expect(container.textContent).not.toContain("API key header name");

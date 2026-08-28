@@ -1,3 +1,5 @@
+import { ChevronDown, ChevronRight } from "lucide-react";
+
 import { Button } from "@/src/components/ui/button";
 import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
 import { cn } from "@/src/lib/utils";
@@ -15,6 +17,7 @@ import {
   type WizardDraft,
 } from "@/src/components/integrations/wizard/utils";
 import { WizardFeedback } from "@/src/components/integrations/wizard/shared";
+import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { useTracking } from "@/src/hooks/use-tracking";
 
 interface ConnectStepProps {
@@ -171,49 +174,13 @@ export const ConnectStep = ({
           ) : null}
 
           {selectedConnector ? (
+            <div className="space-y-3">
+              {requiresOAuthConnection ||
+              requiresResourceSelection ||
+              selectedConnector.appUrl ? (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3.5 text-sm text-[var(--color-text-base)]">
-              <div className="grid gap-3 md:grid-cols-2 md:items-start">
-                <label className="grid gap-1.5 text-sm text-white">
-                  <span className="font-medium">Integration key</span>
-                  <input
-                    className={integrationWizardInputClassName}
-                    placeholder="github"
-                    value={draft.key}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        key: event.target.value,
-                      }))
-                    }
-                    disabled={
-                      !draft.managedConnectorSlug.trim() ||
-                      hasDirectConnection
-                    }
-                  />
-                  <span className="text-xs leading-5 text-[var(--color-text-base)]">
-                    {hasDirectConnection
-                      ? "The key is locked because an OAuth connection already exists for it. Delete the integration to use a different key."
-                      : "Edit this if you want more than one saved connection for the same managed connector."}
-                  </span>
-                </label>
-                <label className="grid gap-1.5 text-sm text-white">
-                  <span className="font-medium">Display name</span>
-                  <input
-                    className={integrationWizardInputClassName}
-                    placeholder="GitHub"
-                    value={draft.name}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        name: event.target.value,
-                      }))
-                    }
-                    disabled={!draft.managedConnectorSlug.trim()}
-                  />
-                </label>
-              </div>
               {requiresOAuthConnection ? (
-                <div className="mt-3 flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
                   <div className="space-y-0.5">
                     <p className="text-sm font-medium text-white">
                       {selectedConnection
@@ -314,20 +281,80 @@ export const ConnectStep = ({
                   rel="noreferrer"
                   className="mt-2.5 inline-flex text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
                 >
-                  Open provider docs
+                  {INTEGRATIONS_PAGE_COPY.wizardOpenProviderDocs}
                 </a>
               ) : null}
+            </div>
+              ) : null}
+
+              <details className="group text-sm">
+                <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-base)] [&::-webkit-details-marker]:hidden">
+                  <ChevronRight
+                    aria-hidden
+                    className="h-3.5 w-3.5 group-open:hidden"
+                  />
+                  <ChevronDown
+                    aria-hidden
+                    className="hidden h-3.5 w-3.5 group-open:inline"
+                  />
+                  {INTEGRATIONS_PAGE_COPY.wizardAdvancedLabel}
+                </summary>
+                <div className="mt-3 grid gap-3 md:grid-cols-2 md:items-start">
+                  <label className="grid gap-1.5 text-sm text-white">
+                    <span className="font-medium">
+                      {INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyLabel}
+                    </span>
+                    <input
+                      className={integrationWizardInputClassName}
+                      placeholder="github"
+                      value={draft.key}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          key: event.target.value,
+                        }))
+                      }
+                      disabled={
+                        !draft.managedConnectorSlug.trim() ||
+                        hasDirectConnection
+                      }
+                    />
+                    <span className="text-xs leading-5 text-[var(--color-text-base)]">
+                      {hasDirectConnection
+                        ? INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyLockedHint
+                        : INTEGRATIONS_PAGE_COPY.wizardIntegrationKeyHint}
+                    </span>
+                  </label>
+                  <label className="grid gap-1.5 text-sm text-white">
+                    <span className="font-medium">
+                      {INTEGRATIONS_PAGE_COPY.wizardDisplayNameLabel}
+                    </span>
+                    <input
+                      className={integrationWizardInputClassName}
+                      placeholder="GitHub"
+                      value={draft.name}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          name: event.target.value,
+                        }))
+                      }
+                      disabled={!draft.managedConnectorSlug.trim()}
+                    />
+                  </label>
+                </div>
+              </details>
             </div>
           ) : null}
 
           {requiresOAuthConnection ? (
-            <div className="rounded-lg border border-dashed border-[var(--color-border)] px-3.5 py-3 text-sm text-[var(--color-text-base)]">
-              {!oauthConnectionEnabled
-                ? `Contact an admin to configure OAuth for ${selectedConnector?.name ?? "this provider"} before you can add it.`
-                : selectedConnection
-                  ? `${selectedConnector?.name} is connected. Click Review tools to save this integration with your stored OAuth credentials.`
-                  : `Connect ${selectedConnector?.name ?? "this provider"} before reviewing tools.`}
-            </div>
+            !oauthConnectionEnabled || selectedConnection ? (
+              <div className="rounded-lg border border-dashed border-[var(--color-border)] px-3.5 py-3 text-sm text-[var(--color-text-base)]">
+                {!oauthConnectionEnabled
+                  ? `Contact an admin to configure OAuth for ${selectedConnector?.name ?? "this provider"} before you can add it.`
+                  : `${selectedConnector?.name} is connected. Click Review tools to save this integration with your stored OAuth credentials.`}
+              </div>
+            ) : null
           ) : managedConnectorAuthStrategy === "api_key" ? (
             <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <label className="grid gap-1.5 text-sm text-white md:col-span-2">
@@ -414,11 +441,7 @@ export const ConnectStep = ({
                   "Provide the provider credentials that this managed connector should use upstream."}
               </div>
             </div>
-          ) : managedConnectorAuthStrategy === "none" ? (
-            <div className="rounded-lg border border-dashed border-[var(--color-border)] px-3.5 py-3 text-sm text-[var(--color-text-base)]">
-              No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Review tools to load the available tools.
-            </div>
-          ) : (
+          ) : managedConnectorAuthStrategy === "none" ? null : (
             <label className="grid gap-1.5 text-sm text-white">
               <span className="font-medium">
                 {selectedConnector?.credentialLabel ?? "Access token"}
@@ -444,7 +467,7 @@ export const ConnectStep = ({
             </label>
           )}
 
-          {isAdmin ? (
+          {isAdmin && showConnectorPicker ? (
             <button
               type="button"
               className="self-start text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
@@ -456,13 +479,6 @@ export const ConnectStep = ({
         </>
       ) : (
         <>
-          <button
-            type="button"
-            className="self-start text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-            onClick={() => onSelectKind("managed")}
-          >
-            ← Browse the connector catalog instead
-          </button>
           <div className="grid gap-3 md:grid-cols-2 md:items-start">
             <label className="grid gap-1.5 text-sm text-white">
               <span className="font-medium">Integration key</span>
@@ -599,6 +615,15 @@ export const ConnectStep = ({
       )}
 
       <div className={cn(modalFooterActionsClassName, "gap-3 pt-1")}>
+        {draft.kind === "mcp" ? (
+          <Button
+            variant="secondary"
+            type="button"
+            onClick={() => onSelectKind("managed")}
+          >
+            Back
+          </Button>
+        ) : null}
         <Button type="button" disabled={!canDiscover || discoverPending} onClick={onDiscover}>
           {discoverPending ? "Loading tools…" : "Review tools"}
         </Button>
