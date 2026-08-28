@@ -31,6 +31,11 @@ vi.mock("@/src/lib/fetch-json", () => ({
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/admin-integrations",
+}));
+
+vi.mock("@/src/hooks/use-pending-approvals-count", () => ({
+  usePendingApprovalsCount: () => 0,
 }));
 
 import { ClientAdminIntegrationsPage } from "@/src/components/admin/integrations/client-page";

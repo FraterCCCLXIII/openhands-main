@@ -14,13 +14,12 @@ import {
   copyTextToClipboard,
   maskApiKey,
 } from "@/src/components/dashboard/utils";
-import { SelectDropdown } from "@/src/components/ui/select-dropdown";
-import {
-  AGENT_CONNECTION_PAGE_COPY,
-  permissionProfilesCountAriaLabel,
-} from "@/src/constants/agent-connection-page";
+import { SavePermissionsModal } from "@/src/components/permission-profiles/save-permissions-modal";
+import { permissionProfileLabel } from "@/src/components/permission-profiles/permission-profile-utils";
+import { AGENT_CONNECTION_PAGE_COPY } from "@/src/constants/agent-connection-page";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { cn } from "@/src/lib/utils";
+import { formControlButtonClassName } from "@/src/styles/form-control-classes";
 import type { PermissionProfile } from "@/src/types/integrations-hub";
 import {
   settingsListContainerClassName,
@@ -29,11 +28,7 @@ import {
   settingsListRowClassName,
 } from "@/src/styles/settings-list-classes";
 
-const profileLabel = (profile: PermissionProfile) =>
-  profile.name ?? "Default profile";
-
 interface ApiKeyListRowProps {
-  badgeLabel: string;
   copied: boolean;
   label: string;
   maskedValue: string;
@@ -48,7 +43,6 @@ interface ApiKeyListRowProps {
 }
 
 function ApiKeyListRow({
-  badgeLabel,
   copied,
   label,
   maskedValue,
@@ -70,10 +64,7 @@ function ApiKeyListRow({
         <span className="min-w-0 truncate text-sm font-medium text-white">
           {label}
         </span>
-        <span className="shrink-0 rounded-md border border-[var(--oh-border)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.04em] text-tertiary-light">
-          {badgeLabel}
-        </span>
-        <code className="min-w-0 flex-1 truncate font-mono text-xs text-tertiary-light">
+        <code className="min-w-0 flex-1 truncate text-right font-mono text-xs text-tertiary-light">
           {maskedValue}
         </code>
       </div>
@@ -128,7 +119,7 @@ function ProfileAgentKeyListRow({
 }: {
   profile: PermissionProfile;
 }) {
-  const label = `${profileLabel(profile)} agent key`;
+  const label = permissionProfileLabel(profile);
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [agentApiKey, setAgentApiKey] = useState(
@@ -198,9 +189,8 @@ function ProfileAgentKeyListRow({
 
   return (
     <ApiKeyListRow
-      testId="agent-connection-agent-key-row"
+      testId={`agent-connection-agent-key-row-${profile.id}`}
       label={label}
-      badgeLabel={profile.name ? "Named" : "Default"}
       maskedValue={
         hasKey
           ? maskApiKey(agentApiKey, revealed)
@@ -226,7 +216,52 @@ function ProfileAgentKeyListRow({
   );
 }
 
+function KeyListSection({
+  action,
+  children,
+  description,
+  testId,
+  title,
+}: {
+  action?: ReactNode;
+  children: ReactNode;
+  description: string;
+  testId: string;
+  title: string;
+}) {
+  return (
+    <section data-testid={testId} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-medium text-white">{title}</h2>
+          {action}
+        </div>
+        <p className="text-sm leading-5 text-tertiary-light">{description}</p>
+      </div>
+      <div
+        className={cn(settingsListContainerClassName, settingsListDividerClassName)}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
+const comparePermissionProfiles = (
+  left: PermissionProfile,
+  right: PermissionProfile,
+) => {
+  if (left.name === null && right.name !== null) {
+    return -1;
+  }
+  if (left.name !== null && right.name === null) {
+    return 1;
+  }
+  return permissionProfileLabel(left).localeCompare(permissionProfileLabel(right));
+};
+
 interface AgentConnectionSectionProps {
+  actionPending?: boolean;
   adminKey: {
     copied: boolean;
     handleCopy: () => void | Promise<void>;
@@ -244,6 +279,10 @@ interface AgentConnectionSectionProps {
   agentOpenApiSchemaEndpoint: string;
   agentRestPromptExample: string;
   isAdmin: boolean;
+  isSaveModalOpen?: boolean;
+  onCloseSaveModal?: () => void;
+  onOpenSaveModal?: () => void;
+  onSaveProfile?: (profileName: string) => void;
   permissionProfiles: PermissionProfile[];
   permissionProfilesLoading: boolean;
   permissionProfilesError: string | null;
@@ -263,6 +302,7 @@ interface AgentConnectionSectionProps {
 }
 
 export const AgentConnectionSection = ({
+  actionPending = false,
   adminKey,
   adminPromptExample,
   adminSchemaEndpoint,
@@ -272,6 +312,10 @@ export const AgentConnectionSection = ({
   agentOpenApiSchemaEndpoint,
   agentRestPromptExample,
   isAdmin,
+  isSaveModalOpen = false,
+  onCloseSaveModal,
+  onOpenSaveModal,
+  onSaveProfile,
   permissionProfiles,
   permissionProfilesLoading,
   permissionProfilesError,
@@ -285,101 +329,63 @@ export const AgentConnectionSection = ({
   const detailsOpen = connectionDetailsOpen ?? uncontrolledDetailsOpen;
   const setDetailsOpen =
     onConnectionDetailsOpenChange ?? setUncontrolledDetailsOpen;
-  const defaultProfileId = useMemo(
-    () =>
-      permissionProfiles.find((profile) => profile.name === null)?.id ??
-      permissionProfiles[0]?.id ??
-      "",
+  const sortedProfiles = useMemo(
+    () => [...permissionProfiles].sort(comparePermissionProfiles),
     [permissionProfiles],
   );
-  const [selectedProfileId, setSelectedProfileId] = useState(defaultProfileId);
 
-  useEffect(() => {
-    if (!defaultProfileId) {
-      setSelectedProfileId("");
-      return;
-    }
-
-    const selectedProfileExists = permissionProfiles.some(
-      (profile) => profile.id === selectedProfileId,
-    );
-    if (!selectedProfileId || !selectedProfileExists) {
-      setSelectedProfileId(defaultProfileId);
-    }
-  }, [defaultProfileId, permissionProfiles, selectedProfileId]);
-
-  const selectedProfile =
-    permissionProfiles.find((profile) => profile.id === selectedProfileId) ??
-    permissionProfiles.find((profile) => profile.id === defaultProfileId);
-
-  const profileOptions = permissionProfiles.map((profile) => ({
-    value: profile.id,
-    label: profileLabel(profile),
-  }));
-
-  let agentKeyRow: ReactNode;
-  if (selectedProfile) {
-    agentKeyRow = (
-      <ProfileAgentKeyListRow key={selectedProfile.id} profile={selectedProfile} />
-    );
+  let profileKeyRows: ReactNode;
+  if (sortedProfiles.length > 0) {
+    profileKeyRows = sortedProfiles.map((profile) => (
+      <ProfileAgentKeyListRow key={profile.id} profile={profile} />
+    ));
   } else {
-    agentKeyRow = (
+    profileKeyRows = (
       <div
         data-testid="agent-connection-agent-key-empty"
         className={cn(settingsListRowClassName, "text-sm text-tertiary-light")}
       >
         {permissionProfilesError
-          ? `Unable to load agent key: ${permissionProfilesError}`
+          ? `Unable to load profile keys: ${permissionProfilesError}`
           : permissionProfilesLoading
-            ? "Loading agent key…"
-            : "No agent key available. Save a permission profile to provision one."}
+            ? "Loading profile keys…"
+            : "No permission profiles yet. Create a profile to provision an agent key."}
       </div>
     );
   }
 
   return (
-    <section data-testid="agent-connection-page" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-base font-medium text-white">
-          {AGENT_CONNECTION_PAGE_COPY.apiKeysTitle}
-        </h2>
-        <p className="text-sm leading-5 text-tertiary-light">
-          {AGENT_CONNECTION_PAGE_COPY.apiKeysDescription}
-        </p>
-      </div>
-
-      {permissionProfiles.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm text-tertiary-light">
-            {AGENT_CONNECTION_PAGE_COPY.permissionProfileLabel}
-          </span>
-          <SelectDropdown
-            testId="agent-connection-permission-profile-select"
-            ariaLabel={AGENT_CONNECTION_PAGE_COPY.permissionProfileLabel}
-            value={selectedProfile?.id ?? ""}
-            options={profileOptions}
-            onChange={setSelectedProfileId}
-            variant="filter"
-            className="min-w-[12rem]"
-          />
-          <span
-            className="text-xs text-tertiary-light"
-            aria-label={permissionProfilesCountAriaLabel(permissionProfiles.length)}
+    <section data-testid="agent-connection-page" className="flex flex-col gap-6">
+      <KeyListSection
+        testId="agent-connection-profile-keys"
+        title={AGENT_CONNECTION_PAGE_COPY.profileKeysTitle}
+        description={AGENT_CONNECTION_PAGE_COPY.profileKeysDescription}
+        action={
+          <button
+            type="button"
+            data-testid="agent-connection-new-profile"
+            disabled={actionPending}
+            onClick={onOpenSaveModal}
+            className={cn(
+              formControlButtonClassName,
+              "shrink-0 border border-[var(--oh-border)] bg-base-secondary text-white hover:bg-surface-raised",
+            )}
           >
-            {permissionProfiles.length}{" "}
-            {AGENT_CONNECTION_PAGE_COPY.profilesCountLabel.toLowerCase()}
-          </span>
-        </div>
-      ) : null}
-
-      <div
-        className={cn(settingsListContainerClassName, settingsListDividerClassName)}
+            {AGENT_CONNECTION_PAGE_COPY.newProfileButton}
+          </button>
+        }
       >
-        {agentKeyRow}
+        {profileKeyRows}
+      </KeyListSection>
+
+      <KeyListSection
+        testId="agent-connection-automation-keys"
+        title={AGENT_CONNECTION_PAGE_COPY.automationKeysTitle}
+        description={AGENT_CONNECTION_PAGE_COPY.automationKeysDescription}
+      >
         <ApiKeyListRow
           testId="agent-connection-user-key-row"
           label={AGENT_CONNECTION_PAGE_COPY.userAutomationKeyTitle}
-          badgeLabel={AGENT_CONNECTION_PAGE_COPY.userAutomationKeyBadge}
           maskedValue={
             userKey.maskedValue || AGENT_CONNECTION_PAGE_COPY.noUserAutomationKey
           }
@@ -395,7 +401,6 @@ export const AgentConnectionSection = ({
           <ApiKeyListRow
             testId="agent-connection-admin-key-row"
             label={AGENT_CONNECTION_PAGE_COPY.adminAutomationKeyTitle}
-            badgeLabel={AGENT_CONNECTION_PAGE_COPY.adminAutomationKeyBadge}
             maskedValue={
               adminKey.maskedValue ||
               AGENT_CONNECTION_PAGE_COPY.noAdminAutomationKey
@@ -409,7 +414,7 @@ export const AgentConnectionSection = ({
             rotateLabel={adminKey.hasKey ? "Rotate" : "Create"}
           />
         ) : null}
-      </div>
+      </KeyListSection>
 
       {detailsOpen ? (
         <AgentConnectionDetailsModal
@@ -424,6 +429,14 @@ export const AgentConnectionSection = ({
           isAdmin={isAdmin}
           userOpenApiSchemaEndpoint={userOpenApiSchemaEndpoint}
           userRestPromptExample={userRestPromptExample}
+        />
+      ) : null}
+
+      {isSaveModalOpen ? (
+        <SavePermissionsModal
+          actionPending={actionPending}
+          onClose={onCloseSaveModal ?? (() => undefined)}
+          onSave={onSaveProfile}
         />
       ) : null}
     </section>

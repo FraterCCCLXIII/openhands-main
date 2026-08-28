@@ -6,10 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
 
-import {
-  enableReactActEnvironment,
-  selectDropdownOption,
-} from "@/src/test-utils/jsdom-helpers";
+import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
 enableReactActEnvironment();
 
@@ -49,6 +46,10 @@ const createDefaultProps = () => ({
   ],
   permissionProfilesLoading: false,
   permissionProfilesError: null,
+  isSaveModalOpen: false,
+  onOpenSaveModal: vi.fn(),
+  onCloseSaveModal: vi.fn(),
+  onSaveProfile: vi.fn(),
 
   agentMcpToolName: "github__list_issues",
   agentOpenApiSchemaEndpoint: "https://example.com/api/agent/openapi",
@@ -106,8 +107,10 @@ describe("AgentConnectionSection", () => {
       );
     });
 
-    expect(container.textContent).toContain("API keys");
-    expect(container.textContent).toContain("Loading agent key…");
+    expect(container.textContent).toContain("Permission profile keys");
+    expect(container.textContent).toContain("Automation keys");
+    expect(container.textContent).toContain("Loading profile keys…");
+    expect(container.textContent).toContain("New profile");
     expect(container.textContent).toContain(
       "No user automation key yet. Reveal or copy to create one.",
     );
@@ -130,7 +133,7 @@ describe("AgentConnectionSection", () => {
     });
 
     expect(container.textContent).toContain(
-      "Unable to load agent key: Network error",
+      "Unable to load profile keys: Network error",
     );
   });
 
@@ -159,20 +162,18 @@ describe("AgentConnectionSection", () => {
 
     expect(container.textContent).toContain("Admin automation key");
     expect(container.textContent).toContain("User automation key");
-    expect(container.textContent).toContain("Default profile agent key");
-    expect(container.textContent).not.toContain("Research assistant agent key");
+    expect(container.textContent).toContain("Default profile");
+    expect(container.textContent).toContain("Research assistant");
     expect(container.textContent).not.toContain("cla_default_profile_key");
-
-    const profileSelectTrigger = container.querySelector(
-      '[data-testid="agent-connection-permission-profile-select-trigger"]',
-    );
-    expect(profileSelectTrigger?.textContent).toContain("Default profile");
+    expect(container.querySelector(
+      '[data-testid="agent-connection-permission-profile-select"]',
+    )).toBeNull();
 
     const revealAgent = container.querySelector(
-      '[data-testid="agent-connection-agent-key-row-reveal"]',
+      '[data-testid="agent-connection-agent-key-row-default-profile-reveal"]',
     ) as HTMLButtonElement;
     const copyAgent = container.querySelector(
-      '[data-testid="agent-connection-agent-key-row-copy"]',
+      '[data-testid="agent-connection-agent-key-row-default-profile-copy"]',
     ) as HTMLButtonElement;
     const revealUser = container.querySelector(
       '[data-testid="agent-connection-user-key-row-reveal"]',
@@ -221,16 +222,36 @@ describe("AgentConnectionSection", () => {
     expect(props.adminKey.handleCopy).toHaveBeenCalledTimes(1);
     expect(props.adminKey.handleRotate).toHaveBeenCalledTimes(1);
 
+    const revealResearch = container.querySelector(
+      '[data-testid="agent-connection-agent-key-row-research-profile-reveal"]',
+    ) as HTMLButtonElement;
     await act(async () => {
-      await selectDropdownOption(
-        container,
-        "agent-connection-permission-profile-select",
-        "research-profile",
-      );
+      revealResearch.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(container.textContent).toContain("cla_research_profile_key");
+  });
+
+  it("opens the save-profile modal from the new profile button", async () => {
+    const props = createDefaultProps();
+
+    await act(async () => {
+      root.render(<AgentConnectionSection {...props} />);
     });
 
-    expect(container.textContent).toContain("Research assistant agent key");
-    expect(container.textContent).not.toContain("cla_research_profile_key");
+    const newProfileButton = container.querySelector(
+      '[data-testid="agent-connection-new-profile"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      newProfileButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(props.onOpenSaveModal).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      root.render(<AgentConnectionSection {...props} isSaveModalOpen />);
+    });
+    expect(
+      document.body.querySelector('[data-testid="save-permissions-modal"]'),
+    ).toBeTruthy();
   });
 
   it("opens connection details in a modal when requested", async () => {
@@ -277,13 +298,13 @@ describe("AgentConnectionSection", () => {
       );
     });
 
-    expect(container.textContent).toContain("Default profile agent key");
+    expect(container.textContent).toContain("Default profile");
     expect(container.textContent).toContain(
       "No agent key has been provisioned for this profile yet.",
     );
 
     const provisionButton = container.querySelector(
-      'button[aria-label="Provision default profile agent key"]',
+      'button[aria-label="Provision default profile"]',
     ) as HTMLButtonElement | null;
     expect(provisionButton?.disabled).toBe(false);
   });

@@ -75,7 +75,10 @@ export const formatTimestampParts = (value?: string) => {
 };
 
 
-export const formatTrackedUsage = (toolSpec: ToolSpec) => {
+export const formatTrackedUsage = (toolSpec: Pick<
+  ToolSpec,
+  "lastInvokedAt" | "invocationCount" | "lastInvocationOutcome"
+>) => {
   if (!toolSpec.lastInvokedAt) {
     return "No tracked usage yet";
   }
@@ -116,7 +119,7 @@ export const matchesConnectorSearch = (
       connector.slug,
       connector.description,
       connector.authStrategy,
-      ...connector.categories,
+      ...(connector.categories ?? []),
     ],
     query,
   );

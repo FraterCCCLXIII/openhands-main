@@ -45,7 +45,7 @@ export const catalogOptionToConnectorOption = (
     toolCount: Array.isArray((cd as Record<string, unknown> | undefined)?.tools)
       ? ((cd as Record<string, unknown>).tools as unknown[]).length
       : (entry.toolCount ?? 0),
-    categories: entry.categories,
+    categories: entry.categories ?? [],
     authModes: cd?.authModes?.length ? cd.authModes : (entry.authModes ?? [authStrategy]),
     authStrategy,
     oauthConfigured: cd?.oauthConfigured ?? entry.oauthConfigured,

@@ -3,6 +3,7 @@ import { BrandButton } from "@/src/components/ui/brand-button";
 import { Button } from "@/src/components/ui/button";
 import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
+import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
 import { cn } from "@/src/lib/utils";
 import type { IntegrationSpec } from "@/src/types/integrations-hub";
 
@@ -53,7 +54,7 @@ export function DeleteIntegrationModal({
           {INTEGRATIONS_PAGE_COPY.deleteModalDescription(integration.name)}
         </p>
 
-        <div className="mt-2 flex justify-end gap-2">
+        <div className={cn(modalFooterActionsClassName, "mt-2")}>
           <BrandButton type="button" variant="secondary" onClick={onClose}>
             {INTEGRATIONS_PAGE_COPY.cancel}
           </BrandButton>

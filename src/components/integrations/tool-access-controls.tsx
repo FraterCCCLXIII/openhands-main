@@ -1,11 +1,13 @@
-import { ChevronRight } from "lucide-react";
+import { Ban, Check, ListTodo, type LucideIcon } from "lucide-react";
 import { useId, useState } from "react";
 
-import { Button } from "@/src/components/ui/button";
+import { DetailsRevealCaret } from "@/src/components/integrations/details-reveal-caret";
+import { SelectDropdown } from "@/src/components/ui/select-dropdown";
 import {
   functionAccessModes,
   getAllowedFunctionAccessModes,
 } from "@/src/lib/function-access-mode";
+import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { matchesSearchQuery } from "@/src/lib/text-utils";
 import { cn } from "@/src/lib/utils";
 import type { ToolAccessMode, ToolSpec } from "@/src/types/integrations-hub";
@@ -34,29 +36,33 @@ export const matchesToolSearch = (
     query,
   );
 
-export const accessModeButtonClassName: Record<ToolAccessMode, string> = {
+const accessModeTriggerClassName: Record<ToolAccessMode, string> = {
   enabled:
-    "border-[color:rgba(165,231,94,0.3)] bg-[color:rgba(165,231,94,0.12)] text-[var(--oh-color-success)] hover:bg-[color:rgba(165,231,94,0.18)]",
+    "border-[color:rgba(165,231,94,0.3)] bg-[color:rgba(165,231,94,0.12)] text-[var(--oh-color-success)] hover:bg-[color:rgba(165,231,94,0.18)] hover:text-[var(--oh-color-success)]",
   approval_required:
-    "border-[color:rgba(217,181,90,0.28)] bg-[color:rgba(217,181,90,0.12)] text-[var(--oh-warning)] hover:bg-[color:rgba(217,181,90,0.18)]",
+    "border-[color:rgba(217,181,90,0.28)] bg-[color:rgba(217,181,90,0.12)] text-[var(--oh-warning)] hover:bg-[color:rgba(217,181,90,0.18)] hover:text-[var(--oh-warning)]",
   disabled:
-    "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.12)] text-[var(--oh-color-danger)] hover:bg-[color:rgba(231,106,94,0.18)]",
+    "border-[color:rgba(231,106,94,0.3)] bg-[color:rgba(231,106,94,0.12)] text-[var(--oh-color-danger)] hover:bg-[color:rgba(231,106,94,0.18)] hover:text-[var(--oh-color-danger)]",
 };
 
-const accessModeSegmentClassName: Record<ToolAccessMode, string> = {
-  enabled: "bg-[color:rgba(165,231,94,0.16)] text-[var(--oh-color-success)]",
-  approval_required:
-    "bg-[color:rgba(217,181,90,0.16)] text-[var(--oh-warning)]",
-  disabled: "bg-[color:rgba(231,106,94,0.16)] text-[var(--oh-color-danger)]",
+const accessModeIcons: Record<ToolAccessMode, LucideIcon> = {
+  enabled: Check,
+  approval_required: ListTodo,
+  disabled: Ban,
 };
 
 const accessModeOptions: Array<{
   value: ToolAccessMode;
   label: string;
+  icon: LucideIcon;
 }> = functionAccessModes.map((value) => ({
   value,
   label: accessModeLabel(value),
+  icon: accessModeIcons[value],
 }));
+
+export const getAccessModeDropdownTestId = (toolName: string) =>
+  `access-mode-${toolName}`;
 
 export const AccessModeSlider = ({
   toolName,
@@ -69,44 +75,33 @@ export const AccessModeSlider = ({
   maxMode?: ToolAccessMode;
   onChange: (mode: ToolAccessMode) => void;
 }) => {
-  const allowedModes = maxMode ? getAllowedFunctionAccessModes(maxMode) : functionAccessModes;
+  const allowedModes = maxMode
+    ? getAllowedFunctionAccessModes(maxMode)
+    : functionAccessModes;
+  const options = accessModeOptions.filter((option) =>
+    allowedModes.includes(option.value),
+  );
 
   return (
     <div
-      className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[var(--oh-border)] bg-[var(--oh-bg-input)] p-1"
-      role="group"
-      aria-label={`Default access for ${toolName}`}
+      className="w-fit shrink-0"
       data-access-mode={mode}
       data-max-access-mode={maxMode}
     >
-      {accessModeOptions.map((option) => {
-        const active = option.value === mode;
-        const allowed = allowedModes.includes(option.value);
-
-        return (
-          <button
-            key={option.value}
-            type="button"
-            className={cn(
-              "cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50",
-              active
-                ? accessModeSegmentClassName[option.value]
-                : "text-[var(--oh-text-secondary)] hover:bg-[var(--oh-interactive-active)] hover:text-white disabled:hover:bg-transparent disabled:hover:text-[var(--oh-text-secondary)]",
-            )}
-            aria-pressed={active}
-            aria-label={`${accessModeLabel(option.value)} access for ${toolName}`}
-            disabled={!allowed}
-            onClick={() => {
-              if (!allowed) {
-                return;
-              }
-              onChange(option.value);
-            }}
-          >
-            {option.label}
-          </button>
-        );
-      })}
+      <SelectDropdown
+        testId={getAccessModeDropdownTestId(toolName)}
+        value={mode}
+        options={options}
+        ariaLabel={`Default access for ${toolName}`}
+        variant="filter"
+        menuAlign="right"
+        className="w-fit"
+        triggerClassName={cn(
+          accessModeTriggerClassName[mode],
+          "h-7 min-h-7 w-fit gap-1 px-2 text-[10px] font-semibold leading-4",
+        )}
+        onChange={(nextValue) => onChange(nextValue as ToolAccessMode)}
+      />
     </div>
   );
 };
@@ -145,16 +140,16 @@ export const ToolRow = ({
 
   return (
     <div
-      className={cn("px-3.5 py-3", className)}
+      className={cn("px-4 py-4", className)}
       data-tool-name={name}
     >
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-3">
             {onToggleSelected ? (
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg-input)] text-[var(--color-accent)]"
+                className="mt-1 h-4 w-4 rounded border-[var(--oh-border)] bg-[var(--oh-bg-input)] accent-[var(--oh-accent)]"
                 checked={selected ?? false}
                 aria-label={`Select ${name}`}
                 onChange={(event) => onToggleSelected(event.target.checked)}
@@ -162,52 +157,46 @@ export const ToolRow = ({
             ) : null}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-white">{name}</p>
-              <p className="mt-1 truncate text-xs leading-5 text-[var(--color-text-base)]">
-                {toolSpec.description || "No description provided."}
+              <p className="mt-1 truncate text-xs leading-5 text-[var(--oh-text-secondary)]">
+                {toolSpec.description ||
+                  INTEGRATIONS_PAGE_COPY.installedToolNoDescription}
               </p>
             </div>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 self-start">
           <AccessModeSlider
             toolName={name}
             mode={accessMode}
             maxMode={toolSpec.maxAccessMode}
             onChange={onAccessModeChange}
           />
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-8 rounded-md px-3 text-xs"
-            aria-expanded={isExpanded}
-            aria-controls={detailsId}
-            onClick={() => {
+          <DetailsRevealCaret
+            expanded={isExpanded}
+            controlsId={detailsId}
+            showLabel={INTEGRATIONS_PAGE_COPY.installedShowToolDetails}
+            hideLabel={INTEGRATIONS_PAGE_COPY.installedHideToolDetails}
+            onToggle={() => {
               setIsExpanded((prev) => !prev);
               onToggleExpanded?.(name);
             }}
-          >
-            {isExpanded ? "Hide details" : "Show details"}
-            <ChevronRight
-              className={cn(
-                "ml-1 h-4 w-4 transition-transform",
-                isExpanded && "rotate-90",
-              )}
-            />
-          </Button>
+          />
         </div>
       </div>
 
       {isExpanded ? (
         <div
           id={detailsId}
-          className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-input)] p-3.5"
+          className="mt-3 rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-subtle)] p-4"
         >
-          <p className="text-sm leading-6 text-[var(--color-text-base)]">
-            {toolSpec.description || "No description provided."}
+          <p className="text-sm leading-5 text-[var(--oh-text-secondary)]">
+            {toolSpec.description ||
+              INTEGRATIONS_PAGE_COPY.installedToolNoDescription}
           </p>
-          <p className="mt-2 text-xs leading-5 text-[var(--color-text-base)]">
-            Default scopes: {toolSpec.defaultScopes.join(", ") || "none"}
+          <p className="mt-2 text-xs leading-5 text-[var(--oh-text-secondary)]">
+            {INTEGRATIONS_PAGE_COPY.installedDefaultScopesLabel}{" "}
+            {toolSpec.defaultScopes.join(", ") ||
+              INTEGRATIONS_PAGE_COPY.installedNoneLabel}
           </p>
         </div>
       ) : null}

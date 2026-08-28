@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { normalizeCaseInsensitiveText } from "@/src/lib/text-utils";
+import { isUxReviewMode } from "@/src/lib/ux-review-mode";
 import { apiPath } from "@/src/shared/paths";
 
 interface ClientUser {
@@ -61,14 +62,18 @@ async function fetchSession(
   return { user: body.user ?? null, status: response.status };
 }
 
-export function useClientAuth(authDisabled = false): ClientAuthState {
+export function useClientAuth(
+  authDisabled = false,
+  uxReviewViewAsAdmin = true,
+): ClientAuthState {
+  const effectiveAuthDisabled = authDisabled || isUxReviewMode();
   const [user, setUser] = useState<ClientUser | null>(null);
   const [sessionError, setSessionError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(!authDisabled);
+  const [isLoading, setIsLoading] = useState(!effectiveAuthDisabled);
 
   useEffect(() => {
-    if (authDisabled) {
+    if (effectiveAuthDisabled) {
       setUser(DEV_USER);
       setSessionError(null);
       setIsLoading(false);
@@ -93,7 +98,7 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
       });
 
     return () => controller.abort();
-  }, [authDisabled, retryCount]);
+  }, [effectiveAuthDisabled, retryCount]);
 
   const retrySession = useCallback(() => setRetryCount((n) => n + 1), []);
 
@@ -102,11 +107,11 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
   }, []);
 
   return useMemo(() => {
-    if (authDisabled) {
+    if (effectiveAuthDisabled) {
       return {
         user: DEV_USER,
         ownerId: DEV_OWNER_ID,
-        isAdmin: true,
+        isAdmin: isUxReviewMode() ? uxReviewViewAsAdmin : true,
         isLoading: false,
         isAuthenticated: true,
         sessionError: null,
@@ -133,5 +138,13 @@ export function useClientAuth(authDisabled = false): ClientAuthState {
       signOut,
       retrySession,
     };
-  }, [authDisabled, isLoading, retrySession, sessionError, signOut, user]);
+  }, [
+    effectiveAuthDisabled,
+    isLoading,
+    retrySession,
+    sessionError,
+    signOut,
+    user,
+    uxReviewViewAsAdmin,
+  ]);
 }

@@ -6,17 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 
 import { CompactPanel } from "@/src/components/dashboard/shared";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
-import {
-  DashboardSidebar,
-  DashboardSidebarUserPanel,
-} from "@/src/components/layout/dashboard-sidebar";
-import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
+import { HubAppShell } from "@/src/components/layout/hub-app-shell";
 import { useAuth } from "@/src/components/auth/auth-context";
 import { Badge } from "@/src/components/ui/badge";
 import { Card } from "@/src/components/ui/card";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { apiPath } from "@/src/shared/paths";
+import { hubPageShellClassName } from "@/src/styles/neo-layout";
 import type { AdminOperationalOverview } from "@/src/types/integrations-hub";
 
 const pluralize = (count: number, singular: string, plural = `${singular}s`) =>
@@ -59,33 +56,19 @@ export function ClientAdminOverviewPage() {
   const userEmail = user?.email?.trim() || "Not provided";
 
   return (
-    <main className="min-h-screen overflow-x-hidden px-6 py-8">
-      <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-8">
-        <DashboardSidebar
-          badge={<Badge>{overview ? `${overview.users.length} users` : "Admin only"}</Badge>}
-          activeItem={isAdmin ? "adminOverview" : "integrations"}
-          showAdminOverviewLink={isAdmin}
-          showAdminIntegrationsLink
-          footer={
-            isAuthenticated ? (
-              <DashboardSidebarUserPanel
-                userName={userName}
-                userEmail={userEmail}
-                badges={
-                  overview
-                    ? [
-                        <Badge key="owners">{overview.connectedOwners} owners</Badge>,
-                        <Badge key="pending">{overview.pendingAccessRequests} pending</Badge>,
-                      ]
-                    : [<Badge key="request">Request admin access</Badge>]
-                }
-                action={<DashboardSignOutButton />}
-              />
-            ) : undefined
-          }
-        />
-
-        <div className="min-w-0 space-y-4">
+    <HubAppShell
+      activeItem={isAdmin ? "adminOverview" : "integrations"}
+      stats={{
+        liveIntegrations: overview?.connectedOwners ?? 0,
+        toolCount: overview?.managedConnectors ?? 0,
+      }}
+      userDisplayName={userName}
+      userEmail={userEmail}
+      showAdminOverviewLink={isAdmin}
+      showAdminIntegrationsLink
+    >
+      <div className={hubPageShellClassName}>
+        <div className="space-y-4">
           <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-base)]">
@@ -240,6 +223,6 @@ export function ClientAdminOverviewPage() {
           )}
         </div>
       </div>
-    </main>
+    </HubAppShell>
   );
 }

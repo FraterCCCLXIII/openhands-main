@@ -2,8 +2,9 @@
 
 import { ChevronUp, LogOut, User } from "lucide-react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import React from "react";
+
+import { logoutViaMainApp } from "@/src/lib/main-app-auth";
 
 import { DashboardCollapsedIconSlot } from "@/src/components/layout/dashboard-collapsed-icon-slot";
 import { SidebarTooltip } from "@/src/components/ui/sidebar-tooltip";
@@ -62,7 +63,7 @@ export function DashboardUserMenu({
 
   const handleLogout = () => {
     closeMenu();
-    void signOut({ redirectTo: "/" });
+    void logoutViaMainApp();
   };
 
   const trigger = (

@@ -1,5 +1,6 @@
 import { Button } from "@/src/components/ui/button";
-import { Badge } from "@/src/components/ui/badge";
+import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
+import { cn } from "@/src/lib/utils";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { uiPath } from "@/src/shared/paths";
@@ -8,7 +9,6 @@ import type {
   IntegrationConnectionStatus,
 } from "@/src/types/integrations-hub";
 import {
-  authStrategyLabel,
   formatDebugDetails,
   integrationWizardInputClassName,
   type DiscoverFeedback,
@@ -34,6 +34,7 @@ interface ConnectStepProps {
   hasDirectConnection: boolean;
   selectedConnector: ManagedConnectorOption | null;
   setDraft: React.Dispatch<React.SetStateAction<WizardDraft>>;
+  showConnectorPicker?: boolean;
   onConnectorSearchChange: (value: string) => void;
   onDiscover: () => void;
   onSelectKind: (kind: WizardDraft["kind"]) => void;
@@ -107,6 +108,7 @@ export const ConnectStep = ({
   hasDirectConnection,
   selectedConnector,
   setDraft,
+  showConnectorPicker = true,
   onConnectorSearchChange,
   onDiscover,
   onSelectKind,
@@ -127,38 +129,40 @@ export const ConnectStep = ({
     <div className="space-y-4">
       {draft.kind === "managed" ? (
         <>
-          <label className="grid gap-1.5 text-sm text-white">
-            <span className="font-medium">Managed connector</span>
-            <input
-              className={integrationWizardInputClassName}
-              list="managed-connector-options"
-              placeholder={
-                managedConnectorsPending
-                  ? "Loading supported connectors..."
-                  : "Search supported connectors..."
-              }
-              value={connectorSearch}
-              onChange={(event) => onConnectorSearchChange(event.target.value)}
-              disabled={managedConnectorsPending}
-            />
-            <datalist id="managed-connector-options">
-              {managedConnectors.map((connector) => (
-                <option
-                  key={connector.slug}
-                  value={`${connector.name} (${connector.slug})`}
-                />
-              ))}
-            </datalist>
-            <span className="text-xs leading-5 text-[var(--color-text-base)]">
-              Don&apos;t see a connector you want?{" "}
-              <a
-                href={uiPath("/admin-integrations")}
-                className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-              >
-                Click here.
-              </a>
-            </span>
-          </label>
+          {showConnectorPicker ? (
+            <label className="grid gap-1.5 text-sm text-white">
+              <span className="font-medium">Managed connector</span>
+              <input
+                className={integrationWizardInputClassName}
+                list="managed-connector-options"
+                placeholder={
+                  managedConnectorsPending
+                    ? "Loading supported connectors..."
+                    : "Search supported connectors..."
+                }
+                value={connectorSearch}
+                onChange={(event) => onConnectorSearchChange(event.target.value)}
+                disabled={managedConnectorsPending}
+              />
+              <datalist id="managed-connector-options">
+                {managedConnectors.map((connector) => (
+                  <option
+                    key={connector.slug}
+                    value={`${connector.name} (${connector.slug})`}
+                  />
+                ))}
+              </datalist>
+              <span className="text-xs leading-5 text-[var(--color-text-base)]">
+                Don&apos;t see a connector you want?{" "}
+                <a
+                  href={uiPath("/admin-integrations")}
+                  className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                >
+                  Click here.
+                </a>
+              </span>
+            </label>
+          ) : null}
 
           {managedConnectorsError ? (
             <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
@@ -168,16 +172,7 @@ export const ConnectStep = ({
 
           {selectedConnector ? (
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3.5 text-sm text-[var(--color-text-base)]">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold text-white">{selectedConnector.name}</p>
-                <Badge>{authStrategyLabel(selectedConnector.authStrategy)}</Badge>
-                {selectedConnection ? <Badge tone="success">Connected</Badge> : null}
-              </div>
-              <p className="mt-1.5 leading-6">
-                {selectedConnector.description ||
-                  "This managed connector is registered for the current deployment."}
-              </p>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2 md:items-start">
                 <label className="grid gap-1.5 text-sm text-white">
                   <span className="font-medium">Integration key</span>
                   <input
@@ -330,11 +325,11 @@ export const ConnectStep = ({
               {!oauthConnectionEnabled
                 ? `Contact an admin to configure OAuth for ${selectedConnector?.name ?? "this provider"} before you can add it.`
                 : selectedConnection
-                  ? `${selectedConnector?.name} is connected. Click Discover to save this integration with your stored OAuth credentials.`
-                  : `Connect ${selectedConnector?.name ?? "this provider"} before discovering tools.`}
+                  ? `${selectedConnector?.name} is connected. Click Review tools to save this integration with your stored OAuth credentials.`
+                  : `Connect ${selectedConnector?.name ?? "this provider"} before reviewing tools.`}
             </div>
           ) : managedConnectorAuthStrategy === "api_key" ? (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <label className="grid gap-1.5 text-sm text-white md:col-span-2">
                 <span className="font-medium">
                   {selectedConnector?.credentialLabel ?? "API key"}
@@ -382,7 +377,7 @@ export const ConnectStep = ({
               )}
             </div>
           ) : managedConnectorAuthStrategy === "basic" ? (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-2 md:items-start">
               <label className="grid gap-1.5 text-sm text-white">
                 <span className="font-medium">Username</span>
                 <input
@@ -421,7 +416,7 @@ export const ConnectStep = ({
             </div>
           ) : managedConnectorAuthStrategy === "none" ? (
             <div className="rounded-lg border border-dashed border-[var(--color-border)] px-3.5 py-3 text-sm text-[var(--color-text-base)]">
-              No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Discover to load the available tools.
+              No provider credential is required for {selectedConnector?.name ?? "this connector"}. Click Review tools to load the available tools.
             </div>
           ) : (
             <label className="grid gap-1.5 text-sm text-white">
@@ -468,7 +463,7 @@ export const ConnectStep = ({
           >
             ← Browse the connector catalog instead
           </button>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2 md:items-start">
             <label className="grid gap-1.5 text-sm text-white">
               <span className="font-medium">Integration key</span>
               <input
@@ -523,7 +518,7 @@ export const ConnectStep = ({
               <span className="text-xs text-[var(--color-text-base)] group-open:hidden">Add</span>
               <span className="hidden text-xs text-[var(--color-text-base)] group-open:inline">Hide</span>
             </summary>
-            <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="mt-3 grid gap-3 md:grid-cols-2 md:items-start">
               <label className="grid gap-1.5 text-sm text-white">
                 <span className="font-medium">Access token</span>
                 <input
@@ -603,9 +598,9 @@ export const ConnectStep = ({
         </>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 pt-1">
+      <div className={cn(modalFooterActionsClassName, "gap-3 pt-1")}>
         <Button type="button" disabled={!canDiscover || discoverPending} onClick={onDiscover}>
-          {discoverPending ? "Discovering…" : "Discover tools"}
+          {discoverPending ? "Loading tools…" : "Review tools"}
         </Button>
       </div>
 

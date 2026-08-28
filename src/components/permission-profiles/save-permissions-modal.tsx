@@ -5,6 +5,7 @@ import React from "react";
 import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-button";
 import { BrandButton } from "@/src/components/ui/brand-button";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
+import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
 import { PERMISSION_PROFILES_PAGE_COPY } from "@/src/constants/permission-profiles-page";
 import { cn } from "@/src/lib/utils";
 import { formControlFieldClassName } from "@/src/styles/form-control-classes";
@@ -73,7 +74,7 @@ export function SavePermissionsModal({
           {PERMISSION_PROFILES_PAGE_COPY.saveFootnote}
         </p>
 
-        <div className="mt-2 flex justify-end gap-2">
+        <div className={cn(modalFooterActionsClassName, "mt-2")}>
           <BrandButton type="button" variant="secondary" onClick={onClose}>
             {PERMISSION_PROFILES_PAGE_COPY.cancel}
           </BrandButton>

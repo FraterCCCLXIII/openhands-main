@@ -31,18 +31,19 @@
     "typecheck:python": "cd backend && uv run pyright",
     "check:deprecations": "uv run --with packaging python .github/scripts/check_deprecations.py",
     "audit": "npm audit --audit-level=moderate",
-    "test:backend:python": "cd backend && uv run pytest tests -q"
+    "test:backend:python": "cd backend && uv run pytest tests -q",
+    "dev:ux-review": "NEXT_PUBLIC_UX_REVIEW_MODE=true DISABLE_AUTH=true next dev"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
-    "@openhands/extensions": "^0.10.0",
+    "@openhands/extensions": "github:OpenHands/extensions",
     "@tanstack/react-query": "^5.95.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
     "next": "^16.2.12",
-    "posthog-js": "^1.372.6",
     "postcss": "^8.5.23",
+    "posthog-js": "^1.372.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hot-toast": "^2.6.0",

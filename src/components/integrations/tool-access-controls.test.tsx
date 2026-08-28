@@ -35,7 +35,7 @@ describe("AccessModeSlider", () => {
     document.body.replaceChildren();
   });
 
-  it("renders the current access mode in a dropdown trigger", async () => {
+  it("renders the current access mode in a compact dropdown trigger with an icon", async () => {
     await act(async () => {
       root.render(
         <AccessModeSlider
@@ -52,10 +52,9 @@ describe("AccessModeSlider", () => {
 
     expect(trigger).toBeTruthy();
     expect(trigger?.textContent).toContain(accessModeLabel("enabled"));
+    expect(trigger?.querySelector("svg")).toBeTruthy();
+    expect(trigger?.className).toContain("w-fit");
     expect(trigger?.className).toContain("text-[var(--oh-color-success)]");
-    expect(trigger?.querySelector("svg")?.getAttribute("class")).toContain("text-current");
-    expect(trigger?.className).toContain("hover:bg-[color:rgba(165,231,94,0.18)]");
-    expect(trigger?.className).not.toContain("rounded-full");
     expect(
       container.querySelector('[data-access-mode="enabled"]'),
     ).toBeTruthy();
@@ -77,9 +76,7 @@ describe("AccessModeSlider", () => {
     ) as HTMLButtonElement | null;
 
     expect(trigger?.className).toContain("text-[var(--oh-warning)]");
-    expect(trigger?.className).toContain("hover:bg-[color:rgba(217,181,90,0.18)]");
-    expect(trigger?.className).not.toContain("bg-white/10");
-    expect(trigger?.className).not.toContain("border-white/60");
+    expect(trigger?.querySelector("svg")).toBeTruthy();
   });
 
   it("calls onChange when a different access mode is selected", async () => {

@@ -7,6 +7,7 @@ import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-but
 import { BrandButton } from "@/src/components/ui/brand-button";
 import { StatusPill } from "@/src/components/ui/status-pill";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
+import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
 import {
   APPROVAL_DURATION,
   APPROVALS_PAGE_COPY,
@@ -104,7 +105,7 @@ export function ApproveSelectedModal({
           </div>
         </label>
 
-        <div className="mt-2 flex justify-end gap-2">
+        <div className={cn(modalFooterActionsClassName, "mt-2")}>
           <BrandButton type="button" variant="secondary" onClick={onClose}>
             {APPROVALS_PAGE_COPY.cancel}
           </BrandButton>

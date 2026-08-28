@@ -13,7 +13,7 @@ import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-but
 import { BrandButton } from "@/src/components/ui/brand-button";
 import { Button } from "@/src/components/ui/button";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
-import { modalShellClassName } from "@/src/components/ui/modal-shell";
+import { modalFooterActionsClassName, modalShellClassName } from "@/src/components/ui/modal-shell";
 import { SelectDropdown } from "@/src/components/ui/select-dropdown";
 import { ADMIN_INTEGRATIONS_PAGE_COPY } from "@/src/constants/admin-integrations-page";
 import { cn } from "@/src/lib/utils";
@@ -379,7 +379,7 @@ export function ManagedConnectorDetailsModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-[var(--oh-border)] px-7 py-4">
+        <div className={cn(modalFooterActionsClassName, "border-t border-[var(--oh-border)] px-7 py-4")}>
           <Button
             type="button"
             variant="danger"
@@ -394,21 +394,19 @@ export function ManagedConnectorDetailsModal({
               ? ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorDeletingLabel
               : ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorDeleteLabel}
           </Button>
-          <div className="flex items-center gap-2">
-            <BrandButton type="button" variant="secondary" onClick={onClose}>
-              {ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorCloseLabel}
-            </BrandButton>
-            <Button
-              type="submit"
-              form={formId}
-              disabled={form.submitting || form.deleting || form.indexing}
-              data-testid={`managed-connector-save-${connector.slug}`}
-            >
-              {form.submitting
-                ? ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorSavingLabel
-                : ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorSaveChangesLabel}
-            </Button>
-          </div>
+          <BrandButton type="button" variant="secondary" onClick={onClose}>
+            {ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorCloseLabel}
+          </BrandButton>
+          <Button
+            type="submit"
+            form={formId}
+            disabled={form.submitting || form.deleting || form.indexing}
+            data-testid={`managed-connector-save-${connector.slug}`}
+          >
+            {form.submitting
+              ? ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorSavingLabel
+              : ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorSaveChangesLabel}
+          </Button>
         </div>
       </section>
     </ModalBackdrop>

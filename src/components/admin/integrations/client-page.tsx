@@ -8,14 +8,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
-import { DashboardSidebar, DashboardSidebarUserPanel } from "@/src/components/layout/dashboard-sidebar";
-import { DashboardSignOutButton } from "@/src/components/layout/dashboard-sign-out-button";
+import { HubAppShell } from "@/src/components/layout/hub-app-shell";
 import { useAuth } from "@/src/components/auth/auth-context";
 import { Badge } from "@/src/components/ui/badge";
 import { buildAdminSectionHref } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { apiPath } from "@/src/shared/paths";
 import { catalogOptionToConnectorOption } from "@/src/lib/catalog-mappers";
+import { hubPageShellClassName } from "@/src/styles/neo-layout";
 import type {
   IntegrationConnectionStatus,
   ManagedConnectorDefinition,
@@ -129,35 +129,19 @@ export function ClientAdminIntegrationsPage() {
   const userEmail = user?.email?.trim() || "Not provided";
 
   return (
-    <main className="min-h-screen overflow-x-hidden px-6 py-8">
-      <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[300px_minmax(0,1fr)] xl:gap-8">
-        <DashboardSidebar
-          badge={
-            <Badge>
-              {isAdmin
-                ? `${data.managedConnectors.length} added`
-                : `${data.readyConnectors.length} ready`}
-            </Badge>
-          }
-          activeItem="adminIntegrations"
-          showAdminOverviewLink={isAdmin}
-          showAdminIntegrationsLink
-          footer={
-            isAuthenticated ? (
-              <DashboardSidebarUserPanel
-                userName={userName}
-                userEmail={userEmail}
-                badges={[
-                  <Badge key="ready">{data.readyConnectors.length} ready</Badge>,
-                  <Badge key="catalog">{data.integrationCatalog.length} available</Badge>,
-                ]}
-                action={<DashboardSignOutButton />}
-              />
-            ) : undefined
-          }
-        />
-
-        <div className="min-w-0 space-y-4">
+    <HubAppShell
+      activeItem="adminIntegrations"
+      stats={{
+        liveIntegrations: data.readyConnectors.length,
+        toolCount: data.integrationCatalog.length,
+      }}
+      userDisplayName={userName}
+      userEmail={userEmail}
+      showAdminOverviewLink={isAdmin}
+      showAdminIntegrationsLink
+    >
+      <div className={hubPageShellClassName}>
+        <div className="space-y-4">
           {oauthStatusMessage ? (
             <div
               className={`rounded-lg border p-3 text-sm ${
@@ -215,6 +199,6 @@ export function ClientAdminIntegrationsPage() {
           />
         </div>
       </div>
-    </main>
+    </HubAppShell>
   );
 }

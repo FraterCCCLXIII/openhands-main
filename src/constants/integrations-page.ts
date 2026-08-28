@@ -45,7 +45,7 @@ export const INTEGRATIONS_PAGE_COPY = {
   cancel: "Cancel",
   wizardContinue: "Continue",
   wizardBack: "Back",
-  wizardDiscoverTools: "Discover tools",
+  wizardDiscoverTools: "Review tools",
   wizardCreateIntegration: "Create integration",
   wizardSetupTitle: "Step-by-step integration setup",
   wizardSetupDescription:
@@ -62,7 +62,7 @@ export const INTEGRATIONS_PAGE_COPY = {
     "The dashboard loads the managed connectors registered for this service.",
     "Choosing a connector auto-fills the integration key and display name, while still letting you customize them if needed.",
     "For OAuth connectors, each user connects their own account and the token is stored server-side for that user only.",
-    "Choosing Discover tools calls the MCP for the selected connector and brings its full tool list into the review step.",
+    "Choosing Review tools calls the MCP for the selected connector and brings its full tool list into the review step.",
   ] as const,
   wizardConnectSidebarMcpBullets: [
     "The dashboard connects to your MCP server and calls listTools.",
@@ -81,7 +81,7 @@ export const INTEGRATIONS_PAGE_COPY = {
     "Edit this if you want more than one saved connection for the same managed connector.",
   wizardDisplayNameLabel: "Display name",
   wizardConnectBeforeDiscover: (name: string) =>
-    `Connect ${name} before discovering tools.`,
+    `Connect ${name} before reviewing tools.`,
   wizardConnectAccountTitle: (name: string) => `Connect your ${name} account`,
   wizardConnectAccountDescriptionOAuth: (name: string) =>
     `OAuth connection for ${name}.`,
@@ -97,6 +97,9 @@ export const INTEGRATIONS_PAGE_COPY = {
   wizardReviewSearchEmpty: "No tools match this search. Try a different term.",
   wizardAdminDiagnosticsTitle: "Admin diagnostics",
   wizardSearchToolsPlaceholder: "Search tools",
+  wizardBulkActions: "Bulk Actions",
+  wizardSelectAllMatches: "Select all matches",
+  wizardDeselectMatches: "Deselect matches",
   wizardEnableSelected: "Enable selected",
   wizardCaseByCaseSelected: "Case-by-case selected",
   wizardDisableSelected: "Disable selected",

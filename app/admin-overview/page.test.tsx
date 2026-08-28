@@ -21,6 +21,14 @@ const { useAuthMock, fetchJsonMock } = vi.hoisted(() => ({
   fetchJsonMock: vi.fn(),
 }));
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/admin-overview",
+}));
+
+vi.mock("@/src/hooks/use-pending-approvals-count", () => ({
+  usePendingApprovalsCount: () => 0,
+}));
+
 vi.mock("@/src/components/auth/auth-context", () => ({
   useAuth: useAuthMock,
 }));

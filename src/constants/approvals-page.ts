@@ -11,7 +11,6 @@ export const APPROVALS_PAGE_COPY = {
   filterDenied: "denied",
   searchPlaceholder: "Search integration requests",
   searchClearAriaLabel: "Clear search",
-  selectionMenuLabel: "Selection",
   selectAllMatches: "Select all matches",
   deselectMatches: "Deselect matches",
   decisionMenuLabel: "Bulk Actions",

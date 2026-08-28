@@ -59,6 +59,7 @@ const createDefaultProps = () => ({
   actionPending: false,
   isSaveModalOpen: false,
   onCloseSaveModal: vi.fn(),
+  onOpenSaveModal: vi.fn(),
   onSaveProfile: vi.fn(),
   onLoadProfile: vi.fn(),
   onUpdateProfile: vi.fn(),
@@ -238,6 +239,20 @@ describe("PermissionProfilesSection", () => {
       expect.objectContaining({ method: "POST" }),
     );
     expect(container.textContent).toContain("cla_new_profile_key");
+  });
+
+  it("opens the save modal from the new profile button", () => {
+    const props = createDefaultProps();
+
+    act(() => {
+      root.render(<PermissionProfilesSection {...props} />);
+    });
+
+    const newProfileButton = container.querySelector(
+      '[data-testid="permission-profiles-new-profile"]',
+    ) as HTMLButtonElement | null;
+    act(() => newProfileButton?.click());
+    expect(props.onOpenSaveModal).toHaveBeenCalledTimes(1);
   });
 
   it("captures profile names from the save modal before saving", () => {

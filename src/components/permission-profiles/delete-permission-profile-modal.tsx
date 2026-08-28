@@ -1,6 +1,7 @@
 import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-button";
 import { BrandButton } from "@/src/components/ui/brand-button";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
+import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
 import {
   permissionProfileLabel,
 } from "@/src/components/permission-profiles/permission-profile-utils";
@@ -54,7 +55,7 @@ export function DeletePermissionProfileModal({
           {PERMISSION_PROFILES_PAGE_COPY.deleteModalDescription(label)}
         </p>
 
-        <div className="mt-2 flex justify-end gap-2">
+        <div className={cn(modalFooterActionsClassName, "mt-2")}>
           <BrandButton type="button" variant="secondary" onClick={onClose}>
             {PERMISSION_PROFILES_PAGE_COPY.cancel}
           </BrandButton>

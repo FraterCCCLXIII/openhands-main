@@ -1,8 +1,21 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { useClientAuth, type ClientAuthState } from "@/src/lib/client-auth";
+import {
+  isUxReviewMode,
+  readUxReviewViewAsAdmin,
+  writeUxReviewViewAsAdmin,
+} from "@/src/lib/ux-review-mode";
 
 declare global {
   interface Window {
@@ -12,6 +25,8 @@ declare global {
 
 interface AuthContextValue extends ClientAuthState {
   authDisabled: boolean;
+  uxReviewViewAsAdmin?: boolean;
+  toggleUxReviewViewAsAdmin?: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -22,14 +37,46 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children, authDisabled = false }: AuthProviderProps) {
-  const authState = useClientAuth(authDisabled);
+  const effectiveAuthDisabled = authDisabled || isUxReviewMode();
+  const uxReviewEnabled = isUxReviewMode();
+  const [uxReviewViewAsAdmin, setUxReviewViewAsAdmin] = useState(true);
+
+  useEffect(() => {
+    if (!uxReviewEnabled) {
+      return;
+    }
+
+    setUxReviewViewAsAdmin(readUxReviewViewAsAdmin());
+  }, [uxReviewEnabled]);
+
+  const toggleUxReviewViewAsAdmin = useCallback(() => {
+    setUxReviewViewAsAdmin((current) => {
+      const next = !current;
+      writeUxReviewViewAsAdmin(next);
+      return next;
+    });
+  }, []);
+
+  const authState = useClientAuth(effectiveAuthDisabled, uxReviewViewAsAdmin);
 
   const value = useMemo(
     () => ({
       ...authState,
-      authDisabled,
+      authDisabled: effectiveAuthDisabled,
+      ...(uxReviewEnabled
+        ? {
+            uxReviewViewAsAdmin,
+            toggleUxReviewViewAsAdmin,
+          }
+        : {}),
     }),
-    [authState, authDisabled],
+    [
+      authState,
+      effectiveAuthDisabled,
+      toggleUxReviewViewAsAdmin,
+      uxReviewEnabled,
+      uxReviewViewAsAdmin,
+    ],
   );
 
   useEffect(() => {

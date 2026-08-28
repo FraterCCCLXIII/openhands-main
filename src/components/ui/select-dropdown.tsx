@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, type LucideIcon } from "lucide-react";
 import React from "react";
 import { createPortal } from "react-dom";
 
@@ -19,6 +19,7 @@ import {
 export interface SelectDropdownOption {
   value: string;
   label: string;
+  icon?: LucideIcon;
 }
 
 export interface SelectDropdownProps {
@@ -63,6 +64,7 @@ export function SelectDropdown({
 
   const selectedOption = options.find((option) => option.value === value);
   const selectedLabel = selectedOption?.label ?? value;
+  const SelectedIcon = selectedOption?.icon;
   const resolvedDefaultValue = defaultValue ?? options[0]?.value;
 
   React.useLayoutEffect(() => {
@@ -158,6 +160,7 @@ export function SelectDropdown({
           >
             {options.map((option) => {
               const selected = option.value === value;
+              const OptionIcon = option.icon;
               return (
                 <button
                   key={option.value}
@@ -174,6 +177,9 @@ export function SelectDropdown({
                     selected && "bg-[var(--oh-interactive-selected)]",
                   )}
                 >
+                  {OptionIcon ? (
+                    <OptionIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  ) : null}
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   {selected ? (
                     <Check className="h-4 w-4 shrink-0" aria-hidden />
@@ -218,6 +224,9 @@ export function SelectDropdown({
           triggerClassName,
         )}
       >
+        {SelectedIcon ? (
+          <SelectedIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        ) : null}
         <span
           className={cn(
             "min-w-0 truncate whitespace-nowrap text-left",

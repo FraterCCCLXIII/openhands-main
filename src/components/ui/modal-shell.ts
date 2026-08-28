@@ -14,3 +14,6 @@ export function modalShellClassName(width: keyof typeof MODAL_WIDTH_CLASS = "lg"
     MODAL_MAX_WIDTH_VIEWPORT,
   );
 }
+
+export const modalFooterActionsClassName =
+  "flex flex-wrap items-center justify-end gap-2";

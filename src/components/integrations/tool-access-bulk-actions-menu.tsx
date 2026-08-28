@@ -3,7 +3,6 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
 
-import { APPROVALS_PAGE_COPY } from "@/src/constants/approvals-page";
 import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { cn } from "@/src/lib/utils";
 import {
@@ -15,6 +14,11 @@ import { formControlButtonClassName } from "@/src/styles/form-control-classes";
 
 interface ToolAccessBulkActionsMenuProps {
   isDisabled?: boolean;
+  canSelectAll?: boolean;
+  canDeselect?: boolean;
+  canChangeAccess?: boolean;
+  onSelectAll?: () => void;
+  onDeselect?: () => void;
   onEnableSelected?: () => void;
   onCaseByCaseSelected?: () => void;
   onDisableSelected?: () => void;
@@ -22,6 +26,11 @@ interface ToolAccessBulkActionsMenuProps {
 
 export function ToolAccessBulkActionsMenu({
   isDisabled = false,
+  canSelectAll = false,
+  canDeselect = false,
+  canChangeAccess = false,
+  onSelectAll,
+  onDeselect,
   onEnableSelected,
   onCaseByCaseSelected,
   onDisableSelected,
@@ -67,18 +76,18 @@ export function ToolAccessBulkActionsMenu({
     >
       <button
         type="button"
-        data-testid="approvals-decision-trigger"
+        data-testid="tool-access-bulk-actions-trigger"
         disabled={isDisabled}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={APPROVALS_PAGE_COPY.decisionMenuLabel}
+        aria-label={INTEGRATIONS_PAGE_COPY.wizardBulkActions}
         onClick={() => setOpen((isOpen) => !isOpen)}
         className={cn(
           formControlButtonClassName,
           "shrink-0 whitespace-nowrap border border-[var(--oh-border)] bg-base-secondary text-xs text-white hover:bg-surface-raised",
         )}
       >
-        <span>{APPROVALS_PAGE_COPY.decisionMenuLabel}</span>
+        <span>{INTEGRATIONS_PAGE_COPY.wizardBulkActions}</span>
         <ChevronDown
           className={cn(
             "size-4 shrink-0 transition-transform duration-75",
@@ -92,7 +101,7 @@ export function ToolAccessBulkActionsMenu({
         <div
           role="menu"
           data-testid="tool-access-bulk-actions-menu-panel"
-          aria-label={APPROVALS_PAGE_COPY.decisionMenuLabel}
+          aria-label={INTEGRATIONS_PAGE_COPY.wizardBulkActions}
           className={cn(
             "absolute right-0 top-full z-50 mt-1 w-max min-w-full",
             dropdownMenuSurfaceClassName,
@@ -103,8 +112,42 @@ export function ToolAccessBulkActionsMenu({
               <button
                 type="button"
                 role="menuitem"
-                data-testid="tool-access-enable-selected"
+                data-testid="tool-access-select-all-matches"
+                disabled={!canSelectAll}
                 onClick={() => {
+                  if (!canSelectAll) return;
+                  onSelectAll?.();
+                  closeMenu();
+                }}
+                className={dropdownMenuRowClassName}
+              >
+                {INTEGRATIONS_PAGE_COPY.wizardSelectAllMatches}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="tool-access-deselect-matches"
+                disabled={!canDeselect}
+                onClick={() => {
+                  if (!canDeselect) return;
+                  onDeselect?.();
+                  closeMenu();
+                }}
+                className={dropdownMenuRowClassName}
+              >
+                {INTEGRATIONS_PAGE_COPY.wizardDeselectMatches}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="tool-access-enable-selected"
+                disabled={!canChangeAccess}
+                onClick={() => {
+                  if (!canChangeAccess) return;
                   onEnableSelected?.();
                   closeMenu();
                 }}
@@ -118,7 +161,9 @@ export function ToolAccessBulkActionsMenu({
                 type="button"
                 role="menuitem"
                 data-testid="tool-access-case-by-case-selected"
+                disabled={!canChangeAccess}
                 onClick={() => {
+                  if (!canChangeAccess) return;
                   onCaseByCaseSelected?.();
                   closeMenu();
                 }}
@@ -132,7 +177,9 @@ export function ToolAccessBulkActionsMenu({
                 type="button"
                 role="menuitem"
                 data-testid="tool-access-disable-selected"
+                disabled={!canChangeAccess}
                 onClick={() => {
+                  if (!canChangeAccess) return;
                   onDisableSelected?.();
                   closeMenu();
                 }}

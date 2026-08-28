@@ -1,5 +1,6 @@
 export const PERMISSION_PROFILES_PAGE_COPY = {
   saveButton: "Save current permissions",
+  newProfileButton: "New profile",
   saveModalAriaLabel: "Save current permissions",
   saveModalTitle: "Save current permissions",
   saveModalDescription:

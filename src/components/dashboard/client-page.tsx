@@ -7,6 +7,7 @@ import { DashboardWorkspace } from "@/src/components/dashboard/workspace";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { ServiceUnavailableScreen } from "@/src/components/feedback/service-unavailable-screen";
 import { useAuth } from "@/src/components/auth/auth-context";
+import { Button } from "@/src/components/ui/button";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { currentBrowserPath, redirectToMainAppLogin } from "@/src/lib/main-app-auth";
 import type {
@@ -107,17 +108,13 @@ export function ClientDashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight text-white">
             Couldn't reach OpenHands Cloud
           </h1>
-          <p className="text-sm leading-7 text-[var(--color-text-base)]">
+          <p className="text-sm leading-5 text-[var(--color-text-base)]">
             Your session is still saved. The network or OpenHands Cloud was
             briefly unavailable. Try again — you won't need to log back in.
           </p>
-          <button
-            type="button"
-            onClick={retrySession}
-            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
+          <Button type="button" onClick={retrySession}>
             Retry
-          </button>
+          </Button>
         </div>
       </main>
     );

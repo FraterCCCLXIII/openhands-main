@@ -38,6 +38,7 @@ import {
   safeAnalyticsIdentifier,
   useTracking,
 } from "@/src/hooks/use-tracking";
+import { reportStatusMessage } from "@/src/utils/custom-toast-handlers";
 
 interface DashboardWorkspaceProps {
   initialIntegrations?: IntegrationSpec[];
@@ -70,7 +71,6 @@ export const DashboardWorkspace = ({
   const [activeSection, setActiveSection] = useState<AdminSection>(() =>
     getAdminSectionFromPath(pathname),
   );
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showIntegrationWizard, setShowIntegrationWizard] = useState(false);
   const [connectionDetailsOpen, setConnectionDetailsOpen] = useState(false);
 
@@ -192,7 +192,7 @@ export const DashboardWorkspace = ({
     agentApiKey,
     userApiKey,
     adminApiKey,
-    onStatus: setStatusMessage,
+    onStatus: reportStatusMessage,
   });
 
   const userName = currentUser.name?.trim() || "Admin User";
@@ -205,18 +205,18 @@ export const DashboardWorkspace = ({
   const integrationsSection = useIntegrationsSection({
     initialIntegrations,
     enabled: activeSection === "integrations",
-    onStatus: setStatusMessage,
+    onStatus: reportStatusMessage,
   });
 
   const approvalsSection = useApprovalsSection({
     initialAccessRequests,
     enabled: activeSection === "caseByCaseApprovals",
-    onStatus: setStatusMessage,
+    onStatus: reportStatusMessage,
   });
 
   const permissionProfilesSection = usePermissionProfilesSection({
     enabled: activeSection === "permissionProfiles" || activeSection === "apiKeys",
-    onStatus: setStatusMessage,
+    onStatus: reportStatusMessage,
   });
 
   const installedIntegrationKeys = useMemo(
@@ -302,7 +302,6 @@ export const DashboardWorkspace = ({
       userEmail={userEmail}
       enabledIntegrationCount={enabledIntegrationCount}
       discoveredToolCount={discoveredToolCount}
-      statusMessage={statusMessage}
       oauthStatusMessage={oauthStatusMessage}
       showOAuthStatus={!showIntegrationWizard}
       agentApiReady={agentApiReady}
@@ -335,7 +334,7 @@ export const DashboardWorkspace = ({
       ) : null}
 
       {activeSection === "caseByCaseApprovals" ? (
-        <ApprovalsSection {...approvalsSection} canDecide={isAdmin} />
+        <ApprovalsSection {...approvalsSection} />
       ) : null}
 
       {activeSection === "permissionProfiles" ? (
@@ -353,7 +352,7 @@ export const DashboardWorkspace = ({
           onCloseIntegrationWizard={closeIntegrationWizard}
           onCreated={handleIntegrationCreated}
           onOpenIntegrationWizard={openIntegrationWizard}
-          onStatus={setStatusMessage}
+          onStatus={reportStatusMessage}
           showIntegrationWizard={showIntegrationWizard}
         />
       ) : null}
@@ -379,6 +378,11 @@ export const DashboardWorkspace = ({
           agentOpenApiSchemaEndpoint={agentConnectionGuide.openApiSchemaEndpoint}
           agentRestPromptExample={agentRestPromptExample}
           isAdmin={isAdmin}
+          actionPending={permissionProfilesSection.actionPending}
+          isSaveModalOpen={permissionProfilesSection.isSaveModalOpen}
+          onCloseSaveModal={permissionProfilesSection.onCloseSaveModal}
+          onOpenSaveModal={permissionProfilesSection.onOpenSaveModal}
+          onSaveProfile={permissionProfilesSection.onSaveProfile}
           permissionProfiles={permissionProfilesSection.profiles}
           permissionProfilesLoading={permissionProfilesSection.isPending}
           permissionProfilesError={permissionProfilesSection.errorMessage}

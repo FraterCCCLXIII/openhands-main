@@ -5,7 +5,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock } =
+const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock, reportStatusMessageMock } =
   vi.hoisted(() => ({
     pushMock: vi.fn(),
     usePathnameMock: vi.fn(() => "/integrations"),
@@ -13,12 +13,17 @@ const { pushMock, usePathnameMock, useRouterMock, useSearchParamsMock } =
       push: pushMock,
     })),
     useSearchParamsMock: vi.fn(() => new URLSearchParams()),
+    reportStatusMessageMock: vi.fn(),
   }));
 
 vi.mock("next/navigation", () => ({
   usePathname: usePathnameMock,
   useRouter: useRouterMock,
   useSearchParams: useSearchParamsMock,
+}));
+
+vi.mock("@/src/utils/custom-toast-handlers", () => ({
+  reportStatusMessage: reportStatusMessageMock,
 }));
 
 
@@ -33,6 +38,50 @@ import type {
 } from "@/src/types/integrations-hub";
 
 enableReactActEnvironment();
+
+async function clickApprovalsMenuItem(container: HTMLElement, testId: string) {
+  const trigger = container.querySelector(
+    '[data-testid="approvals-decision-trigger"]',
+  ) as HTMLButtonElement | null;
+  expect(trigger).toBeTruthy();
+
+  await act(async () => {
+    trigger?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await Promise.resolve();
+  });
+
+  const item = container.querySelector(
+    `[data-testid="${testId}"]`,
+  ) as HTMLButtonElement | null;
+  expect(item).toBeTruthy();
+
+  await act(async () => {
+    item?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    await Promise.resolve();
+  });
+}
+
+function setApproveModalDurationHours(hours: string) {
+  const durationInput = document.querySelector(
+    '[data-testid="approve-selected-modal"] input[data-testid="approvals-duration-hours"]',
+  ) as HTMLInputElement | null;
+  expect(durationInput).toBeTruthy();
+  setInputValue(durationInput ?? undefined, hours);
+  durationInput?.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+async function confirmApproveModal() {
+  const confirmApproveButton = Array.from(
+    document.querySelectorAll('[data-testid="approve-selected-modal"] button'),
+  ).find((button) => button.textContent?.trim() === "Approve");
+  expect(confirmApproveButton).toBeTruthy();
+
+  await act(async () => {
+    (confirmApproveButton as HTMLButtonElement | undefined)?.click();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
 
 
 const managedConnectors: ManagedConnectorOption[] = [
@@ -119,6 +168,7 @@ describe("DashboardWorkspace", () => {
       push: pushMock,
     }));
     useSearchParamsMock.mockImplementation(() => new URLSearchParams());
+    reportStatusMessageMock.mockClear();
 
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -606,10 +656,14 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    const managedConnectorInput = Array.from(container.querySelectorAll("input")).find(
-      (input) => input.getAttribute("placeholder") === "Search supported connectors...",
-    ) as HTMLInputElement | undefined;
-    expect(managedConnectorInput?.value).toBe("GitHub (github)");
+    expect(
+      document.querySelector(
+        '[data-testid="integration-wizard-modal"] input[list="managed-connector-options"]',
+      ),
+    ).toBeNull();
+    expect(
+      document.querySelector('[data-testid="integration-wizard-modal"]')?.textContent,
+    ).toContain("GitHub");
 
     const tokenInput = Array.from(container.querySelectorAll("input")).find(
       (input) => input.getAttribute("placeholder") === "Paste your GitHub token",
@@ -745,7 +799,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
-    expect(container.textContent).toContain("Connect an integration");
+    expect(container.textContent).toContain("Notion");
     expect(container.textContent).toContain(
       'Webflow token exchange failed (400): {"error":"invalid_client"}',
     );
@@ -793,25 +847,33 @@ describe("DashboardWorkspace", () => {
       await renderAgentConnectionRoute(root);
 
       const text = container.textContent ?? "";
-      expect(text).toContain("API keys");
-      expect(text).toContain("Agent key");
+      expect(text).toContain("Permission profile keys");
+      expect(text).toContain("New profile");
       expect(text).toContain(
-        "Give this key to agents that should use this permission profile.",
+        "Each agent key is bound to a named permission profile.",
+      );
+      expect(text).toContain("Automation keys");
+      expect(text).toContain(
+        "Account-scoped keys that are not tied to a permission profile.",
       );
       expect(text).toContain("User automation key");
-      expect(text).toContain(
-        "Use this key to programmatically manage user-scoped integrations-hub settings.",
-      );
       expect(text).toContain("Admin automation key");
-      expect(text).toContain(
-        "Use this key for admin-only QA and operational automation surfaces.",
-      );
     });
+
+    const openConnectionDetails = async () => {
+      const detailsLink = container.querySelector(
+        '[data-testid="agent-connection-details-link"]',
+      ) as HTMLButtonElement | null;
+      await act(async () => {
+        detailsLink?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    };
 
     it("renders MCP connection details with the config example", async () => {
       await renderAgentConnectionRoute(root);
+      await openConnectionDetails();
 
-      const text = container.textContent ?? "";
+      const text = document.body.textContent ?? "";
       expect(text).toContain("Connection details");
       expect(text).toContain("Agent MCP");
       expect(text).toContain("MCP config example");
@@ -822,8 +884,9 @@ describe("DashboardWorkspace", () => {
 
     it("renders REST API connection details with example agent prompts", async () => {
       await renderAgentConnectionRoute(root);
+      await openConnectionDetails();
 
-      const text = container.textContent ?? "";
+      const text = document.body.textContent ?? "";
       expect(text).toContain("Agent REST API");
       expect(text).toContain("User REST API");
       expect(text).toContain("Admin REST API");
@@ -850,10 +913,10 @@ describe("DashboardWorkspace", () => {
       await renderAgentConnectionRoute(root);
 
       const copyButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
-        button.textContent?.includes("Copy"),
+        button.getAttribute("aria-label")?.startsWith("Copy "),
       );
       const revealButtons = Array.from(container.querySelectorAll("button")).filter((button) =>
-        button.textContent?.includes("Reveal"),
+        button.getAttribute("aria-label")?.startsWith("Reveal "),
       );
 
       expect(copyButtons).toHaveLength(3);
@@ -1740,17 +1803,13 @@ describe("DashboardWorkspace", () => {
         container.querySelector('[data-testid="approvals-search"]')?.className,
       ).toContain("w-full");
       expect(
-        container.querySelector('[data-testid="approvals-filter-toolbar"]')
-          ?.className,
-      ).toContain("flex-col");
-      expect(
-        container.querySelector('[data-testid="approvals-decision-menu"]')
-          ?.parentElement?.className,
-      ).toContain("hidden");
+        container.querySelector('[data-testid="approvals-decision-menu"]'),
+      ).toBeTruthy();
       expect(container.textContent).toContain("no agent identity provided");
-      expect(container.textContent).toContain(
-        "Invocation identity: Not provided · Not provided",
-      );
+      expect(container.textContent).toContain("Not provided · Not provided");
+      expect(
+        container.querySelector('input[data-testid="approvals-duration-hours"]'),
+      ).toBeNull();
 
       const conversationLink = container.querySelector(
         'a[href="https://app.all-hands.dev/conversations/f3e731620cf147a1976b53050bbe039e"]',
@@ -1877,6 +1936,7 @@ describe("DashboardWorkspace", () => {
             currentUser={{ name: "Admin User", email: "admin@example.com" }}
             agentApiBaseUrl="https://example.com"
             agentApiKey="test-key"
+            isAdmin={false}
           />
         </QueryClientProvider>,
       );
@@ -1886,24 +1946,16 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    const selectAllButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Select all matches"),
-    );
-    expect(selectAllButton).toBeTruthy();
+    await clickApprovalsMenuItem(container, "approvals-select-all-matches");
+    await clickApprovalsMenuItem(container, "approvals-approve-selected");
+
+    const confirmApproveButton = Array.from(
+      document.querySelectorAll('[data-testid="approve-selected-modal"] button'),
+    ).find((button) => button.textContent?.trim() === "Approve");
+    expect(confirmApproveButton).toBeTruthy();
 
     await act(async () => {
-      selectAllButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    const approveSelectedButton = Array.from(
-      container.querySelectorAll("button"),
-    ).find((button) => button.textContent?.includes("Approve selected"));
-    expect(approveSelectedButton).toBeTruthy();
-
-    await act(async () => {
-      approveSelectedButton?.dispatchEvent(
-        new MouseEvent("click", { bubbles: true }),
-      );
+      (confirmApproveButton as HTMLButtonElement | undefined)?.click();
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -1916,7 +1968,7 @@ describe("DashboardWorkspace", () => {
     );
   });
 
-  it("approves a single request in one click from the row action using the inline duration", async () => {
+  it("approves a single request from the row action using the modal duration", async () => {
     usePathnameMock.mockReturnValue("/case-by-case-approvals");
 
     const accessRequestsState: AccessRequest[] = [
@@ -1980,19 +2032,6 @@ describe("DashboardWorkspace", () => {
 
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    const durationInput = container.querySelector(
-      'input[data-testid="approvals-duration-hours"]',
-    ) as HTMLInputElement | null;
-    expect(durationInput).toBeTruthy();
-    expect(durationInput?.type).toBe("number");
-    expect(durationInput?.value).toBe("4");
-
-    await act(async () => {
-      setInputValue(durationInput ?? undefined, "12");
-      durationInput?.dispatchEvent(new Event("change", { bubbles: true }));
-      await Promise.resolve();
     });
 
     const rowApproveButton = container.querySelector(
@@ -2006,12 +2045,19 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
+    await act(async () => {
+      setApproveModalDurationHours("12");
+      await Promise.resolve();
+    });
+
+    await confirmApproveModal();
+
     expect(approvePayload).toEqual({
       durationMinutes: 720,
     });
   });
 
-  it("approves selected requests in one click from the bulk decision menu using the inline duration", async () => {
+  it("approves selected requests from the bulk decision menu using the modal duration", async () => {
     usePathnameMock.mockReturnValue("/case-by-case-approvals");
 
     const accessRequestsState: AccessRequest[] = [
@@ -2077,24 +2123,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    const durationInput = container.querySelector(
-      'input[data-testid="approvals-duration-hours"]',
-    ) as HTMLInputElement | null;
-    expect(durationInput).toBeTruthy();
-
-    await act(async () => {
-      setInputValue(durationInput ?? undefined, "8");
-      durationInput?.dispatchEvent(new Event("change", { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    const selectAllButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Select all matches"),
-    );
-    expect(selectAllButton).toBeTruthy();
-    await act(async () => {
-      selectAllButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
+    await clickApprovalsMenuItem(container, "approvals-select-all-matches");
 
     const decisionTrigger = container.querySelector(
       '[data-testid="approvals-decision-trigger"]',
@@ -2115,6 +2144,13 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
+
+    await act(async () => {
+      setApproveModalDurationHours("8");
+      await Promise.resolve();
+    });
+
+    await confirmApproveModal();
 
     expect(approvePayload).toEqual({
       durationMinutes: 480,
@@ -2240,9 +2276,11 @@ describe("DashboardWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(container.textContent).toContain("Unable to enable GitHub right now.");
+    expect(reportStatusMessageMock).toHaveBeenCalledWith(
+      "Unable to enable GitHub right now.",
+    );
     expect(container.textContent).not.toContain(
-      "Slack connected successfully. Finish saving the integration to use it.",
+      "Unable to enable GitHub right now.",
     );
   });
 
@@ -2344,7 +2382,9 @@ describe("DashboardWorkspace", () => {
       'Delete the integration "GitHub"? This removes it from your personal dashboard and disconnects any saved credentials for this tool.',
     );
     expect(deleteCalls).toBe(0);
-    expect(container.textContent).toContain("Unable to enable GitHub right now.");
+    expect(reportStatusMessageMock).toHaveBeenCalledWith(
+      "Unable to enable GitHub right now.",
+    );
   });
 
   it("normalizes invalid unused-tool thresholds before submitting a failing bulk disable request", async () => {
@@ -2460,7 +2500,7 @@ describe("DashboardWorkspace", () => {
     expect(container.textContent).toContain("Bulk disable failed.");
   });
 
-  it("shows an empty unused-tool state and resets invalid approval durations before a deny failure", async () => {
+  it("shows an empty unused-tool state and surfaces a deny failure", async () => {
     usePathnameMock.mockReturnValue("/case-by-case-approvals");
 
     const accessRequestsState: AccessRequest[] = [
@@ -2523,34 +2563,8 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const approvalDurationInput = container.querySelector(
-      'input[aria-label="Approval duration in hours"]',
-    ) as HTMLInputElement | null;
-    const selectAllButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Select all matches"),
-    );
-    const denySelectedButton = Array.from(container.querySelectorAll("button")).find((button) =>
-      button.textContent?.includes("Deny selected"),
-    );
-
-    await act(async () => {
-      approvalDurationInput?.focus();
-      setInputValue(approvalDurationInput ?? undefined, "0");
-      approvalDurationInput?.blur();
-      await Promise.resolve();
-    });
-
-    expect(approvalDurationInput?.value).toBe("4");
-
-    await act(async () => {
-      selectAllButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    await act(async () => {
-      denySelectedButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await clickApprovalsMenuItem(container, "approvals-select-all-matches");
+    await clickApprovalsMenuItem(container, "approvals-deny-selected");
 
     expect(rejectPayload).toEqual({});
     expect(container.textContent).toContain("Reject failed.");

@@ -22,7 +22,7 @@ export const usePermissionProfilesSection = ({
   onStatus,
 }: UsePermissionProfilesSectionOptions) => {
   const queryClient = useQueryClient();
-  const [permissionProfileName, setPermissionProfileName] = useState("");
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   const permissionProfilesQuery = useQuery({
     queryKey: ["permission-profiles"],
@@ -48,12 +48,20 @@ export const usePermissionProfilesSection = ({
       method?: string;
       body?: unknown;
     }) =>
-      fetchJson<PermissionProfile | PermissionProfileApplyResult>(url, {
+      fetchJson<
+        PermissionProfile | PermissionProfileApplyResult | { deleted: boolean }
+      >(url, {
         method,
         headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
       }),
     onSuccess: async (result, variables) => {
+      if ("deleted" in result) {
+        onStatus("Deleted permission profile.");
+        await invalidateAll();
+        return;
+      }
+
       const profile = "profile" in result ? result.profile : result;
       if (variables.url.endsWith("/load")) {
         const applied = "appliedTools" in result ? result.appliedTools : 0;
@@ -61,8 +69,17 @@ export const usePermissionProfilesSection = ({
       } else if (variables.url.endsWith("/update")) {
         onStatus(`Updated ${permissionProfileLabel(profile)} from current settings.`);
       } else {
-        setPermissionProfileName("");
-        onStatus(`Saved ${permissionProfileLabel(profile)} permission profile.`);
+        setIsSaveModalOpen(false);
+        const requestedName =
+          variables.body &&
+          typeof variables.body === "object" &&
+          variables.body !== null &&
+          "name" in variables.body
+            ? String((variables.body as { name: unknown }).name).trim()
+            : "";
+        onStatus(
+          `Saved ${requestedName || permissionProfileLabel(profile)} permission profile.`,
+        );
       }
       await invalidateAll();
     },
@@ -71,10 +88,10 @@ export const usePermissionProfilesSection = ({
     },
   });
 
-  const handleCreatePermissionProfile = () => {
+  const handleSavePermissionProfile = (profileName: string) => {
     permissionProfileMutation.mutate({
       url: "/api/permission-profiles",
-      body: { name: permissionProfileName.trim() },
+      body: { name: profileName.trim() },
     });
   };
 
@@ -110,17 +127,26 @@ export const usePermissionProfilesSection = ({
     });
   };
 
+  const handleDeletePermissionProfile = (profile: PermissionProfile) => {
+    permissionProfileMutation.mutate({
+      url: `/api/permission-profiles/${profile.id}`,
+      method: "DELETE",
+    });
+  };
+
   return {
     actionPending: permissionProfileMutation.isPending,
     errorMessage: permissionProfilesQuery.isError
       ? (permissionProfilesQuery.error as Error).message
       : null,
     isPending: permissionProfilesQuery.isPending,
-    onCreateProfile: handleCreatePermissionProfile,
+    isSaveModalOpen,
+    onCloseSaveModal: () => setIsSaveModalOpen(false),
+    onOpenSaveModal: () => setIsSaveModalOpen(true),
+    onSaveProfile: handleSavePermissionProfile,
     onLoadProfile: handleLoadPermissionProfile,
     onUpdateProfile: handleUpdatePermissionProfile,
-    profileName: permissionProfileName,
+    onDeleteProfile: handleDeletePermissionProfile,
     profiles: permissionProfilesQuery.data ?? [],
-    setProfileName: setPermissionProfileName,
   };
 };

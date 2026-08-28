@@ -19,3 +19,9 @@ __pycache__/
 .pytest_cache/
 .venv/
 .vscode/launch.json
+
+# Local-only UX review tooling (keep out of commits/PRs)
+.local/
+src/fixtures/
+src/lib/ux-review-mode.ts
+src/components/feedback/ux-review-banner.tsx

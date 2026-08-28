@@ -1,3 +1,5 @@
+import { resolveUxReviewFixture } from "@/src/fixtures/ux-review/fixture-router";
+import { isUxReviewMode } from "@/src/lib/ux-review-mode";
 import { apiPath } from "@/src/shared/paths";
 
 export type ApiDebugDetails = Record<string, unknown>;
@@ -27,6 +29,10 @@ export const fetchJson = async <T,>(
   input: RequestInfo,
   init?: RequestInit,
 ): Promise<T> => {
+  if (isUxReviewMode()) {
+    return resolveUxReviewFixture(input, init) as T;
+  }
+
   const response = await apiFetch(input, init);
 
   if (!response.ok) {

@@ -34,9 +34,6 @@ export const useApprovalsSection = ({
   const [approvalSearch, setApprovalSearch] = useState("");
   const [approvalFilter, setApprovalFilter] =
     useState<ApprovalRequestFilter>("pending");
-  const [approvalDurationHours, setApprovalDurationHours] = useState(
-    String(DEFAULT_CASE_BY_CASE_APPROVAL_HOURS),
-  );
   const [selectedApprovalRequests, setSelectedApprovalRequests] = useState<
     Record<string, boolean>
   >({});
@@ -91,13 +88,6 @@ export const useApprovalsSection = ({
     hasVisibleApprovalRequests &&
     filteredAccessRequests.every((request) => selectedApprovalRequests[request.id]);
   const selectedApprovalRequestCount = selectedApprovalRequestIds.length;
-  const normalizedApprovalDurationHours = useMemo(() => {
-    const parsed = Number(approvalDurationHours);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return DEFAULT_CASE_BY_CASE_APPROVAL_HOURS;
-    }
-    return normalizeApprovalDurationHours(parsed);
-  }, [approvalDurationHours]);
 
   const setSelectedStateForApprovalRequests = (
     requestIds: string[],
@@ -116,10 +106,6 @@ export const useApprovalsSection = ({
     });
   };
 
-  const handleApprovalDurationBlur = () => {
-    setApprovalDurationHours(String(normalizedApprovalDurationHours));
-  };
-
   const handleAccessRequestDecision = async (
     requestIds: string[],
     action: "approve" | "deny",
@@ -134,7 +120,7 @@ export const useApprovalsSection = ({
     try {
       const decisionDurationHours =
         durationHoursOverride === undefined
-          ? normalizedApprovalDurationHours
+          ? DEFAULT_CASE_BY_CASE_APPROVAL_HOURS
           : normalizeApprovalDurationHours(durationHoursOverride);
 
       for (const requestId of requestIds) {
@@ -184,18 +170,15 @@ export const useApprovalsSection = ({
   return {
     allVisibleApprovalRequestsSelected,
     approvalCounts,
-    approvalDurationHours,
     approvalFilter,
     approvalSearch,
     filteredAccessRequests,
     handleAccessRequestDecision,
-    handleApprovalDurationBlur,
     hasVisibleApprovalRequests,
     requestActionPending,
     selectedApprovalRequestCount,
     selectedApprovalRequestIds,
     selectedApprovalRequests,
-    setApprovalDurationHours,
     setApprovalFilter,
     setApprovalSearch,
     setSelectedStateForApprovalRequests,

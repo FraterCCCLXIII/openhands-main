@@ -135,6 +135,7 @@ type RenderOptions = {
   redirectSection?: AdminSection;
   statefulDraft?: boolean;
   isAdmin?: boolean;
+  showConnectorPicker?: boolean;
 };
 
 const renderConnectStep = async (options: RenderOptions = {}) => {
@@ -183,6 +184,7 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
           hasDirectConnection={options.hasDirectConnection ?? !!options.selectedConnection}
           selectedConnector={options.selectedConnector ?? null}
           setDraft={appliedSetDraft}
+          showConnectorPicker={options.showConnectorPicker}
           onConnectorSearchChange={onConnectorSearchChange}
           onDiscover={onDiscover}
           onSelectKind={onSelectKind}
@@ -285,6 +287,33 @@ describe("ConnectStep", () => {
     await cleanup();
   });
 
+  it("hides the connector search when opened from a single catalog integration", async () => {
+    const { container, cleanup } = await renderConnectStep({
+      showConnectorPicker: false,
+      connectorSearch: "DeepWiki (deepwiki)",
+      draft: {
+        ...baseManagedDraft,
+        key: "deepwiki",
+        name: "DeepWiki",
+        managedConnectorSlug: "deepwiki",
+      },
+      selectedConnector: {
+        ...noAuthConnector,
+        slug: "deepwiki",
+        name: "DeepWiki",
+      },
+    });
+
+    expect(
+      container.querySelector('input[list="managed-connector-options"]'),
+    ).toBeNull();
+    expect(container.textContent).not.toContain("Don't see a connector you want?");
+    expect(container.textContent).toContain("DeepWiki");
+    expect(container.textContent).toContain("Integration key");
+
+    await cleanup();
+  });
+
   it("shows OAuth connection status copy and disables unavailable connection actions", async () => {
     const connected = await renderConnectStep({
       draft: {
@@ -309,15 +338,12 @@ describe("ConnectStep", () => {
       oauthConnectionEnabled: true,
     });
 
-    expect(connected.container.textContent).toContain(
-      "This managed connector is registered for the current deployment.",
-    );
     expect(connected.container.textContent).toContain("Acme Workspace");
     expect(connected.container.textContent).toContain(
       "This Notion token is stored per user in the database and will be injected automatically for agent calls.",
     );
     expect(connected.container.textContent).toContain(
-      "Notion is connected. Click Discover to save this integration with your stored OAuth credentials.",
+      "Notion is connected. Click Review tools to save this integration with your stored OAuth credentials.",
     );
     expect(connected.container.textContent).toContain("Reconnect");
     expect(connected.container.textContent).toContain("Expires");
@@ -514,7 +540,7 @@ describe("ConnectStep", () => {
     );
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
 
     await act(async () => {
@@ -668,7 +694,7 @@ describe("ConnectStep", () => {
       (button) => button.textContent?.includes("Contact admin"),
     );
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
 
     expect(notAvailableButton?.hasAttribute("disabled")).toBe(true);
@@ -754,7 +780,7 @@ describe("ConnectStep", () => {
     });
 
     expect(container.textContent).toContain(
-      "No provider credential is required for Public Feed. Click Discover to load the available tools.",
+      "No provider credential is required for Public Feed. Click Review tools to load the available tools.",
     );
     expect(container.textContent).not.toContain("Access token");
     expect(container.textContent).not.toContain("API key header name");

@@ -1,16 +1,49 @@
 import { PlugZap } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { IntegrationLogoBadge } from "@/src/components/integrations/integration-logo-badge";
+import { Badge } from "@/src/components/ui/badge";
 import { cn } from "@/src/lib/utils";
 
-export const WizardHeader = () => (
+interface WizardHeaderProps {
+  title?: string | null;
+  description?: string | null;
+  logoSlug?: string | null;
+  logoUrl?: string | null;
+  authLabel?: string | null;
+  isConnected?: boolean;
+}
+
+export const WizardHeader = ({
+  title,
+  description,
+  logoSlug,
+  logoUrl,
+  authLabel,
+  isConnected = false,
+}: WizardHeaderProps = {}) => (
   <div className="mb-5 flex items-start gap-3">
-    <PlugZap className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]" />
+    {logoSlug ? (
+      <IntegrationLogoBadge
+        slug={logoSlug}
+        name={title?.trim() || logoSlug}
+        logoUrl={logoUrl ?? undefined}
+        className="mt-0.5"
+      />
+    ) : (
+      <PlugZap className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-accent)]" />
+    )}
     <div className="space-y-1">
-      <h2 className="text-lg font-semibold text-white">Connect an integration</h2>
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="text-lg font-semibold text-white">
+          {title?.trim() || "Connect an integration"}
+        </h2>
+        {authLabel ? <Badge>{authLabel}</Badge> : null}
+        {isConnected ? <Badge tone="success">Connected</Badge> : null}
+      </div>
       <p className="text-sm leading-6 text-[var(--color-text-base)]">
-        Pick a connector, connect your account or paste credentials, then review
-        the tools the agent can use.
+        {description?.trim() ||
+          "Pick a connector, connect your account or paste credentials, then review the tools the agent can use."}
       </p>
     </div>
   </div>

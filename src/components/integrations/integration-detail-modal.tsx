@@ -25,7 +25,8 @@ import {
   INTEGRATIONS_PAGE_COPY,
 } from "@/src/constants/integrations-page";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
-import { modalShellClassName } from "@/src/components/ui/modal-shell";
+import { modalFooterActionsClassName, modalShellClassName } from "@/src/components/ui/modal-shell";
+import { cn } from "@/src/lib/utils";
 import {
   extensionModuleCardPillClassName,
 } from "@/src/styles/extension-module-card-classes";
@@ -233,7 +234,7 @@ export function IntegrationDetailModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-t border-[var(--oh-border)] px-7 py-4">
+        <div className={cn(modalFooterActionsClassName, "border-t border-[var(--oh-border)] px-7 py-4")}>
           <Button
             type="button"
             variant="danger"

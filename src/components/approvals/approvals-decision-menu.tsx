@@ -14,12 +14,24 @@ import { formControlButtonClassName } from "@/src/styles/form-control-classes";
 
 interface ApprovalsDecisionMenuProps {
   isDisabled?: boolean;
+  canSelectAll?: boolean;
+  canDeselect?: boolean;
+  canApprove?: boolean;
+  canDeny?: boolean;
+  onSelectAll?: () => void;
+  onDeselect?: () => void;
   onApprove?: () => void;
   onDeny?: () => void;
 }
 
 export function ApprovalsDecisionMenu({
   isDisabled = false,
+  canSelectAll = false,
+  canDeselect = false,
+  canApprove = false,
+  canDeny = false,
+  onSelectAll,
+  onDeselect,
   onApprove,
   onDeny,
 }: ApprovalsDecisionMenuProps) {
@@ -59,7 +71,7 @@ export function ApprovalsDecisionMenu({
   return (
     <div
       ref={containerRef}
-      className="relative shrink-0"
+      className="relative shrink-0 self-end"
       data-testid="approvals-decision-menu"
     >
       <button
@@ -100,8 +112,42 @@ export function ApprovalsDecisionMenu({
               <button
                 type="button"
                 role="menuitem"
-                data-testid="approvals-approve-selected"
+                data-testid="approvals-select-all-matches"
+                disabled={!canSelectAll}
                 onClick={() => {
+                  if (!canSelectAll) return;
+                  onSelectAll?.();
+                  closeMenu();
+                }}
+                className={dropdownMenuRowClassName}
+              >
+                {APPROVALS_PAGE_COPY.selectAllMatches}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="approvals-deselect-matches"
+                disabled={!canDeselect}
+                onClick={() => {
+                  if (!canDeselect) return;
+                  onDeselect?.();
+                  closeMenu();
+                }}
+                className={dropdownMenuRowClassName}
+              >
+                {APPROVALS_PAGE_COPY.deselectMatches}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="approvals-approve-selected"
+                disabled={!canApprove}
+                onClick={() => {
+                  if (!canApprove) return;
                   onApprove?.();
                   closeMenu();
                 }}
@@ -115,7 +161,9 @@ export function ApprovalsDecisionMenu({
                 type="button"
                 role="menuitem"
                 data-testid="approvals-deny-selected"
+                disabled={!canDeny}
                 onClick={() => {
+                  if (!canDeny) return;
                   onDeny?.();
                   closeMenu();
                 }}

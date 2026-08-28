@@ -331,7 +331,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -344,7 +344,9 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    expect(container.textContent).toContain("1 tool discovered for ElevenLabs");
+    expect(
+      container.querySelector("[data-wizard-pane]")?.getAttribute("data-wizard-pane"),
+    ).toBe("review");
     expect(container.textContent).toContain("list_models");
   });
 
@@ -531,7 +533,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -544,7 +546,9 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    expect(container.textContent).toContain("1 tool discovered for Notion");
+    expect(
+      container.querySelector("[data-wizard-pane]")?.getAttribute("data-wizard-pane"),
+    ).toBe("review");
     expect(container.textContent).toContain("searchPages");
   });
 
@@ -643,7 +647,7 @@ describe("IntegrationWizard", () => {
     expect(container.textContent).toContain("Connect");
     expect(container.textContent).not.toContain("Reconnect");
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
 
@@ -801,6 +805,11 @@ describe("IntegrationWizard", () => {
       });
     };
 
+    const clickBulkAction = async (label: string) => {
+      await clickButton("Bulk Actions");
+      await clickButton(label);
+    };
+
     const getVisibleToolNames = () =>
       Array.from(container.querySelectorAll("[data-tool-name]")).map((row) =>
         row.getAttribute("data-tool-name"),
@@ -816,7 +825,7 @@ describe("IntegrationWizard", () => {
         .querySelector(`[data-tool-name="${name}"] [data-access-mode]`)
         ?.getAttribute("data-access-mode");
 
-    await clickButton("Discover tools");
+    await clickButton("Review tools");
 
     expect(getVisibleToolNames()).toEqual([
       "archiveDatabase",
@@ -855,7 +864,7 @@ describe("IntegrationWizard", () => {
 
     expect(getVisibleToolNames()).toEqual(["createPage", "searchPages"]);
 
-    await clickButton("Select all matches");
+    await clickBulkAction("Select all matches");
 
     await act(async () => {
       setInputValue(searchInput ?? undefined, "");
@@ -877,7 +886,7 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    await clickButton("Disable selected");
+    await clickBulkAction("Disable selected");
     expect(getToolMode("createPage")).toBe("disabled");
     expect(getToolMode("searchPages")).toBe("disabled");
     expect(getToolCheckbox("createPage")?.checked).toBe(false);
@@ -891,8 +900,8 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    await clickButton("Select all matches");
-    await clickButton("Case-by-case selected");
+    await clickBulkAction("Select all matches");
+    await clickBulkAction("Case-by-case selected");
     expect(getToolMode("searchPages")).toBe("approval_required");
     expect(getToolCheckbox("searchPages")?.checked).toBe(false);
 
@@ -904,8 +913,8 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    await clickButton("Select all matches");
-    await clickButton("Enable selected");
+    await clickBulkAction("Select all matches");
+    await clickBulkAction("Enable selected");
     expect(getToolCheckbox("archiveDatabase")?.checked).toBe(false);
 
     await act(async () => {
@@ -1058,7 +1067,7 @@ describe("IntegrationWizard", () => {
       });
     };
 
-    await clickButton("Discover tools");
+    await clickButton("Review tools");
     await clickButton("Create integration");
 
     expect(onCreated).not.toHaveBeenCalled();
@@ -1221,7 +1230,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
     expect(discoverButton).toBeTruthy();
     expect(discoverButton?.hasAttribute("disabled")).toBe(false);
@@ -1241,7 +1250,7 @@ describe("IntegrationWizard", () => {
     expect(feedback?.textContent).toContain("Admin diagnostics");
     expect(feedback?.textContent).toContain('"startsWithBearerPrefix": false');
     expect(feedback?.textContent).toContain('"operationName": "listTools"');
-    expect(container.textContent).toContain("Connect an integration");
+    expect(container.textContent).toContain("Notion");
   });
 
   it("uses the draft display name instead of the connector name when customised", async () => {
@@ -1355,7 +1364,7 @@ describe("IntegrationWizard", () => {
     });
 
     const discoverButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Discover tools"),
+      (button) => button.textContent?.includes("Review tools"),
     );
     expect(discoverButton).toBeTruthy();
 
@@ -1367,8 +1376,10 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 25));
     });
 
-    // The review step should show the custom display name, not "ElevenLabs".
-    expect(container.textContent).toContain("My Custom Voice");
+    expect(
+      container.querySelector("[data-wizard-pane]")?.getAttribute("data-wizard-pane"),
+    ).toBe("review");
+    expect(nameInput?.value).toBe("My Custom Voice");
   });
 
   it("does not surface a stale OAuth connection after the user changes the integration key", async () => {

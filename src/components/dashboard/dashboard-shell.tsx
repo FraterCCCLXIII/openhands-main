@@ -5,7 +5,12 @@ import type { ReactNode } from "react";
 
 import { HubAppShell } from "@/src/components/layout/hub-app-shell";
 import { PageHeader } from "@/src/components/layout/page-header";
+import {
+  APPROVAL_DURATION,
+  APPROVALS_PAGE_COPY,
+} from "@/src/constants/approvals-page";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
+import { uiPath } from "@/src/shared/paths";
 import { hubPageShellClassName } from "@/src/styles/neo-layout";
 
 interface DashboardShellProps {
@@ -15,7 +20,6 @@ interface DashboardShellProps {
   userEmail: string;
   enabledIntegrationCount: number;
   discoveredToolCount: number;
-  statusMessage: string | null;
   oauthStatusMessage: string | null;
   showOAuthStatus: boolean;
   agentApiReady: boolean;
@@ -55,7 +59,22 @@ const sectionCopy: Record<AdminSection, { title: string; description: ReactNode 
   },
   caseByCaseApprovals: {
     title: "Integration requests",
-    description: "Review temporary tool-access requests from your agents.",
+    description: (
+      <>
+        {APPROVALS_PAGE_COPY.decideSelectedDescription(
+          APPROVAL_DURATION.defaultHours,
+          APPROVAL_DURATION.maxHours,
+        )}{" "}
+        {APPROVALS_PAGE_COPY.longDurationHintPrefix}{" "}
+        <Link
+          href={uiPath("/integrations")}
+          className="text-white transition-opacity hover:opacity-80"
+        >
+          {APPROVALS_PAGE_COPY.longDurationHintLink}
+        </Link>
+        {APPROVALS_PAGE_COPY.longDurationHintSuffix}
+      </>
+    ),
   },
 };
 
@@ -66,7 +85,6 @@ export const DashboardShell = ({
   userEmail,
   enabledIntegrationCount,
   discoveredToolCount,
-  statusMessage,
   oauthStatusMessage,
   showOAuthStatus,
   agentApiReady,
@@ -106,9 +124,9 @@ export const DashboardShell = ({
         />
 
         <div className="mt-5 space-y-4">
-          {statusMessage || (oauthStatusMessage && showOAuthStatus) ? (
+          {oauthStatusMessage && showOAuthStatus ? (
             <div className="rounded-xl border border-[var(--oh-border)] bg-base-secondary px-3 py-2 text-sm text-white">
-              {statusMessage || oauthStatusMessage}
+              {oauthStatusMessage}
             </div>
           ) : null}
 

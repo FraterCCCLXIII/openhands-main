@@ -1,13 +1,19 @@
 export const AGENT_CONNECTION_PAGE_COPY = {
   apiKeysTitle: "API keys",
   apiKeysDescription:
-    "Choose a permission profile for agent access, then copy or rotate the keys your agents and automations should use.",
+    "Copy or rotate the keys your agents and automations should use.",
+  profileKeysTitle: "Permission profile keys",
+  profileKeysDescription:
+    "Each agent key is bound to a named permission profile. Give the matching key to agents that should use that profile.",
+  newProfileButton: "New profile",
+  automationKeysTitle: "Automation keys",
+  automationKeysDescription:
+    "Account-scoped keys that are not tied to a permission profile.",
   connectionDetailsTitle: "Connection details",
   connectionDetailsDescription:
     "Endpoints, OpenAPI schemas, and starter prompts for MCP and REST integrations.",
   connectionDetailsLink: "View connection details",
   connectionDetailsModalAriaLabel: "Connection details",
-  profilesCountLabel: "Profiles",
   permissionProfileLabel: "Permission profile",
   profileAgentKeyTitle: (profileName: string) => `${profileName} agent key`,
   profileAgentKeyDescription:
@@ -17,11 +23,9 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   userAutomationKeyTitle: "User automation key",
   userAutomationKeyDescription:
     "Use this key to programmatically manage user-scoped integrations-hub settings.",
-  userAutomationKeyBadge: "User",
   adminAutomationKeyTitle: "Admin automation key",
   adminAutomationKeyDescription:
     "Use this key for admin-only QA and operational automation surfaces.",
-  adminAutomationKeyBadge: "Admin",
   noAgentKey: "No agent key available yet.",
   noUserAutomationKey:
     "No user automation key yet. Reveal or copy to create one.",
@@ -47,7 +51,3 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   adminRestApiDescription:
     "Use the admin automation key with the admin-only OpenAPI schema for connector, discovery, and approval QA.",
 } as const;
-
-export function permissionProfilesCountAriaLabel(count: number): string {
-  return `${count} profile${count === 1 ? "" : "s"}`;
-}

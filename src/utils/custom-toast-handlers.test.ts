@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import {
   displayErrorToast,
   displaySuccessToast,
+  reportStatusMessage,
 } from "@/src/utils/custom-toast-handlers";
 
 const { toastMock } = vi.hoisted(() => ({
@@ -37,6 +38,20 @@ describe("custom-toast-handlers", () => {
         }),
       }),
     );
+  });
+
+  it("routes success status messages to a success toast", () => {
+    reportStatusMessage("Saved Research permission profile.");
+
+    expect(toast.success).toHaveBeenCalled();
+    expect(toastMock).not.toHaveBeenCalled();
+  });
+
+  it("routes failure status messages to an error toast", () => {
+    reportStatusMessage("Unable to enable GitHub right now.");
+
+    expect(toastMock).toHaveBeenCalled();
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("uses compact toast typography for error messages", () => {

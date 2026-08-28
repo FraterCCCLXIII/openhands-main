@@ -8,7 +8,7 @@ import {
 } from "@/src/constants/integrations-page";
 import { Button } from "@/src/components/ui/button";
 import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
-import { modalShellClassName } from "@/src/components/ui/modal-shell";
+import { modalFooterActionsClassName, modalShellClassName } from "@/src/components/ui/modal-shell";
 import { SelectDropdown } from "@/src/components/ui/select-dropdown";
 import { dashboardInputClassName } from "@/src/components/dashboard/shared";
 import {
@@ -66,7 +66,7 @@ export function UnusedToolsBulkDisableModal({
             </p>
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-end md:gap-4">
             <label className="flex flex-col gap-1 text-xs text-[var(--oh-text-secondary)]">
               <span>{INTEGRATIONS_PAGE_COPY.bulkDisableUnusedForLabel}</span>
               <input
@@ -94,24 +94,25 @@ export function UnusedToolsBulkDisableModal({
                 className="w-32"
               />
             </label>
-            <div className="flex flex-col gap-2 sm:items-end">
-              <p
-                data-testid="unused-tools-matched-count"
-                className="text-xs text-[var(--oh-text-secondary)]"
-              >
-                {formatToolsMatchedLabel(unusedToolCandidateCount)}
-              </p>
-              <Button
-                type="button"
-                variant="secondary"
-                className="shrink-0"
-                onClick={onDisable}
-                disabled={isBulkDisablePending}
-                aria-label="Disable unused tools"
-              >
-                {INTEGRATIONS_PAGE_COPY.bulkDisableDisableButton}
-              </Button>
-            </div>
+            <p
+              data-testid="unused-tools-matched-count"
+              className="text-xs text-[var(--oh-text-secondary)] md:ml-auto md:pb-2"
+            >
+              {formatToolsMatchedLabel(unusedToolCandidateCount)}
+            </p>
+          </div>
+
+          <div className={cn(modalFooterActionsClassName, "mt-6")}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="shrink-0"
+              onClick={onDisable}
+              disabled={isBulkDisablePending}
+              aria-label="Disable unused tools"
+            >
+              {INTEGRATIONS_PAGE_COPY.bulkDisableDisableButton}
+            </Button>
           </div>
         </div>
       </section>

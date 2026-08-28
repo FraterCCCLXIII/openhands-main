@@ -15,22 +15,9 @@ import type {
 
 export type IntegrationKind = "managed" | "mcp";
 export type WizardFlow = "add" | "catalog";
-export type WizardStep = 1 | 2 | 3;
 
 export function getWizardFlow(searchParams: Pick<URLSearchParams, "get"> | null): WizardFlow {
   return searchParams?.get("managedConnector") ? "catalog" : "add";
-}
-
-export function getWizardTotalSteps(flow: WizardFlow): number {
-  return flow === "catalog" ? 2 : 3;
-}
-
-export function getWizardProgressIndex(flow: WizardFlow, step: WizardStep): number {
-  if (flow === "catalog") {
-    return step <= 2 ? 0 : 1;
-  }
-
-  return Math.max(0, step - 1);
 }
 
 
@@ -80,7 +67,7 @@ export const INITIAL_DRAFT: WizardDraft = {
 };
 
 export const integrationWizardInputClassName =
-  "rounded-md border border-[var(--oh-border)] bg-[var(--oh-bg-input)] px-4 py-3 text-white outline-none transition-colors focus:border-[var(--oh-accent)]";
+  "h-9 min-h-9 w-full rounded-md border border-[var(--oh-border)] bg-[var(--oh-bg-input)] px-4 py-0 text-sm leading-5 text-white outline-none transition-colors focus:border-[var(--oh-accent)]";
 
 export const formatDebugDetails = (debugDetails: ApiDebugDetails) =>
   JSON.stringify(debugDetails, null, 2);

@@ -74,8 +74,6 @@ const renderReviewStep = async (overrides: RenderOptions = {}) => {
 
   const props: ComponentProps<typeof ReviewStep> = {
     createPending: false,
-    draftKey: "demo-key",
-    draftName: "Demo integration",
     filteredReviewedTools: [
       ["archiveDatabase", archiveTool],
       ["searchPages", searchTool],
@@ -152,7 +150,6 @@ describe("ReviewStep", () => {
   it("shows the empty discovery state and disables saving when no tools were found", async () => {
     const { container, onBack } = await renderReviewStep({
       createPending: true,
-      draftName: "Empty integration",
       reviewedTools: [],
       filteredReviewedTools: [],
       matchingToolNames: [],
@@ -200,17 +197,24 @@ describe("ReviewStep", () => {
       expandedTools: {},
     });
 
-    expect(container.textContent).toContain("0 matching");
-    expect(container.textContent).toContain("0 selected in view");
     expect(container.textContent).toContain(
       "No tools match this search. Try a different term.",
     );
 
-    const selectAllButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Select all matches"),
+    const bulkActionsTrigger = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Bulk Actions"),
     );
-    const deselectButton = Array.from(container.querySelectorAll("button")).find(
-      (button) => button.textContent?.includes("Deselect matches"),
+    expect(bulkActionsTrigger).toBeTruthy();
+
+    await act(async () => {
+      bulkActionsTrigger?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const selectAllButton = container.querySelector(
+      '[data-testid="tool-access-select-all-matches"]',
+    );
+    const deselectButton = container.querySelector(
+      '[data-testid="tool-access-deselect-matches"]',
     );
 
     expect(selectAllButton?.hasAttribute("disabled")).toBe(true);
@@ -228,7 +232,6 @@ describe("ReviewStep", () => {
       onToggleToolExpanded,
       getNextSelectionState,
     } = await renderReviewStep({
-      draftName: "GitHub",
       toolSearch: "page",
       filteredReviewedTools: [
         ["searchPages", searchTool],
@@ -243,8 +246,6 @@ describe("ReviewStep", () => {
       expandedTools: { emptyTool: true },
     });
 
-    expect(container.textContent).toContain("2 matching");
-    expect(container.textContent).toContain("1 selected");
     expect(container.textContent).toContain("Search pages");
     expect(container.textContent).toContain("No description provided.");
     expect(container.textContent).toContain("Default scopes: none");
@@ -262,11 +263,16 @@ describe("ReviewStep", () => {
       });
     };
 
-    await clickButton("Select all matches");
-    await clickButton("Deselect matches");
-    await clickButton("Enable selected");
-    await clickButton("Case-by-case selected");
-    await clickButton("Disable selected");
+    const clickBulkAction = async (label: string) => {
+      await clickButton("Bulk Actions");
+      await clickButton(label);
+    };
+
+    await clickBulkAction("Select all matches");
+    await clickBulkAction("Deselect matches");
+    await clickBulkAction("Enable selected");
+    await clickBulkAction("Case-by-case selected");
+    await clickBulkAction("Disable selected");
     await clickButton("Hide details");
     await clickButton("Back");
     await clickButton("Create integration");
