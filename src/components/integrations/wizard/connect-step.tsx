@@ -5,7 +5,6 @@ import { modalFooterActionsClassName } from "@/src/components/ui/modal-shell";
 import { cn } from "@/src/lib/utils";
 import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
 import { fetchJson } from "@/src/lib/fetch-json";
-import { uiPath } from "@/src/shared/paths";
 import type {
   ManagedConnectorOption,
   IntegrationConnectionStatus,
@@ -21,11 +20,8 @@ import { INTEGRATIONS_PAGE_COPY } from "@/src/constants/integrations-page";
 import { useTracking } from "@/src/hooks/use-tracking";
 
 interface ConnectStepProps {
-  managedConnectors: ManagedConnectorOption[];
   managedConnectorsError?: string | null;
-  managedConnectorsPending: boolean;
   canDiscover: boolean;
-  connectorSearch: string;
   discoverFeedback: DiscoverFeedback | null;
   discoverPending: boolean;
   draft: WizardDraft;
@@ -37,8 +33,6 @@ interface ConnectStepProps {
   hasDirectConnection: boolean;
   selectedConnector: ManagedConnectorOption | null;
   setDraft: React.Dispatch<React.SetStateAction<WizardDraft>>;
-  showConnectorPicker?: boolean;
-  onConnectorSearchChange: (value: string) => void;
   onDiscover: () => void;
   onSelectKind: (kind: WizardDraft["kind"]) => void;
 }
@@ -95,11 +89,8 @@ const startOAuthConnection = async ({
 };
 
 export const ConnectStep = ({
-  managedConnectors,
   managedConnectorsError,
-  managedConnectorsPending,
   canDiscover,
-  connectorSearch,
   discoverFeedback,
   discoverPending,
   draft,
@@ -111,8 +102,6 @@ export const ConnectStep = ({
   hasDirectConnection,
   selectedConnector,
   setDraft,
-  showConnectorPicker = true,
-  onConnectorSearchChange,
   onDiscover,
   onSelectKind,
 }: ConnectStepProps) => {
@@ -132,41 +121,6 @@ export const ConnectStep = ({
     <div className="space-y-4">
       {draft.kind === "managed" ? (
         <>
-          {showConnectorPicker ? (
-            <label className="grid gap-1.5 text-sm text-white">
-              <span className="font-medium">Managed connector</span>
-              <input
-                className={integrationWizardInputClassName}
-                list="managed-connector-options"
-                placeholder={
-                  managedConnectorsPending
-                    ? "Loading supported connectors..."
-                    : "Search supported connectors..."
-                }
-                value={connectorSearch}
-                onChange={(event) => onConnectorSearchChange(event.target.value)}
-                disabled={managedConnectorsPending}
-              />
-              <datalist id="managed-connector-options">
-                {managedConnectors.map((connector) => (
-                  <option
-                    key={connector.slug}
-                    value={`${connector.name} (${connector.slug})`}
-                  />
-                ))}
-              </datalist>
-              <span className="text-xs leading-5 text-[var(--color-text-base)]">
-                Don&apos;t see a connector you want?{" "}
-                <a
-                  href={uiPath("/admin-integrations")}
-                  className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
-                >
-                  Click here.
-                </a>
-              </span>
-            </label>
-          ) : null}
-
           {managedConnectorsError ? (
             <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
               {managedConnectorsError}
@@ -441,7 +395,7 @@ export const ConnectStep = ({
                   "Provide the provider credentials that this managed connector should use upstream."}
               </div>
             </div>
-          ) : managedConnectorAuthStrategy === "none" ? null : (
+          ) : !selectedConnector || managedConnectorAuthStrategy === "none" ? null : (
             <label className="grid gap-1.5 text-sm text-white">
               <span className="font-medium">
                 {selectedConnector?.credentialLabel ?? "Access token"}
@@ -467,13 +421,13 @@ export const ConnectStep = ({
             </label>
           )}
 
-          {isAdmin && showConnectorPicker ? (
+          {isAdmin && !selectedConnector ? (
             <button
               type="button"
-              className="self-start text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="cursor-pointer self-start text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
               onClick={() => onSelectKind("mcp")}
             >
-              Use a custom MCP server URL instead
+              {INTEGRATIONS_PAGE_COPY.wizardCustomMcpLabel}
             </button>
           ) : null}
         </>

@@ -15,6 +15,7 @@ import {
   maskApiKey,
 } from "@/src/components/dashboard/utils";
 import { SavePermissionsModal } from "@/src/components/permission-profiles/save-permissions-modal";
+import { SavedPermissionProfilesList } from "@/src/components/permission-profiles/saved-permission-profiles-list";
 import { permissionProfileLabel } from "@/src/components/permission-profiles/permission-profile-utils";
 import { AGENT_CONNECTION_PAGE_COPY } from "@/src/constants/agent-connection-page";
 import { fetchJson } from "@/src/lib/fetch-json";
@@ -114,7 +115,7 @@ function ApiKeyListRow({
   );
 }
 
-function ProfileAgentKeyListRow({
+function ProfileAgentKeyActions({
   profile,
 }: {
   profile: PermissionProfile;
@@ -187,32 +188,64 @@ function ProfileAgentKeyListRow({
     }
   };
 
+  const testId = `agent-connection-agent-key-row-${profile.id}`;
+  const maskedValue = hasKey
+    ? maskApiKey(agentApiKey, revealed)
+    : keyActionError ?? AGENT_CONNECTION_PAGE_COPY.noProfileAgentKey;
+  const rotateLabel = keyActionPending
+    ? hasKey
+      ? "Rotating"
+      : "Provisioning"
+    : hasKey
+      ? "Rotate"
+      : "Provision";
+
   return (
-    <ApiKeyListRow
-      testId={`agent-connection-agent-key-row-${profile.id}`}
-      label={label}
-      maskedValue={
-        hasKey
-          ? maskApiKey(agentApiKey, revealed)
-          : keyActionError ?? AGENT_CONNECTION_PAGE_COPY.noProfileAgentKey
-      }
-      copied={copied}
-      revealed={revealed}
-      revealDisabled={!hasKey}
-      onCopy={handleCopy}
-      onRevealToggle={() => setRevealed((current) => !current)}
-      onRotate={handleRotate}
-      rotateDisabled={keyActionPending}
-      rotateLabel={
-        keyActionPending
-          ? hasKey
-            ? "Rotating"
-            : "Provisioning"
-          : hasKey
-            ? "Rotate"
-            : "Provision"
-      }
-    />
+    <div className="flex min-w-0 items-center gap-2">
+      <code className="min-w-0 max-w-48 truncate text-right font-mono text-xs text-tertiary-light">
+        {maskedValue}
+      </code>
+      <div className="flex shrink-0 items-center gap-0.5">
+        <button
+          type="button"
+          data-testid={`${testId}-reveal`}
+          aria-label={revealed ? `Hide ${label.toLowerCase()}` : `Reveal ${label.toLowerCase()}`}
+          className={settingsListIconActionButtonClassName}
+          disabled={!hasKey}
+          onClick={() => setRevealed((current) => !current)}
+        >
+          {revealed ? (
+            <EyeOff width={16} height={16} aria-hidden />
+          ) : (
+            <Eye width={16} height={16} aria-hidden />
+          )}
+        </button>
+        <button
+          type="button"
+          data-testid={`${testId}-copy`}
+          aria-label={`Copy ${label.toLowerCase()}`}
+          className={settingsListIconActionButtonClassName}
+          disabled={!hasKey}
+          onClick={() => void handleCopy()}
+        >
+          {copied ? (
+            <CheckCircle2 width={16} height={16} aria-hidden />
+          ) : (
+            <Copy width={16} height={16} aria-hidden />
+          )}
+        </button>
+        <button
+          type="button"
+          data-testid={`${testId}-rotate`}
+          aria-label={`${rotateLabel} ${label.toLowerCase()}`}
+          className={settingsListIconActionButtonClassName}
+          disabled={keyActionPending}
+          onClick={() => void handleRotate()}
+        >
+          <RotateCw width={16} height={16} aria-hidden />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -283,6 +316,9 @@ interface AgentConnectionSectionProps {
   onCloseSaveModal?: () => void;
   onOpenSaveModal?: () => void;
   onSaveProfile?: (profileName: string) => void;
+  onLoadProfile?: (profile: PermissionProfile) => void;
+  onUpdateProfile?: (profile: PermissionProfile) => void;
+  onDeleteProfile?: (profile: PermissionProfile) => void;
   permissionProfiles: PermissionProfile[];
   permissionProfilesLoading: boolean;
   permissionProfilesError: string | null;
@@ -316,6 +352,9 @@ export const AgentConnectionSection = ({
   onCloseSaveModal,
   onOpenSaveModal,
   onSaveProfile,
+  onLoadProfile,
+  onUpdateProfile,
+  onDeleteProfile,
   permissionProfiles,
   permissionProfilesLoading,
   permissionProfilesError,
@@ -334,49 +373,42 @@ export const AgentConnectionSection = ({
     [permissionProfiles],
   );
 
-  let profileKeyRows: ReactNode;
-  if (sortedProfiles.length > 0) {
-    profileKeyRows = sortedProfiles.map((profile) => (
-      <ProfileAgentKeyListRow key={profile.id} profile={profile} />
-    ));
-  } else {
-    profileKeyRows = (
-      <div
-        data-testid="agent-connection-agent-key-empty"
-        className={cn(settingsListRowClassName, "text-sm text-tertiary-light")}
-      >
-        {permissionProfilesError
-          ? `Unable to load profile keys: ${permissionProfilesError}`
-          : permissionProfilesLoading
-            ? "Loading profile keys…"
-            : "No permission profiles yet. Create a profile to provision an agent key."}
-      </div>
-    );
-  }
-
   return (
     <section data-testid="agent-connection-page" className="flex flex-col gap-6">
-      <KeyListSection
-        testId="agent-connection-profile-keys"
-        title={AGENT_CONNECTION_PAGE_COPY.profileKeysTitle}
-        description={AGENT_CONNECTION_PAGE_COPY.profileKeysDescription}
-        action={
-          <button
-            type="button"
-            data-testid="agent-connection-new-profile"
-            disabled={actionPending}
-            onClick={onOpenSaveModal}
-            className={cn(
-              formControlButtonClassName,
-              "shrink-0 border border-[var(--oh-border)] bg-base-secondary text-white hover:bg-surface-raised",
-            )}
-          >
-            {AGENT_CONNECTION_PAGE_COPY.newProfileButton}
-          </button>
-        }
-      >
-        {profileKeyRows}
-      </KeyListSection>
+      <section data-testid="agent-connection-profile-keys" className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-medium text-white">
+              {AGENT_CONNECTION_PAGE_COPY.profileKeysTitle}
+            </h2>
+            <button
+              type="button"
+              data-testid="agent-connection-new-profile"
+              disabled={actionPending}
+              onClick={onOpenSaveModal}
+              className={cn(
+                formControlButtonClassName,
+                "shrink-0 border border-[var(--oh-border)] bg-base-secondary text-white hover:bg-surface-raised",
+              )}
+            >
+              {AGENT_CONNECTION_PAGE_COPY.newProfileButton}
+            </button>
+          </div>
+          <p className="text-sm leading-5 text-tertiary-light">
+            {AGENT_CONNECTION_PAGE_COPY.profileKeysDescription}
+          </p>
+        </div>
+        <SavedPermissionProfilesList
+          profiles={sortedProfiles}
+          isPending={permissionProfilesLoading}
+          errorMessage={permissionProfilesError}
+          actionPending={actionPending}
+          renderTrailing={(profile) => <ProfileAgentKeyActions profile={profile} />}
+          onLoadProfile={onLoadProfile}
+          onUpdateProfile={onUpdateProfile}
+          onDeleteProfile={onDeleteProfile}
+        />
+      </section>
 
       <KeyListSection
         testId="agent-connection-automation-keys"

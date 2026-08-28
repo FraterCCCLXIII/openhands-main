@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { type ReactNode } from "react";
 import { MoreVertical } from "lucide-react";
 
 import { DeletePermissionProfileModal } from "@/src/components/permission-profiles/delete-permission-profile-modal";
 import { PermissionProfileActionsMenu } from "@/src/components/permission-profiles/permission-profile-actions-menu";
-import { PermissionProfileApiKeyField } from "@/src/components/permission-profiles/permission-profile-api-key-field";
 import {
   formatPermissionProfileSummary,
   formatPermissionProfileUpdatedAt,
@@ -23,6 +22,7 @@ import type { PermissionProfile } from "@/src/types/integrations-hub";
 interface SavedPermissionProfileRowProps {
   profile: PermissionProfile;
   actionPending?: boolean;
+  trailing?: ReactNode;
   onLoadProfile?: (profile: PermissionProfile) => void;
   onUpdateProfile?: (profile: PermissionProfile) => void;
   onDeleteProfile?: (profile: PermissionProfile) => void;
@@ -31,6 +31,7 @@ interface SavedPermissionProfileRowProps {
 export function SavedPermissionProfileRow({
   profile,
   actionPending = false,
+  trailing,
   onLoadProfile,
   onUpdateProfile,
   onDeleteProfile,
@@ -49,7 +50,7 @@ export function SavedPermissionProfileRow({
       data-testid={`permission-profile-row-${profile.id}`}
       className={cn(
         settingsListRowClassName,
-        "h-auto min-h-12 flex-col items-stretch gap-3 py-3 sm:flex-row sm:items-center sm:gap-4",
+        "h-auto min-h-12 justify-between gap-3 py-3",
       )}
     >
       <div className="min-w-0 flex-1">
@@ -80,13 +81,9 @@ export function SavedPermissionProfileRow({
         </p>
       </div>
 
-      <div className="flex w-full items-center gap-2 sm:contents">
-        <PermissionProfileApiKeyField
-          profile={profile}
-          className="w-full sm:w-auto"
-        />
-
-        <div className="relative shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
+        {trailing}
+        <div className="relative">
           <button
             ref={menuTriggerRef}
             type="button"

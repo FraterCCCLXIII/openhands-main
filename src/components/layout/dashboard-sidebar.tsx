@@ -1,9 +1,10 @@
 "use client";
 
-import { Blocks, ChevronLeft, ChevronRight, CircleCheck, KeyRound, LayoutDashboard, ListChecks, PlugZap } from "lucide-react";
+import { Blocks, ChevronLeft, ChevronRight, CircleCheck, Grid2x2, KeyRound, Target } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React from "react";
 
+import { HUB_PAGE_COPY } from "@/src/constants/hub-pages";
 import { SIDEBAR_LABELS } from "@/src/constants/sidebar-labels";
 import { DashboardNavLink } from "@/src/components/layout/dashboard-nav-link";
 import { useDashboardMobileNav } from "@/src/components/layout/dashboard-mobile-nav-context";
@@ -61,8 +62,7 @@ export const getDashboardSections = (
   [
     { id: "integrations" as const, label: "Integrations" },
     { id: "caseByCaseApprovals" as const, label: "Agent requests" },
-    { id: "apiKeys" as const, label: "Agent Connection" },
-    { id: "permissionProfiles" as const, label: "Permission Profiles" },
+    { id: "apiKeys" as const, label: HUB_PAGE_COPY.agentConnection.title },
   ].filter((item) => showApprovalsLink || item.id !== "caseByCaseApprovals");
 
 interface DashboardSidebarRailBodyProps {
@@ -412,7 +412,7 @@ function DashboardSidebarRailBody({
         >
         <DashboardNavLink
           href={getAdminSectionPath("integrations")}
-          icon={PlugZap}
+          icon={Blocks}
           label="Integrations"
           active={isNavItemActive(activeItem, "integrations")}
           collapsed={collapsed}
@@ -430,15 +430,8 @@ function DashboardSidebarRailBody({
         <DashboardNavLink
           href={getAdminSectionPath("apiKeys")}
           icon={KeyRound}
-          label="Agent Connection"
+          label={HUB_PAGE_COPY.agentConnection.title}
           active={isNavItemActive(activeItem, "apiKeys")}
-          collapsed={collapsed}
-        />
-        <DashboardNavLink
-          href={getAdminSectionPath("permissionProfiles")}
-          icon={ListChecks}
-          label="Permission Profiles"
-          active={isNavItemActive(activeItem, "permissionProfiles")}
           collapsed={collapsed}
         />
       </nav>
@@ -465,7 +458,7 @@ function DashboardSidebarRailBody({
             {showAdminOverviewLink ? (
               <DashboardNavLink
                 href="/admin-overview"
-                icon={LayoutDashboard}
+                icon={Target}
                 label="Operational Overview"
                 active={isNavItemActive(activeItem, "adminOverview")}
                 collapsed={collapsed}
@@ -474,7 +467,7 @@ function DashboardSidebarRailBody({
             {showAdminIntegrationsLink ? (
               <DashboardNavLink
                 href="/admin-integrations"
-                icon={Blocks}
+                icon={Grid2x2}
                 label="Admin Integrations"
                 active={isNavItemActive(activeItem, "adminIntegrations")}
                 accentWhenActive

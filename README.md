@@ -33,7 +33,7 @@ These are the canonical top-level routes in the current app:
 
 - `/` — landing page
 - `/integrations` — install integrations, connect OAuth accounts, and manage function access
-- `/agent-connection` — view agent/user/admin keys plus REST and MCP connection examples
+- `/agent-connection` — manage API keys, permission profiles, and REST/MCP connection examples
 - `/profile` — signed-in user profile details
 - `/case-by-case-approvals` — review pending approval-required tool requests
 - `/admin-integrations` — admin-only service-level managed connector and provider catalog management
@@ -41,6 +41,7 @@ These are the canonical top-level routes in the current app:
 Legacy compatibility routes still exist, but new docs and links should target the canonical routes above:
 
 - `/home` redirects to `/integrations`
+- `/permission-profiles` redirects to `/agent-connection`
 
 ## Core interfaces
 

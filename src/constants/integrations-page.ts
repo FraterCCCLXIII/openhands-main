@@ -89,6 +89,7 @@ export const INTEGRATIONS_PAGE_COPY = {
   wizardConnectAccountDescriptionApiKey: (name: string) =>
     `API key connection for ${name}.`,
   wizardOpenProviderDocs: "Open provider docs",
+  wizardCustomMcpLabel: "Use a custom MCP server URL instead",
   wizardConnect: "Connect",
   wizardConnected: "Connected",
   wizardReconnect: "Reconnect",

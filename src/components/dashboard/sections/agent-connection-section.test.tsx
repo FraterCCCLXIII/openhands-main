@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
+import type { PermissionProfile } from "@/src/types/integrations-hub";
 
 import { enableReactActEnvironment } from "@/src/test-utils/jsdom-helpers";
 
@@ -41,15 +42,36 @@ const createDefaultProps = () => ({
       agentApiKey: "cla_research_profile_key",
       createdAt: "2026-06-10T00:00:00.000Z",
       updatedAt: "2026-06-10T00:00:00.000Z",
-      snapshot: { integrations: {} },
+      snapshot: {
+        integrations: {
+          github: {
+            enabled: true,
+            tools: {
+              search: "enabled",
+              create_issue: "approval_required",
+              delete_repo: "disabled",
+            },
+          },
+          archived: {
+            enabled: false,
+            tools: {
+              read_archive: "enabled",
+              export_archive: "approval_required",
+            },
+          },
+        },
+      },
     },
-  ],
+  ] as PermissionProfile[],
   permissionProfilesLoading: false,
   permissionProfilesError: null,
   isSaveModalOpen: false,
   onOpenSaveModal: vi.fn(),
   onCloseSaveModal: vi.fn(),
   onSaveProfile: vi.fn(),
+  onLoadProfile: vi.fn(),
+  onUpdateProfile: vi.fn(),
+  onDeleteProfile: vi.fn(),
 
   agentMcpToolName: "github__list_issues",
   agentOpenApiSchemaEndpoint: "https://example.com/api/agent/openapi",
@@ -107,9 +129,9 @@ describe("AgentConnectionSection", () => {
       );
     });
 
-    expect(container.textContent).toContain("Permission profile keys");
+    expect(container.textContent).toContain("Permission profiles");
     expect(container.textContent).toContain("Automation keys");
-    expect(container.textContent).toContain("Loading profile keys…");
+    expect(container.textContent).toContain("Loading profiles...");
     expect(container.textContent).toContain("New profile");
     expect(container.textContent).toContain(
       "No user automation key yet. Reveal or copy to create one.",
@@ -132,9 +154,7 @@ describe("AgentConnectionSection", () => {
       );
     });
 
-    expect(container.textContent).toContain(
-      "Unable to load profile keys: Network error",
-    );
+    expect(container.textContent).toContain("Network error");
   });
 
   it("renders key rows and forwards reveal/copy/rotate actions", async () => {
@@ -164,6 +184,9 @@ describe("AgentConnectionSection", () => {
     expect(container.textContent).toContain("User automation key");
     expect(container.textContent).toContain("Default profile");
     expect(container.textContent).toContain("Research assistant");
+    expect(container.textContent).toContain(
+      "1/2 integrations on · 1 enabled · 1 case-by-case · 3 disabled",
+    );
     expect(container.textContent).not.toContain("cla_default_profile_key");
     expect(container.querySelector(
       '[data-testid="agent-connection-permission-profile-select"]',
@@ -307,5 +330,63 @@ describe("AgentConnectionSection", () => {
       'button[aria-label="Provision default profile"]',
     ) as HTMLButtonElement | null;
     expect(provisionButton?.disabled).toBe(false);
+  });
+
+  it("forwards load and update actions from the fuller profile menu", async () => {
+    const props = createDefaultProps();
+    const researchProfile = props.permissionProfiles[1];
+
+    await act(async () => {
+      root.render(<AgentConnectionSection {...props} />);
+    });
+
+    const trigger = container.querySelector(
+      '[data-testid="permission-profile-menu-trigger-research-profile"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      document
+        .querySelector('[data-testid="permission-profile-load"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(props.onLoadProfile).toHaveBeenCalledWith(researchProfile);
+
+    await act(async () => {
+      trigger.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      document
+        .querySelector('[data-testid="permission-profile-update-from-current"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(props.onUpdateProfile).toHaveBeenCalledWith(researchProfile);
+  });
+
+  it("marks the default profile and disables delete in the actions menu", async () => {
+    const props = createDefaultProps();
+
+    await act(async () => {
+      root.render(
+        <AgentConnectionSection
+          {...props}
+          permissionProfiles={[props.permissionProfiles[0]!]}
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("Default");
+
+    await act(async () => {
+      container
+        .querySelector('[data-testid="permission-profile-menu-trigger-default-profile"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    const deleteButton = document.querySelector(
+      '[data-testid="permission-profile-delete"]',
+    ) as HTMLButtonElement | null;
+    expect(deleteButton?.disabled).toBe(true);
   });
 });

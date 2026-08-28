@@ -163,15 +163,27 @@ describe("app/admin-overview/page (ClientAdminOverviewPage)", () => {
     });
 
     expect(container.querySelector('[data-testid="admin-overview-users-card"]')).toBeTruthy();
-    expect(container.textContent).toContain("Browse users");
-    expect(container.textContent).toContain("Shown");
-    expect(container.textContent).toContain("Connected owners");
+    expect(container.textContent).toContain("connected owners");
     expect(container.textContent).toContain("owner-a@example.com");
     expect(container.textContent).toContain("owner-b@example.com");
     expect(container.textContent).toContain("owner-c@example.com");
+    expect(container.textContent).toContain("1 connection");
+    expect(container.textContent).toContain("1 pending");
     expect(
       container.querySelectorAll('[data-testid="admin-overview-user-row-caret"]'),
     ).toHaveLength(3);
+
+    const firstRow = container.querySelector<HTMLButtonElement>(
+      '[data-testid="admin-overview-user-row"] button',
+    );
+    expect(firstRow).toBeTruthy();
+    await act(async () => {
+      firstRow?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).toBeTruthy();
+    expect(
+      document.querySelector('[data-testid="admin-overview-user-details"]'),
+    ).toBeTruthy();
   });
 
   it("shows duplicate group count in badges for admins", async () => {
@@ -196,8 +208,24 @@ describe("app/admin-overview/page (ClientAdminOverviewPage)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    // The duplicates section shows a count badge and description for duplicate external-account groups
-    expect(container.textContent).toContain("Duplicate external accounts");
-    expect(container.textContent).toContain("duplicate external-account groups");
+    expect(container.textContent).toContain("duplicate external accounts");
+    expect(container.querySelector('[data-testid="admin-overview-duplicates-card"]')).toBeTruthy();
+    expect(container.textContent).toContain("github");
+    expect(container.textContent).toContain("xingyaoww");
+    expect(container.textContent).toContain("2 owners");
+
+    const duplicateRow = container.querySelector<HTMLButtonElement>(
+      '[data-testid="admin-overview-duplicate-group-row"] button',
+    );
+    expect(duplicateRow).toBeTruthy();
+    await act(async () => {
+      duplicateRow?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(
+      document.querySelector('[data-testid="admin-overview-duplicate-group-modal"]'),
+    ).toBeTruthy();
+    expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+      "owner-a@example.com",
+    );
   });
 });

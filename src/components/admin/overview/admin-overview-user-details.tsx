@@ -1,8 +1,6 @@
+import { Badge } from "@/src/components/ui/badge";
 import { HUB_PAGE_COPY } from "@/src/constants/hub-pages";
 import { cn } from "@/src/lib/utils";
-import {
-  extensionModuleCardPillClassName,
-} from "@/src/styles/extension-module-card-classes";
 import { settingsListContainerClassName } from "@/src/styles/settings-list-classes";
 import { subsectionTitleClassName } from "@/src/styles/typography-classes";
 import type {
@@ -53,9 +51,7 @@ function ConnectionRow({ connection }: { connection: AdminIntegrationConnectionS
         {connection.externalAccountId ?? copy.noExternalAccountId}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <span className={extensionModuleCardPillClassName}>
-          {connection.authStrategy}
-        </span>
+        <Badge>{connection.authStrategy}</Badge>
         <span className="text-xs text-tertiary-alt">
           {formatTimestamp(connection.updatedAt)}
         </span>
@@ -78,12 +74,10 @@ function DuplicateGroupRow({
         <span className="text-sm font-medium text-white">
           {group.provider}
         </span>
-        <span className={extensionModuleCardPillClassName}>
-          {group.externalAccountId}
-        </span>
-        <span className={extensionModuleCardPillClassName}>
+        <Badge>{group.externalAccountId}</Badge>
+        <Badge>
           {copy.duplicateOwnerCount(group.ownerCount ?? group.ownerIds.length)}
-        </span>
+        </Badge>
       </div>
       {group.displayNames.length > 0 ? (
         <p className="mt-2 text-xs text-tertiary-light">
@@ -125,9 +119,7 @@ export function AdminOverviewUserDetails({
         ) : (
           <div className="flex flex-wrap gap-2">
             {user.integrations.map((integration) => (
-              <span key={integration} className={extensionModuleCardPillClassName}>
-                {integration}
-              </span>
+              <Badge key={integration}>{integration}</Badge>
             ))}
           </div>
         )}
@@ -142,9 +134,7 @@ export function AdminOverviewUserDetails({
         ) : (
           <div className="flex flex-wrap gap-2">
             {user.providers.map((provider) => (
-              <span key={provider} className={extensionModuleCardPillClassName}>
-                {provider}
-              </span>
+              <Badge key={provider}>{provider}</Badge>
             ))}
           </div>
         )}

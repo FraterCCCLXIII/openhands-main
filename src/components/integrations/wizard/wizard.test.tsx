@@ -114,13 +114,17 @@ describe("IntegrationWizard", () => {
       { credentials: "same-origin" },
     );
 
-    const options = Array.from(container.querySelectorAll("datalist option")).map(
-      (option) => option.getAttribute("value"),
+    const header = container.querySelector('[data-testid="integration-wizard-header"]');
+    expect(header?.querySelector("h2")?.textContent).toBe("Connect an integration");
+    expect(header?.textContent).toContain(
+      "Pick a connector, connect your account or paste credentials, then review the tools the agent can use.",
     );
-    expect(options).toEqual(["GitHub (github)", "Notion (notion)"]);
 
-    const addConnectorLink = container.querySelector('a[href="/admin-integrations"]');
-    expect(addConnectorLink?.textContent).toContain("Click here");
+    expect(
+      container.querySelector('input[list="managed-connector-options"]'),
+    ).toBeNull();
+    expect(container.textContent).not.toContain("Don't see a connector you want?");
+    expect(container.textContent).not.toContain("Access token");
   });
 
   it("hides the custom MCP server escape hatch from non-admin users", async () => {
@@ -439,10 +443,10 @@ describe("IntegrationWizard", () => {
       { credentials: "same-origin" },
     );
 
-    const options = Array.from(container.querySelectorAll("datalist option")).map(
-      (option) => option.getAttribute("value"),
-    );
-    expect(options).toEqual(["GitHub (github)", "Notion (notion)"]);
+    expect(
+      container.querySelector('input[list="managed-connector-options"]'),
+    ).toBeNull();
+    expect(container.textContent).toContain("Use a custom MCP server URL instead");
   });
 
   it("advances to review access defaults after discovering a connected Notion workspace", async () => {
@@ -1132,6 +1136,9 @@ describe("IntegrationWizard", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
+    const header = container.querySelector('[data-testid="integration-wizard-header"]');
+    expect(header?.querySelector("h2")?.textContent).toBe("Ordinal");
+    expect(header?.textContent).toContain("Social media management via Ordinal MCP");
     expect(container.textContent).toContain("Ordinal API key");
     expect(container.textContent).not.toContain("API key header name");
   });

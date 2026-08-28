@@ -194,12 +194,14 @@ describe("catalog helper utilities", () => {
 });
 
 const findProviderToggle = (container: ParentNode, name: string) =>
-  Array.from(container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')).find(
+  Array.from(container.querySelectorAll<HTMLButtonElement>('button[aria-haspopup="dialog"]')).find(
     (button) => button.textContent?.includes(name),
   ) ?? null;
 
 // In the unified list there is only one toggle per connector.
 const findConnectorToggle = findProviderToggle;
+
+const getConnectorDialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
 
 describe("IntegrationsCatalog", () => {
   let container: HTMLDivElement;
@@ -249,12 +251,15 @@ describe("IntegrationsCatalog", () => {
     });
 
     // Registered connector shows onboarding with Configure integration as step 1
-    expect(container.textContent).toContain("Configure integration");
-    expect(container.textContent).not.toContain("Register this provider");
+    const dialog = getConnectorDialog();
+    expect(dialog?.textContent).toContain("Configure integration");
+    expect(dialog?.textContent).not.toContain("Register this provider");
+    expect(toggle?.textContent).not.toContain("Show");
+    expect(toggle?.className).toContain("hover:bg-[var(--color-interactive-hover)]");
 
     // Step 1 (Configure integration) starts collapsed because it's completed.
     // Expand it to reveal the Delete button inside the config form.
-    const step1Toggle = container.querySelector<HTMLButtonElement>(
+    const step1Toggle = dialog?.querySelector<HTMLButtonElement>(
       'button[aria-label="Expand Configure integration"]',
     );
     expect(step1Toggle).toBeTruthy();
@@ -262,8 +267,8 @@ describe("IntegrationsCatalog", () => {
       step1Toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    // Delete button is in the expanded panel
-    const deleteButton = container.querySelector(
+    // Delete button is in the details modal
+    const deleteButton = getConnectorDialog()?.querySelector(
       'button[aria-label="Delete Google Calendar connector"]',
     );
     expect(deleteButton).toBeTruthy();
@@ -285,8 +290,8 @@ describe("IntegrationsCatalog", () => {
     });
 
     // Unregistered connector shows onboarding with "Register connector" button
-    expect(container.textContent).toContain("Configure integration");
-    expect(container.textContent).toContain("Register connector");
+    expect(getConnectorDialog()?.textContent).toContain("Configure integration");
+    expect(getConnectorDialog()?.textContent).toContain("Register connector");
   });
 
   it("hides registration controls for non-admin viewers", async () => {
@@ -313,8 +318,8 @@ describe("IntegrationsCatalog", () => {
     });
 
     // Non-admins see the "only admins" message
-    expect(container.textContent).toContain("Only app administrators");
-    expect(container.textContent).not.toContain("Register this provider");
+    expect(getConnectorDialog()?.textContent).toContain("Only app administrators");
+    expect(getConnectorDialog()?.textContent).not.toContain("Register this provider");
   });
 
   it("shows onboarding with Configure integration for unregistered oauth connector", async () => {
@@ -338,8 +343,8 @@ describe("IntegrationsCatalog", () => {
     });
 
     // Unregistered connector shows unified onboarding, not the old registration form
-    expect(container.textContent).toContain("Configure integration");
-    expect(container.textContent).toContain("Register connector");
+    expect(getConnectorDialog()?.textContent).toContain("Configure integration");
+    expect(getConnectorDialog()?.textContent).toContain("Register connector");
   });
 
   it("transitions from unregistered onboarding to registered onboarding after registering", async () => {
@@ -368,10 +373,10 @@ describe("IntegrationsCatalog", () => {
     });
 
     // Unregistered onboarding shows "Register connector" button
-    expect(container.textContent).toContain("Register connector");
+    expect(getConnectorDialog()?.textContent).toContain("Register connector");
 
     // Fill in the required OAuth client credentials
-    const inputs = container.querySelectorAll("input");
+    const inputs = getConnectorDialog()?.querySelectorAll("input") ?? [];
     const clientIdInput = Array.from(inputs).find((i) => i.type === "text" && i.value === "");
     const clientSecretInput = Array.from(inputs).find((i) => i.type === "password");
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
@@ -388,7 +393,7 @@ describe("IntegrationsCatalog", () => {
       });
     }
 
-    const form = container.querySelector("form");
+    const form = getConnectorDialog()?.querySelector("form");
     expect(form).toBeTruthy();
 
     await act(async () => {
@@ -398,10 +403,10 @@ describe("IntegrationsCatalog", () => {
 
     // After registration, the button changes from "Register connector" to "Save Config".
     // Step 1 is now completed and collapsed, so expand it to verify the button text.
-    expect(container.textContent).toContain("Configure integration");
-    expect(container.textContent).not.toContain("Register connector");
+    expect(getConnectorDialog()?.textContent).toContain("Configure integration");
+    expect(getConnectorDialog()?.textContent).not.toContain("Register connector");
 
-    const step1Toggle = container.querySelector<HTMLButtonElement>(
+    const step1Toggle = getConnectorDialog()?.querySelector<HTMLButtonElement>(
       'button[aria-label="Expand Configure integration"]',
     );
     if (step1Toggle) {
@@ -409,7 +414,7 @@ describe("IntegrationsCatalog", () => {
         step1Toggle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });
     }
-    expect(container.textContent).toContain("Save Config");
+    expect(getConnectorDialog()?.textContent).toContain("Save Config");
   });
 
   it("shows onboarding for unregistered manual-token connector", async () => {
@@ -432,7 +437,43 @@ describe("IntegrationsCatalog", () => {
       toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Configure integration");
-    expect(container.textContent).toContain("Register connector");
+    expect(getConnectorDialog()?.textContent).toContain("Configure integration");
+    expect(getConnectorDialog()?.textContent).toContain("Register connector");
+  });
+
+  it("lists a registered custom MCP server that is not in the researched catalog", async () => {
+    const customMcp: ManagedConnectorDefinition = {
+      slug: "internal-tools",
+      name: "Internal tools",
+      description: "Custom MCP server at https://mcp.example.com/mcp",
+      categories: ["Custom"],
+      authModes: ["bearer"],
+      authStrategy: "bearer",
+      provider: "mcp",
+      oauthConfigured: false,
+      credentialLabel: "Access token",
+      credentialPlaceholder: "OAuth or bearer token",
+      credentialHelp: "Use this for bearer-token MCP servers.",
+      serverUrl: "https://mcp.example.com/mcp",
+      tools: [],
+      enabled: true,
+      createdAt: "2026-08-27T00:00:00.000Z",
+      updatedAt: "2026-08-27T00:00:00.000Z",
+    };
+
+    await act(async () => {
+      root.render(
+        <IntegrationsCatalog
+          integrationCatalog={integrationCatalog}
+          initialReadyManagedConnectors={readyManagedConnectors}
+          managedConnectors={[...managedConnectors, customMcp]}
+          canRegisterManagedConnectors
+          oauthCallbackBaseUrl="https://integrations-hub.example.com/api/oauth"
+        />,
+      );
+    });
+
+    expect(findConnectorToggle(container, "Internal tools")).toBeTruthy();
+    expect(container.textContent).toContain("Custom MCP server at https://mcp.example.com/mcp");
   });
 });

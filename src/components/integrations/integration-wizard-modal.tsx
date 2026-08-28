@@ -12,6 +12,7 @@ import { type AdminSection } from "@/src/lib/admin-routes";
 import { getWizardFlow } from "@/src/components/integrations/wizard/utils";
 
 interface IntegrationWizardModalProps {
+  existingIntegrationKeys?: Set<string>;
   isAdmin: boolean;
   onClose: () => void;
   onCreated: () => Promise<void>;
@@ -20,6 +21,7 @@ interface IntegrationWizardModalProps {
 }
 
 export function IntegrationWizardModal({
+  existingIntegrationKeys,
   isAdmin,
   onClose,
   onCreated,
@@ -46,6 +48,7 @@ export function IntegrationWizardModal({
 
         <div className="flex min-h-0 flex-col overflow-hidden">
           <IntegrationWizard
+            existingIntegrationKeys={existingIntegrationKeys}
             isAdmin={isAdmin}
             onCreated={onCreated}
             onStatus={onStatus}

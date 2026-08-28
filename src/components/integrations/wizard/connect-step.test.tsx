@@ -119,10 +119,7 @@ const noAuthConnector: ManagedConnectorOption = {
 };
 
 type RenderOptions = {
-  managedConnectors?: ManagedConnectorOption[];
   managedConnectorsError?: string | null;
-  managedConnectorsPending?: boolean;
-  connectorSearch?: string;
   draft?: WizardDraft;
   selectedConnector?: ManagedConnectorOption | null;
   selectedConnection?: IntegrationConnectionStatus | null;
@@ -135,7 +132,6 @@ type RenderOptions = {
   redirectSection?: AdminSection;
   statefulDraft?: boolean;
   isAdmin?: boolean;
-  showConnectorPicker?: boolean;
 };
 
 const renderConnectStep = async (options: RenderOptions = {}) => {
@@ -143,19 +139,9 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
   document.body.appendChild(container);
   const root = createRoot(container);
   const setDraft = vi.fn();
-  const onConnectorSearchChange = vi.fn();
   const onDiscover = vi.fn();
   const onSelectKind = vi.fn();
   const initialDraft = options.draft ?? baseManagedDraft;
-  const managedConnectors =
-    options.managedConnectors ??
-    [
-      notionConnector,
-      elevenLabsConnector,
-      genericApiConnector,
-      basicConnector,
-      noAuthConnector,
-    ];
 
   const TestHarness = () => {
     const [draft, setHarnessDraft] = useState(initialDraft);
@@ -168,11 +154,8 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
     return (
       <>
         <ConnectStep
-          managedConnectors={managedConnectors}
           managedConnectorsError={options.managedConnectorsError ?? null}
-          managedConnectorsPending={options.managedConnectorsPending ?? false}
           canDiscover={options.canDiscover ?? true}
-          connectorSearch={options.connectorSearch ?? ""}
           discoverFeedback={options.discoverFeedback ?? null}
           discoverPending={options.discoverPending ?? false}
           draft={draft}
@@ -184,8 +167,6 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
           hasDirectConnection={options.hasDirectConnection ?? !!options.selectedConnection}
           selectedConnector={options.selectedConnector ?? null}
           setDraft={appliedSetDraft}
-          showConnectorPicker={options.showConnectorPicker}
-          onConnectorSearchChange={onConnectorSearchChange}
           onDiscover={onDiscover}
           onSelectKind={onSelectKind}
         />
@@ -204,7 +185,6 @@ const renderConnectStep = async (options: RenderOptions = {}) => {
     container,
     root,
     setDraft,
-    onConnectorSearchChange,
     onDiscover,
     onSelectKind,
     cleanup: async () => {
@@ -248,41 +228,14 @@ describe("ConnectStep", () => {
     });
   });
 
-  it("renders searchable managed connector options and forwards search changes", async () => {
-    const pendingRender = await renderConnectStep({ managedConnectorsPending: true });
-    const pendingSearchInput = pendingRender.container.querySelector(
-      'input[list="managed-connector-options"]',
-    ) as HTMLInputElement | null;
+  it("does not render a managed connector picker because the page catalog is the source", async () => {
+    const { container, cleanup } = await renderConnectStep();
 
-    expect(pendingSearchInput?.placeholder).toBe("Loading supported connectors...");
-    expect(pendingSearchInput?.disabled).toBe(true);
-    await pendingRender.cleanup();
-
-    const { container, cleanup, onConnectorSearchChange } = await renderConnectStep({
-      connectorSearch: "Not",
-    });
-    const searchInput = container.querySelector(
-      'input[list="managed-connector-options"]',
-    ) as HTMLInputElement | null;
-    const optionValues = Array.from(
-      container.querySelectorAll('#managed-connector-options option'),
-    ).map((option) => (option as HTMLOptionElement).value);
-
-    expect(searchInput?.placeholder).toBe("Search supported connectors...");
-    expect(optionValues).toEqual([
-      "Notion (notion)",
-      "ElevenLabs (elevenlabs)",
-      "Generic API (generic-api)",
-      "Basic Auth Service (basic-auth)",
-      "Public Feed (public-feed)",
-    ]);
-
-    await act(async () => {
-      setInputValue(searchInput, "Notion");
-    });
-
-    expect(onConnectorSearchChange).toHaveBeenCalledWith("Notion");
-    expect(container.textContent).toContain("Click here.");
+    expect(
+      container.querySelector('input[list="managed-connector-options"]'),
+    ).toBeNull();
+    expect(container.textContent).not.toContain("Don't see a connector you want?");
+    expect(container.textContent).not.toContain("Access token");
     expect(container.textContent).not.toContain(
       "Use a custom MCP server URL instead",
     );
@@ -293,7 +246,6 @@ describe("ConnectStep", () => {
   it("shows the custom MCP escape hatch only on the generic admin add flow", async () => {
     const generic = await renderConnectStep({
       isAdmin: true,
-      showConnectorPicker: true,
     });
     expect(generic.container.textContent).toContain(
       "Use a custom MCP server URL instead",
@@ -304,8 +256,6 @@ describe("ConnectStep", () => {
   it("hides the connector search when opened from a single catalog integration", async () => {
     const { container, cleanup } = await renderConnectStep({
       isAdmin: true,
-      showConnectorPicker: false,
-      connectorSearch: "DeepWiki (deepwiki)",
       draft: {
         ...baseManagedDraft,
         key: "deepwiki",
@@ -450,14 +400,6 @@ describe("ConnectStep", () => {
         managedConnectorSlug: "custom-token",
       },
       selectedConnector: customTokenConnector,
-      managedConnectors: [
-        notionConnector,
-        elevenLabsConnector,
-        genericApiConnector,
-        basicConnector,
-        noAuthConnector,
-        customTokenConnector,
-      ],
       statefulDraft: true,
     });
     const apiInput = enabled.container.querySelector(
@@ -724,9 +666,7 @@ describe("ConnectStep", () => {
   it("shows unavailable OAuth guidance, connector load errors, and disabled actions", async () => {
     const { container, cleanup } = await renderConnectStep({
       managedConnectorsError: "Could not load managed connectors.",
-      managedConnectorsPending: true,
       canDiscover: false,
-      connectorSearch: "Notion",
       draft: {
         ...baseManagedDraft,
         key: "notion",
@@ -746,13 +686,9 @@ describe("ConnectStep", () => {
       "Contact an admin to configure OAuth for Notion before you can add it.",
     );
 
-    const connectorInput = container.querySelector(
-      'input[list="managed-connector-options"]',
-    ) as HTMLInputElement | null;
-    expect(connectorInput?.getAttribute("placeholder")).toBe(
-      "Loading supported connectors...",
-    );
-    expect(connectorInput?.hasAttribute("disabled")).toBe(true);
+    expect(
+      container.querySelector('input[list="managed-connector-options"]'),
+    ).toBeNull();
 
     const notAvailableButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent?.includes("Contact admin"),

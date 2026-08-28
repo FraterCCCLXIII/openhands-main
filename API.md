@@ -8,7 +8,7 @@ This repository exposes three main surfaces: dashboard pages for humans, agent-f
 | --- | --- | --- |
 | `/` | Everyone | Landing page |
 | `/integrations` | Signed-in users | Install integrations, manage function access, connect OAuth providers |
-| `/agent-connection` | Signed-in users | View keys plus REST/MCP connection examples |
+| `/agent-connection` | Signed-in users | Manage API keys, permission profiles, and REST/MCP connection examples |
 | `/profile` | Signed-in users | Profile details |
 | `/case-by-case-approvals` | Allowlisted admins | Review and decide approval-required access requests |
 | `/admin-integrations` | Allowlisted admins | Manage service-level managed connectors and provider defaults |
@@ -16,6 +16,7 @@ This repository exposes three main surfaces: dashboard pages for humans, agent-f
 Legacy redirects:
 
 - `/home` → `/integrations`
+- `/permission-profiles` → `/agent-connection`
 
 ## Agent runtime interfaces
 

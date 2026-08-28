@@ -1,12 +1,17 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 import { isOAuthMcpConnector } from "@/src/components/admin/integrations/connector-predicates";
 import { ConnectorSetupProgress, type ConfigFormState, createConfigForm, buildConfigPayload } from "@/src/components/admin/integrations/connector-setup-progress";
+import { ModalCloseButton } from "@/src/components/shared/modals/modal-close-button";
 import { Badge } from "@/src/components/ui/badge";
+import { BrandButton } from "@/src/components/ui/brand-button";
+import { ModalBackdrop } from "@/src/components/ui/modal-backdrop";
+import { modalFooterActionsClassName, modalShellClassName } from "@/src/components/ui/modal-shell";
+import { ADMIN_INTEGRATIONS_PAGE_COPY } from "@/src/constants/admin-integrations-page";
 import { apiFetch } from "@/src/lib/fetch-json";
 import { cn } from "@/src/lib/utils";
 import type {
@@ -55,6 +60,38 @@ const integrationStatusLabel = (provider: IntegrationCatalogOption) => {
 
 /** Convert a catalog option into a minimal ManagedConnectorDefinition so
  *  the same onboarding steps can be rendered for unregistered connectors. */
+/** Synthesize a catalog row for a registered connector that is not in the
+ *  researched provider list (for example a custom MCP server). */
+export const managedToCatalogOption = (
+  connector: ManagedConnectorDefinition,
+): IntegrationCatalogOption => ({
+  slug: connector.slug,
+  name: connector.name,
+  description: connector.description,
+  categories: connector.categories?.length ? connector.categories : ["Custom"],
+  appUrl: connector.appUrl,
+  docsUrl: connector.docsUrl,
+  logoUrl: connector.logoUrl,
+  iconBg: connector.iconBg,
+  iconColor: connector.iconColor,
+  notes: "",
+  popularityRank: 0,
+  connectionDefaults: {
+    provider: connector.provider ?? "mcp",
+    authModes: connector.authModes,
+    authStrategy: connector.authStrategy === "mcp_session" ? "none" : connector.authStrategy,
+    oauthConfigured: connector.oauthConfigured,
+    oauthConfig: connector.oauthConfig,
+    credentialLabel: connector.credentialLabel,
+    credentialPlaceholder: connector.credentialPlaceholder,
+    credentialHelp: connector.credentialHelp,
+    apiBaseUrl: connector.apiBaseUrl,
+    serverUrl: connector.serverUrl,
+    openApiUrl: connector.openApiUrl,
+    connectionModel: connector.connectionModel,
+  },
+});
+
 const catalogToConnector = (catalog: IntegrationCatalogOption): ManagedConnectorDefinition => {
   const cd = catalog.connectionDefaults;
   const authStrategy = cd?.authStrategy ?? "oauth2";
@@ -117,6 +154,63 @@ const ConnectorAvatar = ({ name, logoUrl, iconBg, iconColor }: { name: string; l
   );
 };
 
+// ── details modal ────────────────────────────────────────────────────────
+
+interface ConnectorDetailsModalProps {
+  catalog: IntegrationCatalogOption;
+  children: ReactNode;
+  onClose: () => void;
+}
+
+const ConnectorDetailsModal = ({ catalog, children, onClose }: ConnectorDetailsModalProps) => (
+  <ModalBackdrop
+    ariaLabel={ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorDetailModalAriaLabel(catalog.name)}
+    onClose={onClose}
+  >
+    <section
+      data-testid={`connector-details-modal-${catalog.slug}`}
+      data-connector-details={catalog.slug}
+      className={cn(modalShellClassName("xl"), "min-h-0 max-h-[90vh] gap-0")}
+    >
+      <ModalCloseButton
+        onClose={onClose}
+        testId={`connector-details-modal-close-${catalog.slug}`}
+      />
+
+      <div className="custom-scrollbar-always min-h-0 flex-1 overflow-y-auto px-7 pb-4 pt-7">
+        <div className="flex items-start gap-3 pr-6">
+          <ConnectorAvatar
+            name={catalog.name}
+            logoUrl={catalog.logoUrl}
+            iconBg={catalog.iconBg}
+            iconColor={catalog.iconColor}
+          />
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-white">{catalog.name}</h2>
+            <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+              {catalog.slug}
+            </p>
+            {catalog.description ? (
+              <p className="mt-1 text-xs leading-5 text-[var(--color-text-base)]">
+                {catalog.description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-6 text-sm leading-7 text-[var(--color-text-base)]">
+          {children}
+        </div>
+      </div>
+
+      <div className={cn(modalFooterActionsClassName, "border-t border-[var(--oh-border)] px-7 py-4")}>
+        <BrandButton type="button" variant="secondary" onClick={onClose}>
+          {ADMIN_INTEGRATIONS_PAGE_COPY.managedConnectorCloseLabel}
+        </BrandButton>
+      </div>
+    </section>
+  </ModalBackdrop>
+);
+
 // ── main component ───────────────────────────────────────────────────────
 
 export interface UnifiedConnectorListProps {
@@ -148,7 +242,14 @@ export function UnifiedConnectorList({
   onManagedConnectorsStale,
   search = "",
 }: UnifiedConnectorListProps) {
-  const [expandedSlug, setExpandedSlug] = useState<string | null>(initialExpandedSlug);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(initialExpandedSlug);
+  const [prevInitialExpandedSlug, setPrevInitialExpandedSlug] = useState(initialExpandedSlug);
+  if (initialExpandedSlug !== prevInitialExpandedSlug) {
+    setPrevInitialExpandedSlug(initialExpandedSlug);
+    if (initialExpandedSlug) {
+      setSelectedSlug(initialExpandedSlug);
+    }
+  }
   const [configForms, setConfigForms] = useState<Record<string, ConfigFormState>>({});
   const [localManagedConnectors, setLocalManagedConnectors] = useState(
     () => (Array.isArray(managedConnectors) ? managedConnectors : []),
@@ -179,21 +280,28 @@ export function UnifiedConnectorList({
     return map;
   }, [localManagedConnectors]);
 
-  // Build unified list: all catalog entries, joined with managed connector data
+  // Catalog entries plus registered connectors that are not in the researched
+  // provider list (custom MCP servers).
   const unifiedList = useMemo(() => {
-    return integrationCatalog
-      .map((catalogEntry) => {
-        const managed = managedBySlug.get(catalogEntry.slug);
-        return { catalog: catalogEntry, managed: managed ?? null };
-      })
+    const catalogSlugs = new Set(integrationCatalog.map((entry) => entry.slug));
+    const fromCatalog = integrationCatalog.map((catalogEntry) => ({
+      catalog: catalogEntry,
+      managed: managedBySlug.get(catalogEntry.slug) ?? null,
+    }));
+    const customOnly = localManagedConnectors
+      .filter((connector) => !catalogSlugs.has(connector.slug))
+      .map((connector) => ({
+        catalog: managedToCatalogOption(connector),
+        managed: connector,
+      }));
+    return [...fromCatalog, ...customOnly]
       .filter((entry) => matchesSearch(entry.catalog, search))
       .sort((a, b) => {
-        // Registered connectors first, then by name
         if (a.managed && !b.managed) return -1;
         if (!a.managed && b.managed) return 1;
         return a.catalog.name.localeCompare(b.catalog.name);
       });
-  }, [integrationCatalog, managedBySlug, search]);
+  }, [integrationCatalog, localManagedConnectors, managedBySlug, search]);
 
   const getConfigForm = (connector: ManagedConnectorDefinition) =>
     configForms[connector.slug] ?? createConfigForm(connector);
@@ -328,7 +436,7 @@ export function UnifiedConnectorList({
         delete next[connector.slug];
         return next;
       });
-      setExpandedSlug((current) => (current === connector.slug ? null : current));
+      setSelectedSlug((current) => (current === connector.slug ? null : current));
     } catch (error) {
       updateConfigForm(connector, {
         deleting: false,
@@ -399,87 +507,113 @@ export function UnifiedConnectorList({
     );
   }
 
+  const selectedCatalog = selectedSlug
+    ? unifiedList.find((entry) => entry.catalog.slug === selectedSlug)?.catalog ?? null
+    : null;
+  const selectedManaged = selectedSlug ? managedBySlug.get(selectedSlug) ?? null : null;
+  const selectedConnection = selectedManaged
+    ? connectionByKey.get(selectedManaged.slug) ?? null
+    : null;
+  const selectedAuthStrategy = selectedCatalog ? getProviderAuthStrategy(selectedCatalog) : null;
+  const selectedIsRegistered = selectedManaged !== null;
+
   return (
-    <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
-      {unifiedList.map(({ catalog, managed }) => {
-        const isExpanded = expandedSlug === catalog.slug;
-        const isRegistered = managed !== null;
-        const authStrategy = getProviderAuthStrategy(catalog);
-        const connection = managed ? connectionByKey.get(managed.slug) ?? null : null;
-        const stepsCompleted = managed
-          ? [
-              isOAuthMcpConnector(managed)
-                ? Boolean(managed.oauthConfigured) || Boolean(connection) || managed.tools.length > 0
-                : true,
-              isOAuthMcpConnector(managed) ? Boolean(connection) : true,
-              managed.tools.length > 0,
-            ].filter(Boolean).length
-          : 0;
+    <>
+      <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-subtle)] divide-y divide-[var(--color-border)]">
+        {unifiedList.map(({ catalog, managed }) => {
+          const isOpen = selectedSlug === catalog.slug;
+          const isRegistered = managed !== null;
+          const connection = managed ? connectionByKey.get(managed.slug) ?? null : null;
+          const stepsCompleted = managed
+            ? [
+                isOAuthMcpConnector(managed)
+                  ? Boolean(managed.oauthConfigured) || Boolean(connection) || managed.tools.length > 0
+                  : true,
+                isOAuthMcpConnector(managed) ? Boolean(connection) : true,
+                managed.tools.length > 0,
+              ].filter(Boolean).length
+            : 0;
 
-        return (
-          <div key={catalog.slug} data-connector-slug={catalog.slug} data-connector-registered={isRegistered}>
-            {/* Row header */}
-            <button
-              type="button"
-              onClick={() => setExpandedSlug(isExpanded ? null : catalog.slug)}
-              aria-expanded={isExpanded}
-              className="flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-3 text-left text-sm"
-            >
-              <ConnectorAvatar name={catalog.name} logoUrl={catalog.logoUrl} iconBg={catalog.iconBg} iconColor={catalog.iconColor} />
-              <span className="shrink-0 font-medium text-white">{catalog.name}</span>
-              <span className="shrink-0 text-[var(--color-text-muted)]">({catalog.slug})</span>
-              <span className="shrink-0 text-[var(--color-text-base)]">—</span>
-              <span className="shrink-0 text-[var(--color-text-base)]">
-                {isRegistered ? `${stepsCompleted} steps done` : integrationStatusLabel(catalog)}
-              </span>
-              {isRegistered && managed?.tools.length ? (
-                <span className="shrink-0 text-[var(--color-accent)]">— {managed.tools.length} tools</span>
-              ) : null}
-              <span className="min-w-0 flex-1 truncate text-[var(--color-text-base)]">{catalog.description}</span>
-              <span className="shrink-0 text-xs text-[var(--color-text-muted)]">
-                {isExpanded ? "Hide" : "Show"}
-              </span>
-              <ChevronRight className={cn("h-4 w-4 shrink-0 text-[var(--color-text-muted)] transition-transform", isExpanded && "rotate-90")} />
-            </button>
-
-            {/* Expanded panel */}
-            {isExpanded ? (
-              <div className="border-t border-[var(--color-border)] px-4 py-4 text-sm leading-7 text-[var(--color-text-base)]">
-                {/* Description + badges */}
-                {catalog.notes ? <p className="mb-3">{catalog.notes}</p> : null}
-                <div className={`${catalog.notes ? "mt-3" : ""} mb-4 flex flex-wrap gap-2`}>
-                  {catalog.categories.map((cat) => (
-                    <Badge key={`${catalog.slug}-${cat}`}>{cat}</Badge>
-                  ))}
-                  <Badge>{authStrategy}</Badge>
-                  {isRegistered ? <Badge tone="success">Registered</Badge> : <Badge tone="warning">Not registered</Badge>}
-                </div>
-
-                {canRegisterManagedConnectors ? (
-                  <div className="space-y-3">
-                    <ConnectorSetupProgress
-                      connector={managed ?? catalogToConnector(catalog)}
-                      connection={connection}
-                      configForm={getConfigForm(managed ?? catalogToConnector(catalog))}
-                      oauthCallbackBaseUrl={oauthCallbackBaseUrl ?? ""}
-                      isRegistered={isRegistered}
-                      onConfigFormChange={(updates) => updateConfigForm(managed ?? catalogToConnector(catalog), updates)}
-                      onSaveConfig={(e) => void (isRegistered && managed ? handleSave(e, managed) : handleRegister(e, catalog))}
-                      onDelete={() => { if (managed) void handleDelete(managed); }}
-                      onIndex={() => { if (managed) void handleIndex(managed); }}
-                      onToolAccessModeChange={(toolName, nextMode) => { if (managed) void handleToolAccessModeChange(managed, toolName, nextMode); }}
-                    />
-                  </div>
-                ) : (
-                  <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-base)]">
-                    Only app administrators listed in <code className="text-white">INTHUB_APP_ADMIN_EMAILS</code> can register providers from this page.
-                  </p>
+          return (
+            <div key={catalog.slug} data-connector-slug={catalog.slug} data-connector-registered={isRegistered}>
+              <button
+                type="button"
+                onClick={() => setSelectedSlug(catalog.slug)}
+                aria-expanded={isOpen}
+                aria-haspopup="dialog"
+                className={cn(
+                  "flex w-full min-w-0 cursor-pointer items-center gap-3 overflow-x-auto whitespace-nowrap px-4 py-3 text-left text-sm transition-colors hover:bg-[var(--color-interactive-hover)]",
+                  isOpen && "bg-[var(--color-interactive-hover)]",
                 )}
-              </div>
-            ) : null}
+              >
+                <ConnectorAvatar name={catalog.name} logoUrl={catalog.logoUrl} iconBg={catalog.iconBg} iconColor={catalog.iconColor} />
+                <span className="shrink-0 font-medium text-white">{catalog.name}</span>
+                {isRegistered ? (
+                  <span className="shrink-0 text-[var(--color-text-base)]">
+                    {stepsCompleted} steps done
+                  </span>
+                ) : (
+                  <Badge>{integrationStatusLabel(catalog)}</Badge>
+                )}
+                {isRegistered && managed?.tools.length ? (
+                  <span className="shrink-0 text-[var(--color-accent)]">— {managed.tools.length} tools</span>
+                ) : null}
+                <span className="min-w-0 flex-1 truncate text-[var(--color-text-base)]">{catalog.description}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedCatalog ? (
+        <ConnectorDetailsModal
+          catalog={selectedCatalog}
+          onClose={() => setSelectedSlug(null)}
+        >
+          {selectedCatalog.notes ? <p className="mb-3">{selectedCatalog.notes}</p> : null}
+          <div className={`${selectedCatalog.notes ? "mt-3" : ""} mb-4 flex flex-wrap gap-2`}>
+            {selectedCatalog.categories.map((cat) => (
+              <Badge key={`${selectedCatalog.slug}-${cat}`}>{cat}</Badge>
+            ))}
+            {selectedAuthStrategy ? <Badge>{selectedAuthStrategy}</Badge> : null}
+            {selectedIsRegistered ? <Badge tone="success">Registered</Badge> : <Badge tone="warning">Not registered</Badge>}
           </div>
-        );
-      })}
-    </div>
+
+          {canRegisterManagedConnectors ? (
+            <div className="space-y-3">
+              <ConnectorSetupProgress
+                connector={selectedManaged ?? catalogToConnector(selectedCatalog)}
+                connection={selectedConnection}
+                configForm={getConfigForm(selectedManaged ?? catalogToConnector(selectedCatalog))}
+                oauthCallbackBaseUrl={oauthCallbackBaseUrl ?? ""}
+                isRegistered={selectedIsRegistered}
+                onConfigFormChange={(updates) =>
+                  updateConfigForm(selectedManaged ?? catalogToConnector(selectedCatalog), updates)
+                }
+                onSaveConfig={(e) =>
+                  void (selectedIsRegistered && selectedManaged
+                    ? handleSave(e, selectedManaged)
+                    : handleRegister(e, selectedCatalog))
+                }
+                onDelete={() => {
+                  if (selectedManaged) void handleDelete(selectedManaged);
+                }}
+                onIndex={() => {
+                  if (selectedManaged) void handleIndex(selectedManaged);
+                }}
+                onToolAccessModeChange={(toolName, nextMode) => {
+                  if (selectedManaged) void handleToolAccessModeChange(selectedManaged, toolName, nextMode);
+                }}
+              />
+            </div>
+          ) : (
+            <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-base)]">
+              Only app administrators listed in <code className="text-white">INTHUB_APP_ADMIN_EMAILS</code> can register providers from this page.
+            </p>
+          )}
+        </ConnectorDetailsModal>
+      ) : null}
+    </>
   );
 }

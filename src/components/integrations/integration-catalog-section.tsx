@@ -12,22 +12,37 @@ interface IntegrationCatalogSectionProps {
   connectors: ManagedConnectorOption[];
   isPending?: boolean;
   errorMessage?: string | null;
+  isAdmin?: boolean;
   onConnect: (slug: string) => void;
+  onUseCustomMcp?: () => void;
 }
 
 export function IntegrationCatalogSection({
   connectors,
   isPending = false,
   errorMessage = null,
+  isAdmin = false,
   onConnect,
+  onUseCustomMcp,
 }: IntegrationCatalogSectionProps) {
   return (
     <section data-testid="integration-catalog-section">
-      <div className="flex items-center">
-        <h2 className="text-base font-semibold text-foreground">
-          {INTEGRATIONS_PAGE_COPY.addIntegrationTitle}
-        </h2>
-        <SectionCountBadge count={connectors.length} />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="flex items-center">
+          <h2 className="text-base font-semibold text-foreground">
+            {INTEGRATIONS_PAGE_COPY.addIntegrationTitle}
+          </h2>
+          <SectionCountBadge count={connectors.length} />
+        </div>
+        {isAdmin && onUseCustomMcp ? (
+          <button
+            type="button"
+            className="cursor-pointer text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            onClick={onUseCustomMcp}
+          >
+            {INTEGRATIONS_PAGE_COPY.wizardCustomMcpLabel}
+          </button>
+        ) : null}
       </div>
 
       {isPending ? (

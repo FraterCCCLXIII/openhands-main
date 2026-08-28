@@ -2,9 +2,9 @@ export const AGENT_CONNECTION_PAGE_COPY = {
   apiKeysTitle: "API keys",
   apiKeysDescription:
     "Copy or rotate the keys your agents and automations should use.",
-  profileKeysTitle: "Permission profile keys",
+  profileKeysTitle: "Permission profiles",
   profileKeysDescription:
-    "Each agent key is bound to a named permission profile. Give the matching key to agents that should use that profile.",
+    "Saved permission sets and the agent key bound to each profile. Load a profile to apply it, or give the matching key to agents that should use it.",
   newProfileButton: "New profile",
   automationKeysTitle: "Automation keys",
   automationKeysDescription:

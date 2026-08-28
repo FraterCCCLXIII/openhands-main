@@ -91,7 +91,6 @@ const clampUnusedThresholdValue = (value: string) => {
 
 export const IntegrationsSection = ({
   addIntegrationSearch,
-  connectedConnectorCount,
   integrations,
   managedConnectorsError,
   managedConnectorsPending,
@@ -434,10 +433,13 @@ export const IntegrationsSection = ({
 
         <IntegrationCatalogSection
           connectors={marketplaceConnectors}
-          connectedConnectorCount={connectedConnectorCount}
           isPending={managedConnectorsPending}
           errorMessage={managedConnectorsError}
+          isAdmin={isAdmin}
           onConnect={handleOpenIntegrationWizard}
+          onUseCustomMcp={
+            isAdmin ? () => handleOpenIntegrationWizard() : undefined
+          }
         />
       </div>
 

@@ -47,6 +47,7 @@ export const useWizardState = ({
   searchParams,
 }: UseIntegrationWizardStateOptions) => {
   const initialManagedConnectorSlug = searchParams.get("managedConnector")?.trim() || "";
+  const initialKind = searchParams.get("kind") === "mcp" ? "mcp" : "managed";
   const initialIntegrationKey = searchParams.get("integrationKey")?.trim() || "";
   const initialSuggestedIntegrationKey = initialManagedConnectorSlug
     ? initialIntegrationKey ||
@@ -57,7 +58,7 @@ export const useWizardState = ({
   );
   const [draft, setDraft] = useState<WizardDraft>(() => {
     if (!initialManagedConnectorSlug) {
-      return { ...INITIAL_DRAFT, kind: "managed" };
+      return { ...INITIAL_DRAFT, kind: initialKind };
     }
 
     return {

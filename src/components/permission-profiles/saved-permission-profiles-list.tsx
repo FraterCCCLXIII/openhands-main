@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { SavedPermissionProfileRow } from "@/src/components/permission-profiles/saved-permission-profile-row";
 import { PERMISSION_PROFILES_PAGE_COPY } from "@/src/constants/permission-profiles-page";
 import { cn } from "@/src/lib/utils";
@@ -13,6 +15,7 @@ interface SavedPermissionProfilesListProps {
   isPending?: boolean;
   errorMessage?: string | null;
   actionPending?: boolean;
+  renderTrailing?: (profile: PermissionProfile) => ReactNode;
   onLoadProfile?: (profile: PermissionProfile) => void;
   onUpdateProfile?: (profile: PermissionProfile) => void;
   onDeleteProfile?: (profile: PermissionProfile) => void;
@@ -23,6 +26,7 @@ export function SavedPermissionProfilesList({
   isPending = false,
   errorMessage = null,
   actionPending = false,
+  renderTrailing,
   onLoadProfile,
   onUpdateProfile,
   onDeleteProfile,
@@ -55,6 +59,7 @@ export function SavedPermissionProfilesList({
               key={profile.id}
               profile={profile}
               actionPending={actionPending}
+              trailing={renderTrailing?.(profile)}
               onLoadProfile={onLoadProfile}
               onUpdateProfile={onUpdateProfile}
               onDeleteProfile={onDeleteProfile}

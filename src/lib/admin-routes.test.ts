@@ -6,9 +6,7 @@ describe("getAdminSectionFromPath", () => {
   it("recognizes dashboard routes with static-export trailing slashes", () => {
     expect(getAdminSectionFromPath("/profile/")).toBe("profile");
     expect(getAdminSectionFromPath("/agent-connection/")).toBe("apiKeys");
-    expect(getAdminSectionFromPath("/permission-profiles/")).toBe(
-      "permissionProfiles",
-    );
+    expect(getAdminSectionFromPath("/permission-profiles/")).toBe("apiKeys");
     expect(getAdminSectionFromPath("/case-by-case-approvals/")).toBe(
       "caseByCaseApprovals",
     );

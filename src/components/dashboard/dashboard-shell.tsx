@@ -9,7 +9,7 @@ import {
   APPROVAL_DURATION,
   APPROVALS_PAGE_COPY,
 } from "@/src/constants/approvals-page";
-import { buildAdminSectionHref, type AdminSection } from "@/src/lib/admin-routes";
+import { type AdminSection } from "@/src/lib/admin-routes";
 import { uiPath } from "@/src/shared/paths";
 import { hubPageShellClassName } from "@/src/styles/neo-layout";
 
@@ -48,14 +48,10 @@ const sectionCopy: Record<AdminSection, { title: string; description: ReactNode 
       </>
     ),
   },
-  permissionProfiles: {
-    title: "Permission Profiles",
-    description: "Save and reapply integration permission snapshots without storing provider credentials.",
-  },
   apiKeys: {
-    title: "Agent Connection",
+    title: "APIs & Permission Profiles",
     description:
-      "Manage API keys for agents and automations. Open connection details for endpoints and schemas.",
+      "Manage API keys, saved permission profiles, and automations. Open connection details for endpoints and schemas.",
   },
   caseByCaseApprovals: {
     title: "Agent requests",
@@ -110,11 +106,9 @@ export const DashboardShell = ({
           title={copy.title}
           description={headerDescription ?? copy.description}
           actions={
-            activeSection === "integrations" && isAdmin ? (
+            activeSection === "integrations" ? (
               <Link
-                href={buildAdminSectionHref("integrations", {
-                  showIntegrationWizard: "1",
-                })}
+                href={uiPath("/admin-integrations")}
                 className="inline-flex h-9 items-center rounded-lg border border-[var(--oh-border)] bg-base-secondary px-3 text-xs font-medium text-white transition-colors hover:bg-surface-raised"
               >
                 Request integration

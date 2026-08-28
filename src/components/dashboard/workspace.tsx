@@ -9,7 +9,6 @@ import { DashboardShell } from "@/src/components/dashboard/dashboard-shell";
 import { AgentConnectionSection } from "@/src/components/dashboard/sections/agent-connection-section";
 import { ApprovalsSection } from "@/src/components/dashboard/sections/approvals-section";
 import { IntegrationsSection } from "@/src/components/dashboard/sections/integrations-section";
-import { PermissionProfilesSection } from "@/src/components/dashboard/sections/permission-profiles-section";
 import { ProfileSection } from "@/src/components/dashboard/sections/profile-section";
 import {
   buildInstalledIntegrationKeys,
@@ -215,7 +214,7 @@ export const DashboardWorkspace = ({
   });
 
   const permissionProfilesSection = usePermissionProfilesSection({
-    enabled: activeSection === "permissionProfiles" || activeSection === "apiKeys",
+    enabled: activeSection === "apiKeys",
     onStatus: reportStatusMessage,
   });
 
@@ -264,6 +263,7 @@ export const DashboardWorkspace = ({
     router.push(
       buildAdminSectionHref("integrations", {
         showIntegrationWizard: "1",
+        kind: managedConnectorSlug ? undefined : "mcp",
         managedConnector: managedConnectorSlug,
         integrationKey:
           suggestedIntegrationKey && suggestedIntegrationKey !== managedConnectorSlug
@@ -308,7 +308,7 @@ export const DashboardWorkspace = ({
       headerDescription={
         activeSection === "apiKeys" ? (
           <>
-            Manage API keys for agents and automations.{" "}
+            Manage API keys, saved permission profiles, and automations.{" "}
             <button
               type="button"
               data-testid="agent-connection-details-link"
@@ -335,10 +335,6 @@ export const DashboardWorkspace = ({
 
       {activeSection === "caseByCaseApprovals" ? (
         <ApprovalsSection {...approvalsSection} />
-      ) : null}
-
-      {activeSection === "permissionProfiles" ? (
-        <PermissionProfilesSection {...permissionProfilesSection} />
       ) : null}
 
       {activeSection === "integrations" ? (
@@ -383,6 +379,9 @@ export const DashboardWorkspace = ({
           onCloseSaveModal={permissionProfilesSection.onCloseSaveModal}
           onOpenSaveModal={permissionProfilesSection.onOpenSaveModal}
           onSaveProfile={permissionProfilesSection.onSaveProfile}
+          onLoadProfile={permissionProfilesSection.onLoadProfile}
+          onUpdateProfile={permissionProfilesSection.onUpdateProfile}
+          onDeleteProfile={permissionProfilesSection.onDeleteProfile}
           permissionProfiles={permissionProfilesSection.profiles}
           permissionProfilesLoading={permissionProfilesSection.isPending}
           permissionProfilesError={permissionProfilesSection.errorMessage}

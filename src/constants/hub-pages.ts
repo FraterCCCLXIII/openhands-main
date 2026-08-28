@@ -10,9 +10,9 @@ export const HUB_PAGE_COPY = {
       "Pending requests are auto-created when an agent attempts to call a case-by-case tool without an active temporary grant.",
   },
   agentConnection: {
-    title: "Agent Connection",
+    title: "APIs & Permission Profiles",
     subtitle:
-      "Configure how agents authenticate and connect to your integration scopes.",
+      "Manage API keys, saved permission profiles, and how agents connect to your integration scopes.",
   },
   permissionProfiles: {
     title: "Permission Profiles",
@@ -45,14 +45,18 @@ export const HUB_PAGE_COPY = {
     },
   },
   adminOverview: {
-    title: "Operational Overview",
+    title: "Operational overview",
     subtitle:
-      "Deployment-wide snapshot of /api/admin/overview, presented as a concise expandable user browser.",
+      "Deployment-wide snapshot of connected identities, approval pressure, and duplicate external accounts.",
     browseUsersTitle: "Browse users",
-    usersSearchPlaceholder: "Search users by owner id, integration, or provider",
+    usersSearchPlaceholder: "Search users by owner, integration, or provider",
     usersSearchEmpty: "No users match your search.",
+    userDetailModalAriaLabel: (ownerId: string) => `User details for ${ownerId}`,
+    userDetailCloseLabel: "Close",
+    duplicateGroupCount: (count: number) =>
+      `${count} ${count === 1 ? "duplicate" : "duplicates"}`,
     deploymentUserSummariesDescription:
-      "Expand a row to inspect saved identities, approval pressure, notification volume, and duplicate external-account groups for a specific user.",
+      "Select a user to inspect saved identities, approval pressure, notification volume, and duplicate external-account groups.",
     noUsersYet:
       "No deployment users have any saved connections, approval requests, or notification history yet.",
     adminAccessRequiredTitle: "Admin access required",
@@ -86,6 +90,9 @@ export const HUB_PAGE_COPY = {
     duplicateAccountsDeploymentTitle: "Duplicate external accounts",
     duplicateAccountsDeploymentDescription:
       "Normalized provider + external account ids shared across multiple owners in this deployment.",
+    duplicateGroupModalAriaLabel: (provider: string, accountId: string) =>
+      `Duplicate ${provider} account ${accountId}`,
+    duplicateGroupsSearchEmpty: "No duplicate groups match your search.",
     totalAccessRequestsLabel: "Total access requests",
     pendingAccessRequestsLabel: "Pending approvals",
     notificationsLabel: "Notifications",

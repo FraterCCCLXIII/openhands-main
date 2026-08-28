@@ -25,7 +25,6 @@ import {
   buildCreatePayload,
   buildDiscoverPayload,
   formatDebugDetails,
-  getWizardFlow,
   hasManagedConnectorCredentialInput,
   type DiscoverFeedback,
   type DiscoveryResponse,
@@ -84,7 +83,6 @@ export const IntegrationWizard = ({
   const oauthReturnIntegrationKey = searchParams.get("integrationKey")?.trim() || "";
   const oauthReturnConnectorSlug =
     searchParams.get("managedConnector")?.trim() || "";
-  const wizardFlow = getWizardFlow(searchParams);
 
   const state = useWizardState({
     existingIntegrationKeys,
@@ -340,6 +338,9 @@ export const IntegrationWizard = ({
       data-testid="integration-wizard"
       data-wizard-pane={activePane}
     >
+      <div className="shrink-0 border-b border-[var(--oh-border)] px-7 pb-4 pt-7 pr-12">
+        {wizardHeader}
+      </div>
       <div
         className={cn(
           "flex w-[200%] items-start transition-transform duration-300 ease-out motion-reduce:transition-none",
@@ -347,23 +348,19 @@ export const IntegrationWizard = ({
         )}
       >
         <section
-          className="flex w-1/2 shrink-0 flex-col px-7 pb-7 pt-7"
+          className="flex w-1/2 shrink-0 flex-col px-7 pb-7 pt-5"
           aria-hidden={activePane !== "connect"}
           data-testid="integration-wizard-connect-pane"
         >
-          {state.selectedConnector ? wizardHeader : null}
           {oauthStatus ? <OAuthReturnBanner status={oauthStatus} /> : null}
           <div className="mt-1">
             <ConnectStep
-              managedConnectors={managedConnectors}
               managedConnectorsError={
                 managedConnectorsQuery.isError
                   ? (managedConnectorsQuery.error as Error).message
                   : null
               }
-              managedConnectorsPending={managedConnectorsQuery.isPending}
               canDiscover={canDiscover}
-              connectorSearch={state.connectorSearch}
               discoverFeedback={state.discoverFeedback}
               discoverPending={discoverMutation.isPending}
               draft={state.draft}
@@ -375,8 +372,6 @@ export const IntegrationWizard = ({
               hasDirectConnection={hasDirectConnection}
               selectedConnector={state.selectedConnector}
               setDraft={state.setDraft}
-              showConnectorPicker={wizardFlow === "add"}
-              onConnectorSearchChange={state.handleConnectorSearchChange}
               onDiscover={() =>
                 discoverMutation.mutate({
                   draft: state.draft,
@@ -392,11 +387,10 @@ export const IntegrationWizard = ({
         </section>
 
         <section
-          className="flex max-h-[90vh] w-1/2 shrink-0 flex-col overflow-hidden px-7 pb-7 pt-7"
+          className="flex max-h-[90vh] w-1/2 shrink-0 flex-col overflow-hidden px-7 pb-7 pt-5"
           aria-hidden={activePane !== "review"}
           data-testid="integration-wizard-review-pane"
         >
-          {state.selectedConnector ? wizardHeader : null}
           {createFeedback ? (
             <div className="mb-4 shrink-0">
               <WizardFeedback tone={createFeedback.tone} testId="create-feedback">

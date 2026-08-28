@@ -176,6 +176,7 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
     // The managed-connector management controls (Delete) are admin-only.
     expect(container.textContent).toContain("available");
     expect(container.textContent).not.toContain("Delete");
+    expect(container.textContent).not.toContain("Add custom MCP");
     // Both OAuth and non-OAuth (api_key/MCP) providers are listed — the page
     // no longer filters to OAuth-only.
     expect(container.textContent).toContain("GitHub");
@@ -212,10 +213,26 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
     // the management controls (Delete).
     expect(container.textContent).toContain("GitHub");
     expect(container.textContent).toContain("ElevenLabs");
+    expect(container.textContent).toContain("Add custom MCP");
 
-    // Expand the registered GitHub connector to see the Delete button.
+    const addButton = Array.from(container.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Add custom MCP"),
+    );
+    expect(addButton).toBeTruthy();
+    await act(async () => {
+      addButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(document.querySelector('[data-testid="add-custom-mcp-modal"]')).toBeTruthy();
+
+    await act(async () => {
+      document
+        .querySelector<HTMLButtonElement>('[data-testid="add-custom-mcp-modal-close"]')
+        ?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    // Open the registered GitHub connector modal to see the Delete button.
     const githubToggle = Array.from(
-      container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]'),
+      container.querySelectorAll<HTMLButtonElement>('button[aria-haspopup="dialog"]'),
     ).find((btn) => btn.textContent?.includes("GitHub"));
     expect(githubToggle).toBeTruthy();
 
@@ -223,9 +240,12 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
       githubToggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+    expect(dialog).toBeTruthy();
+
     // Step 1 (Configure integration) starts collapsed because it's completed.
     // Expand it to reveal the Delete button inside the config form.
-    const step1Toggle = container.querySelector<HTMLButtonElement>(
+    const step1Toggle = dialog?.querySelector<HTMLButtonElement>(
       'button[aria-label="Expand Configure integration"]',
     );
     expect(step1Toggle).toBeTruthy();
@@ -233,7 +253,7 @@ describe("app/admin-integrations/page (ClientAdminIntegrationsPage)", () => {
       step1Toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(container.textContent).toContain("Delete");
+    expect(dialog?.textContent).toContain("Delete");
     expect(container.querySelector('[data-testid="admin-guidance-card"]')).toBeFalsy();
     expect(container.querySelector('[data-testid="user-guidance-card"]')).toBeFalsy();
   });

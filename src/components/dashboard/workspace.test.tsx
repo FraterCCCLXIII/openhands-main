@@ -493,16 +493,14 @@ describe("DashboardWorkspace", () => {
       );
     });
 
-    const profileLink = Array.from(container.querySelectorAll('a[href="/profile"]')).find(
-      (link) => link.textContent?.includes("User Profile"),
-    );
-    expect(profileLink).toBeTruthy();
-    expect(profileLink?.getAttribute("href")).toBe("/profile");
-
     const sidebarLabels = Array.from(container.querySelectorAll("aside nav a")).map(
       (link) => link.textContent,
     );
-    expect(sidebarLabels.slice(-2)).toEqual(["Permission Profiles", "User Profile"]);
+    expect(sidebarLabels).toContain("APIs & Permission Profiles");
+    expect(sidebarLabels).not.toContain("Permission Profiles");
+    expect(sidebarLabels).not.toContain("Agent Connection");
+    expect(container.querySelector('a[href="/permission-profiles"]')).toBeNull();
+    expect(container.querySelector('a[href="/agent-connection"]')).toBeTruthy();
   });
 
   it("shows integrations as the default section with a searchable add-integration panel", async () => {
@@ -720,11 +718,11 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
-    const connectorInput = () =>
+    const wizardTitle = () =>
       document
-        .querySelector('[data-testid="integration-wizard-modal"]')
-        ?.querySelector<HTMLInputElement>('input[list="managed-connector-options"]');
-    expect(connectorInput()?.value).toBe("slack");
+        .querySelector('[data-testid="integration-wizard-header"] h2')
+        ?.textContent;
+    expect(wizardTitle()).toBe("Slack");
 
     await act(async () => {
       document
@@ -751,7 +749,7 @@ describe("DashboardWorkspace", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
     });
 
-    expect(connectorInput()?.value).toBe("github");
+    expect(wizardTitle()).toBe("GitHub");
   });
 
   it("keeps OAuth callback errors visible after the wizard auto-selects the connector", async () => {
@@ -847,10 +845,10 @@ describe("DashboardWorkspace", () => {
       await renderAgentConnectionRoute(root);
 
       const text = container.textContent ?? "";
-      expect(text).toContain("Permission profile keys");
+      expect(text).toContain("Permission profiles");
       expect(text).toContain("New profile");
       expect(text).toContain(
-        "Each agent key is bound to a named permission profile.",
+        "Saved permission sets and the agent key bound to each profile.",
       );
       expect(text).toContain("Automation keys");
       expect(text).toContain(

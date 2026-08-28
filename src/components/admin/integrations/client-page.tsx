@@ -4,11 +4,14 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { AddCustomMcpModal } from "@/src/components/admin/integrations/add-custom-mcp-modal";
 import { IntegrationsCatalog } from "@/src/components/admin/integrations/catalog";
 import { LoadingSpinner } from "@/src/components/feedback/loading-spinner";
 import { HubAppShell } from "@/src/components/layout/hub-app-shell";
 import { PageHeader } from "@/src/components/layout/page-header";
 import { useAuth } from "@/src/components/auth/auth-context";
+import { BrandButton } from "@/src/components/ui/brand-button";
+import { ADMIN_INTEGRATIONS_PAGE_COPY } from "@/src/constants/admin-integrations-page";
 import { fetchJson } from "@/src/lib/fetch-json";
 import { apiPath } from "@/src/shared/paths";
 import { catalogOptionToConnectorOption } from "@/src/lib/catalog-mappers";
@@ -29,6 +32,8 @@ interface AdminIntegrationsData {
 export function ClientAdminIntegrationsPage() {
   const queryClient = useQueryClient();
   const { user, isAdmin, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [addCustomMcpOpen, setAddCustomMcpOpen] = useState(false);
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
 
   const { data, isLoading: dataLoading, error } = useQuery({
     queryKey: ["admin-integrations-init"],
@@ -161,6 +166,17 @@ export function ClientAdminIntegrationsPage() {
               ...(isAdmin ? [`${data.managedConnectors.length} added`] : []),
               `${data.integrationCatalog.length} available`,
             ]}
+            actions={
+              isAdmin ? (
+                <BrandButton
+                  type="button"
+                  variant="primary"
+                  onClick={() => setAddCustomMcpOpen(true)}
+                >
+                  {ADMIN_INTEGRATIONS_PAGE_COPY.addCustomMcpButtonLabel}
+                </BrandButton>
+              ) : null
+            }
           />
 
           <IntegrationsCatalog
@@ -172,10 +188,43 @@ export function ClientAdminIntegrationsPage() {
             connections={connectionsQuery.data ?? []}
             onConnectionsStale={() => void connectionsQuery.refetch()}
             onManagedConnectorsStale={() => void queryClient.invalidateQueries({ queryKey: ["admin-integrations-init"] })}
-            initialExpandedSlug={searchParams?.get("managedConnector") ?? null}
+            initialExpandedSlug={
+              expandedSlug ?? searchParams?.get("managedConnector") ?? null
+            }
           />
         </div>
       </div>
+      {isAdmin && addCustomMcpOpen ? (
+        <AddCustomMcpModal
+          existingSlugs={[
+            ...data.managedConnectors.map((connector) => connector.slug),
+            ...data.integrationCatalog.map((entry) => entry.slug),
+          ]}
+          onClose={() => setAddCustomMcpOpen(false)}
+          onRegistered={(connector) => {
+            setAddCustomMcpOpen(false);
+            setExpandedSlug(connector.slug);
+            queryClient.setQueryData<AdminIntegrationsData>(
+              ["admin-integrations-init"],
+              (current) => {
+                if (!current) return current;
+                return {
+                  ...current,
+                  managedConnectors: [
+                    ...current.managedConnectors.filter(
+                      (existing) => existing.slug !== connector.slug,
+                    ),
+                    connector,
+                  ],
+                };
+              },
+            );
+            void queryClient.invalidateQueries({
+              queryKey: ["admin-integrations-init"],
+            });
+          }}
+        />
+      ) : null}
     </HubAppShell>
   );
 }

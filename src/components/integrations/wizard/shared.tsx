@@ -22,7 +22,10 @@ export const WizardHeader = ({
   authLabel,
   isConnected = false,
 }: WizardHeaderProps = {}) => (
-  <div className="mb-5 flex items-start gap-3">
+  <header
+    className="flex items-start gap-3"
+    data-testid="integration-wizard-header"
+  >
     {logoSlug ? (
       <IntegrationLogoBadge
         slug={logoSlug}
@@ -46,7 +49,7 @@ export const WizardHeader = ({
           "Pick a connector, connect your account or paste credentials, then review the tools the agent can use."}
       </p>
     </div>
-  </div>
+  </header>
 );
 
 export interface OAuthReturnStatus {
