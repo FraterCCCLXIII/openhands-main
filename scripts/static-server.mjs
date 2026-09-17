@@ -35,6 +35,14 @@ import { pathToFileURL } from "node:url";
 import sirv from "sirv";
 
 import {
+  isConnectHostsRequest,
+  writeConnectHostsResponse,
+} from "./connect-hosts.mjs";
+import {
+  isConnectTunnelRequest,
+  writeConnectTunnelResponse,
+} from "./connect-tunnel.mjs";
+import {
   createProxyHandlers,
   createRouter,
   isServerInfoRequest,
@@ -672,6 +680,15 @@ export function startStaticServer(config) {
   const uninstallDiagnostics = proxy.installDiagnostics();
 
   const server = createServer((req, res) => {
+    if (isConnectHostsRequest(req)) {
+      writeConnectHostsResponse(res, config.port);
+      return;
+    }
+    if (isConnectTunnelRequest(req)) {
+      void writeConnectTunnelResponse(req, res, `http://127.0.0.1:${config.port}`);
+      return;
+    }
+
     const url = req.url ?? "/";
     const backend = route(url);
     if (backend) {

@@ -141,6 +141,39 @@ export default defineConfig(({ mode }) => {
         },
       },
       {
+        name: "mobile-connect-hosts",
+        apply: "serve",
+        async configureServer(server) {
+          const { isConnectHostsRequest, writeConnectHostsResponse } =
+            await import("./scripts/connect-hosts.mjs");
+          const {
+            isConnectTunnelRequest,
+            resolveConnectTunnelTarget,
+            writeConnectTunnelResponse,
+          } = await import("./scripts/connect-tunnel.mjs");
+          const listenPortOf = () => {
+            const address = server.httpServer?.address();
+            if (address && typeof address === "object") {
+              return address.port;
+            }
+            return server.config.server.port ?? 3001;
+          };
+          server.middlewares.use((req, res, next) => {
+            if (isConnectHostsRequest(req)) {
+              writeConnectHostsResponse(res, listenPortOf());
+              return;
+            }
+            if (isConnectTunnelRequest(req)) {
+              void resolveConnectTunnelTarget(listenPortOf()).then((target) =>
+                writeConnectTunnelResponse(req, res, target),
+              );
+              return;
+            }
+            next();
+          });
+        },
+      },
+      {
         name: "serve-generated-i18n-locales",
         apply: "serve",
         configureServer(server) {
@@ -320,6 +353,8 @@ export default defineConfig(({ mode }) => {
         // the browser and dev crashes with ``ReferenceError: exports is not
         // defined`` on the first import of agent-settings.tsx.
         "shell-quote",
+        // CJS browser build used by Settings → Mobile pairing QR.
+        "qrcode",
         "unist-util-visit",
         "uuid",
         "zustand",
@@ -393,6 +428,16 @@ export default defineConfig(({ mode }) => {
       host: true,
       allowedHosts: true,
       proxy: {
+        // More specific than `/api` so a sidecar automation backend can be
+        // reached while `dev:minimal` still proxies everything else to the
+        // agent-server. Full-stack `npm run dev` serves this path through
+        // ingress instead.
+        "/api/automation": {
+          target:
+            process.env.VITE_AUTOMATION_URL || "http://127.0.0.1:18002",
+          changeOrigin: true,
+          secure: !INSECURE_SKIP_VERIFY,
+        },
         "/api": {
           target: API_URL,
           changeOrigin: true,

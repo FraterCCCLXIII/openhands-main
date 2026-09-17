@@ -11,6 +11,7 @@
         "src/routes/llm-settings*.tsx",
         "src/routes/agent-settings.tsx",
         "src/routes/app-settings.tsx",
+        "src/routes/mobile-settings.tsx",
         "src/routes/settings-layout.tsx"
       ],
       "tests": ["settings"]
