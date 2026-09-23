@@ -238,6 +238,8 @@ export default function App() {
   // reload the baked key is still null, but the registry has the key.
   // So: skip the instant gate when a registered backend already carries
   // an API key — let the normal /server_info probe validate it instead.
+  const location = useLocation();
+  const isInstallerRoute = location.pathname === "/installer";
   const bakedKeyMissing = isAuthRequiredAndMissing();
   const hasRegisteredKey = Boolean(getEffectiveLocalBackend()?.apiKey);
   const authMissing = bakedKeyMissing && !hasRegisteredKey;
@@ -349,6 +351,17 @@ export default function App() {
     active.backend.kind === "cloud" &&
     activeCloudHealth?.disabled === true &&
     isCloudBackendApiKeyOrNetworkHealthError(activeCloudHealth.lastError);
+
+  // The installer lives in the canvas shell but skips first-run onboarding
+  // and backend gates so it can render without a connected agent-server.
+  if (isInstallerRoute) {
+    return (
+      <>
+        <Outlet />
+        <TelemetryConsentBanner />
+      </>
+    );
+  }
 
   if (showFirstRunOnboarding) {
     return (

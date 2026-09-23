@@ -38,6 +38,7 @@ export default [
     route("automations/templates", "routes/automation-templates.tsx"),
     route("automations/new/:automationId", "routes/automation-setup-route.tsx"),
     route("automations/:automationId", "routes/automation-detail.tsx"),
+    route("installer", "routes/installer.tsx"),
   ]),
   route(
     "shared/conversations/:conversationId",

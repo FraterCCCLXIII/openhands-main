@@ -94,7 +94,9 @@ export default function MainApp() {
     }
   }, [settings?.language]);
 
-  if (config.isLoading) {
+  const isInstallerRoute = location.pathname === "/installer";
+
+  if (config.isLoading && !isInstallerRoute) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-base">
         <LoadingSpinner size="large" />
@@ -138,7 +140,11 @@ export default function MainApp() {
                 )}
               <div
                 id="root-outlet"
-                className="relative flex-1 overflow-auto px-0 custom-scrollbar"
+                className={
+                  isInstallerRoute
+                    ? "relative flex-1 overflow-hidden px-0"
+                    : "relative flex-1 overflow-auto px-0 custom-scrollbar"
+                }
               >
                 <Outlet />
               </div>

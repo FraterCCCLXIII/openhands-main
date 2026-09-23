@@ -7,6 +7,7 @@ import {
   Server,
   Settings,
   PanelsTopLeft,
+  Wand2,
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
@@ -210,6 +211,14 @@ export function SidebarRailBody({
           testId="sidebar-conversations-link"
           collapsed={collapsed}
           icon={<Plus width={ICON_SIZE} height={ICON_SIZE} />}
+        />
+        <SidebarNavLink
+          to="/installer"
+          end
+          label={t(I18nKey.INSTALLER$NAV_LABEL)}
+          testId="sidebar-installer-link"
+          collapsed={collapsed}
+          icon={<Wand2 width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}

@@ -151,6 +151,7 @@ describe("Sidebar email verification", () => {
     // (a disabled link would carry aria-disabled="true").
     for (const testId of [
       "sidebar-conversations-link",
+      "sidebar-installer-link",
       "sidebar-skills-link",
       "sidebar-automations-link",
     ]) {

@@ -485,6 +485,7 @@ describe("Sidebar", () => {
 
     for (const testId of [
       "sidebar-conversations-link",
+      "sidebar-installer-link",
       "sidebar-automations-link",
       "sidebar-skills-link",
     ]) {
@@ -500,6 +501,9 @@ describe("Sidebar", () => {
     // Act + Assert: each top-level nav link surfaces its new user-facing label.
     expect(screen.getByTestId("sidebar-conversations-link")).toHaveTextContent(
       "New Chat",
+    );
+    expect(screen.getByTestId("sidebar-installer-link")).toHaveTextContent(
+      "Setup",
     );
     expect(screen.getByTestId("sidebar-skills-link")).toHaveTextContent(
       "Customize",
