@@ -166,6 +166,15 @@ code {
  * through the block margins so the tree has no gaps. A block that follows a
  * thinking block is nested one level deeper.
  */
+@keyframes rail-pulse {
+  0% {
+    border-color: var(--oh-foreground);
+  }
+  100% {
+    border-color: var(--oh-border);
+  }
+}
+
 @keyframes rail-draw {
   from {
     clip-path: inset(0 100% 100% 0);
@@ -274,7 +283,10 @@ code {
   border-left: 1px solid var(--oh-border);
   border-bottom: 1px solid var(--oh-border);
   border-bottom-left-radius: 0.5rem;
-  animation: rail-draw 420ms ease-out both;
+  /* A new branch draws in, then flashes once so the eye finds it. */
+  animation:
+    rail-draw 420ms ease-out both,
+    rail-pulse 1100ms ease-out both;
 }
 
 [data-rail-thread] > *::after {
