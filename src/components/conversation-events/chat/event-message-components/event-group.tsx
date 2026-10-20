@@ -16,6 +16,36 @@ import { PathInteractiveContext } from "../../../features/chat/path-component";
 import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { RotatingStatus } from "#/components/shared/rotating-status";
 
+/** Refresh rate of the live elapsed time, in milliseconds. */
+const ELAPSED_TICK_MS = 250;
+
+/** Event timestamps may omit the offset; treat those as UTC, as the chat does. */
+function parseEventTime(timestamp?: string): number | null {
+  if (!timestamp) return null;
+  const utc = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(timestamp)
+    ? timestamp
+    : `${timestamp}Z`;
+  const time = new Date(utc).getTime();
+  return Number.isNaN(time) ? null : time;
+}
+
+/** Server-side span of a group, from its first event to its last. */
+function eventSpanMs(events: OpenHandsEvent[]): number | null {
+  const start = parseEventTime(events[0]?.timestamp);
+  const end = parseEventTime(events.at(-1)?.timestamp);
+  return start !== null && end !== null && end >= start ? end - start : null;
+}
+
+/** Formats seconds as a localised unit, for example "2.1s". */
+function formatElapsed(ms: number): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "unit",
+    unit: "second",
+    unitDisplay: "narrow",
+    maximumFractionDigits: 1,
+  }).format(ms / 1000);
+}
+
 interface EventGroupProps {
   /** The events represented by this group. Used to compute the summary. */
   events: OpenHandsEvent[];
@@ -101,6 +131,17 @@ export function EventGroup({
   const contentId = React.useId();
   const buttonId = `${contentId}-toggle`;
 
+  // The live clock starts when this group first mounts while it is still the
+  // chat's tail. Client time is used because server timestamps may be skewed.
+  const isTicking = variant === "rail" && !isFinalized;
+  const [mountedAt] = React.useState(() => Date.now());
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    if (!isTicking) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), ELAPSED_TICK_MS);
+    return () => window.clearInterval(timer);
+  }, [isTicking]);
+
   if (events.length === 0) {
     return null;
   }
@@ -154,6 +195,10 @@ export function EventGroup({
     : t(I18nKey.EVENT_GROUP$ACTIONS_COMPLETED, { count: totalCount });
 
   const isRail = variant === "rail";
+  // Running shows time since mount; finished shows the group's total span.
+  const elapsedMs = isRunning ? now - mountedAt : eventSpanMs(events);
+  const elapsedLabel =
+    isRail && elapsedMs !== null ? formatElapsed(elapsedMs) : null;
   const expanded = userExpanded ?? (isRail && isRunning && !isFinalized);
   return (
     <div
@@ -206,6 +251,11 @@ export function EventGroup({
                 {isFinalized ? countSummary : (latestTitle ?? countSummary)}
               </PathInteractiveContext.Provider>
             </span>
+            {elapsedLabel ? (
+              <span className="flex-shrink-0 text-xs tabular-nums text-muted/80">
+                {elapsedLabel}
+              </span>
+            ) : null}
             {isFinalized && !isRunning ? null : (
               <span className="flex items-center flex-shrink-0 text-muted/80">
                 <span className="truncate text-xs">{countSummary}</span>
