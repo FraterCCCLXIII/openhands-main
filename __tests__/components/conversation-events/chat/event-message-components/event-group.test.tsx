@@ -411,6 +411,32 @@ describe("EventGroup", () => {
       );
     });
 
+    it("shows skeleton rows only while the live tail is still running", () => {
+      const running = [makeBashAction("a1", "echo hello")];
+      const done = [
+        makeBashAction("a2", "ls"),
+        makeBashObservation("o2", "a2", "ls"),
+      ];
+
+      const { unmount } = renderWithProviders(
+        <EventGroup events={running} variant="rail">
+          <div>child</div>
+        </EventGroup>,
+      );
+      expect(screen.getByTestId("rail-skeleton")).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+      unmount();
+
+      renderWithProviders(
+        <EventGroup events={done} variant="rail" isFinalized>
+          <div>child</div>
+        </EventGroup>,
+      );
+      expect(screen.queryByTestId("rail-skeleton")).not.toBeInTheDocument();
+    });
+
     it("keeps the classic variant collapsed while running", () => {
       const events = [makeBashAction("a1", "echo hello")];
 

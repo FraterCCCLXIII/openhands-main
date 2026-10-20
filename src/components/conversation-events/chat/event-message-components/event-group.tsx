@@ -15,6 +15,7 @@ import { IsInEventGroupContext } from "../../../features/chat/is-in-event-group-
 import { PathInteractiveContext } from "../../../features/chat/path-component";
 import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { RotatingStatus } from "#/components/shared/rotating-status";
+import { SkeletonLines } from "#/components/shared/skeleton-lines";
 
 /** Refresh rate of the live elapsed time, in milliseconds. */
 const ELAPSED_TICK_MS = 250;
@@ -344,6 +345,9 @@ export function EventGroup({
               <IsInEventGroupContext.Provider value>
                 {children}
               </IsInEventGroupContext.Provider>
+              {isRunning && !isFinalized ? (
+                <SkeletonLines className="py-1.5 pr-6" />
+              ) : null}
               {isRunning && !isFinalized ? (
                 // The live tail: the agent is still working, so its status
                 // rolls through short messages as the last branch of the tree.
