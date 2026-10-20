@@ -237,7 +237,19 @@ export function EventGroup({
               )}
             >
               {isRunning ? null : (
-                <span className="size-1.5 rounded-full bg-muted/70" />
+                // The check draws itself in when the group finishes.
+                <svg
+                  aria-hidden
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-2.5 text-muted"
+                >
+                  <path data-check-draw d="M2.5 6.5 5 9l4.5-5" />
+                </svg>
               )}
             </span>
             <span
