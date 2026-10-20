@@ -270,7 +270,14 @@ export function EventGroup({
             ) : null}
             {isFinalized && !isRunning ? null : (
               <span className="flex items-center flex-shrink-0 text-muted/80">
-                <span className="truncate text-xs">{countSummary}</span>
+                {/* Keyed on the completed count, so the summary rolls in
+                    each time another step finishes. */}
+                <span
+                  key={completedCount}
+                  className="truncate text-xs animate-[status-roll-in_320ms_ease-out_both] motion-reduce:animate-none"
+                >
+                  {countSummary}
+                </span>
                 {isRunning ? (
                   <LoaderCircle
                     data-testid="spinner-icon"
