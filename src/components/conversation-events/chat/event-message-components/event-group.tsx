@@ -16,6 +16,8 @@ import { PathInteractiveContext } from "../../../features/chat/path-component";
 import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { RotatingStatus } from "#/components/shared/rotating-status";
 import { SkeletonLines } from "#/components/shared/skeleton-lines";
+import { TokenMeter } from "#/components/shared/token-meter";
+import useMetricsStore from "#/stores/metrics-store";
 
 /** Refresh rate of the live elapsed time, in milliseconds. */
 const ELAPSED_TICK_MS = 250;
@@ -143,6 +145,8 @@ export function EventGroup({
     return () => window.clearInterval(timer);
   }, [isTicking]);
 
+  const usage = useMetricsStore((state) => state.usage);
+
   if (events.length === 0) {
     return null;
   }
@@ -268,6 +272,13 @@ export function EventGroup({
               <span className="flex-shrink-0 text-xs tabular-nums text-muted/80">
                 {elapsedLabel}
               </span>
+            ) : null}
+            {!isFinalized && usage && usage.context_window > 0 ? (
+              <TokenMeter
+                used={usage.per_turn_token}
+                limit={usage.context_window}
+                title={t(I18nKey.CONVERSATION$TOKEN_USAGE)}
+              />
             ) : null}
             {isFinalized && !isRunning ? null : (
               <span className="flex items-center flex-shrink-0 text-muted/80">
