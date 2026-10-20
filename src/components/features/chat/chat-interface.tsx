@@ -620,55 +620,58 @@ export function ChatInterface({
             onWheel={handleWheelForPagination}
             className="custom-scrollbar-always flex min-h-0 grow flex-col gap-2 overflow-x-hidden overflow-y-auto px-0 pt-4 pb-8 md:px-4"
           >
-            {isChatLoading && isReturningToConversation && (
-              <ChatMessagesSkeleton />
-            )}
+            <div className="mx-auto flex w-full max-w-200 min-w-0 flex-col gap-2">
+              {isChatLoading && isReturningToConversation && (
+                <ChatMessagesSkeleton />
+              )}
 
-            {isChatLoading && !isReturningToConversation && (
-              <div
-                className="flex justify-center"
-                data-testid="loading-spinner"
-              >
-                <LoadingSpinner size="small" />
-              </div>
-            )}
+              {isChatLoading && !isReturningToConversation && (
+                <div
+                  className="flex justify-center"
+                  data-testid="loading-spinner"
+                >
+                  <LoadingSpinner size="small" />
+                </div>
+              )}
 
-            {isLoadingOlderEvents && (
-              <div
-                className="flex items-center justify-center gap-2 py-3 text-sm text-text-tertiary"
-                data-testid="loading-older-events"
-              >
-                <LoadingSpinner size="small" />
-                <span>{t(I18nKey.CHAT_INTERFACE$FETCHING_OLDER_MESSAGES)}</span>
-              </div>
-            )}
+              {isLoadingOlderEvents && (
+                <div
+                  className="flex items-center justify-center gap-2 py-3 text-sm text-text-tertiary"
+                  data-testid="loading-older-events"
+                >
+                  <LoadingSpinner size="small" />
+                  <span>
+                    {t(I18nKey.CHAT_INTERFACE$FETCHING_OLDER_MESSAGES)}
+                  </span>
+                </div>
+              )}
 
-            {/*
-             * Render whenever there's anything to display. Previously this
-             * was gated on `conversationUserEventsExist`, but with the lazy
-             * "50 most recent" REST fetch the initial window may not include
-             * any `source: "user"` events (long agent runs between user
-             * turns). That left the chat blank, leaving the user nothing to
-             * scroll — which is why "scroll up to load older" appeared
-             * broken. The empty-state ChatSuggestions block above still
-             * keeps its own gate (`!userEventsExist && !hasSubstantiveAgentActions`)
-             * so brand-new conversations show suggestions, not an empty chat.
-             */}
-            {/* /model entries created before any event is rendered are
+              {/*
+               * Render whenever there's anything to display. Previously this
+               * was gated on `conversationUserEventsExist`, but with the lazy
+               * "50 most recent" REST fetch the initial window may not include
+               * any `source: "user"` events (long agent runs between user
+               * turns). That left the chat blank, leaving the user nothing to
+               * scroll — which is why "scroll up to load older" appeared
+               * broken. The empty-state ChatSuggestions block above still
+               * keeps its own gate (`!userEventsExist && !hasSubstantiveAgentActions`)
+               * so brand-new conversations show suggestions, not an empty chat.
+               */}
+              {/* /model entries created before any event is rendered are
               anchored to `null` and live above the message list. */}
-            <ModelMessages
-              conversationId={conversationId}
-              anchorEventId={null}
-            />
-
-            {showConversationMessages && renderableEvents.length > 0 && (
-              <Messages
-                messages={renderableEvents}
-                allEvents={allConversationEvents}
+              <ModelMessages
+                conversationId={conversationId}
+                anchorEventId={null}
               />
-            )}
 
-            {/*
+              {showConversationMessages && renderableEvents.length > 0 && (
+                <Messages
+                  messages={renderableEvents}
+                  allEvents={allConversationEvents}
+                />
+              )}
+
+              {/*
             Render the local pending-message queue independently so messages
             the user just submitted show up immediately (with a faded "sending"
             treatment) even before any real conversation event has come back
@@ -676,14 +679,15 @@ export function ChatInterface({
             UserMessageEvent echoes back over the WebSocket, so this never
             double-renders alongside the real event list.
           */}
-            <PendingUserMessages />
+              <PendingUserMessages />
 
-            {/* Goal-loop status sits at the end of the message flow — above the
+              {/* Goal-loop status sits at the end of the message flow — above the
               composer and its typing indicator — so progress stays in view. */}
-            <GoalStatusBanner conversationId={conversationId} />
+              <GoalStatusBanner conversationId={conversationId} />
+            </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-1.5 pb-4">
+          <div className="mx-auto flex w-full max-w-200 shrink-0 flex-col gap-1.5 pb-4">
             <SkillInstallRestartBanner conversationId={conversationId} />
             <BtwMessages conversationId={conversationId} />
             {errorMessage && (
