@@ -129,9 +129,10 @@ describe("Messages confirmation prompt", () => {
     renderWithProviders(<Messages messages={events} allEvents={events} />);
 
     expect(screen.getByTestId("event-group")).toBeInTheDocument();
+    // The rail variant opens itself while the group is the live tail.
     expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
       "aria-expanded",
-      "false",
+      "true",
     );
     expect(
       screen.getByText("CHAT_INTERFACE$USER_ASK_CONFIRMATION"),

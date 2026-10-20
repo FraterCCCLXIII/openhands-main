@@ -8,6 +8,8 @@ interface CopyToClipboardButtonProps {
   isDisabled: boolean;
   onClick: () => void;
   mode: "copy" | "copied";
+  /** `boxed` keeps the bordered tile; `ghost` renders a bare icon. */
+  variant?: "boxed" | "ghost";
 }
 
 export function CopyToClipboardButton({
@@ -15,6 +17,7 @@ export function CopyToClipboardButton({
   isDisabled,
   onClick,
   mode,
+  variant = "boxed",
 }: CopyToClipboardButtonProps) {
   const { t } = useTranslation("openhands");
   return (
@@ -27,7 +30,11 @@ export function CopyToClipboardButton({
       aria-label={t(
         mode === "copy" ? I18nKey.BUTTON$COPY : I18nKey.BUTTON$COPIED,
       )}
-      className="button-base p-1 cursor-pointer"
+      className={
+        variant === "ghost"
+          ? "cursor-pointer rounded-xs p-1 text-muted transition-colors hover:text-foreground"
+          : "button-base p-1 cursor-pointer"
+      }
     >
       {mode === "copy" && <CopyIcon width={15} height={15} />}
       {mode === "copied" && <CheckmarkIcon width={15} height={15} />}

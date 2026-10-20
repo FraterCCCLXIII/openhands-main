@@ -1,8 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import ArrowDown from "#/icons/angle-down-solid.svg?react";
-import ArrowUp from "#/icons/angle-up-solid.svg?react";
 import i18n from "#/i18n";
+import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { MarkdownRenderer } from "../markdown/markdown-renderer";
 
 interface ErrorMessageProps {
@@ -28,11 +27,10 @@ export function ErrorMessage({ errorId, defaultMessage }: ErrorMessageProps) {
           onClick={() => setShowDetails((prev) => !prev)}
           className="cursor-pointer text-left"
         >
-          {showDetails ? (
-            <ArrowUp className="h-4 w-4 ml-2 inline fill-danger" />
-          ) : (
-            <ArrowDown className="h-4 w-4 ml-2 inline fill-danger" />
-          )}
+          <ExpandChevron
+            expanded={showDetails}
+            className="h-3 w-3 ml-2 inline text-danger"
+          />
         </button>
       </div>
 

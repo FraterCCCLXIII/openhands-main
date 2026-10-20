@@ -1,9 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import ArrowDown from "#/icons/angle-down-solid.svg?react";
-import ArrowUp from "#/icons/angle-up-solid.svg?react";
 import LightbulbIcon from "#/icons/lightbulb.svg?react";
 import { I18nKey } from "#/i18n/declaration";
+import { ExpandChevron } from "#/components/shared/expand-chevron";
+import { AnimatedCollapse } from "#/components/shared/animated-collapse";
 import { MarkdownRenderer } from "../../../features/markdown/markdown-renderer";
 
 interface CollapsibleThinkingProps {
@@ -24,8 +24,6 @@ export function CollapsibleThinking({ content }: CollapsibleThinkingProps) {
     return null;
   }
 
-  const Chevron = expanded ? ArrowUp : ArrowDown;
-
   return (
     <div
       className="my-1 w-full py-1 text-sm"
@@ -39,20 +37,20 @@ export function CollapsibleThinking({ content }: CollapsibleThinkingProps) {
           expanded ? t(I18nKey.THINKING$COLLAPSE) : t(I18nKey.THINKING$EXPAND)
         }
         data-testid="collapsible-thinking-toggle"
-        className="w-full flex items-center gap-2 text-left cursor-pointer"
+        className="group w-fit flex items-center gap-2 rounded-xl py-0.5 pl-2.5 pr-3 -my-0.5 -ml-1 text-left cursor-pointer transition-colors hover:bg-interactive-hover"
       >
-        <Chevron className="h-4 w-4 fill-muted flex-shrink-0" />
         <LightbulbIcon className="h-4 w-4 fill-muted flex-shrink-0" />
-        <span className="font-normal text-muted">
+        <span className="font-normal text-muted transition-colors group-hover:text-foreground">
           {t(I18nKey.THINKING$TITLE)}
         </span>
+        <ExpandChevron expanded={expanded} className="h-3 w-3 fill-muted" />
       </button>
 
-      {expanded && (
+      <AnimatedCollapse open={expanded}>
         <div className="mt-1.5 pl-6" data-testid="collapsible-thinking-content">
           <MarkdownRenderer>{content}</MarkdownRenderer>
         </div>
-      )}
+      </AnimatedCollapse>
     </div>
   );
 }

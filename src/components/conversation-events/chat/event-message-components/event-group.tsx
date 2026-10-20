@@ -1,8 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { LoaderCircle } from "lucide-react";
-import ArrowDown from "#/icons/angle-down-solid.svg?react";
-import ArrowUp from "#/icons/angle-up-solid.svg?react";
 import { OpenHandsEvent, ActionEvent } from "#/types/agent-server/core";
 import {
   isActionEvent,
@@ -11,9 +9,12 @@ import {
   isUserRejectObservation,
 } from "#/types/agent-server/type-guards";
 import { I18nKey } from "#/i18n/declaration";
+import { cn } from "#/utils/utils";
 import { getEventContent } from "../event-content-helpers/get-event-content";
 import { IsInEventGroupContext } from "../../../features/chat/is-in-event-group-context";
 import { PathInteractiveContext } from "../../../features/chat/path-component";
+import { ExpandChevron } from "#/components/shared/expand-chevron";
+import { RotatingStatus } from "#/components/shared/rotating-status";
 
 interface EventGroupProps {
   /** The events represented by this group. Used to compute the summary. */
@@ -36,6 +37,33 @@ interface EventGroupProps {
   isFinalized?: boolean;
   /** The fully-rendered event messages to show when the group is expanded. */
   children: React.ReactNode;
+  /**
+   * `classic` keeps the original collapsed card. `rail` threads the steps on a
+   * vertical line with a marker per run state, and opens itself while the group
+   * is the live tail so the agent's work is visible without a click.
+   */
+  variant?: EventGroupVariant;
+}
+
+export type EventGroupVariant = "classic" | "rail";
+
+/** Matches the accordion transition duration in `index.css`. */
+const DISCLOSURE_HOLD_MS = 400;
+
+/**
+ * Stops the chat's bottom-follow loop from dragging the view down while a
+ * disclosure animates. Without it, opening a group near the bottom of the
+ * chat moves its header up instead of pushing the content down.
+ */
+function holdChatFollow(anchor: HTMLElement) {
+  const scroller = anchor.closest<HTMLElement>(
+    '[data-testid="chat-scroll-container"]',
+  );
+  if (!scroller) return;
+  scroller.dataset.holdFollow = "true";
+  window.setTimeout(() => {
+    delete scroller.dataset.holdFollow;
+  }, DISCLOSURE_HOLD_MS);
 }
 
 /**
@@ -64,9 +92,12 @@ export function EventGroup({
   allEvents,
   isFinalized = false,
   children,
+  variant = "classic",
 }: EventGroupProps) {
   const { t } = useTranslation("openhands");
-  const [expanded, setExpanded] = React.useState(false);
+  // `null` until the reader toggles the group; then their choice wins over the
+  // rail's auto-open rule.
+  const [userExpanded, setUserExpanded] = React.useState<boolean | null>(null);
   const contentId = React.useId();
   const buttonId = `${contentId}-toggle`;
 
@@ -122,14 +153,21 @@ export function EventGroup({
       })
     : t(I18nKey.EVENT_GROUP$ACTIONS_COMPLETED, { count: totalCount });
 
-  const Chevron = expanded ? ArrowUp : ArrowDown;
-
+  const isRail = variant === "rail";
+  const expanded = userExpanded ?? (isRail && isRunning && !isFinalized);
   return (
-    <div className="my-1 w-full py-1 text-sm" data-testid="event-group">
+    <div
+      className={cn("w-full text-sm", isRail ? "mt-0 mb-1" : "my-1 py-1")}
+      data-testid="event-group"
+      data-variant={variant}
+    >
       <button
         id={buttonId}
         type="button"
-        onClick={() => setExpanded((prev) => !prev)}
+        onClick={(event) => {
+          if (isRail) holdChatFollow(event.currentTarget);
+          setUserExpanded(!expanded);
+        }}
         aria-controls={contentId}
         aria-expanded={expanded}
         aria-label={
@@ -140,15 +178,58 @@ export function EventGroup({
         data-testid="event-group-toggle"
         className="w-full flex items-center justify-between gap-2 text-left cursor-pointer"
       >
-        {isFinalized ? (
+        {isRail ? (
+          <span className="flex w-fit items-center gap-2 min-w-0 -my-1 -ml-1 rounded-xl py-1 pl-2.5 pr-3 text-muted transition-colors hover:bg-interactive-hover hover:text-foreground">
+            <span
+              data-testid="rail-marker"
+              data-running={isRunning}
+              aria-hidden
+              className={cn(
+                "relative z-10 flex size-3.5 flex-shrink-0 items-center justify-center rounded-full border",
+                isRunning
+                  ? "border-accent bg-accent/20 motion-safe:animate-pulse"
+                  : "border-muted/60 bg-background",
+              )}
+            >
+              {isRunning ? null : (
+                <span className="size-1.5 rounded-full bg-muted/70" />
+              )}
+            </span>
+            <span
+              className={cn(
+                "truncate",
+                isRunning && !isFinalized ? "text-foreground" : "text-muted",
+              )}
+            >
+              <PathInteractiveContext.Provider value={false}>
+                {isFinalized ? countSummary : (latestTitle ?? countSummary)}
+              </PathInteractiveContext.Provider>
+            </span>
+            {isFinalized && !isRunning ? null : (
+              <span className="flex items-center flex-shrink-0 text-muted/80">
+                <span className="truncate text-xs">{countSummary}</span>
+                {isRunning ? (
+                  <LoaderCircle
+                    data-testid="spinner-icon"
+                    className="h-3 w-3 ml-1.5 inline animate-spin text-muted"
+                  />
+                ) : null}
+              </span>
+            )}
+            <ExpandChevron expanded={expanded} className="h-3 w-3 fill-muted" />
+          </span>
+        ) : isFinalized ? (
           <span className="flex items-center gap-2 min-w-0 font-normal text-muted">
-            <Chevron className="h-4 w-4 fill-muted flex-shrink-0" />
+            <ExpandChevron expanded={expanded} className="h-4 w-4 fill-muted" />
             <span className="truncate">{countSummary}</span>
           </span>
         ) : (
           <>
             <span className="flex items-center gap-2 min-w-0 font-normal text-muted">
-              <Chevron className="h-4 w-4 fill-muted flex-shrink-0" />
+              <ExpandChevron
+                expanded={expanded}
+                className="h-4 w-4 fill-muted"
+              />
               <span className="truncate">
                 <PathInteractiveContext.Provider value={false}>
                   {latestTitle ?? countSummary}
@@ -168,18 +249,63 @@ export function EventGroup({
         )}
       </button>
 
-      {expanded && (
+      {isRail ? (
+        // The rail opens and closes as an accordion: the grid row animates
+        // from 0fr to 1fr while the content stays mounted, and it is inert
+        // while closed so hidden steps cannot take focus.
         <div
-          id={contentId}
-          role="region"
-          aria-labelledby={buttonId}
-          className="mt-1.5 flex flex-col"
-          data-testid="event-group-content"
+          className={cn(
+            "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+            expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
         >
-          <IsInEventGroupContext.Provider value>
-            {children}
-          </IsInEventGroupContext.Provider>
+          <div
+            id={contentId}
+            role="region"
+            aria-labelledby={buttonId}
+            inert={!expanded}
+            className="min-h-0 overflow-hidden"
+            data-testid="event-group-content"
+          >
+            <div
+              data-rail-thread
+              className="relative ml-3.25 mt-1.5 flex flex-col"
+            >
+              <IsInEventGroupContext.Provider value>
+                {children}
+              </IsInEventGroupContext.Provider>
+              {isRunning && !isFinalized ? (
+                // The live tail: the agent is still working, so its status
+                // rolls through short messages as the last branch of the tree.
+                <RotatingStatus
+                  className="py-1"
+                  messages={[
+                    t(I18nKey.ACTION_MESSAGE$THINK),
+                    t(I18nKey.CHAT_INTERFACE$AGENT_RUNNING_MESSAGE),
+                    t(
+                      I18nKey.CHAT_INTERFACE$INITIALIZING_AGENT_LOADING_MESSAGE,
+                    ),
+                    t(I18nKey.CHAT_INTERFACE$AGENT_INIT_MESSAGE),
+                  ]}
+                />
+              ) : null}
+            </div>
+          </div>
         </div>
+      ) : (
+        expanded && (
+          <div
+            id={contentId}
+            role="region"
+            aria-labelledby={buttonId}
+            className="mt-1.5 flex flex-col"
+            data-testid="event-group-content"
+          >
+            <IsInEventGroupContext.Provider value>
+              {children}
+            </IsInEventGroupContext.Provider>
+          </div>
+        )
       )}
     </div>
   );

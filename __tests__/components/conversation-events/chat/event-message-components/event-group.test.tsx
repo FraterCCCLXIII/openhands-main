@@ -344,4 +344,87 @@ describe("EventGroup", () => {
     ).toBeNull();
     expect(toggle.querySelectorAll("button")).toHaveLength(0);
   });
+
+  describe("rail variant", () => {
+    it("opens itself while the group is the live tail with an action in flight", () => {
+      const events = [
+        makeBashObservation("o1", "a1", "ls"),
+        makeBashAction("a2", "echo hello"),
+      ];
+
+      renderWithProviders(
+        <EventGroup events={events} variant="rail">
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+      expect(screen.getByText("child")).toBeInTheDocument();
+      expect(screen.getByTestId("rail-marker")).toHaveAttribute(
+        "data-running",
+        "true",
+      );
+    });
+
+    it("stays collapsed once the group is finalized", () => {
+      const events = [
+        makeBashAction("a1", "echo hello"),
+        makeBashObservation("o1", "a1", "hello"),
+      ];
+
+      renderWithProviders(
+        <EventGroup events={events} variant="rail" isFinalized>
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+      expect(screen.getByTestId("event-group-content")).toHaveAttribute(
+        "inert",
+      );
+    });
+
+    it("respects a reader's manual toggle over the auto-open rule", async () => {
+      const user = userEvent.setup();
+      const events = [makeBashAction("a1", "echo hello")];
+
+      renderWithProviders(
+        <EventGroup events={events} variant="rail">
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      const toggle = screen.getByTestId("event-group-toggle");
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+      expect(screen.getByTestId("event-group-content")).toHaveAttribute(
+        "inert",
+      );
+    });
+
+    it("keeps the classic variant collapsed while running", () => {
+      const events = [makeBashAction("a1", "echo hello")];
+
+      renderWithProviders(
+        <EventGroup events={events}>
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+      expect(screen.queryByTestId("rail-marker")).not.toBeInTheDocument();
+    });
+  });
 });

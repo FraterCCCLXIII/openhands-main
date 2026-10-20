@@ -155,3 +155,100 @@ code {
 .environment-switch-overlay > div {
   animation: environment-switch-overlay-fade 980ms ease-in-out forwards;
 }
+
+/*
+ * Activity rail: each direct block of an expanded tool group hangs off a
+ * continuous spine with a curved branch into its first line. The spine runs
+ * through the block margins so the tree has no gaps. A block that follows a
+ * thinking block is nested one level deeper.
+ */
+@keyframes rail-draw {
+  from {
+    clip-path: inset(0 100% 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes status-roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rail-fade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+[data-rail-thread] > * {
+  position: relative;
+  padding-left: 1.25rem;
+  animation: rail-fade 420ms ease-out both;
+}
+
+[data-rail-thread] > *::before,
+[data-rail-thread] > *::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+[data-rail-thread] > *::before {
+  height: 18px;
+  width: 0.875rem;
+  border-left: 1px solid var(--oh-border);
+  border-bottom: 1px solid var(--oh-border);
+  border-bottom-left-radius: 0.5rem;
+  animation: rail-draw 420ms ease-out both;
+}
+
+[data-rail-thread] > *::after {
+  top: -0.25rem;
+  bottom: -0.25rem;
+  width: 1px;
+  background: var(--oh-border);
+  animation: rail-draw 420ms ease-out both;
+}
+
+[data-rail-thread] > *:first-child::after {
+  top: -10px;
+}
+
+[data-rail-thread] > *:last-child::after {
+  display: none;
+}
+
+[data-rail-thread] > [data-rail-kind="thinking"] + * {
+  padding-left: 2.5rem;
+}
+
+[data-rail-thread] > [data-rail-kind="thinking"] + *::before {
+  left: 1.25rem;
+  width: 1.25rem;
+}
+
+[data-rail-thread] > [data-rail-kind="thinking"] + *::after {
+  left: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rail-thread] > *,
+  [data-rail-thread] > *::before,
+  [data-rail-thread] > *::after {
+    animation: none;
+  }
+}
