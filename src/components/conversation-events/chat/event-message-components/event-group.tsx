@@ -196,6 +196,7 @@ export function EventGroup({
               )}
             </span>
             <span
+              data-live-title={isRunning && !isFinalized ? "" : undefined}
               className={cn(
                 "truncate",
                 isRunning && !isFinalized ? "text-foreground" : "text-muted",
