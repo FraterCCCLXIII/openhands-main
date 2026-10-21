@@ -478,12 +478,12 @@ export function ChatInputAgentProfilePicker() {
             </li>
           )}
           {showSettingsLink && (
-            <li role="presentation" className="px-3 pt-1">
+            <li role="presentation" className="px-3 pt-1 pb-1">
               <NavigationLink
                 to="/settings/agents"
                 onClick={close}
                 data-testid="chat-input-agent-profile-add"
-                className="flex h-8 items-center gap-2 rounded-md px-2 text-sm text-foreground hover:bg-interactive-hover"
+                className="flex h-7.5 items-center gap-2 rounded px-2 text-sm leading-5 text-foreground hover:bg-interactive-hover transition-colors"
               >
                 <Plus width={14} height={14} className="shrink-0" aria-hidden />
                 <span>{t(I18nKey.SETTINGS$ADD_AGENT_PROFILE)}</span>

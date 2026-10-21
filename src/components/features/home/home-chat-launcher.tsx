@@ -381,7 +381,11 @@ export function HomeChatLauncher() {
             // Header-placed widgets (Learn resources) render above the composer.
             if (widget.placement === "header") return null;
             return (
-              <HomeDashboardSection key={id} id={id}>
+              <HomeDashboardSection
+                key={id}
+                id={id}
+                ownsDismiss={widget.ownsDismiss}
+              >
                 <Suspense fallback={null}>{widget.render()}</Suspense>
               </HomeDashboardSection>
             );
