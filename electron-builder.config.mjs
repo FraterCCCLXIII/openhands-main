@@ -36,7 +36,7 @@
  *
  * Packaged app layout (Resources/app/ = electron/ contents):
  *   main.mjs        ← Electron entry point
- *   loading.html    ← loading splash
+ *   boot-overlay.mjs ← startup overlay injected into the main window
  *   package.json    ← {"main":"main.mjs"} (from electron/package.json)
  *   scripts/        ← backend scripts
  *   node_modules/   ← runtime closure of RUNTIME_PACKAGES (restored by afterPack)
@@ -359,7 +359,7 @@ const config = {
   // Paths with `from` are relative to directories.app (electron/).
   // Bare globs are also relative to directories.app.
   files: [
-    // electron/ base files (main.mjs, loading.html, package.json)
+    // electron/ base files (main.mjs, boot-overlay.mjs, package.json)
     "**/*",
     // Bundle the raw 1024×1024 PNG into Resources/app/build-resources/ so
     // main.mjs can set it as the BrowserWindow icon at runtime (used for the

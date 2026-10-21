@@ -35207,6 +35207,24 @@
     "uk": "Надіслати анонімні дані використання",
     "id": "Kirim data penggunaan anonim"
   },
+  "TELEMETRY$DO_NOT_SHOW_AGAIN": {
+    "en": "Do not show again",
+    "ja": "今後表示しない",
+    "zh-CN": "不再显示",
+    "zh-TW": "不再顯示",
+    "ko-KR": "다시 표시 안 함",
+    "no": "Ikke vis igjen",
+    "ar": "عدم الإظهار مرة أخرى",
+    "de": "Nicht erneut anzeigen",
+    "fr": "Ne plus afficher",
+    "it": "Non mostrare più",
+    "pt": "Não mostrar novamente",
+    "es": "No volver a mostrar",
+    "ca": "No tornis a mostrar",
+    "tr": "Bir daha gösterme",
+    "uk": "Більше не показувати",
+    "id": "Jangan tampilkan lagi"
+  },
   "TELEMETRY$CONFIRM_PREFERENCES": {
     "en": "Confirm preferences",
     "ja": "設定を確認",

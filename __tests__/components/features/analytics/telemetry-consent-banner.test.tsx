@@ -333,7 +333,9 @@ describe("telemetry consent banner", () => {
   it("shows the prompt again on later visits when Do not show again is unchecked", async () => {
     renderBanner();
     advanceBy(50);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Do not show again" }));
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Do not show again" }),
+    );
     await submitForm();
 
     cleanup();
