@@ -15,6 +15,8 @@ export function clampLeftToViewport(
   return Math.max(gutter, Math.min(left, window.innerWidth - gutter - width));
 }
 
+export type PopoverFixedHorizontalAlign = "end" | "center";
+
 /**
  * Position a popover with `position: fixed`, anchored below the trigger and
  * clamped within the viewport. Used by the conversation-panel "+ New
@@ -28,9 +30,19 @@ export function clampLeftToViewport(
  */
 export function usePopoverFixedPlacement(
   triggerRef: React.RefObject<HTMLElement | null>,
-  options: { open: boolean; enabled: boolean; targetWidth?: number },
+  options: {
+    open: boolean;
+    enabled: boolean;
+    targetWidth?: number;
+    horizontalAlign?: PopoverFixedHorizontalAlign;
+  },
 ): FixedPlacementBox | null {
-  const { open, enabled, targetWidth = 16 * 16 } = options;
+  const {
+    open,
+    enabled,
+    targetWidth = 16 * 16,
+    horizontalAlign = "end",
+  } = options;
   const [box, setBox] = React.useState<FixedPlacementBox | null>(null);
 
   const measure = React.useCallback(() => {
@@ -39,9 +51,13 @@ export function usePopoverFixedPlacement(
     const r = el.getBoundingClientRect();
     const gutter = 8;
     const width = Math.min(targetWidth, window.innerWidth - gutter * 2);
-    const left = clampLeftToViewport(r.right - width, width, gutter);
+    const anchorLeft =
+      horizontalAlign === "center"
+        ? r.left + r.width / 2 - width / 2
+        : r.right - width;
+    const left = clampLeftToViewport(anchorLeft, width, gutter);
     setBox({ top: r.bottom + 4, left, width });
-  }, [triggerRef, targetWidth]);
+  }, [triggerRef, targetWidth, horizontalAlign]);
 
   React.useLayoutEffect(() => {
     if (!open || !enabled) {
