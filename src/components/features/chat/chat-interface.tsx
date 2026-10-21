@@ -54,6 +54,10 @@ import { useConversationWebSocket } from "#/contexts/conversation-websocket-cont
 import ChatStatusIndicator from "./chat-status-indicator";
 import { cn, getStatusColor, getStatusText } from "#/utils/utils";
 import { useNewConversationCommand } from "#/hooks/mutation/use-new-conversation-command";
+import { useDrainAgentNotificationPrompts } from "#/hooks/chat/use-drain-agent-notification-prompts";
+import { useIngestAgentNotificationsFromEvents } from "#/hooks/chat/use-ingest-agent-notifications-from-events";
+import { isInteractiveFeConversation } from "#/utils/is-interactive-fe-conversation";
+import { isAgentNotificationsStagingEnabled } from "./agent-notifications.constants";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { setConversationState } from "#/utils/conversation-local-storage";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
@@ -105,6 +109,7 @@ export function ChatInterface({
   composerPlaceholder?: string;
 } = {}) {
   useAutoRefreshFilesOnEdit();
+  useDrainAgentNotificationPrompts();
 
   const { trackInitialQuerySubmitted, trackUserMessageSent } = useTracking();
   const { setMessageToSend, conversationMode, planContent } =
@@ -168,6 +173,8 @@ export function ChatInterface({
   const { data: activeConversation } = useActiveConversation();
   const sandboxStatus = activeConversation?.sandbox_status ?? null;
   const isArchivedConversation = useIsArchivedConversation();
+  const allowAgentNotifications =
+    isInteractiveFeConversation(activeConversation);
 
   // Block sending in a resumed conversation that has no usable LLM, and show
   // the same setup banner as the home screen so the dead end is explained.
@@ -231,6 +238,9 @@ export function ChatInterface({
 
   const { selectedRepository, replayJson } = useInitialQueryStore();
   const { conversationId } = useOptionalConversationId();
+  useIngestAgentNotificationsFromEvents(conversationId, {
+    enabled: allowAgentNotifications,
+  });
 
   // The live goal banner renders in the scroll stream but advances via store
   // updates (in-progress goal events are filtered out of `renderableEvents`),
@@ -392,6 +402,16 @@ export function ChatInterface({
   // If events exist (e.g., remount after data was already fetched), skip skeleton.
   const isHistoryLoading = !showConversationMessages;
   const isChatLoading = isHistoryLoading && !isTask;
+
+  const showAgentNotifications =
+    allowAgentNotifications &&
+    (isAgentNotificationsStagingEnabled() ||
+      (hasSubstantiveAgentActions &&
+        !isAgentRunning &&
+        !isChatLoading &&
+        !isProvisioningTask &&
+        !isArchivedConversation &&
+        !llmBlocked));
 
   const handleSendMessage = async (
     content: string,
@@ -599,6 +619,7 @@ export function ChatInterface({
         }}
         disabled={isNewConversationPending || llmBlocked}
         hasStartedConversation={hasStartedConversation}
+        showAgentNotifications={showAgentNotifications}
         showGitControlBar={showGitControlBar}
         placeholder={
           isMinimalComposer
