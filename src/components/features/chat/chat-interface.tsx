@@ -735,6 +735,13 @@ export function ChatInterface({
               </div>
             ) : (
               <div className="relative">
+                {/* Fades and shadows whatever scrolls up against the composer
+                    top, so messages and buttons dissolve instead of clipping. */}
+                <div
+                  aria-hidden
+                  data-testid="composer-top-fade"
+                  className="pointer-events-none absolute inset-x-0 bottom-full z-10 h-10 bg-linear-to-t from-canvas-base to-transparent shadow-[0_-10px_16px_-6px_rgba(0,0,0,0.5)]"
+                />
                 <div className="pointer-events-none absolute inset-x-0 bottom-full mb-1 z-20">
                   <div className="flex justify-between relative">
                     <div className="flex items-end gap-1 pointer-events-auto">
