@@ -42,6 +42,8 @@ import { LlmNotConfiguredBanner } from "#/components/features/home/llm-not-confi
 import { useLlmConfigured } from "#/hooks/use-llm-configured";
 import { Messages } from "#/components/conversation-events/chat/messages";
 import { PendingUserMessages } from "./pending-user-messages";
+import { StickyLastPrompt } from "./sticky-last-prompt";
+import { isUserMessageEvent } from "#/types/agent-server/type-guards";
 import { useUnifiedUploadFiles } from "#/hooks/mutation/use-unified-upload-files";
 import { validateFiles } from "#/utils/file-validation";
 import { useConversationStore } from "#/stores/conversation-store";
@@ -334,6 +336,31 @@ export function ChatInterface({
     [pendingMessages, conversationId],
   );
 
+  // The user's latest prompt: a still-pending message wins over any echoed
+  // event, otherwise the last renderable event sent by the user.
+  const lastUserPrompt = React.useMemo(() => {
+    const pending = conversationId
+      ? pendingMessages.filter((message) =>
+          matchesPendingConversationId(conversationId, message.conversationId),
+        )
+      : [];
+    const lastPending = pending[pending.length - 1];
+    if (lastPending) return { key: lastPending.id, text: lastPending.text };
+    for (let i = renderableEvents.length - 1; i >= 0; i -= 1) {
+      const event = renderableEvents[i];
+      if (isUserMessageEvent(event)) {
+        const { content } = event.llm_message;
+        const text = Array.isArray(content)
+          ? content
+              .map((part) => (part.type === "text" ? part.text : ""))
+              .join("")
+          : "";
+        return { key: event.id, text };
+      }
+    }
+    return null;
+  }, [pendingMessages, conversationId, renderableEvents]);
+
   const hasModelEntries = useModelStore((s) =>
     conversationId
       ? (s.entriesByConversation[conversationId]?.length ?? 0) > 0
@@ -620,6 +647,13 @@ export function ChatInterface({
             onWheel={handleWheelForPagination}
             className="custom-scrollbar-always flex min-h-0 grow flex-col gap-2 overflow-x-hidden overflow-y-auto px-0 pt-4 pb-8 md:px-4"
           >
+            {lastUserPrompt && (
+              <StickyLastPrompt
+                text={lastUserPrompt.text}
+                messageKey={lastUserPrompt.key}
+                scrollRef={scrollRef}
+              />
+            )}
             <div className="mx-auto flex w-full max-w-200 min-w-0 flex-col gap-2">
               {isChatLoading && isReturningToConversation && (
                 <ChatMessagesSkeleton />
