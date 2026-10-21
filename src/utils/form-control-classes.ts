@@ -5,7 +5,9 @@ export const formControlHeightClassName = "h-9 min-h-9";
 
 export const formControlRadiusClassName = "rounded-lg";
 
-export const formControlBorderClassName = "border border-border";
+/** Interactive boundary for fields, triggers, and outlined buttons (3:1 target). */
+export const formControlBorderClassName =
+  "border border-border-input dark:border-border";
 
 export const formControlSurfaceClassName = "bg-base-secondary";
 
@@ -69,10 +71,10 @@ export const chatInputAddButtonSurfaceClassName =
   "relative shrink-0 size-7 ring-[0.5px] ring-inset ring-white/15 bg-linear-to-b from-contrast/10 to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_2px_rgba(0,0,0,0.4)]";
 
 export const formControlFocusClassName =
-  "focus:border-contrast/40 focus:ring-1 focus:ring-contrast/20 focus:outline-none";
+  "focus:border-contrast/40 dark:focus:border-contrast/40 focus:ring-1 focus:ring-contrast/20 focus:outline-none";
 
 export const formControlFocusWithinClassName =
-  "focus-within:border-contrast/40 focus-within:ring-1 focus-within:ring-contrast/20";
+  "focus-within:border-contrast/40 dark:focus-within:border-contrast/40 focus-within:ring-1 focus-within:ring-contrast/20";
 
 export const formControlDisabledClassName =
   "disabled:cursor-not-allowed disabled:opacity-60";

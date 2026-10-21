@@ -1,5 +1,5 @@
 import React from "react";
-import { createPortal } from "react-dom";
+import { AppearancePortal } from "#/components/shared/appearance-portal";
 import { useEscapeBoundary } from "#/hooks/use-close-on-escape";
 import { useModalFocus } from "./use-modal-focus";
 
@@ -55,38 +55,39 @@ export function ModalBackdrop({
   // onboarding slide rail) would become the containing block and the
   // modal would render trapped inside it instead of overlapping its
   // parent modal.
-  return createPortal(
-    // Focus and key events from the content (including popovers it portals
-    // elsewhere) bubble here through the React tree; see useModalFocus.
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-    <div
-      ref={focus.rootRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label={ariaLabel}
-      tabIndex={-1}
-      onFocus={focus.onFocus}
-      onKeyDown={focus.onKeyDown}
-      className={`fixed inset-0 flex items-center justify-center outline-none ${
-        elevated ? "z-[70]" : "z-60"
-      }`}
-    >
+  return (
+    <AppearancePortal>
+      {/* Focus and key events from content (including portaled popovers)
+          bubble through the React tree; see useModalFocus. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div
-        onClick={handleClick}
-        className={`fixed inset-0 bg-black opacity-60 ${
-          exiting ? "modal-fade-out-anim" : "modal-overlay-enter"
-        }`}
-      />
-      <div
-        className={`relative ${
-          exiting
-            ? "modal-pop-out-anim pointer-events-none"
-            : "modal-content-enter"
+        ref={focus.rootRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
+        tabIndex={-1}
+        onFocus={focus.onFocus}
+        onKeyDown={focus.onKeyDown}
+        className={`fixed inset-0 flex items-center justify-center outline-none ${
+          elevated ? "z-[70]" : "z-60"
         }`}
       >
-        {children}
+        <div
+          onClick={handleClick}
+          className={`fixed inset-0 bg-black opacity-60 ${
+            exiting ? "modal-fade-out-anim" : "modal-overlay-enter"
+          }`}
+        />
+        <div
+          className={`relative ${
+            exiting
+              ? "modal-pop-out-anim pointer-events-none"
+              : "modal-content-enter"
+          }`}
+        >
+          {children}
+        </div>
       </div>
-    </div>,
-    document.body,
+    </AppearancePortal>
   );
 }

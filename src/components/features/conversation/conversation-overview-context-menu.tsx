@@ -1,5 +1,4 @@
 import React, { useLayoutEffect, useState } from "react";
-import ReactDOM from "react-dom";
 import {
   Activity,
   FolderGit2,
@@ -39,6 +38,7 @@ import {
   type ConversationOverviewGitPart,
   type ConversationOverviewSection,
 } from "./conversation-overview-sections";
+import { AppearancePortal } from "#/components/shared/appearance-portal";
 
 interface ConversationOverviewContextMenuProps {
   isOpen: boolean;
@@ -422,9 +422,10 @@ export function ConversationOverviewContextMenu({
   );
 
   if (isPortaled && portalStyle && typeof document !== "undefined") {
-    return ReactDOM.createPortal(
-      <div style={portalStyle}>{menu}</div>,
-      document.body,
+    return (
+      <AppearancePortal>
+        <div style={portalStyle}>{menu}</div>
+      </AppearancePortal>
     );
   }
 
