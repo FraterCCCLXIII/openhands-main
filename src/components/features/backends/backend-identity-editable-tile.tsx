@@ -33,6 +33,9 @@ export function EditableAccountIdentityTile({
   const identity = useBackendIdentityStore(
     (state) => state.identityByKey[identityKey],
   );
+  const background = useBackendIdentityStore(
+    (state) => state.backgroundByKey[identityKey],
+  );
   const setBackendIdentity = useBackendIdentityStore(
     (state) => state.setBackendIdentity,
   );
@@ -58,6 +61,7 @@ export function EditableAccountIdentityTile({
         identity={identity}
         fallback={fallback}
         size={size}
+        background={background}
       />
       <button
         type="button"
