@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useAutoResize } from "#/hooks/use-auto-resize";
 import { isBottomAnchored } from "#/hooks/use-drag-resize";
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import { CHAT_INPUT } from "#/utils/constants";
 import {
   IMessageToSend,
@@ -20,8 +21,10 @@ export const useGripResize = (
   // the top grip would grow the box downward, so we disable the grip.
   const [canResize, setCanResize] = useState(true);
 
-  const { setShouldHideSuggestions, clearMessageToSend } =
-    useConversationStore();
+  const setShouldHideSuggestions = useConversationStore(
+    (state) => state.setShouldHideSuggestions,
+  );
+  const { clearMessageToSend } = useConversationComposer();
 
   useEffect(() => {
     const check = () => setCanResize(isBottomAnchored());

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let useConversationStore: (typeof import("#/stores/conversation-store"))["useConversationStore"];
+let getComposerBucket: (typeof import("#/stores/conversation-store"))["getComposerBucket"];
 
 const defaultConversationState: {
   selectedTab: "files";
@@ -34,23 +35,19 @@ describe("conversation store", () => {
       writable: true,
     });
     vi.resetModules();
-    ({ useConversationStore } = await import("#/stores/conversation-store"));
+    ({ useConversationStore, getComposerBucket } =
+      await import("#/stores/conversation-store"));
   });
+
+  const composer = (conversationId: string = CONV_ID) =>
+    getComposerBucket(useConversationStore.getState(), conversationId);
 
   it("starts with the complete transient state reset", () => {
     expect(useConversationStore.getState()).toMatchObject({
       isRightPanelShown: false,
       selectedTab: "files",
-      images: [],
-      files: [],
-      imagesMarkedUploadAsFile: [],
-      pastedImageNames: [],
-      loadingFiles: [],
-      loadingImages: [],
-      messageToSend: null,
-      messageRestoreIfEmpty: null,
+      byConversation: {},
       shouldShownAgentLoading: false,
-      submittedMessage: null,
       shouldHideSuggestions: false,
       hasRightPanelToggled: false,
       planContent: null,
@@ -72,55 +69,80 @@ describe("conversation store", () => {
 
   describe("imagesMarkedUploadAsFile", () => {
     it("toggles per-image upload-as-file marks by file name", () => {
-      expect(useConversationStore.getState().imagesMarkedUploadAsFile).toEqual(
-        [],
-      );
+      expect(composer().imagesMarkedUploadAsFile).toEqual([]);
 
-      useConversationStore.getState().toggleImageUploadAsFile("paste.png");
-      expect(useConversationStore.getState().imagesMarkedUploadAsFile).toEqual([
-        "paste.png",
-      ]);
+      useConversationStore
+        .getState()
+        .toggleImageUploadAsFile(CONV_ID, "paste.png");
+      expect(composer().imagesMarkedUploadAsFile).toEqual(["paste.png"]);
 
-      useConversationStore.getState().toggleImageUploadAsFile("paste.png");
-      expect(useConversationStore.getState().imagesMarkedUploadAsFile).toEqual(
-        [],
-      );
+      useConversationStore
+        .getState()
+        .toggleImageUploadAsFile(CONV_ID, "paste.png");
+      expect(composer().imagesMarkedUploadAsFile).toEqual([]);
     });
 
     it("clears marks when an image is removed", () => {
       const image = new File(["x"], "paste.png", { type: "image/png" });
-      useConversationStore.getState().addImages([image]);
-      useConversationStore.getState().toggleImageUploadAsFile("paste.png");
-      useConversationStore.getState().removeImage(0);
+      useConversationStore.getState().addImages(CONV_ID, [image]);
+      useConversationStore
+        .getState()
+        .toggleImageUploadAsFile(CONV_ID, "paste.png");
+      useConversationStore.getState().removeImage(CONV_ID, 0);
 
-      expect(useConversationStore.getState().imagesMarkedUploadAsFile).toEqual(
-        [],
-      );
+      expect(composer().imagesMarkedUploadAsFile).toEqual([]);
     });
 
     it("is reset by clearAllFiles", () => {
-      useConversationStore.getState().toggleImageUploadAsFile("paste.png");
-      useConversationStore.getState().clearAllFiles();
-      expect(useConversationStore.getState().imagesMarkedUploadAsFile).toEqual(
-        [],
-      );
+      useConversationStore
+        .getState()
+        .toggleImageUploadAsFile(CONV_ID, "paste.png");
+      useConversationStore.getState().clearAllFiles(CONV_ID);
+      expect(composer().imagesMarkedUploadAsFile).toEqual([]);
     });
   });
 
   describe("pastedImageNames", () => {
     it("tracks attached image names for the upload-as-file control", () => {
-      useConversationStore.getState().markImagesAsPasted(["shot.png"]);
-      expect(useConversationStore.getState().pastedImageNames).toEqual([
-        "shot.png",
-      ]);
+      useConversationStore.getState().markImagesAsPasted(CONV_ID, ["shot.png"]);
+      expect(composer().pastedImageNames).toEqual(["shot.png"]);
     });
 
     it("clears pasted names when the image is removed", () => {
       const image = new File(["x"], "shot.png", { type: "image/png" });
-      useConversationStore.getState().addImages([image]);
-      useConversationStore.getState().markImagesAsPasted(["shot.png"]);
-      useConversationStore.getState().removeImage(0);
-      expect(useConversationStore.getState().pastedImageNames).toEqual([]);
+      useConversationStore.getState().addImages(CONV_ID, [image]);
+      useConversationStore.getState().markImagesAsPasted(CONV_ID, ["shot.png"]);
+      useConversationStore.getState().removeImage(CONV_ID, 0);
+      expect(composer().pastedImageNames).toEqual([]);
+    });
+  });
+
+  describe("composer isolation", () => {
+    it("keeps attachments, drafts and queued messages per conversation", () => {
+      const image = new File(["x"], "a.png", { type: "image/png" });
+      const store = useConversationStore.getState();
+
+      store.addImages("conv-a", [image]);
+      store.setMessageToSend("conv-a", "for a");
+      store.setSubmittedMessage("conv-a", "sent from a");
+
+      expect(composer("conv-b")).toMatchObject({
+        images: [],
+        messageToSend: null,
+        submittedMessage: null,
+      });
+      expect(composer("conv-a").images).toEqual([image]);
+    });
+
+    it("clearComposer drops only the targeted conversation", () => {
+      const store = useConversationStore.getState();
+      store.setMessageToSend("conv-a", "a");
+      store.setMessageToSend("conv-b", "b");
+
+      store.clearComposer("conv-a");
+
+      expect(composer("conv-a").messageToSend).toBeNull();
+      expect(composer("conv-b").messageToSend?.text).toBe("b");
     });
   });
 
@@ -164,34 +186,34 @@ describe("conversation store", () => {
     const secondFile = new File(["b"], "second.txt");
     const store = useConversationStore.getState();
 
-    store.addImages([firstImage]);
-    store.addImages([secondImage]);
-    store.addFiles([firstFile]);
-    store.addFiles([secondFile]);
-    store.markImagesAsPasted(["first.png", "first.png", "second.png"]);
-    store.toggleImageUploadAsFile("first.png");
-    store.toggleImageUploadAsFile("second.png");
-    store.removeImage(99);
-    expect(useConversationStore.getState()).toMatchObject({
+    store.addImages(CONV_ID, [firstImage]);
+    store.addImages(CONV_ID, [secondImage]);
+    store.addFiles(CONV_ID, [firstFile]);
+    store.addFiles(CONV_ID, [secondFile]);
+    store.markImagesAsPasted(CONV_ID, ["first.png", "first.png", "second.png"]);
+    store.toggleImageUploadAsFile(CONV_ID, "first.png");
+    store.toggleImageUploadAsFile(CONV_ID, "second.png");
+    store.removeImage(CONV_ID, 99);
+    expect(composer()).toMatchObject({
       images: [firstImage, secondImage],
       imagesMarkedUploadAsFile: ["first.png", "second.png"],
       pastedImageNames: ["first.png", "second.png"],
     });
 
-    store.removeImage(0);
-    store.removeFile(0);
-    expect(useConversationStore.getState()).toMatchObject({
+    store.removeImage(CONV_ID, 0);
+    store.removeFile(CONV_ID, 0);
+    expect(composer()).toMatchObject({
       images: [secondImage],
       files: [secondFile],
       imagesMarkedUploadAsFile: ["second.png"],
       pastedImageNames: ["second.png"],
     });
 
-    store.removeFile(99);
-    expect(useConversationStore.getState().files).toEqual([secondFile]);
-    store.clearImages();
-    store.clearFiles();
-    expect(useConversationStore.getState()).toMatchObject({
+    store.removeFile(CONV_ID, 99);
+    expect(composer().files).toEqual([secondFile]);
+    store.clearImages(CONV_ID);
+    store.clearFiles(CONV_ID);
+    expect(composer()).toMatchObject({
       images: [],
       files: [],
     });
@@ -199,27 +221,27 @@ describe("conversation store", () => {
 
   it("deduplicates and removes file and image loading indicators", () => {
     const store = useConversationStore.getState();
-    store.addFileLoading("one.txt");
-    store.addFileLoading("one.txt");
-    store.addFileLoading("two.txt");
-    store.addImageLoading("one.png");
-    store.addImageLoading("one.png");
-    store.addImageLoading("two.png");
+    store.addFileLoading(CONV_ID, "one.txt");
+    store.addFileLoading(CONV_ID, "one.txt");
+    store.addFileLoading(CONV_ID, "two.txt");
+    store.addImageLoading(CONV_ID, "one.png");
+    store.addImageLoading(CONV_ID, "one.png");
+    store.addImageLoading(CONV_ID, "two.png");
 
-    expect(useConversationStore.getState()).toMatchObject({
+    expect(composer()).toMatchObject({
       loadingFiles: ["one.txt", "two.txt"],
       loadingImages: ["one.png", "two.png"],
     });
 
-    store.removeFileLoading("one.txt");
-    store.removeImageLoading("one.png");
-    expect(useConversationStore.getState()).toMatchObject({
+    store.removeFileLoading(CONV_ID, "one.txt");
+    store.removeImageLoading(CONV_ID, "one.png");
+    expect(composer()).toMatchObject({
       loadingFiles: ["two.txt"],
       loadingImages: ["two.png"],
     });
 
-    store.clearAllLoading();
-    expect(useConversationStore.getState()).toMatchObject({
+    store.clearAllLoading(CONV_ID);
+    expect(composer()).toMatchObject({
       loadingFiles: [],
       loadingImages: [],
     });
@@ -229,16 +251,16 @@ describe("conversation store", () => {
     const image = new File(["a"], "one.png", { type: "image/png" });
     const file = new File(["a"], "one.txt");
     const store = useConversationStore.getState();
-    store.addImages([image]);
-    store.addFiles([file]);
-    store.toggleImageUploadAsFile("one.png");
-    store.markImagesAsPasted(["one.png"]);
-    store.addFileLoading("one.txt");
-    store.addImageLoading("one.png");
+    store.addImages(CONV_ID, [image]);
+    store.addFiles(CONV_ID, [file]);
+    store.toggleImageUploadAsFile(CONV_ID, "one.png");
+    store.markImagesAsPasted(CONV_ID, ["one.png"]);
+    store.addFileLoading(CONV_ID, "one.txt");
+    store.addImageLoading(CONV_ID, "one.png");
 
-    store.clearAllFiles();
+    store.clearAllFiles(CONV_ID);
 
-    expect(useConversationStore.getState()).toMatchObject({
+    expect(composer()).toMatchObject({
       images: [],
       files: [],
       imagesMarkedUploadAsFile: [],
@@ -251,20 +273,19 @@ describe("conversation store", () => {
   it("creates and consumes timestamped send and restore requests", () => {
     vi.spyOn(Date, "now").mockReturnValueOnce(100).mockReturnValueOnce(200);
     const store = useConversationStore.getState();
-    store.setMessageToSend("send me");
-    store.restoreMessageToInputIfEmpty("restore me");
-    expect(useConversationStore.getState()).toMatchObject({
+    store.setMessageToSend(CONV_ID, "send me");
+    store.restoreMessageToInputIfEmpty(CONV_ID, "restore me");
+    expect(composer()).toMatchObject({
       messageToSend: {
         text: "send me",
         timestamp: 100,
-        target: "conversation",
       },
       messageRestoreIfEmpty: { text: "restore me", timestamp: 200 },
     });
 
-    store.clearMessageToSend();
-    store.clearMessageRestoreIfEmpty();
-    expect(useConversationStore.getState()).toMatchObject({
+    store.clearMessageToSend(CONV_ID);
+    store.clearMessageRestoreIfEmpty(CONV_ID);
+    expect(composer()).toMatchObject({
       messageToSend: null,
       messageRestoreIfEmpty: null,
     });
@@ -276,24 +297,24 @@ describe("conversation store", () => {
       writable: true,
     });
     const store = useConversationStore.getState();
-    store.setSubmittedMessage("submitted");
+    store.setSubmittedMessage(CONV_ID, "submitted");
     store.setSubConversationTaskId("task-1");
     store.setPlanContent("# Plan");
     store.setConversationMode("plan");
 
+    expect(composer().submittedMessage).toBe("submitted");
     expect(useConversationStore.getState()).toMatchObject({
-      submittedMessage: "submitted",
       subConversationTaskId: "task-1",
       planContent: "# Plan",
       conversationMode: "plan",
     });
     expect(mockSetConversationState).not.toHaveBeenCalled();
 
-    store.setSubmittedMessage(null);
+    store.setSubmittedMessage(CONV_ID, null);
     store.setSubConversationTaskId(null);
     store.setPlanContent(null);
+    expect(composer().submittedMessage).toBeNull();
     expect(useConversationStore.getState()).toMatchObject({
-      submittedMessage: null,
       subConversationTaskId: null,
       planContent: null,
     });
@@ -326,23 +347,28 @@ describe("conversation store", () => {
       "setIsRightPanelShown",
       () => useConversationStore.getState().setIsRightPanelShown(true),
     ],
-    ["clearImages", () => useConversationStore.getState().clearImages()],
-    ["clearAllFiles", () => useConversationStore.getState().clearAllFiles()],
+    ["clearImages", () => useConversationStore.getState().clearImages(CONV_ID)],
+    [
+      "clearAllFiles",
+      () => useConversationStore.getState().clearAllFiles(CONV_ID),
+    ],
     [
       "clearAllLoading",
-      () => useConversationStore.getState().clearAllLoading(),
+      () => useConversationStore.getState().clearAllLoading(CONV_ID),
     ],
     [
       "setMessageToSend",
-      () => useConversationStore.getState().setMessageToSend("message"),
+      () =>
+        useConversationStore.getState().setMessageToSend(CONV_ID, "message"),
     ],
     [
       "clearMessageToSend",
-      () => useConversationStore.getState().clearMessageToSend(),
+      () => useConversationStore.getState().clearMessageToSend(CONV_ID),
     ],
     [
       "setSubmittedMessage",
-      () => useConversationStore.getState().setSubmittedMessage("message"),
+      () =>
+        useConversationStore.getState().setSubmittedMessage(CONV_ID, "message"),
     ],
     [
       "resetConversationState",

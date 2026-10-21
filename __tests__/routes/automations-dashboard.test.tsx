@@ -238,7 +238,7 @@ afterEach(() => {
   captureMock.mockRestore();
   automationConversationMocks.createConversationMutate.mockReset();
   automationConversationMocks.isCreatingConversation.mockReset();
-  useConversationStore.setState({ messageToSend: null });
+  useConversationStore.getState().clearComposer("automation-conversation");
 });
 
 describe("AutomationsList — manifest-declared dashboard", () => {
@@ -359,9 +359,11 @@ describe("AutomationsList — manifest-declared dashboard", () => {
       ).draftMessage,
     ).toBe(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT);
     await waitFor(() => {
-      expect(useConversationStore.getState().messageToSend?.text).toBe(
-        I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT,
-      );
+      expect(
+        useConversationStore.getState().byConversation[
+          "automation-conversation"
+        ]?.messageToSend?.text,
+      ).toBe(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT);
     });
   });
 

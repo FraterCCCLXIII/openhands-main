@@ -128,7 +128,7 @@ describe("CreateInstructions", () => {
         url: null,
       });
     });
-    useConversationStore.setState({ messageToSend: null });
+    useConversationStore.getState().clearComposer("automation-conversation");
   });
 
   afterEach(() => {
@@ -192,6 +192,7 @@ describe("CreateInstructions", () => {
     ).toBe("Help me figure out what I should automate.");
     await waitFor(() => {
       expect(setMessageToSend).toHaveBeenCalledWith(
+        "automation-conversation",
         "Help me figure out what I should automate.",
       );
     });

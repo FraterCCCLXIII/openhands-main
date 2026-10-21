@@ -6,8 +6,8 @@ import {
   screen,
   waitFor,
   within,
+  act,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { flushSync } from "react-dom";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -34,7 +34,6 @@ import { useTaskPolling } from "#/hooks/query/use-task-polling";
 import { AgentState } from "#/types/agent-state";
 import { useConversationStore } from "#/stores/conversation-store";
 import { useGoalStore } from "#/stores/goal-store";
-import { act } from "@testing-library/react";
 import ProfilesService from "#/api/profiles-service/profiles-service.api";
 import { getConversationState } from "#/utils/conversation-local-storage";
 
@@ -720,7 +719,9 @@ describe("ChatInterface - Pending message queue", () => {
     // ChatInterface's `onSubmit` handler. Driving that store directly is the
     // most reliable way to simulate "the user pressed send" in jsdom.
     act(() => {
-      useConversationStore.setState({ submittedMessage: text });
+      useConversationStore
+        .getState()
+        .setSubmittedMessage("test-conversation-id", text);
     });
   }
 
@@ -966,7 +967,9 @@ describe("ChatInterface - Auto-scroll on submit (issue #817)", () => {
 
     // Act: submit a new prompt (same path InteractiveChatBox uses).
     act(() => {
-      useConversationStore.setState({ submittedMessage: "hello" });
+      useConversationStore
+        .getState()
+        .setSubmittedMessage("test-conversation-id", "hello");
     });
 
     // Assert: scrollDomToBottom landed scrollHeight onto scrollTop even
@@ -1164,7 +1167,9 @@ describe("ChatInterface - Tracking", () => {
     renderInterface();
 
     act(() => {
-      useConversationStore.setState({ submittedMessage: "my first task" });
+      useConversationStore
+        .getState()
+        .setSubmittedMessage("test-conversation-id", "my first task");
     });
 
     await waitFor(() => {
@@ -1195,7 +1200,9 @@ describe("ChatInterface - Tracking", () => {
     renderInterface();
 
     act(() => {
-      useConversationStore.setState({ submittedMessage: "follow-up" });
+      useConversationStore
+        .getState()
+        .setSubmittedMessage("test-conversation-id", "follow-up");
     });
 
     await waitFor(() => {
