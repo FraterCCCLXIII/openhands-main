@@ -5,18 +5,12 @@ import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { useReorderDrag } from "#/components/shared/use-reorder-drag";
 import { ReorderGrip } from "#/components/shared/reorder-grip";
 import { I18nKey } from "#/i18n/declaration";
+import { getHomeDashboardWidget } from "./home-dashboard-widgets";
 import { ToggleSwitch } from "#/ui/toggle-switch";
 import {
+  isHomeDashboardComponentHidden,
   useHomeDashboardVisibilityStore,
-  type HomeDashboardComponentId,
 } from "#/stores/home-dashboard-visibility-store";
-
-const COMPONENT_LABEL_KEYS: Record<HomeDashboardComponentId, I18nKey> = {
-  learnResources: I18nKey.HOME$DASHBOARD_LEARN_RESOURCES,
-  recommendedAutomations: I18nKey.HOME$DASHBOARD_RECOMMENDED_AUTOMATIONS,
-  pinnedAutomations: I18nKey.HOME$DASHBOARD_PINNED_AUTOMATIONS,
-  runningAutomations: I18nKey.HOME$DASHBOARD_RUNNING_AUTOMATIONS,
-};
 
 /**
  * Lists each home dashboard component with a toggle to show or hide it. Drag
@@ -30,7 +24,7 @@ export function HomeDashboardComponentsMenu() {
     () => setOpen(false),
     anchorRef,
   );
-  const hiddenIds = useHomeDashboardVisibilityStore((state) => state.hiddenIds);
+  const visibility = useHomeDashboardVisibilityStore((state) => state);
   const order = useHomeDashboardVisibilityStore((state) => state.order);
   const setHidden = useHomeDashboardVisibilityStore((state) => state.setHidden);
   const moveTo = useHomeDashboardVisibilityStore((state) => state.moveTo);
@@ -56,7 +50,8 @@ export function HomeDashboardComponentsMenu() {
           className="absolute top-full right-0 z-50 mt-1 min-w-64 divide-y divide-border-subtle rounded-xl border border-border-subtle bg-tertiary px-2 shadow-lg"
         >
           {order.map((id) => {
-            const label = t(COMPONENT_LABEL_KEYS[id]);
+            const label = t(getHomeDashboardWidget(id).labelKey);
+            const hidden = isHomeDashboardComponentHidden(visibility, id);
             return (
               <div
                 key={id}
@@ -71,9 +66,9 @@ export function HomeDashboardComponentsMenu() {
                 />
                 <span className="flex-1">{label}</span>
                 <ToggleSwitch
-                  enabled={!hiddenIds[id]}
+                  enabled={!hidden}
                   label={label}
-                  onToggle={() => setHidden(id, !hiddenIds[id])}
+                  onToggle={() => setHidden(id, !hidden)}
                 />
               </div>
             );
