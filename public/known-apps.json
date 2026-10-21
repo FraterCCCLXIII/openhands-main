@@ -1,0 +1,237 @@
+{
+  "description": "Known apps across the OpenHands repositories. Canvas Apps install from Customize → Apps; the other entries are product repositories.",
+  "apps": [
+    {
+      "name": "learning-center",
+      "display_name": "Learning Center",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "Browse courses of articles and videos loaded from a GitHub catalog repository.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/learning-center",
+      "source": "github:FraterCCCLXIII/learning-center",
+      "ref": "main",
+      "path": "learning-center"
+    },
+    {
+      "name": "tamagotchi",
+      "display_name": "ASCII Tamagotchi",
+      "kind": "canvas-app-fixture",
+      "version": "0.1.0",
+      "description": "A dependency-free ASCII pet with feeding, play, naps, cleanup, medicine, and a journal.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "src/fixtures/canvas-extensions/tamagotchi"
+    },
+    {
+      "name": "demo-page",
+      "display_name": "Demo page",
+      "kind": "canvas-app-fixture",
+      "version": "0.1.0",
+      "description": "A dependency-free fixture for the Canvas Extension page ABI.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "src/fixtures/canvas-extensions/demo-page"
+    },
+    {
+      "name": "qa-bridge-echo",
+      "display_name": "QA owned bridge echo",
+      "kind": "canvas-app-fixture",
+      "version": "0.0.1",
+      "description": "Owned no-model HTTP/WS session bridge fixture with no environment or credential output.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": ".agents/skills/verify-openhands/scripts/fixtures/app-backend-echo"
+    },
+    {
+      "name": "openhands-agent-canvas",
+      "display_name": "OpenHands (Agent Canvas)",
+      "kind": "product",
+      "version": "1.29.0",
+      "description": "Agent Canvas UI for OpenHands: run AI coding agents with a visual interface.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "OpenHands"
+    },
+    {
+      "name": "openhands-main",
+      "display_name": "OpenHands Main",
+      "kind": "product",
+      "description": "Main OpenHands checkout: agent server, runtime, and the ways to run OpenHands.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "OpenHands-Main"
+    },
+    {
+      "name": "openhands-agent-server",
+      "display_name": "Agent Server",
+      "kind": "product",
+      "description": "OpenHands agent server checkout.",
+      "owner": "All-Hands-AI",
+      "repo": "All-Hands-AI/OpenHands",
+      "path": "OpenHands-Agent-Server"
+    },
+    {
+      "name": "openhands-electron",
+      "display_name": "Desktop (Electron)",
+      "kind": "product",
+      "description": "Electron desktop build of OpenHands.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/OpenHands-Electron",
+      "path": "OpenHands-Electron"
+    },
+    {
+      "name": "openhands-cli",
+      "display_name": "OpenHands CLI",
+      "kind": "product",
+      "description": "Run the OpenHands agent in your terminal, IDE, CI pipelines, or OpenHands Cloud sandboxes.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/OpenHands-CLI",
+      "path": "OpenHands-CLI"
+    },
+    {
+      "name": "openhands-cli-proton",
+      "display_name": "OpenHands CLI (Proton)",
+      "kind": "product",
+      "description": "Proton variant of the OpenHands CLI.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/OpenHands-CLI-Proton",
+      "path": "OpenHands-CLI-Proton"
+    },
+    {
+      "name": "openhands-proton-cli",
+      "display_name": "Proton CLI (Textual)",
+      "kind": "product",
+      "description": "Terminal UI variant of OpenHands built with Textual.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-cli-prototyper",
+      "path": "OpenHands-Proton-CLI"
+    },
+    {
+      "name": "openhands-proton",
+      "display_name": "UI XP (Proton)",
+      "kind": "product",
+      "description": "Monorepo with the main UI prototype and supporting apps.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/OpenHands-Proton",
+      "path": "OpenHands-Proton"
+    },
+    {
+      "name": "openhands-mobile",
+      "display_name": "Mobile",
+      "kind": "product",
+      "description": "Phone and tablet client for OpenHands, one Expo (React Native) app for iPhone, Android, iPad, and Android tablets.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/openhands-mobile",
+      "path": "openhands-mobile"
+    },
+    {
+      "name": "openhands-sdk-client",
+      "display_name": "SDK Client Dashboard",
+      "kind": "product",
+      "description": "Lean chat interface and dashboard over a selectable backend: SDK prototype, local OpenHands Main, or OpenHands Cloud.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-sdk-client",
+      "path": "openhands-sdk-client"
+    },
+    {
+      "name": "openhands-integrations-hub",
+      "display_name": "Integrations Hub",
+      "kind": "product",
+      "description": "Managed connectors, MCP, approvals, and scoped permissions for AI agents.",
+      "owner": "Local (no remote)",
+      "repo": null,
+      "path": "OpenHands-Integrations-Hub"
+    },
+    {
+      "name": "integrations-hub",
+      "display_name": "Integrations Hub (legacy)",
+      "kind": "product",
+      "description": "Earlier checkout of the integrations hub.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/integrations-hub",
+      "path": "integrations-hub"
+    },
+    {
+      "name": "openhands-design-system",
+      "display_name": "Design System (Neo)",
+      "kind": "product",
+      "description": "Neo-themed UI system for OpenHands apps: tokens, headless components, blocks, CLI, and reference docs.",
+      "owner": "Local (no remote)",
+      "repo": null,
+      "path": "OpenHands-Design-System"
+    },
+    {
+      "name": "openhands-index",
+      "display_name": "OpenHands Index",
+      "kind": "product",
+      "description": "OpenHands Index: a Hugging Face Space served by app.py in Docker.",
+      "owner": "kosmonautical (Hugging Face)",
+      "repo": "huggingface.co/spaces/kosmonautical/openhands-index-paul",
+      "path": "OpenHands-Index"
+    },
+    {
+      "name": "openhands-website",
+      "display_name": "OpenHands Website",
+      "kind": "website",
+      "description": "Marketing website for OpenHands.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/dark-mode-forge",
+      "path": "OpenHands-Website"
+    },
+    {
+      "name": "company-website",
+      "display_name": "All Hands Website",
+      "kind": "website",
+      "description": "All Hands AI company website.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/company-website",
+      "path": "company-website"
+    },
+    {
+      "name": "presentations",
+      "display_name": "Presentations",
+      "kind": "tool",
+      "description": "Generate slide decks from a brief, present them in the browser, and export PPTX.",
+      "owner": "Local (no remote)",
+      "repo": null,
+      "path": "Presentations"
+    },
+    {
+      "name": "designbot",
+      "display_name": "DesignBot",
+      "kind": "tool",
+      "description": "Control-room dashboard for an AI-run automated design agency.",
+      "owner": "contactjrhventures",
+      "repo": "contactjrhventures/designbot",
+      "path": "designbot"
+    },
+    {
+      "name": "enterprise",
+      "display_name": "Enterprise",
+      "kind": "private",
+      "description": "OpenHands Enterprise: governance, security, and compliance for organizations.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/enterprise",
+      "path": "enterprise"
+    },
+    {
+      "name": "enterprise-no-hub",
+      "display_name": "Enterprise (no hub)",
+      "kind": "private",
+      "description": "Enterprise build without the integrations hub.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/enterprise",
+      "path": "enterprise-no-hub"
+    },
+    {
+      "name": "enterprise-demo",
+      "display_name": "Enterprise Demo",
+      "kind": "private",
+      "description": "Companion demo repo. Enterprise customers do not have access.",
+      "owner": "OpenHands",
+      "repo": "OpenHands/enterprise-demo",
+      "path": "enterprise-demo"
+    }
+  ]
+}
