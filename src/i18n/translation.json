@@ -36665,6 +36665,24 @@
     "uk": "Отримання старіших повідомлень…",
     "id": "Mengambil pesan lama…"
   },
+  "CHAT_INTERFACE$LAST_PROMPT": {
+    "en": "Your last prompt",
+    "ja": "最後のプロンプト",
+    "zh-CN": "你的上一条提示",
+    "zh-TW": "你的上一則提示",
+    "ko-KR": "마지막 프롬프트",
+    "no": "Din siste ledetekst",
+    "ar": "آخر طلب أرسلته",
+    "de": "Ihr letzter Prompt",
+    "fr": "Votre dernier prompt",
+    "it": "Il tuo ultimo prompt",
+    "pt": "Seu último prompt",
+    "es": "Tu último prompt",
+    "ca": "El teu darrer prompt",
+    "tr": "Son isteminiz",
+    "uk": "Ваш останній запит",
+    "id": "Prompt terakhir Anda"
+  },
   "SETTINGS$CREATE_PROFILE": {
     "en": "Create Profile",
     "ja": "プロファイルを作成",
