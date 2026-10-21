@@ -2,7 +2,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConversationGitActionsToggle } from "#/components/features/conversation/conversation-git-actions-toggle";
-import { useConversationStore } from "#/stores/conversation-store";
+import {
+  HOME_COMPOSER_KEY,
+  useConversationStore,
+} from "#/stores/conversation-store";
 
 const { breakpointIsMobile } = vi.hoisted(() => ({
   breakpointIsMobile: { value: false },
@@ -29,7 +32,7 @@ describe("ConversationGitActionsToggle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     breakpointIsMobile.value = false;
-    useConversationStore.setState({ messageToSend: null });
+    useConversationStore.getState().clearComposer(HOME_COMPOSER_KEY);
   });
 
   it("stays visible on smaller screens", () => {
@@ -51,34 +54,39 @@ describe("ConversationGitActionsToggle", () => {
     await user.click(
       await screen.findByTestId("conversation-git-actions-commit"),
     );
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "commit",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("commit");
 
     await user.click(screen.getByTestId("conversation-git-actions-toggle"));
     await user.click(screen.getByTestId("conversation-git-actions-pull"));
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "pull",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("pull");
 
     await user.click(screen.getByTestId("conversation-git-actions-toggle"));
     await user.click(screen.getByTestId("conversation-git-actions-push"));
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "push",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("push");
 
     await user.click(screen.getByTestId("conversation-git-actions-toggle"));
     await user.click(screen.getByTestId("conversation-git-actions-create-pr"));
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "pull request",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("pull request");
 
     await user.click(screen.getByTestId("conversation-git-actions-toggle"));
     await user.click(
       screen.getByTestId("conversation-git-actions-create-new-branch"),
     );
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "new branch",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("new branch");
   });
 });
