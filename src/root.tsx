@@ -159,7 +159,6 @@ function MissingAgentServerScreen() {
       data-testid="agent-server-onboarding-screen"
       className="min-h-screen bg-canvas-base"
     >
-      <Outlet />
       {isModalOpen ? (
         <React.Suspense fallback={null}>
           <ManageBackendsModal onClose={handleClose} recoveryMode />

@@ -690,7 +690,7 @@ export default function AutomationsList() {
   if (isHealthLoading) {
     return renderShell(
       <div>
-        <h1 className="text-xl font-medium text-content">
+        <h1 className="font-inter text-[22px] font-normal text-content">
           {interfaceCopy.listTitle}
         </h1>
         <p className="mt-1 text-sm text-muted">{interfaceCopy.listSubtitle}</p>
@@ -707,7 +707,7 @@ export default function AutomationsList() {
   if (!isBackendHealthy) {
     return renderShell(
       <div>
-        <h1 className="text-xl font-medium text-content">
+        <h1 className="font-inter text-[22px] font-normal text-content">
           {interfaceCopy.listTitle}
         </h1>
         <p className="mt-1 text-sm text-muted">{interfaceCopy.listSubtitle}</p>
@@ -721,7 +721,7 @@ export default function AutomationsList() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 basis-64">
-          <h1 className="text-xl font-semibold text-content">
+          <h1 className="font-inter text-[22px] font-normal text-content">
             {interfaceCopy.listTitle}
           </h1>
           <p className="mt-1 text-sm text-muted">
