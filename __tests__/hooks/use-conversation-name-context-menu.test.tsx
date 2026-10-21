@@ -126,7 +126,7 @@ describe("useConversationNameContextMenu", () => {
     harness.conversation = null;
     harness.systemMessage = null;
     harness.downloadConversation.mockResolvedValue(undefined);
-    useEventStore.setState({ events: [], eventIds: new Set(), uiEvents: [] });
+    useEventStore.getState().clearEvents();
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -134,10 +134,10 @@ describe("useConversationNameContextMenu", () => {
   });
 
   it("keeps actions safe when no conversation is selected", async () => {
-    const events = useEventStore.getState().events;
     const { result } = renderHook(() => useConversationNameContextMenu({}));
 
-    expect(harness.adaptSystemMessage).toHaveBeenCalledWith(events);
+    // No conversation in scope, so the hook reads an empty event stream.
+    expect(harness.adaptSystemMessage).toHaveBeenCalledWith([]);
     expect(result.current.shareUrl).toBe("");
     expect(result.current.systemMessage).toBeNull();
     expect(result.current.systemModalVisible).toBe(false);

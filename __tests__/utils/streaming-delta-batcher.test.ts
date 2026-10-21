@@ -9,6 +9,7 @@ import { MessageEvent } from "#/types/agent-server/core";
 import { isStreamingDeltaEvent } from "#/types/agent-server/type-guards";
 
 const ITEM_ID = "agent-1";
+const CONVERSATION_ID = "conv-batcher";
 
 const makeDelta = (
   order: number,
@@ -179,14 +180,16 @@ describe("createStreamingDeltaBatcher wired into the event store", () => {
     const clock = manualScheduler();
     // Commit into the real store exactly as ConversationWebSocketProvider does.
     const batcher = createStreamingDeltaBatcher(
-      (frames) => useEventStore.getState().appendStreamingDeltas(frames),
+      (frames) =>
+        useEventStore.getState().appendStreamingDeltas(CONVERSATION_ID, frames),
       clock.scheduler,
     );
 
-    useEventStore.getState().addEvent(userMessage);
-    useEventStore
-      .getState()
-      .openStreamingSlot({ type: "item_started", item_id: ITEM_ID });
+    useEventStore.getState().addEvent(CONVERSATION_ID, userMessage);
+    useEventStore.getState().openStreamingSlot(CONVERSATION_ID, {
+      type: "item_started",
+      item_id: ITEM_ID,
+    });
 
     // Stream one char per delta, flushing a frame only every 5 chars, so deltas
     // arrive faster than frames — the case where the UI used to fall behind.
@@ -201,7 +204,9 @@ describe("createStreamingDeltaBatcher wired into the event store", () => {
 
     const slot = useEventStore
       .getState()
-      .uiEvents.find((event) => isStreamingDeltaEvent(event));
+      .byConversation[
+        CONVERSATION_ID
+      ].uiEvents.find((event) => isStreamingDeltaEvent(event));
     expect(slot?.content).toBe(streamed);
 
     // The durable message carries the slot's id, so it retires it outright.
@@ -216,9 +221,9 @@ describe("createStreamingDeltaBatcher wired into the event store", () => {
       activated_skills: [],
       extended_content: [],
     };
-    useEventStore.getState().addEvent(finalMessage);
+    useEventStore.getState().addEvent(CONVERSATION_ID, finalMessage);
 
-    const state = useEventStore.getState();
+    const state = useEventStore.getState().byConversation[CONVERSATION_ID];
     expect(state.uiEvents).toHaveLength(2);
     const bubble = state.uiEvents[1] as MessageEvent;
     expect(bubble.id).toBe(ITEM_ID);

@@ -66,8 +66,18 @@ vi.mock("#/stores/event-message-store", () => ({
 }));
 
 vi.mock("#/stores/use-event-store", () => ({
-  useEventStore: (selector: (state: { events: object[] }) => unknown) =>
-    selector(eventState),
+  EMPTY_EVENTS: [],
+  useEventStore: (
+    selector: (state: {
+      byConversation: Record<string, { events: object[] }>;
+    }) => unknown,
+  ) =>
+    selector({ byConversation: { "conv-1": { events: eventState.events } } }),
+}));
+
+vi.mock("#/hooks/use-conversation-id", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("#/hooks/use-conversation-id")>()),
+  useOptionalConversationId: () => ({ conversationId: "conv-1" }),
 }));
 
 vi.mock("#/hooks/query/use-active-conversation", () => ({

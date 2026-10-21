@@ -12,11 +12,11 @@ import {
   MODAL_WIDTH_CLASS,
 } from "#/components/shared/modals/modal-body";
 import { adaptSystemMessage } from "#/utils/system-message-adapter";
-import { EventState } from "#/stores/use-event-store";
+import type { OHEvent } from "#/stores/use-event-store";
 
 const LONG_SYSTEM_PROMPT = "v1 prompt\n".repeat(80);
 
-const systemPromptEvents: EventState["events"] = [
+const systemPromptEvents: OHEvent[] = [
   {
     id: "v1-id",
     timestamp: "2025-12-30T12:00:00Z",

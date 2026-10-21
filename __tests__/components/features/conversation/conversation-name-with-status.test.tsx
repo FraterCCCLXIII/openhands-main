@@ -437,4 +437,11 @@ describe("conversation name status controls", () => {
       );
     },
   );
+  it("aligns git actions, overview, and drawer in one 28px row", () => {
+    renderSubject();
+
+    const actions = screen.getByTestId("conversation-header-actions");
+    expect(actions).toHaveClass("h-7", "items-center");
+    expect(actions).toContainElement(screen.getByTestId("right-panel-toggle"));
+  });
 });

@@ -90,6 +90,10 @@ vi.mock("#/components/features/command-menu/command-menu", () => ({
   CommandMenu: () => <div data-testid="command-menu" />,
 }));
 
+vi.mock("#/components/features/popout/popout-host", () => ({
+  PopoutHost: () => <div data-testid="popout-host" />,
+}));
+
 vi.mock("#/components/features/onboarding", () => ({
   OnboardingHost: () => <div data-testid="onboarding-host" />,
 }));

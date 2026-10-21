@@ -13,7 +13,7 @@ import { useEventStore } from "#/stores/use-event-store";
 const CONVO = "conv-a";
 
 function addServerMessage(id: string, timestamp: string) {
-  useEventStore.getState().addEvent({
+  useEventStore.getState().addEvent(CONVO, {
     id,
     timestamp,
     source: "user",
@@ -31,7 +31,7 @@ describe("optimistic-user-message-store", () => {
     vi.useFakeTimers();
     useOptimisticUserMessageStore.getState().clearPendingMessages();
     resetPendingTaskMessageLinkState();
-    useEventStore.getState().clearEventsForConversation(CONVO);
+    useEventStore.getState().clearConversation(CONVO);
   });
 
   afterEach(() => {

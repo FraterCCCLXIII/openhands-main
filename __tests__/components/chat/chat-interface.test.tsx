@@ -38,6 +38,9 @@ import ProfilesService from "#/api/profiles-service/profiles-service.api";
 import { getConversationState } from "#/utils/conversation-local-storage";
 import { seedConversationEvents } from "../../helpers/seed-conversation-events";
 
+// The conversation id the mocked navigation hooks report by default.
+const TEST_CONVERSATION_ID = "test-conversation-id";
+
 const mockSend = vi.fn();
 vi.mock("#/hooks/use-send-message", () => ({
   useSendMessage: () => ({ send: mockSend }),
@@ -219,7 +222,11 @@ describe("ChatInterface - Chat Suggestions", () => {
       extended_content: [],
     };
 
-    seedConversationEvents("test-conversation-id", [mockUserEvent], [mockUserEvent]);
+    seedConversationEvents(
+      "test-conversation-id",
+      [mockUserEvent],
+      [mockUserEvent],
+    );
 
     renderWithQueryClient(<ChatInterface />, queryClient);
 
@@ -449,6 +456,21 @@ describe("ChatInterface - Scroll-up loads older events", () => {
     fireEvent.scroll(scrollContainer);
     expect(loadOlder).toHaveBeenCalledTimes(1);
 
+    const nextConversationHistory: MessageEvent = {
+      id: "msg-next-conversation-history",
+      timestamp: "2025-07-01T00:00:00Z",
+      source: "user",
+      llm_message: {
+        role: "user",
+        content: [{ type: "text", text: "Next conversation history" }],
+      },
+      activated_skills: [],
+      extended_content: [],
+    };
+
+    // The next conversation already has its first page of history loaded, so
+    // the rendered list length is unchanged by the switch itself.
+    seedConversationEvents("next-conversation-id", [nextConversationHistory]);
     vi.mocked(useConversationId).mockReturnValue({
       conversationId: "next-conversation-id",
     });
@@ -480,7 +502,9 @@ describe("ChatInterface - Scroll-up loads older events", () => {
       extended_content: [],
     };
     act(() => {
-      useEventStore.getState().addEvent(nextConversationEvent);
+      useEventStore
+        .getState()
+        .addEvent("next-conversation-id", nextConversationEvent);
     });
 
     // Restoring the previous conversation's geometry would assign
@@ -638,7 +662,11 @@ describe("ChatInterface - Scroll-up loads older events", () => {
       thinking_blocks: [],
     };
 
-    seedConversationEvents("test-conversation-id", [agentAction], [agentAction]);
+    seedConversationEvents(
+      "test-conversation-id",
+      [agentAction],
+      [agentAction],
+    );
 
     renderWithQueryClient(<ChatInterface />, queryClient);
 
@@ -1047,11 +1075,7 @@ describe("ChatInterface - Status Indicator", () => {
       llm_response_id: "response-running-terminal",
       security_risk: SecurityRisk.LOW,
     };
-    useEventStore.setState({
-      events: [terminalAction],
-      eventIds: new Set([terminalAction.id]),
-      uiEvents: [terminalAction],
-    });
+    seedConversationEvents(TEST_CONVERSATION_ID, [terminalAction]);
     vi.mocked(useAgentState).mockReturnValue({
       curAgentState: AgentState.RUNNING,
     });
@@ -1155,13 +1179,17 @@ describe("ChatInterface - Tracking", () => {
     // totalEvents = uiEvents.filter(shouldRenderAgentServerEvent).length.
     // A MessageEvent (has llm_message.role + content) passes that filter,
     // so seeding uiEvents with one makes totalEvents = 1.
-    seedConversationEvents("test-conversation-id", [], [
+    seedConversationEvents(
+      "test-conversation-id",
+      [],
+      [
         {
           id: "e1",
           source: "user",
           llm_message: { role: "user", content: "prior message" },
         } as never,
-      ]);
+      ],
+    );
 
     renderInterface();
 
@@ -1207,7 +1235,7 @@ describe("ChatInterface - Build plan keyboard shortcut", () => {
         .mockResolvedValue({ skipped_files: [], uploaded_files: [] }),
       isLoading: false,
     });
-    useEventStore.setState({ events: [], eventIds: new Set(), uiEvents: [] });
+    useEventStore.getState().clearEvents();
   });
 
   function renderInterface() {
@@ -1383,11 +1411,7 @@ describe("ChatInterface - Sticky last prompt", () => {
   });
 
   const seedEvents = (events: MessageEvent[]) =>
-    useEventStore.setState({
-      events,
-      eventIds: new Set(events.map((e) => e.id)),
-      uiEvents: events,
-    });
+    seedConversationEvents(TEST_CONVERSATION_ID, events);
 
   // Simulates the browser reporting whether the observed message is on screen.
   const reportMessageVisibility = (isVisible: boolean) =>
@@ -1448,7 +1472,7 @@ describe("ChatInterface - Sticky last prompt", () => {
         .mockResolvedValue({ skipped_files: [], uploaded_files: [] }),
       isLoading: false,
     });
-    useEventStore.setState({ events: [], eventIds: new Set(), uiEvents: [] });
+    useEventStore.getState().clearEvents();
   });
 
   afterEach(() => {

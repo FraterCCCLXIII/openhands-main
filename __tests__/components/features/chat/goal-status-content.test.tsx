@@ -94,7 +94,7 @@ describe("GoalStatusContent loop controls", () => {
     it("offers Resume only on the latest goal status", () => {
       useEventStore
         .getState()
-        .addEvents([
+        .addEvents("conv-1", [
           goalEvent("goal-old", "2026-01-01T00:00:00Z", interrupted),
           goalEvent("goal-new", "2026-01-01T00:01:00Z", interrupted),
         ]);
@@ -121,7 +121,7 @@ describe("GoalStatusContent loop controls", () => {
       (_label, later) => {
         useEventStore
           .getState()
-          .addEvents([
+          .addEvents("conv-1", [
             goalEvent("goal-old", "2026-01-01T00:00:00Z", interrupted),
             goalEvent("goal-new", "2026-01-01T00:01:00Z", status(later)),
           ]);

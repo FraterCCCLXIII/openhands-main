@@ -1,5 +1,7 @@
 import { useCallback, useRef } from "react";
+import { AgentNotifications } from "./agent-notifications";
 import { CustomChatInput } from "./custom-chat-input";
+import { useAgentNotifications } from "#/hooks/chat/use-agent-notifications";
 import { useBtwInterceptor } from "#/hooks/chat/use-btw-interceptor";
 import { useGoalInterceptor } from "#/hooks/chat/use-goal-interceptor";
 import { useModelInterceptor } from "#/hooks/chat/use-model-interceptor";
@@ -22,6 +24,7 @@ interface InteractiveChatBoxProps {
   onSubmit: (message: string, images: File[], files: File[]) => void;
   disabled?: boolean;
   hasStartedConversation?: boolean;
+  showAgentNotifications?: boolean;
   showGitControlBar?: boolean;
   placeholder?: string;
   /** Whether the composer saves and restores a draft; see CustomChatInput. */
@@ -32,6 +35,7 @@ export function InteractiveChatBox({
   onSubmit,
   disabled = false,
   hasStartedConversation,
+  showAgentNotifications = false,
   showGitControlBar = true,
   placeholder,
   persistDraft = true,
@@ -97,6 +101,11 @@ export function InteractiveChatBox({
     handleSubmit(suggestion);
   };
 
+  const agentNotifications = useAgentNotifications({
+    conversationId,
+    enabled: showAgentNotifications,
+  });
+
   const isDisabled =
     disabled ||
     curAgentState === AgentState.AWAITING_USER_CONFIRMATION ||
@@ -104,6 +113,16 @@ export function InteractiveChatBox({
 
   return (
     <div data-testid="interactive-chat-box">
+      {agentNotifications.isVisible ? (
+        <AgentNotifications
+          agentNotifications={agentNotifications.agentNotifications}
+          onCreateAll={agentNotifications.createAll}
+          onDismiss={agentNotifications.dismiss}
+          onRemove={agentNotifications.remove}
+          disabled={isDisabled}
+          isCreating={agentNotifications.isCreating}
+        />
+      ) : null}
       <CustomChatInput
         disabled={isDisabled}
         isNewConversationPending={disabled}

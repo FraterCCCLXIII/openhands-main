@@ -10,7 +10,10 @@ import {
   useConversationWebSocket,
 } from "#/contexts/conversation-websocket-context";
 import { useConversationStore } from "#/stores/conversation-store";
-import { useEventStore } from "#/stores/use-event-store";
+import {
+  useEventStore,
+  type ConversationEventBucket,
+} from "#/stores/use-event-store";
 import useMetricsStore from "#/stores/metrics-store";
 import { useOptimisticUserMessageStore } from "#/stores/optimistic-user-message-store";
 import { useBrowserStore } from "#/stores/browser-store";
@@ -1174,8 +1177,19 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
     extended_content: [],
   });
 
-  const renderProviderWithUrl = (conversationId: string) =>
-    render(
+  // The conversation the test under way is rendering; its bucket is the one
+  // whose history the assertions read.
+  let activeConversationId = "";
+  const activeBucket = (): ConversationEventBucket =>
+    useEventStore.getState().byConversation[activeConversationId] ?? {
+      events: [],
+      eventIds: new Set<string | number>(),
+      uiEvents: [],
+    };
+
+  const renderProviderWithUrl = (conversationId: string) => {
+    activeConversationId = conversationId;
+    return render(
       <QueryClientProvider client={queryClient}>
         <ConversationWebSocketProvider
           conversationId={conversationId}
@@ -1185,6 +1199,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
         </ConversationWebSocketProvider>
       </QueryClientProvider>,
     );
+  };
 
   it("buffers deltas, then retires the slot by id when the durable message arrives", async () => {
     renderProviderWithUrl("conv-stream");
@@ -1211,7 +1226,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
       });
     });
 
-    const { uiEvents, eventIds: ids } = useEventStore.getState();
+    const { uiEvents, eventIds: ids } = activeBucket();
     expect(uiEvents).toHaveLength(2);
     const bubble = uiEvents[1] as MessageEvent;
     expect(bubble.id).toBe("agent-final");
@@ -1241,13 +1256,13 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
 
     // One bubble, still whole, with the interrupting message below it.
     await waitFor(() => {
-      const slots = useEventStore
-        .getState()
-        .uiEvents.filter((event) => isStreamingDeltaEvent(event));
+      const slots = activeBucket().uiEvents.filter((event) =>
+        isStreamingDeltaEvent(event),
+      );
       expect(slots).toHaveLength(1);
       expect(slots[0].content).toBe("First half second half");
     });
-    expect(useEventStore.getState().uiEvents.map((event) => event.id)).toEqual([
+    expect(activeBucket().uiEvents.map((event) => event.id)).toEqual([
       "user-msg-conv-split",
       "agent-split",
       "mid-stream",
@@ -1274,7 +1289,10 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
         </ConversationWebSocketProvider>
       </QueryClientProvider>,
     );
-    await waitFor(() => expect(eventIds()).toEqual(["user-msg-conv-b"]));
+    activeConversationId = "conv-b";
+    await waitFor(() =>
+      expect(eventIds("conv-b")).toEqual(["user-msg-conv-b"]),
+    );
 
     // B streams and finalizes. Had the switch not reset the batcher, A's
     // "STALE" delta would still be buffered and commit here.
@@ -1286,7 +1304,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
       });
     });
 
-    const { uiEvents, events } = useEventStore.getState();
+    const { uiEvents, events } = activeBucket();
     expect(uiEvents).toHaveLength(2);
     expect((uiEvents[1] as MessageEvent).llm_message.content).toEqual([
       { type: "text", text: "fresh." },
@@ -1429,9 +1447,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
 
   describe("streaming slots across reconnects", () => {
     const slots = () =>
-      useEventStore
-        .getState()
-        .uiEvents.filter((event) => isStreamingDeltaEvent(event));
+      activeBucket().uiEvents.filter((event) => isStreamingDeltaEvent(event));
 
     it("leaves no orphaned bubble when the socket drops mid-stream", async () => {
       renderProviderWithUrl("conv-drop");
@@ -1460,7 +1476,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
         });
       });
 
-      const { uiEvents } = useEventStore.getState();
+      const { uiEvents } = activeBucket();
       expect(slots()).toHaveLength(0);
       expect(uiEvents.map((event) => event.id)).toEqual([
         "user-msg-conv-drop",
@@ -1569,9 +1585,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
         }
       });
     const slots = () =>
-      useEventStore
-        .getState()
-        .uiEvents.filter((event) => isStreamingDeltaEvent(event));
+      activeBucket().uiEvents.filter((event) => isStreamingDeltaEvent(event));
     const retiringIds = (frames: Frame[]) =>
       frames.filter((f) => f.type === "item_started").map((f) => f.item_id!);
 
@@ -1613,7 +1627,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
         expect(slots()[0]?.content).toBe("Let me check the workspace"),
       );
       expect(slots()).toHaveLength(1);
-      const order = useEventStore.getState().uiEvents.map((e) => e.id);
+      const order = activeBucket().uiEvents.map((e) => e.id);
       expect(order.indexOf(slots()[0].id)).toBeLessThan(
         order.indexOf(frames[midUser].event!.id),
       );
@@ -1621,7 +1635,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
       feed(frames.slice(midUser + 2));
       await waitFor(() => expect(slots()).toHaveLength(0));
 
-      const { events } = useEventStore.getState();
+      const { events } = activeBucket();
       const ids = events.map((e) => e.id);
       for (const itemId of retiringIds(frames)) {
         expect(ids.filter((id) => id === itemId)).toHaveLength(1);
@@ -1669,7 +1683,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
       await waitFor(() => {
         expect(slots()).toHaveLength(0);
       });
-      const ids = useEventStore.getState().events.map((e) => e.id);
+      const ids = activeBucket().events.map((e) => e.id);
       expect(ids.filter((id) => id === openItem)).toHaveLength(1);
       const serverIds = new Set(
         [...before, ...after]

@@ -105,12 +105,7 @@ const createUserRejectObservation = (
 
 describe("Messages confirmation prompt", () => {
   beforeEach(() => {
-    useEventStore.setState({
-      events: [],
-      eventIds: new Set(),
-      uiEvents: [],
-      loadedConversationId: null,
-    });
+    useEventStore.getState().clearEvents();
   });
 
   it("keeps confirmation visible when the latest action is inside a collapsed event group", () => {
@@ -120,10 +115,13 @@ describe("Messages confirmation prompt", () => {
     ];
 
     useEventStore.setState({
-      events,
-      eventIds: new Set(events.map((event) => event.id)),
-      uiEvents: events,
-      loadedConversationId: "test-conversation-id",
+      byConversation: {
+        "test-conversation-id": {
+          events,
+          eventIds: new Set(events.map((event) => event.id)),
+          uiEvents: events,
+        },
+      },
     });
 
     renderWithProviders(<Messages messages={events} allEvents={events} />);

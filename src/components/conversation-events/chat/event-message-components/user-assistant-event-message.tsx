@@ -4,6 +4,7 @@ import { MessageEvent } from "#/types/agent-server/core";
 import { ChatMessage } from "../../../features/chat/chat-message";
 import { ImageCarousel } from "../../../features/images/image-carousel";
 import { parseMessageFromEvent } from "../event-content-helpers/parse-message-from-event";
+import { extractAgentNotifications } from "#/components/features/chat/agent-notifications-parser";
 import { CriticResultDisplay } from "./critic-result-display";
 import { CollapsibleThinking } from "./collapsible-thinking";
 import {
@@ -40,12 +41,16 @@ function UserAssistantEventMessageComponent({
   const forkInFlightRef = React.useRef(false);
 
   const parsed = parseMessageFromEvent(event);
+  const displayText =
+    event.source === "agent"
+      ? extractAgentNotifications(parsed).message
+      : parsed;
   // Route an inline <think> block (e.g. from a streamed reply) to the thinking
   // section so reloaded conversations match the live rendering.
   const { reasoning: inlineThink, message } =
     event.source === "agent"
-      ? splitInlineThink(parsed)
-      : { reasoning: "", message: parsed };
+      ? splitInlineThink(displayText)
+      : { reasoning: "", message: displayText };
   // The finished message replaces its streaming slot outright, so reasoning the
   // model streamed must render from the message itself or it vanishes on
   // finalize (and never shows after a reload).

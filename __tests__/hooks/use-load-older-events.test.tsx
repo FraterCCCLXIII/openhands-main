@@ -114,10 +114,16 @@ describe("useLoadOlderEvents", () => {
     events: OpenHandsEvent[] = [],
   ) => {
     act(() => {
-      useEventStore.getState().clearEventsForConversation(conversationId);
-      useEventStore.getState().addEvents(events);
+      useEventStore.getState().clearConversation(conversationId);
+      useEventStore.getState().loadConversation(conversationId);
+      useEventStore.getState().addEvents(conversationId, events);
     });
   };
+
+  const storedEventIds = (conversationId: string) =>
+    (useEventStore.getState().byConversation[conversationId]?.events ?? []).map(
+      (event) => event.id,
+    );
 
   const renderConversationHook = (conversationId: string) =>
     renderHook(({ id }) => useLoadOlderEvents(id), {
@@ -146,7 +152,7 @@ describe("useLoadOlderEvents", () => {
 
     // Reset event store between tests so prior tests don't leak state.
     act(() => {
-      useEventStore.getState().clearEventsForConversation("conv-1");
+      useEventStore.getState().clearConversation("conv-1");
       useModelStore.getState().clearAll();
     });
 
@@ -370,7 +376,7 @@ describe("useLoadOlderEvents", () => {
       await load;
     });
 
-    expect(useEventStore.getState().events.map((event) => event.id)).toEqual([
+    expect(storedEventIds("conv-b")).toEqual([
       "evt-b-recent",
     ]);
     expect(result.current.hasMore).toBe(true);
@@ -404,7 +410,7 @@ describe("useLoadOlderEvents", () => {
       await load;
     });
 
-    expect(useEventStore.getState().events.map((event) => event.id)).toEqual([
+    expect(storedEventIds("conv-a")).toEqual([
       "evt-a-second-visit",
     ]);
   });
@@ -490,7 +496,7 @@ describe("useLoadOlderEvents", () => {
       await load;
     });
 
-    expect(useEventStore.getState().events.map((event) => event.id)).toEqual([
+    expect(storedEventIds("conv-1")).toEqual([
       "evt-recent",
     ]);
   });

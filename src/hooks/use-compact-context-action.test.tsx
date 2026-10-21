@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import useMetricsStore from "#/stores/metrics-store";
+import { NavigationProvider } from "#/context/navigation-context";
 import { useEventStore } from "#/stores/use-event-store";
 import type { OpenHandsEvent } from "#/types/agent-server/core";
 
@@ -48,11 +49,24 @@ const usage = (perTurn: number) => ({
   per_turn_token: perTurn,
 });
 
+// Matches the mocked active conversation id; the await-compaction hook reads
+// the conversation in scope from the navigation context.
+const CONVERSATION_ID = "c1";
+
 function wrapper({ children }: { children: React.ReactNode }) {
-  return React.createElement(
-    QueryClientProvider,
-    { client: new QueryClient() },
-    children,
+  return (
+    <QueryClientProvider client={new QueryClient()}>
+      <NavigationProvider
+        value={{
+          currentPath: `/conversations/${CONVERSATION_ID}`,
+          conversationId: CONVERSATION_ID,
+          isNavigating: false,
+          navigate: () => {},
+        }}
+      >
+        {children}
+      </NavigationProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -86,7 +100,9 @@ describe("useCompactContextAction (integration)", () => {
     );
 
     act(() => {
-      useEventStore.getState().addEvent(condensationEvent("cond-x"));
+      useEventStore
+        .getState()
+        .addEvent(CONVERSATION_ID, condensationEvent("cond-x"));
       useMetricsStore.getState().setMetrics({
         cost: null,
         max_budget_per_task: null,

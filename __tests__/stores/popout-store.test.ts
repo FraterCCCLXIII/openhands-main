@@ -53,7 +53,7 @@ describe("usePopoutStore", () => {
         role: "user",
         content: [{ type: "text", text: "hi" }],
       },
-      activated_microagents: [],
+      activated_skills: [],
       extended_content: [],
     } as MessageEvent);
 

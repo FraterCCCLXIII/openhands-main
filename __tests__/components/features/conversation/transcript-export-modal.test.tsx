@@ -23,8 +23,7 @@ const {
   displayErrorToastMock: vi.fn(),
   downloadBlobMock: vi.fn(),
   eventStoreState: {
-    loadedConversationId: null as string | null,
-    events: [] as OpenHandsEvent[],
+    byConversation: {} as Record<string, { events: OpenHandsEvent[] }>,
   },
   eventsToHtmlMock: vi.fn(),
   eventsToMarkdownMock: vi.fn(),
@@ -151,8 +150,9 @@ function renderExportModal({
     useTranslationMock,
   ].forEach((mock) => mock.mockReset());
 
-  eventStoreState.loadedConversationId = loadedConversationId;
-  eventStoreState.events = loadedEvents;
+  eventStoreState.byConversation = loadedConversationId
+    ? { [loadedConversationId]: { events: loadedEvents } }
+    : {};
   const completeEvents = [makeEvent("complete-event")];
   getEventCountMock.mockResolvedValue(1);
   searchEventsMock.mockResolvedValue({ items: [], next_page_id: null });

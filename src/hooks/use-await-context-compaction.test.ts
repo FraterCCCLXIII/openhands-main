@@ -18,6 +18,18 @@ function condensationEvent(id: string): OpenHandsEvent {
   } as OpenHandsEvent;
 }
 
+const CONVERSATION_ID = "conv-compaction";
+
+// The hook reads the conversation in scope from the navigation context.
+vi.mock("#/context/navigation-context", () => ({
+  useNavigation: () => ({
+    currentPath: "/conversations/conv-compaction",
+    conversationId: "conv-compaction",
+    isNavigating: false,
+    navigate: () => {},
+  }),
+}));
+
 describe("buildContextCompactionResult", () => {
   it("computes tokens saved without going negative", () => {
     expect(buildContextCompactionResult(1000, 400, "compacted")).toEqual({
@@ -66,7 +78,9 @@ describe("useAwaitContextCompaction", () => {
     );
 
     act(() => {
-      useEventStore.getState().addEvent(condensationEvent("cond-1"));
+      useEventStore
+        .getState()
+        .addEvent(CONVERSATION_ID, condensationEvent("cond-1"));
       useMetricsStore.getState().setMetrics({
         cost: null,
         max_budget_per_task: null,
@@ -100,7 +114,9 @@ describe("useAwaitContextCompaction", () => {
     );
 
     act(() => {
-      useEventStore.getState().addEvent(condensationEvent("cond-2"));
+      useEventStore
+        .getState()
+        .addEvent(CONVERSATION_ID, condensationEvent("cond-2"));
     });
     expect(onComplete).not.toHaveBeenCalled();
 
@@ -142,9 +158,13 @@ describe("useAwaitContextCompaction", () => {
     // The condense POST can return only after the server already emitted its
     // Condensation event. The pre-request baseline (captured before the POST
     // fired) must not contain it, so it still counts as new.
-    const baseline = new Set(useEventStore.getState().eventIds);
+    const baseline = new Set(
+      useEventStore.getState().byConversation[CONVERSATION_ID]?.eventIds,
+    );
     act(() => {
-      useEventStore.getState().addEvent(condensationEvent("cond-early"));
+      useEventStore
+        .getState()
+        .addEvent(CONVERSATION_ID, condensationEvent("cond-early"));
       useMetricsStore.getState().setMetrics({
         cost: null,
         max_budget_per_task: null,

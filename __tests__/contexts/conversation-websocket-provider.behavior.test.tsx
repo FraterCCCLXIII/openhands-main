@@ -35,6 +35,15 @@ import {
   setConversationState,
 } from "#/utils/conversation-local-storage";
 
+const bucketOf = (conversationId: string) =>
+  useEventStore.getState().byConversation[conversationId];
+const eventsOf = (conversationId: string) =>
+  bucketOf(conversationId)?.events ?? [];
+const allStoredEvents = () =>
+  Object.values(useEventStore.getState().byConversation).flatMap(
+    (bucket) => bucket.events,
+  );
+
 interface TestSocket {
   readonly readyState: number;
   send: WebSocket["send"];
@@ -366,12 +375,7 @@ describe("Conversation websocket behavior", () => {
     contextCapture.current = null;
 
     window.localStorage.clear();
-    useEventStore.setState({
-      events: [],
-      eventIds: new Set(),
-      uiEvents: [],
-      loadedConversationId: null,
-    });
+    useEventStore.setState({ byConversation: {} });
     useErrorMessageStore.getState().removeErrorMessage();
     useOptimisticUserMessageStore.getState().clearPendingMessages();
     useConversationStateStore.getState().reset();
@@ -401,8 +405,8 @@ describe("Conversation websocket behavior", () => {
 
   it("retains a newer failed identical prompt when old history reloads", () => {
     const oldDeliveredMessage = makeMessageEvent("01", "user", ["continue"]);
-    useEventStore.getState().clearEventsForConversation("conv-main");
-    useEventStore.getState().addEvent(oldDeliveredMessage);
+    useEventStore.getState().clearConversation("conv-main");
+    useEventStore.getState().addEvent("conv-main", oldDeliveredMessage);
     const store = useOptimisticUserMessageStore.getState();
     const failedId = store.enqueuePendingMessage({
       conversationId: "conv-main",
@@ -460,9 +464,7 @@ describe("Conversation websocket behavior", () => {
 
     renderProvider({ sessionApiKey: "session-key" });
 
-    await waitFor(() =>
-      expect(useEventStore.getState().events).toHaveLength(2),
-    );
+    await waitFor(() => expect(eventsOf("conv-main")).toHaveLength(2));
     expect(useOptimisticUserMessageStore.getState().pendingMessages).toEqual([
       expect.objectContaining({ id: "pending-decoy" }),
     ]);
@@ -534,7 +536,7 @@ describe("Conversation websocket behavior", () => {
 
     expect(socketCapture.mainUrl).toBe("");
     expect(socketCapture.planningUrl).toBe("");
-    expect(useEventStore.getState().loadedConversationId).toBeNull();
+    expect(useEventStore.getState().byConversation).toEqual({});
     missingBoth.unmount();
 
     socketCapture.callIndex = 0;
@@ -572,7 +574,8 @@ describe("Conversation websocket behavior", () => {
       events: [makeMessageEvent("04", "user", ["unscoped history"])],
     };
     renderProvider({ conversationId: undefined });
-    expect(useEventStore.getState().events).toHaveLength(1);
+    // Events are bucketed per conversation, so unscoped history has nowhere to go.
+    expect(allStoredEvents()).toHaveLength(0);
     expect(consumeMatchingPendingMessage).not.toHaveBeenCalled();
     expect(useOptimisticUserMessageStore.getState().pendingMessages).toEqual(
       [],
@@ -582,25 +585,30 @@ describe("Conversation websocket behavior", () => {
   it("clears conversation-owned stores once per conversation identity", () => {
     useEventStore
       .getState()
-      .addEvent(makeMessageEvent("05", "assistant", ["old conversation"]));
-    useEventStore.setState({ loadedConversationId: "conv-old" });
+      .addEvent(
+        "conv-old",
+        makeMessageEvent("05", "assistant", ["old conversation"]),
+      );
     useBrowserStore.getState().setUrl("https://old.example");
 
     const first = renderProvider();
-    expect(useEventStore.getState()).toMatchObject({
-      events: [],
-      loadedConversationId: "conv-main",
-    });
+    expect(useEventStore.getState().isConversationLoaded("conv-main")).toBe(
+      true,
+    );
+    expect(eventsOf("conv-main")).toEqual([]);
     expect(useBrowserStore.getState().url).toBe("");
     first.unmount();
 
     useEventStore
       .getState()
-      .addEvent(makeMessageEvent("06", "assistant", ["keep on remount"]));
+      .addEvent(
+        "conv-main",
+        makeMessageEvent("06", "assistant", ["keep on remount"]),
+      );
     useBrowserStore.getState().setUrl("https://current.example");
     socketCapture.callIndex = 0;
     const sameConversation = renderProvider();
-    expect(useEventStore.getState().events).toHaveLength(1);
+    expect(eventsOf("conv-main")).toHaveLength(1);
     expect(useBrowserStore.getState().url).toBe("https://current.example");
 
     sameConversation.rerender(
@@ -613,10 +621,10 @@ describe("Conversation websocket behavior", () => {
         </ConversationWebSocketProvider>
       </QueryClientProvider>,
     );
-    expect(useEventStore.getState()).toMatchObject({
-      events: [],
-      loadedConversationId: "conv-next",
-    });
+    expect(useEventStore.getState().isConversationLoaded("conv-next")).toBe(
+      true,
+    );
+    expect(eventsOf("conv-next")).toEqual([]);
     expect(useBrowserStore.getState().url).toBe("");
   });
 
@@ -644,9 +652,7 @@ describe("Conversation websocket behavior", () => {
       </QueryClientProvider>,
     );
 
-    await waitFor(() =>
-      expect(useEventStore.getState().events).toHaveLength(1),
-    );
+    await waitFor(() => expect(eventsOf("conv-main")).toHaveLength(1));
     expect(socketCapture.mainUrl).toContain("/sockets/session/conv-main");
     expect(queryParamsOf(mainOptions())).toEqual({ after_seq: "6" });
     expect(
@@ -1459,7 +1465,7 @@ describe("Conversation websocket behavior", () => {
       "Failed to parse WebSocket message as JSON:",
       expect.any(SyntaxError),
     );
-    expect(useEventStore.getState().events).toEqual([]);
+    expect(eventsOf("conv-main")).toEqual([]);
   });
 
   it("keeps conversation-scoped effects inactive when no main conversation is selected", () => {
@@ -1575,7 +1581,7 @@ describe("Conversation websocket behavior", () => {
       ),
     );
     expect(useConversationStore.getState().planContent).toBe("# Loaded plan");
-    expect(useEventStore.getState().events).toEqual(
+    expect(eventsOf("conv-main")).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "35", isFromPlanningAgent: true }),
         expect.objectContaining({ id: "36", isFromPlanningAgent: true }),
@@ -1604,7 +1610,7 @@ describe("Conversation websocket behavior", () => {
     dispatchPlanning({ type: "history-envelope" });
     dispatchPlanning({ type: "history-envelope" });
     expect(screen.getByTestId("loading-history")).toHaveTextContent("true");
-    expect(useEventStore.getState().events).toEqual([]);
+    expect(eventsOf("conv-main")).toEqual([]);
 
     await act(async () => {
       await planningOptions().onOpen?.(new Event("open"));
@@ -1825,12 +1831,12 @@ describe("Conversation websocket behavior", () => {
         kind: "text",
         content: "Streaming",
       });
-      expect(useEventStore.getState().eventIds.has("delta")).toBe(false);
+      expect(bucketOf("conv-main")?.eventIds.has("delta")).toBe(false);
       act(() => {
         if (!frame) throw new Error("Missing scheduled flush");
         frame(0);
       });
-      expect(useEventStore.getState().uiEvents).toEqual([
+      expect(bucketOf("conv-main")?.uiEvents ?? []).toEqual([
         expect.objectContaining({
           kind: "StreamingDeltaEvent",
           content: "Streaming",
@@ -1884,11 +1890,9 @@ describe("Conversation websocket behavior", () => {
     // requestAnimationFrame never fires here, so the slot only holds the
     // streamed text if the durable frame flushed the buffer before it.
     expect(
-      useEventStore
-        .getState()
-        .uiEvents.find(
-          (event) => "kind" in event && event.kind === "StreamingDeltaEvent",
-        ),
+      (bucketOf("conv-main")?.uiEvents ?? []).find(
+        (event) => "kind" in event && event.kind === "StreamingDeltaEvent",
+      ),
     ).toMatchObject({
       content: "Planning",
       isFromPlanningAgent: true,
@@ -2572,12 +2576,7 @@ describe("Conversation websocket — cloud runtime without a URL (OHE-3314)", ()
     };
     useErrorMessageStore.getState().removeErrorMessage();
     useOptimisticUserMessageStore.getState().clearPendingMessages();
-    useEventStore.setState({
-      events: [],
-      eventIds: new Set(),
-      uiEvents: [],
-      loadedConversationId: null,
-    });
+    useEventStore.setState({ byConversation: {} });
     useConversationStore.setState({ conversationMode: "code" });
     setRegisteredBackends([cloudBackend]);
     setActiveSelection({ backendId: cloudBackend.id });
