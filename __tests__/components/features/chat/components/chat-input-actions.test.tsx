@@ -352,18 +352,17 @@ describe("ChatInputActions — Switch agent profile gate (OSS-5735)", () => {
     ).toBeInTheDocument();
   });
 
-  it("joins the model and agent-profile segments in one pill, model first", async () => {
+  it("renders the agent-profile pill as its own pill after the model pill", async () => {
     renderWithProviders(<ChatInputActions disabled={false} />, {
       navigation: { conversationId: null },
     });
 
-    const agentSegment = await screen.findByTestId("agent-profile-pill-stub");
-    const pill = screen.getByTestId("chat-input-model-agent-pill");
-    const modelSegment = within(pill).getByTestId("llm-profile-picker-stub");
+    const agentPill = await screen.findByTestId("agent-profile-pill-stub");
+    const modelPill = screen.getByTestId("llm-profile-picker-stub");
 
-    expect(pill).toContainElement(agentSegment);
+    expect(modelPill).not.toContainElement(agentPill);
     expect(
-      modelSegment.compareDocumentPosition(agentSegment) &
+      modelPill.compareDocumentPosition(agentPill) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
@@ -401,9 +400,21 @@ describe("ChatInputActions — Switch agent profile gate (OSS-5735)", () => {
     expect(
       screen.queryByTestId("switch-agent-profile-button"),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the agent-profile pill visible once the conversation has started", async () => {
+    useActiveConversationMock.mockReturnValue({
+      data: { conversation_id: "conv-started", llm_model: "gpt-4o" },
+    });
+
+    renderWithProviders(
+      <ChatInputActions disabled={false} hasStartedConversation />,
+      { navigation: { conversationId: "conv-started" } },
+    );
+
     expect(
-      screen.queryByTestId("agent-profile-pill-stub"),
-    ).not.toBeInTheDocument();
+      await screen.findByTestId("agent-profile-pill-stub"),
+    ).toBeInTheDocument();
   });
 
   it("does not offer Switch agent profile when the backend has no profiles", async () => {
