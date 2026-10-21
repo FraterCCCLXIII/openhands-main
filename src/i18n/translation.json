@@ -55240,5 +55240,23 @@
     "uk": "Бірюзовий",
     "ca": "Turquesa",
     "id": "Biru kehijauan"
+  },
+  "COLOR$MONOCHROME": {
+    "en": "Monochrome",
+    "ja": "モノクロ",
+    "zh-CN": "单色",
+    "zh-TW": "單色",
+    "ko-KR": "모노크롬",
+    "no": "Monokrom",
+    "it": "Monocromatico",
+    "pt": "Monocromático",
+    "es": "Monocromático",
+    "ar": "أحادي اللون",
+    "fr": "Monochrome",
+    "tr": "Tek renk",
+    "de": "Monochrom",
+    "uk": "Монохромний",
+    "ca": "Monocrom",
+    "id": "Monokrom"
   }
 }

@@ -2,15 +2,21 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { subscribeColorTheme } from "#/themes/color-theme/runtime";
 
-/** The seven preset primary colors offered in the palette popover. */
+/** The preset primary colors offered in the palette popover. */
 export const PRIMARY_COLOR_PRESETS = [
-  { key: "blue", hex: "#3B82F6" },
-  { key: "violet", hex: "#8B5CF6" },
-  { key: "pink", hex: "#EC4899" },
-  { key: "red", hex: "#EF4444" },
-  { key: "orange", hex: "#F97316" },
-  { key: "green", hex: "#22C55E" },
-  { key: "teal", hex: "#14B8A6" },
+  { key: "blue", hex: "#3B82F6", swatch: "#3B82F6" },
+  { key: "violet", hex: "#8B5CF6", swatch: "#8B5CF6" },
+  { key: "pink", hex: "#EC4899", swatch: "#EC4899" },
+  { key: "red", hex: "#EF4444", swatch: "#EF4444" },
+  { key: "orange", hex: "#F97316", swatch: "#F97316" },
+  { key: "green", hex: "#22C55E", swatch: "#22C55E" },
+  { key: "teal", hex: "#14B8A6", swatch: "#14B8A6" },
+  // Neutral override; the swatch is split white and black.
+  {
+    key: "monochrome",
+    hex: "#6B7280",
+    swatch: "linear-gradient(90deg, #FFFFFF 50%, #000000 50%)",
+  },
 ] as const;
 
 export type PrimaryColorKey = (typeof PRIMARY_COLOR_PRESETS)[number]["key"];

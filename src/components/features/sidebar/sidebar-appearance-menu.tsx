@@ -30,6 +30,7 @@ const PRIMARY_COLOR_NAME_KEYS: Record<PrimaryColorKey, I18nKey> = {
   orange: I18nKey.COLOR$ORANGE,
   green: I18nKey.COLOR$GREEN,
   teal: I18nKey.COLOR$TEAL,
+  monochrome: I18nKey.COLOR$MONOCHROME,
 };
 
 const LIGHT_THEME: ColorThemeKey = "light-plus";
@@ -82,7 +83,7 @@ export function SidebarAppearanceMenu() {
         <div
           ref={menuRef}
           data-testid="sidebar-appearance-menu"
-          className="absolute right-0 bottom-full z-50 mb-1 flex w-64 flex-col gap-3 rounded-xl border border-border-subtle bg-tertiary p-3 shadow-lg"
+          className="absolute right-0 bottom-full z-50 mb-1 flex w-72 flex-col gap-3 rounded-xl border border-border-subtle bg-tertiary p-3 shadow-lg"
         >
           <div className="flex items-center justify-between gap-2 text-sm text-contrast">
             <span>{t(I18nKey.SIDEBAR$LIGHT_THEME)}</span>
@@ -134,7 +135,7 @@ export function SidebarAppearanceMenu() {
                       "size-6 cursor-pointer rounded-full border-2 transition-transform hover:scale-110",
                       isSelected ? "border-contrast" : "border-transparent",
                     )}
-                    style={{ backgroundColor: preset.hex }}
+                    style={{ background: preset.swatch }}
                   />
                 );
               })}
