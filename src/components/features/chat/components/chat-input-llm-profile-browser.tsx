@@ -376,12 +376,12 @@ export function ChatInputLlmProfileBrowser({
   return (
     <li
       role="presentation"
-      className="flex min-h-0 gap-1"
+      className="flex max-h-80 min-h-0 gap-1"
       data-testid="chat-input-llm-profile-browser"
     >
       <nav
         aria-label={t(I18nKey.CHAT$MODEL_PROVIDERS)}
-        className="flex w-40 shrink-0 flex-col gap-1 border-r border-border py-2 pr-2 pl-2"
+        className="custom-scrollbar flex w-40 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border py-2 pr-2 pl-2"
       >
         {groups.map((group) => (
           <button
