@@ -93,13 +93,15 @@ export function HomeHeaderTitle() {
       </Typography.H1>
       <p
         data-testid="home-header-subtitle"
-        className="text-center text-[var(--oh-text-tertiary)]"
+        className="text-center text-muted"
       >
         {subtitle}
       </p>
-      <HomeDashboardSection id="learnResources">
-        <HomeLearnResources />
-      </HomeDashboardSection>
+      <div className="mt-3 flex w-full justify-center">
+        <HomeDashboardSection id="learnResources">
+          <HomeLearnResources />
+        </HomeDashboardSection>
+      </div>
     </div>
   );
 }

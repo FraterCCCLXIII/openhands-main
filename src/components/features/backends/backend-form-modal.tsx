@@ -1197,7 +1197,9 @@ function AnimatedPanelHeight({ children }: AnimatedPanelHeightProps) {
     if (!content) return undefined;
 
     const measure = () => {
-      const nextHeight = content.getBoundingClientRect().height;
+      // offsetHeight is the layout height; getBoundingClientRect() would
+      // include the modal's open-animation scale and lock in a short height.
+      const nextHeight = content.offsetHeight;
       // jsdom reports zero-sized layout boxes; leaving height automatic there
       // keeps component tests representative without changing browser behavior.
       setHeight(nextHeight > 0 ? nextHeight : undefined);
@@ -1445,12 +1447,12 @@ function AddBackendChooser({
               {
                 value: "local",
                 label: t(I18nKey.BACKEND$KIND_LOCAL),
-                icon: <Monitor aria-hidden />,
+                icon: <Monitor className="size-4" aria-hidden />,
               },
               {
                 value: "remote",
                 label: t(I18nKey.BACKEND$KIND_REMOTE),
-                icon: <Globe aria-hidden />,
+                icon: <Globe className="size-4" aria-hidden />,
               },
             ]}
             onChange={setAgentServerLocation}

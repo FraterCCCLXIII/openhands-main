@@ -19,6 +19,11 @@ import {
   TEXT_SIZE_MIN_PERCENT,
   useTextSizeStore,
 } from "#/stores/text-size-store";
+import {
+  PADDING_MAX_PERCENT,
+  PADDING_MIN_PERCENT,
+  usePaddingStore,
+} from "#/stores/padding-store";
 import { useBackendColorThemeStore } from "#/stores/backend-color-theme-store";
 import {
   PRIMARY_COLOR_PRESETS,
@@ -45,7 +50,7 @@ const LIGHT_THEME_KEYS: readonly ColorThemeKey[] = [
   "solarized-light",
 ];
 
-/** Palette button that opens a popover with a light theme toggle and a text size slider. */
+/** Palette button that opens a popover with a light theme toggle and text size and padding sliders. */
 export function SidebarAppearanceMenu({
   backendId,
 }: {
@@ -79,6 +84,8 @@ export function SidebarAppearanceMenu({
   );
   const textSizePercent = useTextSizeStore((state) => state.percent);
   const setTextSizePercent = useTextSizeStore((state) => state.setPercent);
+  const paddingPercent = usePaddingStore((state) => state.percent);
+  const setPaddingPercent = usePaddingStore((state) => state.setPercent);
   const primaryColorKey = usePrimaryColorStore(
     (state) => state.primaryColorKey,
   );
@@ -159,6 +166,25 @@ export function SidebarAppearanceMenu({
                   value={textSizePercent}
                   onChange={(event) =>
                     setTextSizePercent(Number(event.currentTarget.value))
+                  }
+                  className="w-full cursor-pointer accent-contrast"
+                />
+              </div>
+              <div className="flex flex-col gap-2 text-sm text-contrast">
+                <span className="flex items-center justify-between">
+                  <span>{t(I18nKey.SIDEBAR$PADDING)}</span>
+                  <span className="text-muted">{paddingPercent}%</span>
+                </span>
+                <input
+                  type="range"
+                  aria-label={t(I18nKey.SIDEBAR$PADDING)}
+                  data-testid="sidebar-padding-slider"
+                  min={PADDING_MIN_PERCENT}
+                  max={PADDING_MAX_PERCENT}
+                  step={10}
+                  value={paddingPercent}
+                  onChange={(event) =>
+                    setPaddingPercent(Number(event.currentTarget.value))
                   }
                   className="w-full cursor-pointer accent-contrast"
                 />

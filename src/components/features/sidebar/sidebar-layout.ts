@@ -17,7 +17,7 @@ export function sidebarHeaderRowClassName(collapsed: boolean): string {
     "flex shrink-0 w-full",
     collapsed
       ? "h-10 min-h-10 items-center px-0"
-      : "h-12 min-h-12 items-center gap-0 pt-2 pl-2.5 pr-2.5",
+      : "h-12 min-h-12 items-center gap-0 pt-2.5 pl-2.5 pr-2.5",
   );
 }
 
