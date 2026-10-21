@@ -22,6 +22,8 @@ const choiceSource = (overrides: Record<string, unknown> = {}) =>
     ...overrides,
   });
 
+const invalidSource = JSON.stringify({ question: "Only" });
+
 const renderChoice = (overrides: Record<string, unknown> = {}) =>
   renderWithProviders(
     <Code className="language-choice">{choiceSource(overrides)}</Code>,
@@ -49,7 +51,7 @@ describe("MultipleChoiceCard via markdown code", () => {
 
   it("falls back to a normal code block for an invalid template", () => {
     renderWithProviders(
-      <Code className="language-choice">{'{"question": "Only"}'}</Code>,
+      <Code className="language-choice">{invalidSource}</Code>,
     );
 
     expect(screen.queryByRole("radio")).not.toBeInTheDocument();
