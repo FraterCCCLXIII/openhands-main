@@ -43,6 +43,7 @@ import { ConversationPanelNewThreadPicker } from "./conversation-panel-new-threa
 import { useCommandMenuStore } from "#/stores/command-menu-store";
 import { ConversationGroupFolderList } from "./conversation-group-folder-list";
 import { ConversationPanelPinnedSection } from "./conversation-panel-pinned-section";
+import { ConversationPanelSearchButton } from "./conversation-panel-search-toggle";
 import {
   applyAutomationConversationFilter,
   applyTagConversationFilter,
@@ -1267,6 +1268,7 @@ export function ConversationPanel({
               </span>
             )}
             <div className="ml-auto flex shrink-0 items-center gap-0.5">
+              <ConversationPanelSearchButton />
               <ConversationPanelNewThreadPicker
                 backendKind={activeBackend.kind}
               />
