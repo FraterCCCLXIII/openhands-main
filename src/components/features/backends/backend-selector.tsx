@@ -453,7 +453,7 @@ export function BackendSelector({
             to="/settings"
             data-testid="backend-selector-header-settings"
             aria-label={settingsLabel}
-            className="absolute right-1 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md bg-surface-raised text-muted opacity-0 transition-opacity hover:text-contrast group-hover:opacity-100 focus-visible:opacity-100"
+            className="absolute right-9 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md bg-surface-raised text-muted opacity-0 transition-opacity hover:text-contrast group-hover:opacity-100 focus-visible:opacity-100"
           >
             <Settings width={16} height={16} />
           </NavigationLink>
