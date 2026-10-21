@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
+  KanbanSquare,
   Plus,
   Server,
   Settings,
@@ -46,6 +47,7 @@ import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/can
 import type { Backend } from "#/api/backend-registry/types";
 
 const ICON_SIZE = 18;
+const PLANNING_PATH = "/planning";
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 
@@ -264,6 +266,13 @@ export function SidebarRailBody({
             )}
           />
         )}
+        <SidebarNavLink
+          to={PLANNING_PATH}
+          label={t(I18nKey.PLANNING$TITLE)}
+          testId="sidebar-planning-link"
+          collapsed={collapsed}
+          icon={<KanbanSquare width={ICON_SIZE} height={ICON_SIZE} />}
+        />
         {canvasExtensionPages.map((page) => (
           <SidebarNavLink
             key={`${page.extension.name}:${page.contribution.id}`}

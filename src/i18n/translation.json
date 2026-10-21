@@ -53296,23 +53296,5 @@
     "tr": "Bugün",
     "uk": "Сьогодні",
     "id": "Hari ini"
-  },
-  "PLANNING$UNSCHEDULED": {
-    "en": "Unscheduled",
-    "ja": "未スケジュール",
-    "zh-CN": "未排期",
-    "zh-TW": "未排程",
-    "ko-KR": "일정 없음",
-    "no": "Ikke planlagt",
-    "ar": "غير مجدول",
-    "de": "Nicht eingeplant",
-    "fr": "Non planifié",
-    "it": "Non pianificato",
-    "pt": "Não agendado",
-    "es": "Sin programar",
-    "ca": "Sense planificar",
-    "tr": "Planlanmamış",
-    "uk": "Не заплановано",
-    "id": "Belum dijadwalkan"
   }
 }
