@@ -460,7 +460,12 @@ export function ChatInputActions({
                 + Settings link. Revisit if floating children are added here. */}
             <ContextMenu
               testId="overflow-model-submenu"
-              className="min-w-55 max-w-80 max-h-[60vh] overflow-y-auto gap-0"
+              className={cn(
+                "max-h-[60vh] overflow-y-auto gap-0",
+                pickerKind === "model"
+                  ? "min-w-55 max-w-80"
+                  : "w-md max-w-screen",
+              )}
             >
               {pickerKind === "model" ? (
                 <ChatInputModelMenuContent
