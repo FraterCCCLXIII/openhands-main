@@ -1393,3 +1393,133 @@ describe("ChatInterface - Build plan keyboard shortcut", () => {
     expect(sentBuildPrompt()).toBe(false);
   });
 });
+
+describe("ChatInterface - Sticky last prompt", () => {
+  let queryClient: QueryClient;
+  let observerCallback: IntersectionObserverCallback | null;
+  const LONG_PROMPT = "Please refactor the billing module. ".repeat(20).trim();
+
+  const userEvent = (id: string, text: string): MessageEvent => ({
+    id,
+    timestamp: "2025-07-01T00:00:00Z",
+    source: "user",
+    llm_message: { role: "user", content: [{ type: "text", text }] },
+    activated_skills: [],
+    extended_content: [],
+  });
+
+  const seedEvents = (events: MessageEvent[]) =>
+    useEventStore.setState({
+      events,
+      eventIds: new Set(events.map((e) => e.id)),
+      uiEvents: events,
+    });
+
+  // Simulates the browser reporting whether the observed message is on screen.
+  const reportMessageVisibility = (isVisible: boolean) =>
+    act(() => {
+      observerCallback?.(
+        [
+          {
+            isIntersecting: isVisible,
+            boundingClientRect: { top: -200 } as DOMRectReadOnly,
+            rootBounds: { top: 0 } as DOMRectReadOnly,
+          } as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    observerCallback = null;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: IntersectionObserverCallback) {
+          observerCallback = callback;
+        }
+
+        observe = vi.fn();
+
+        disconnect = vi.fn();
+
+        unobserve = vi.fn();
+      },
+    );
+    // Long user messages measure themselves with a ResizeObserver.
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe = vi.fn();
+
+        disconnect = vi.fn();
+
+        unobserve = vi.fn();
+      },
+    );
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    useOptimisticUserMessageStore.getState().clearPendingMessages();
+    useErrorMessageStore.setState({ errorMessage: null });
+    (useConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: {},
+    });
+    (
+      useUnifiedUploadFiles as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
+      mutateAsync: vi
+        .fn()
+        .mockResolvedValue({ skipped_files: [], uploaded_files: [] }),
+      isLoading: false,
+    });
+    useEventStore.setState({ events: [], eventIds: new Set(), uiEvents: [] });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const renderInterface = () =>
+    renderWithQueryClient(<ChatInterface />, queryClient);
+
+  it("shows the last user prompt only while that message is scrolled out of view", () => {
+    seedEvents([userEvent("u1", "first"), userEvent("u2", LONG_PROMPT)]);
+    renderInterface();
+
+    expect(screen.queryByTestId("sticky-last-prompt")).not.toBeInTheDocument();
+
+    reportMessageVisibility(false);
+    expect(screen.getByTestId("sticky-last-prompt")).toHaveTextContent(
+      LONG_PROMPT,
+    );
+
+    reportMessageVisibility(true);
+    expect(screen.queryByTestId("sticky-last-prompt")).not.toBeInTheDocument();
+  });
+
+  it("expands the full prompt on click and rolls it up on a second click", () => {
+    seedEvents([userEvent("u1", LONG_PROMPT)]);
+    renderInterface();
+    reportMessageVisibility(false);
+
+    const bar = within(screen.getByTestId("sticky-last-prompt")).getByRole(
+      "button",
+    );
+    expect(bar).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(bar);
+    expect(bar).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(bar);
+    expect(bar).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("shows nothing when there is no user message", () => {
+    renderInterface();
+    reportMessageVisibility(false);
+
+    expect(screen.queryByTestId("sticky-last-prompt")).not.toBeInTheDocument();
+  });
+});
