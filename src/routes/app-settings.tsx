@@ -209,13 +209,15 @@ function AppSettingsForm() {
       {shouldBeLoading && <AppSettingsInputsSkeleton />}
       {!shouldBeLoading && (
         <fieldset disabled={isPending} className="flex min-w-0 flex-col gap-6">
-          <LanguageInput
-            name="language-input"
-            defaultKey={settings.language}
-            onChange={checkIfLanguageInputHasChanged}
-          />
+          <div className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2">
+            <LanguageInput
+              name="language-input"
+              defaultKey={settings.language}
+              onChange={checkIfLanguageInputHasChanged}
+            />
 
-          <ThemeInput />
+            <ThemeInput />
+          </div>
 
           <section className="flex flex-col gap-2">
             <h3 className="text-sm font-medium text-contrast">
