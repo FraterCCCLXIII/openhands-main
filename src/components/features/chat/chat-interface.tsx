@@ -1,3 +1,4 @@
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import React from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
@@ -112,8 +113,8 @@ export function ChatInterface({
   useDrainAgentNotificationPrompts();
 
   const { trackInitialQuerySubmitted, trackUserMessageSent } = useTracking();
-  const { setMessageToSend, conversationMode, planContent } =
-    useConversationStore();
+  const { conversationMode, planContent } = useConversationStore();
+  const { setMessageToSend } = useConversationComposer();
   const {
     errorMessage,
     errorCode,
