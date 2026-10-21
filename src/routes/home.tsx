@@ -19,7 +19,7 @@ function HomeScreen() {
         data-testid="home-screen"
         className="custom-scrollbar-always h-full overflow-y-auto rounded-xl bg-transparent px-4 md:px-0 lg:px-10.5"
       >
-        <div className="pt-4 md:px-4 lg:px-0">
+        <div className="sticky top-0 z-10 bg-base pt-4 md:px-4 lg:px-0">
           <LlmNotConfiguredBanner />
         </div>
 
