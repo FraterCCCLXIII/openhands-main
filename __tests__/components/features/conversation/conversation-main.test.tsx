@@ -59,6 +59,13 @@ vi.mock("#/hooks/query/use-active-conversation", () => ({
 }));
 
 // Mock ChatInterface with useEffect to track mount/unmount lifecycle
+vi.mock(
+  "#/components/features/chat/conversation-minimap/conversation-minimap",
+  () => ({
+    ConversationMinimapHost: () => null,
+  }),
+);
+
 vi.mock("#/components/features/chat/chat-interface", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require("react");

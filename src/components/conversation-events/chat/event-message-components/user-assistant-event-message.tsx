@@ -19,6 +19,7 @@ import { useForkConversation } from "#/hooks/mutation/use-fork-conversation";
 import { setConversationState } from "#/utils/conversation-local-storage";
 import ConversationService from "#/api/conversation-service/conversation-service.api";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
+import { cn } from "#/utils/utils";
 
 interface UserAssistantEventMessageProps {
   event: MessageEvent;
@@ -121,8 +122,15 @@ function UserAssistantEventMessageComponent({
       ]
     : undefined;
 
+  const isUserMessage = event.source === "user";
+
   return (
-    <>
+    <div
+      className={cn("flex w-full flex-col", isUserMessage && "items-end")}
+      {...(isUserMessage
+        ? { "data-conversation-turn-id": String(event.id) }
+        : {})}
+    >
       {reasoning && <CollapsibleThinking content={reasoning} />}
       <ChatMessage
         type={event.source}
@@ -138,7 +146,7 @@ function UserAssistantEventMessageComponent({
       {event.source === "agent" && event.critic_result != null && (
         <CriticResultDisplay criticResult={event.critic_result} />
       )}
-    </>
+    </div>
   );
 }
 

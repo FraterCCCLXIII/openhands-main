@@ -184,7 +184,61 @@ describe("useLoadOlderEvents", () => {
     expect(result.current.hasMore).toBe(true);
   });
 
-  it("paginates older events using timestamp__lt of the oldest known event", async () => {
+  it("paginates older events using next_page_id from the initial REST page", async () => {
+    vi.mocked(useConversationHistory).mockReturnValue({
+      data: {
+        events: [makeEvent("evt-recent", "2024-06-01T00:00:00Z")],
+        hasMore: true,
+        nextPageId: "page-2",
+      },
+      isFetched: true,
+    } as ReturnType<typeof useConversationHistory>);
+
+    act(() => {
+      useEventStore
+        .getState()
+        .addEvent(makeEvent("evt-recent", "2024-06-01T00:00:00Z"));
+    });
+
+    const olderPage = [
+      makeEvent("evt-older-1", "2024-05-01T00:00:00Z"),
+      makeEvent("evt-older-2", "2024-05-15T00:00:00Z"),
+    ];
+    const spy = vi
+      .spyOn(EventService, "searchEvents")
+      .mockResolvedValue(makePage(olderPage, null));
+
+    const { result } = renderHook(() => useLoadOlderEvents("conv-1"), {
+      wrapper,
+    });
+
+    await act(async () => {
+      await result.current.loadOlder();
+    });
+
+    expect(spy).toHaveBeenCalledWith(
+      "conv-1",
+      "https://example.com/conv-test",
+      "secret",
+      {
+        limit: INITIAL_HISTORY_PAGE_SIZE,
+        sortOrder: "TIMESTAMP_DESC",
+        pageId: "page-2",
+      },
+    );
+
+    expect(useEventStore.getState().events.map((e) => (e as any).id)).toEqual([
+      "evt-older-1",
+      "evt-older-2",
+      "evt-recent",
+    ]);
+
+    await waitFor(() => {
+      expect(result.current.hasMore).toBe(false);
+    });
+  });
+
+  it("paginates older events using timestamp__lt when no page id is available", async () => {
     // Seed the store with a single recent event so the hook has an anchor.
     const recent = makeEvent("evt-recent", "2024-06-01T00:00:00Z");
     act(() => {
@@ -275,6 +329,15 @@ describe("useLoadOlderEvents", () => {
   });
 
   it("keeps paginating while the server keeps returning full pages", async () => {
+    vi.mocked(useConversationHistory).mockReturnValue({
+      data: {
+        events: [makeEvent("evt-recent", "2024-06-01T00:00:00Z")],
+        hasMore: true,
+        nextPageId: "page-2",
+      },
+      isFetched: true,
+    } as ReturnType<typeof useConversationHistory>);
+
     act(() => {
       useEventStore
         .getState()
@@ -302,6 +365,13 @@ describe("useLoadOlderEvents", () => {
     await act(async () => {
       await result.current.loadOlder();
     });
+
+    expect(EventService.searchEvents).toHaveBeenCalledWith(
+      "conv-1",
+      "https://example.com/conv-test",
+      "secret",
+      expect.objectContaining({ pageId: "page-2" }),
+    );
 
     // Full page + next_page_id present → still has more.
     expect(result.current.hasMore).toBe(true);

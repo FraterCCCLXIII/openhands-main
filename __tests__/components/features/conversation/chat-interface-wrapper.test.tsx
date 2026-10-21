@@ -3,15 +3,25 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatInterfaceWrapper } from "#/components/features/conversation/conversation-main/chat-interface-wrapper";
 import { useConversationStore } from "#/stores/conversation-store";
 
+vi.mock(
+  "#/components/features/chat/conversation-minimap/conversation-minimap",
+  () => ({
+    ConversationMinimapHost: () => null,
+  }),
+);
+
 vi.mock("#/components/features/chat/chat-interface", () => ({
   ChatInterface: () => <div data-testid="chat-interface" />,
 }));
 
-vi.mock("#/components/features/conversation/conversation-overview-panel", () => ({
-  ConversationOverviewPanel: () => (
-    <div data-testid="conversation-overview-panel" />
-  ),
-}));
+vi.mock(
+  "#/components/features/conversation/conversation-overview-panel",
+  () => ({
+    ConversationOverviewPanel: () => (
+      <div data-testid="conversation-overview-panel" />
+    ),
+  }),
+);
 
 vi.mock("#/hooks/use-breakpoint", () => ({
   useBreakpoint: () => false,
@@ -50,8 +60,12 @@ describe("ChatInterfaceWrapper", () => {
     useConversationStore.setState({ isOverviewPanelShown: true });
     render(<ChatInterfaceWrapper isRightPanelShown={false} />);
 
-    expect(screen.getByTestId("conversation-overview-column")).toBeInTheDocument();
-    expect(screen.getByTestId("conversation-overview-panel")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-column"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-panel"),
+    ).toBeInTheDocument();
   });
 
   it("keeps the thread in a height-constrained flex column when overview is shown", () => {

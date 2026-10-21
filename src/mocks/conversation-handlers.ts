@@ -17,11 +17,16 @@ import {
   CANVAS_DEMO_FILE_PATH,
   CANVAS_DEMO_MARKDOWN,
 } from "#/fixtures/canvas-demo-conversation";
+import {
+  MINIMAP_DEMO_CONVERSATION_ID,
+  MINIMAP_DEMO_EVENTS,
+} from "#/fixtures/minimap-demo-conversation";
 
 /** Map from conversation id → events returned by GET /events/search */
 const CONVERSATION_EVENTS: Record<string, unknown[]> = {
   [TABLE_DEMO_CONVERSATION_ID]: TABLE_DEMO_EVENTS,
   [CANVAS_DEMO_CONVERSATION_ID]: CANVAS_DEMO_EVENTS,
+  [MINIMAP_DEMO_CONVERSATION_ID]: MINIMAP_DEMO_EVENTS,
 };
 
 const now = Date.now();
@@ -170,6 +175,14 @@ const conversations: MockConversation[] = [
     title: "Generated canvas demo",
     created_at: new Date(now - 12 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(now - 12 * 60 * 60 * 1000).toISOString(),
+    execution_status: "idle",
+    workspace: { working_dir: "/workspace/project" },
+  },
+  {
+    id: MINIMAP_DEMO_CONVERSATION_ID,
+    title: "Minimap demo (55 turns)",
+    created_at: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
     execution_status: "idle",
     workspace: { working_dir: "/workspace/project" },
   },

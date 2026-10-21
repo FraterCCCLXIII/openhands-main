@@ -79,6 +79,36 @@ const renderMessage = (event: MessageEvent) =>
 // The fork's saved composer draft, which its composer restores on open.
 const forkDraft = () => getConversationState(forkResult.id).draftMessage;
 
+describe("UserAssistantEventMessage — turn wrapper layout", () => {
+  beforeEach(() => {
+    useActiveBackendMock.mockReturnValue({
+      backend: { kind: "local" },
+      orgId: null,
+    });
+    useOptionalConversationIdMock.mockReturnValue({ conversationId: "conv-1" });
+  });
+
+  it("anchors user turns for the minimap and keeps bubbles right-aligned", () => {
+    renderMessage(makeEvent("user", "evt-user"));
+
+    const turn = screen
+      .getByTestId("user-message")
+      .closest("[data-conversation-turn-id]");
+    expect(turn).toHaveAttribute("data-conversation-turn-id", "evt-user");
+    expect(turn).toHaveClass("items-end");
+  });
+
+  it("does not anchor agent turns", () => {
+    renderMessage(makeEvent("agent", "evt-agent"));
+
+    expect(
+      screen
+        .getByTestId("agent-message")
+        .closest("[data-conversation-turn-id]"),
+    ).toBeNull();
+  });
+});
+
 describe("UserAssistantEventMessage — branch action", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
