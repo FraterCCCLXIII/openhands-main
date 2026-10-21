@@ -753,10 +753,10 @@ export function ChatInterface({
                       data-testid="scroll-to-bottom-wrapper"
                       inert={hitBottom}
                       className={cn(
-                        "absolute left-1/2 -translate-x-1/2 bottom-0 pointer-events-auto transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                        "absolute left-1/2 -translate-x-1/2 bottom-3 pointer-events-auto transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none",
                         hitBottom
-                          ? "opacity-0 pointer-events-none"
-                          : "opacity-100",
+                          ? "pointer-events-none translate-y-2 scale-75 opacity-0"
+                          : "translate-y-0 scale-100 opacity-100",
                       )}
                     >
                       <ScrollToBottomButton onClick={scrollDomToBottom} />
