@@ -57,6 +57,7 @@ import { setConversationState } from "#/utils/conversation-local-storage";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { I18nKey } from "#/i18n/declaration";
 import { hasConversationStarted } from "./components/resolve-picker-kind";
+import { AgentSuggestionRail } from "./agent-suggestion-rail";
 import { ComposerDockedProvider } from "#/context/composer-docked-context";
 import { isContentEmpty } from "./utils/chat-input.utils";
 
@@ -579,9 +580,17 @@ export function ChatInterface({
       />
     </ComposerDockedProvider>
   );
+  const composerWithSuggestions = (
+    <AgentSuggestionRail
+      events={allConversationEvents}
+      disabled={isComposerDocked || isNewConversationPending || llmBlocked}
+    >
+      {composer}
+    </AgentSuggestionRail>
+  );
   const dockedOrInlineComposer = composerDockTarget
-    ? createPortal(composer, composerDockTarget)
-    : composer;
+    ? createPortal(composerWithSuggestions, composerDockTarget)
+    : composerWithSuggestions;
 
   return (
     <WorkspaceFilesForChatProvider>
