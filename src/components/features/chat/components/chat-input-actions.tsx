@@ -528,6 +528,11 @@ export function ChatInputActions({
           {/* The model pill and the agent-profile pill are separate pills side
               by side. The "+" menu keeps its own agent-profile entry (pre-start
               only) for widths where the model pill collapses into overflow. */}
+          {showAgentProfilePill && (
+            <div ref={agentProfileRef} className="min-w-0">
+              <ChatInputAgentProfilePicker />
+            </div>
+          )}
           <div
             ref={modelRef}
             data-testid="chat-input-model-pill"
@@ -541,11 +546,6 @@ export function ChatInputActions({
               <ChatInputLlmProfilePicker />
             )}
           </div>
-          {showAgentProfilePill && (
-            <div ref={agentProfileRef} className="min-w-0">
-              <ChatInputAgentProfilePicker />
-            </div>
-          )}
 
           {hasOverflowItems && (
             <div className="relative shrink-0">

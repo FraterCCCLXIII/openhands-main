@@ -8,6 +8,7 @@ import { useNavigation } from "#/context/navigation-context";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
+import { BANNER_SURFACE_CLASSNAME } from "#/components/shared/banner-surface";
 
 export interface SkillInstallRestartBannerProps {
   conversationId: string | null | undefined;
@@ -69,7 +70,7 @@ export function SkillInstallRestartBanner({
 
   return (
     <div
-      className="flex w-full items-start gap-2 rounded-lg border border-border bg-surface-raised p-2 text-foreground"
+      className={`${BANNER_SURFACE_CLASSNAME} items-start`}
       data-testid="skill-install-restart-banner"
     >
       <div className="min-w-0 flex-1">

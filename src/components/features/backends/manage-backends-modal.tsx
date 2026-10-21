@@ -165,7 +165,7 @@ export function ManageBackendsModal({
         <div
           data-testid="manage-backends-modal"
           className={cn(
-            "relative flex flex-col bg-surface border border-border rounded-xl",
+            "relative flex flex-col bg-surface border border-border rounded-3xl",
             modalWidthClassName(view === "managed-agents" ? "xl" : "lg"),
             MODAL_MAX_WIDTH_VIEWPORT,
             view === "managed-agents" ? "h-[80vh]" : "max-h-[70vh]",

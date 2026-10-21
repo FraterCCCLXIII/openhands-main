@@ -44,6 +44,8 @@ import {
 import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/canvas-extension-icon";
 import type { Backend } from "#/api/backend-registry/types";
+import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
+import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const ICON_SIZE = 18;
 const SIDEBAR_LOGO_WIDTH = 34;
@@ -124,10 +126,19 @@ export function SidebarRailBody({
   // the cloud host itself, so cloud settings open in this tab and Back
   // returns here (OHE-3242). Standalone / Electron keep the new tab.
   const isLockedToCloud = getLockedCloudHost() !== null;
+  const isFullScreen = useDesktopFullScreen();
+  const showTitleBand = isMacDesktopShell() && !isFullScreen;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className={sidebarHeaderRowClassName(collapsed)}>
+      <div
+        className={cn(
+          sidebarHeaderRowClassName(collapsed),
+          // Desktop title-band: the header shares the traffic-light row, with
+          // the collapse control at the right and the lights kept clear.
+          showTitleBand && !collapsed && "-mt-7 mb-7 justify-end pl-20",
+        )}
+      >
         <div
           className={cn(
             collapsed && showCollapseToggle
@@ -143,12 +154,14 @@ export function SidebarRailBody({
               collapsed && showCollapsedExpandButton && "opacity-0",
             )}
           >
-            <OpenHandsLogoButton
-              logoWidth={SIDEBAR_LOGO_WIDTH}
-              logoHeight={SIDEBAR_LOGO_HEIGHT}
-              logoClassName="max-w-none"
-              className={cn(SIDEBAR_ICON_SLOT_CLASS, "overflow-visible")}
-            />
+            {isDesktopShell() ? null : (
+              <OpenHandsLogoButton
+                logoWidth={SIDEBAR_LOGO_WIDTH}
+                logoHeight={SIDEBAR_LOGO_HEIGHT}
+                logoClassName="max-w-none"
+                className={cn(SIDEBAR_ICON_SLOT_CLASS, "overflow-visible")}
+              />
+            )}
           </div>
           {collapsed && showCollapseToggle ? (
             <button
@@ -202,7 +215,7 @@ export function SidebarRailBody({
       </div>
 
       <nav className={sidebarNavListClassName(collapsed)}>
-        <CommandMenuTrigger collapsed={collapsed} />
+        {collapsed ? <CommandMenuTrigger collapsed /> : null}
         <SidebarNavLink
           to="/conversations"
           end

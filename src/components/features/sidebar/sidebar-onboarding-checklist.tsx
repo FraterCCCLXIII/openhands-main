@@ -163,7 +163,7 @@ export function SidebarOnboardingChecklist({
       data-minimized={isMinimized ? "true" : "false"}
       className={cn(
         "group w-full shrink-0 overflow-hidden rounded-xl border border-border",
-        "bg-surface-raised shadow-sm",
+        "bg-surface-raised shadow-[0_4px_12px_rgb(0_0_0/0.18)]",
       )}
     >
       <div className={cn("px-1", isMinimized ? "py-1" : "pt-2 pb-1")}>

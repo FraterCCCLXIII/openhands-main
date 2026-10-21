@@ -8,10 +8,8 @@ import { cn } from "#/utils/utils";
 import { SidebarCollapsedIconSlot } from "#/components/features/sidebar/sidebar-collapsed-icon-slot";
 import {
   SIDEBAR_ICON_SLOT_CLASS,
-  sidebarNavLabelClassName,
   sidebarNavRowClassName,
 } from "#/components/features/sidebar/sidebar-layout";
-import { getCommandMenuShortcutKey } from "./command-menu-items";
 
 interface CommandMenuTriggerProps {
   collapsed: boolean;
@@ -33,9 +31,8 @@ export function CommandMenuTrigger({ collapsed }: CommandMenuTriggerProps) {
       onClick={open}
       className={cn(
         sidebarNavRowClassName({ collapsed }),
-        collapsed
-          ? "cursor-pointer"
-          : "group justify-between border border-border-subtle bg-surface/50 hover:border-border hover:bg-surface-raised",
+        "cursor-pointer",
+        !collapsed && "w-auto justify-center text-muted hover:text-contrast",
       )}
     >
       <span className="flex min-w-0 items-center gap-2">
@@ -47,26 +44,15 @@ export function CommandMenuTrigger({ collapsed }: CommandMenuTriggerProps) {
             />
           </SidebarCollapsedIconSlot>
         ) : (
-          <span
-            className={cn(
-              SIDEBAR_ICON_SLOT_CLASS,
-              "text-muted group-hover:text-contrast",
-            )}
-            aria-hidden="true"
-          >
+          <span className={SIDEBAR_ICON_SLOT_CLASS} aria-hidden="true">
             <Search
               width={COMMAND_MENU_TRIGGER_ICON_SIZE}
               height={COMMAND_MENU_TRIGGER_ICON_SIZE}
             />
           </span>
         )}
-        <span className={sidebarNavLabelClassName(collapsed)}>{label}</span>
+        <span className="sr-only">{label}</span>
       </span>
-      {!collapsed ? (
-        <kbd className="rounded-md border border-border bg-black/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-dim">
-          {t(getCommandMenuShortcutKey())}
-        </kbd>
-      ) : null}
     </button>
   );
 

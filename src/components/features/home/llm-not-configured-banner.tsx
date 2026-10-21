@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { FaTriangleExclamation } from "react-icons/fa6";
+import { FaHand } from "react-icons/fa6";
 import { I18nKey } from "#/i18n/declaration";
 import { useNavigation } from "#/context/navigation-context";
 import { useLlmConfigured } from "#/hooks/use-llm-configured";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { Typography } from "#/ui/typography";
 import { getLockedCloudHost } from "#/api/agent-server-config";
+import { BANNER_SURFACE_CLASSNAME } from "#/components/shared/banner-surface";
 
 /**
  * Warns the user on the home screen when the active agent has no usable LLM —
@@ -31,11 +32,11 @@ export function LlmNotConfiguredBanner() {
     <div
       data-testid="home-llm-not-configured-banner"
       role="alert"
-      className="mt-3 flex w-full flex-col gap-3 rounded-xl border border-border bg-surface-raised px-4 py-3 text-foreground sm:flex-row sm:items-center sm:justify-between sm:py-4"
+      className={`${BANNER_SURFACE_CLASSNAME} justify-between`}
     >
       <div className="flex min-w-0 items-start sm:items-center">
         <div className="flex-shrink-0">
-          <FaTriangleExclamation className="align-middle text-feedback-warning" />
+          <FaHand size={12} className="align-middle text-muted" aria-hidden />
         </div>
         <Typography.Text className="ml-3 text-sm font-medium">
           {t(I18nKey.HOME$LLM_NOT_CONFIGURED_MESSAGE)}
@@ -48,7 +49,7 @@ export function LlmNotConfiguredBanner() {
           testId="home-llm-not-configured-action"
           type="button"
           variant="primary"
-          className="w-fit shrink-0 self-start whitespace-nowrap sm:self-auto"
+          className="h-6 min-h-0 w-fit shrink-0 whitespace-nowrap rounded-md"
           onClick={() => navigate("/settings/llm")}
         >
           {t(I18nKey.HOME$LLM_NOT_CONFIGURED_ACTION)}

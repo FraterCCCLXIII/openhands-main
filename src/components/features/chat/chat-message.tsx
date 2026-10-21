@@ -162,7 +162,12 @@ export function ChatMessage({
         className={cn(
           "rounded-xl relative w-fit max-w-full flex flex-col",
           hasBubbleChildren && "gap-2",
-          type === "user" && "mt-6 bg-tertiary self-end px-4 py-2.5",
+          type === "user" &&
+            "mt-6 bg-tertiary bg-linear-to-b from-white/[0.04] via-transparent to-black/[0.12] self-end px-4 py-2.5 transition-[filter] duration-150 hover:brightness-110 motion-reduce:transition-none",
+          // A message bubbles in as it is sent. The echoed event replaces the
+          // pending bubble without animating again.
+          pendingStatus === "sending" &&
+            "animate-[composer-bubble-in_360ms_cubic-bezier(0.2,0.9,0.3,1)_both] motion-reduce:animate-none",
           type === "agent" && "mt-6 w-full max-w-full bg-transparent",
           isFromPlanningAgent &&
             type === "agent" &&

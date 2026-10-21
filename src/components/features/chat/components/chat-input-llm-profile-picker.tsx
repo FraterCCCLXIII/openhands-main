@@ -114,7 +114,7 @@ export function ChatInputLlmProfileMenuContent({
             to="/settings/llm"
             onClick={onClose}
             className={cn(
-              "flex h-7.5 items-center gap-2 rounded p-2 leading-5 text-foreground hover:bg-interactive-hover transition-colors",
+              "flex min-h-9 items-center gap-2.5 rounded-md px-2.5 py-2 leading-5 text-foreground hover:bg-interactive-hover transition-colors",
               settingsLinkClassName,
             )}
           >
@@ -180,9 +180,9 @@ export function ChatInputLlmProfilePicker() {
     };
   }, [isPopoverOpen]);
 
-  // No LLM profiles yet (or the agent-server lacks the surface): stay out of
-  // the way, exactly like the ACP/AgentProfile pickers.
-  if (isLoading || profiles.length === 0) {
+  // Keep the chip visible while loading the list is pending or no LLM profile
+  // exists yet; the placeholder label and menu still lead to LLM setup.
+  if (isLoading) {
     return null;
   }
 
@@ -237,7 +237,7 @@ export function ChatInputLlmProfilePicker() {
           alignment="left"
           spacing="none"
           className={cn(
-            "z-[60] mb-2 max-h-[60vh] overflow-y-auto",
+            "z-[60] mb-2 max-h-[60vh] overflow-y-auto p-0",
             canSwitchProfile ? "w-md max-w-screen" : "min-w-50 max-w-80",
           )}
         >

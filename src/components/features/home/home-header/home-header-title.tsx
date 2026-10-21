@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Typography } from "#/ui/typography";
 import { I18nKey } from "#/i18n/declaration";
+import { HomeLearnResources } from "./home-learn-resources";
 
 export function HomeHeaderTitle() {
   const { t } = useTranslation("openhands");
@@ -16,6 +17,7 @@ export function HomeHeaderTitle() {
       >
         {t(I18nKey.HOME$ENGINEERING_TASKS_SUBHEADER)}
       </p>
+      <HomeLearnResources />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import React from "react";
 import { Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -33,21 +34,24 @@ import { ConversationCardPreview } from "./conversation-card/conversation-card-p
 import { StartTaskCard } from "./start-task-card/start-task-card";
 import { ConversationCardSkeleton } from "./conversation-card/conversation-card-skeleton";
 import { CompactConversationRow } from "./compact-conversation-row";
+import { useConversationDiffStatsStore } from "#/stores/conversation-diff-stats-store";
 import { useConversationPanelPreferencesStore } from "#/stores/conversation-panel-preferences-store";
 import { cn } from "#/utils/utils";
 import { ConversationLayoutsMenu } from "./conversation-layouts-menu";
 import { ConversationActiveTagFilters } from "./conversation-active-tag-filters";
 import { ConversationPanelNewThreadPicker } from "./conversation-panel-new-thread-picker";
+import { useCommandMenuStore } from "#/stores/command-menu-store";
 import { ConversationGroupFolderList } from "./conversation-group-folder-list";
 import { ConversationPanelPinnedSection } from "./conversation-panel-pinned-section";
 import {
   applyAutomationConversationFilter,
-  applyGroupFolderOrder,
   applyTagConversationFilter,
   collectAutomationNameFacets,
   collectTagFacets,
   DEFAULT_OLDER_CONVERSATION_CUTOFF,
+  applyGroupFolderOrder,
   filterOutPinnedConversations,
+  moveGroupFolderOrder,
   getGroupDiscoveryConversationIds,
   groupConversations,
   isOlderConversationCutoff,
@@ -66,6 +70,7 @@ import {
   isMissingSandboxStatus,
 } from "#/utils/conversation-archive-status";
 import type { SandboxStatus } from "#/api/conversation-service/agent-server-conversation-service.types";
+import { ExpandChevron } from "#/components/shared/expand-chevron";
 
 interface ConversationPanelProps {
   onClose?: () => void;
@@ -80,6 +85,9 @@ interface ConversationPanelProps {
 const noop = () => {};
 
 const EMPTY_PINNED_CONVERSATION_IDS: readonly string[] = [];
+
+/** Manual-order key for top-level rows (subagent lists use their parent id). */
+const TOP_LIST_KEY = "top";
 
 export function ConversationPanel({
   onClose,
@@ -128,6 +136,12 @@ export function ConversationPanel({
   );
   const showHoverMetadata = useConversationPanelPreferencesStore(
     (state) => state.showHoverMetadata,
+  );
+  const showDiffStats = useConversationPanelPreferencesStore(
+    (state) => state.showDiffStats,
+  );
+  const diffTotalsByConversationId = useConversationDiffStatsStore(
+    (state) => state.diffTotalsByConversationId,
   );
   const organizeMode = useConversationPanelPreferencesStore(
     (state) => state.organizeMode,
@@ -469,6 +483,101 @@ export function ConversationPanel({
       : recentScoped;
     return sortConversationsByField(visible, conversationSort);
   }, [recentScoped, olderScoped, showOlderConversations, conversationSort]);
+
+  // Subagent conversations render under their parent. A child that is listed
+  // under a visible parent is kept out of the top level so it appears once.
+  const [collapsedParentIds, setCollapsedParentIds] = React.useState<
+    ReadonlySet<string>
+  >(() => new Set());
+  const toggleSubagentsCollapsed = React.useCallback((parentId: string) => {
+    setCollapsedParentIds((current) => {
+      const next = new Set(current);
+      if (next.has(parentId)) next.delete(parentId);
+      else next.add(parentId);
+      return next;
+    });
+  }, []);
+  const { topLevelConversations, childrenByParentId } = React.useMemo(() => {
+    const byId = new Map(sortedVisibleConversations.map((c) => [c.id, c]));
+    const childIds = new Set<string>();
+    const children = new Map<string, typeof sortedVisibleConversations>();
+    for (const parent of sortedVisibleConversations) {
+      const subIds = parent.sub_conversation_ids ?? [];
+      const kids = subIds
+        .map((id) => byId.get(id))
+        .filter((c): c is (typeof sortedVisibleConversations)[number] => !!c);
+      if (kids.length === 0) continue;
+      kids.forEach((kid) => childIds.add(kid.id));
+      children.set(parent.id, kids);
+    }
+    return {
+      topLevelConversations: sortedVisibleConversations.filter(
+        (c) => !childIds.has(c.id),
+      ),
+      childrenByParentId: children,
+    };
+  }, [sortedVisibleConversations]);
+
+  const openCommandMenu = useCommandMenuStore((state) => state.open);
+  const conversationOrderByList = useConversationPanelPreferencesStore(
+    (state) => state.conversationOrderByList,
+  );
+  const setConversationOrder = useConversationPanelPreferencesStore(
+    (state) => state.setConversationOrder,
+  );
+  const [draggedRow, setDraggedRow] = React.useState<{
+    id: string;
+    listKey: string;
+  } | null>(null);
+  const orderedTopLevel = React.useMemo(
+    () =>
+      applyGroupFolderOrder(
+        topLevelConversations,
+        conversationOrderByList[TOP_LIST_KEY] ?? [],
+      ),
+    [topLevelConversations, conversationOrderByList],
+  );
+  const orderedChildrenOf = React.useCallback(
+    (parentId: string) =>
+      applyGroupFolderOrder(
+        childrenByParentId.get(parentId) ?? [],
+        conversationOrderByList[parentId] ?? [],
+      ),
+    [childrenByParentId, conversationOrderByList],
+  );
+  /** Drop `draggedRow` before `targetId` when both belong to the same list. */
+  const dropBefore = (
+    listKey: string,
+    siblingIds: string[],
+    targetId: string,
+  ) => {
+    if (draggedRow?.listKey !== listKey) return;
+    if (draggedRow.id === targetId) return;
+    setConversationOrder(
+      listKey,
+      moveGroupFolderOrder(
+        conversationOrderByList[listKey] ?? [],
+        siblingIds,
+        draggedRow.id,
+        targetId,
+        "before",
+      ),
+    );
+    setDraggedRow(null);
+  };
+  const dragRowProps = (listKey: string, id: string) => ({
+    draggable: true,
+    onDragStart: (event: React.DragEvent<HTMLDivElement>) => {
+      const transfer = event.dataTransfer;
+      transfer.effectAllowed = "move";
+      transfer.setData("text/plain", id);
+      setDraggedRow({ id, listKey });
+    },
+    onDragEnd: () => setDraggedRow(null),
+    onDragOver: (event: React.DragEvent<HTMLDivElement>) => {
+      if (draggedRow?.listKey === listKey) event.preventDefault();
+    },
+  });
 
   const groupLabels = React.useMemo(
     () => ({
@@ -873,7 +982,7 @@ export function ConversationPanel({
   const renderConversationCard = React.useCallback(
     (
       conversation: (typeof conversations)[number],
-      options?: { inPinnedSection?: boolean },
+      options?: { inPinnedSection?: boolean; isNestedChild?: boolean },
     ) => {
       const isPinned = pinnedIds.includes(conversation.id);
       // Presentation: a row looks archived when the user archived it or its
@@ -1027,6 +1136,11 @@ export function ConversationPanel({
               acpModels={conversation.acp_available_models}
               tags={conversation.tags}
               showTags={showTagsMetadata}
+              diffStats={
+                showDiffStats || options?.isNestedChild
+                  ? (diffTotalsByConversationId[conversation.id] ?? null)
+                  : null
+              }
               isArchived={isArchived}
               isPinned={isPinned}
               onTogglePin={() => togglePin(activeBackend.id, conversation.id)}
@@ -1056,6 +1170,8 @@ export function ConversationPanel({
       showLlmProfiles,
       showTagsMetadata,
       showHoverMetadata,
+      showDiffStats,
+      diffTotalsByConversationId,
       togglePin,
     ],
   );
@@ -1154,6 +1270,19 @@ export function ConversationPanel({
               <ConversationPanelNewThreadPicker
                 backendKind={activeBackend.kind}
               />
+              <button
+                type="button"
+                aria-label={t(I18nKey.COMMAND_MENU$OPEN_LABEL)}
+                data-testid="conversation-panel-search-trigger"
+                onClick={openCommandMenu}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-raised hover:text-contrast"
+              >
+                <Search
+                  className="h-4 w-4 shrink-0"
+                  aria-hidden
+                  strokeWidth={2}
+                />
+              </button>
               <ConversationLayoutsMenu
                 menuOpen={filterMenuOpen}
                 setMenuOpen={setFilterMenuOpen}
@@ -1274,9 +1403,80 @@ export function ConversationPanel({
         !compact &&
         organizeMode === "chronological" ? (
           <div className="space-y-0.5">
-            {sortedVisibleConversations.map((conversation) =>
-              renderConversationCard(conversation),
-            )}
+            {orderedTopLevel.map((conversation) => (
+              <div
+                key={conversation.id}
+                {...dragRowProps(TOP_LIST_KEY, conversation.id)}
+                onDrop={() =>
+                  dropBefore(
+                    TOP_LIST_KEY,
+                    orderedTopLevel.map((c) => c.id),
+                    conversation.id,
+                  )
+                }
+              >
+                {renderConversationCard(conversation)}
+                {childrenByParentId.get(conversation.id)?.length ? (
+                  <div className="ml-4">
+                    <button
+                      type="button"
+                      aria-expanded={!collapsedParentIds.has(conversation.id)}
+                      data-testid="conversation-subagent-toggle"
+                      onClick={() => toggleSubagentsCollapsed(conversation.id)}
+                      className="flex items-center gap-1.5 rounded px-2 py-0.5 text-xs text-muted transition-colors hover:text-foreground"
+                    >
+                      <ExpandChevron
+                        expanded={!collapsedParentIds.has(conversation.id)}
+                        className="size-3"
+                      />
+                      {t(I18nKey.CONVERSATION_PANEL$SUBAGENTS)}
+                    </button>
+                    {!collapsedParentIds.has(conversation.id) ? (
+                      <div data-testid="conversation-subagent-children">
+                        {orderedChildrenOf(conversation.id).map(
+                          (child, index, all) => (
+                            <div
+                              key={child.id}
+                              className="relative pl-4"
+                              {...dragRowProps(conversation.id, child.id)}
+                              onDrop={() =>
+                                dropBefore(
+                                  conversation.id,
+                                  all.map((c) => c.id),
+                                  child.id,
+                                )
+                              }
+                            >
+                              {index === all.length - 1 ? (
+                                // Last child: the connector curves into its title.
+                                <span
+                                  aria-hidden
+                                  className="absolute top-0 left-0 h-1/2 w-3 rounded-bl-lg border-b border-l border-border-subtle"
+                                />
+                              ) : (
+                                <>
+                                  <span
+                                    aria-hidden
+                                    className="absolute top-0 bottom-0 left-0 w-px bg-border-subtle"
+                                  />
+                                  <span
+                                    aria-hidden
+                                    className="absolute top-1/2 left-0 h-px w-3 bg-border-subtle"
+                                  />
+                                </>
+                              )}
+                              {renderConversationCard(child, {
+                                isNestedChild: true,
+                              })}
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ))}
           </div>
         ) : null}
 

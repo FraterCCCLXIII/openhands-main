@@ -238,7 +238,7 @@ export function FolderBrowserModal({
       <div
         data-testid="folder-browser-modal"
         className={cn(
-          "flex flex-col bg-surface border border-border-input rounded-xl",
+          "flex flex-col bg-surface border border-border-input rounded-3xl",
           modalWidthClassName("xl"),
           MODAL_MAX_WIDTH_VIEWPORT,
           "h-120",

@@ -168,7 +168,7 @@ export function ImportAutomationModal({
       <div
         data-testid="import-automation-modal"
         data-view={spec ? "preview" : "picker"}
-        className="relative flex max-h-[85vh] w-[min(36rem,calc(100vw-2rem))] flex-col rounded-xl border border-border bg-base-secondary"
+        className="relative flex max-h-[85vh] w-[min(36rem,calc(100vw-2rem))] flex-col rounded-3xl border border-border bg-base-secondary"
       >
         <ModalCloseButton
           onClose={onClose}
@@ -188,7 +188,7 @@ export function ImportAutomationModal({
 
         {spec ? (
           <>
-            <dl className="mx-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-border bg-surface px-4 py-4">
+            <dl className="mx-6 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-3xl border border-border bg-surface px-4 py-4">
               <PreviewField
                 label={t(I18nKey.AUTOMATIONS$NAME)}
                 value={spec.name}

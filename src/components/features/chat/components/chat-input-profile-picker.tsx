@@ -1,15 +1,15 @@
 import React from "react";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useChatInputProfileState } from "#/hooks/use-chat-input-profile-state";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
-import RobotIcon from "#/icons/u-robot.svg?react";
 import { ContextMenu } from "#/ui/context-menu";
 import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { useCloseOnEscape } from "#/hooks/use-close-on-escape";
 import type { AgentProfileSummary } from "#/api/agent-profiles-service/agent-profiles-service.api";
 import {
   chatInputIconButtonClassName,
+  chatInputModelPillClassName,
   chatInputPillButtonClassName,
 } from "#/utils/form-control-classes";
 import SettingsGearIcon from "#/icons/settings-gear.svg?react";
@@ -21,6 +21,11 @@ import { Typography } from "#/ui/typography";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { getLockedCloudHost } from "#/api/agent-server-config";
+import {
+  agentProfileAccentColor,
+  AGENT_ACCENT_ICONS,
+  agentProfileIconIndex,
+} from "./agent-profile-accent";
 
 interface ChatInputProfileMenuContentProps {
   onClose: () => void;
@@ -148,6 +153,8 @@ export function ChatInputProfileMenuContent({
 
 interface AgentProfileRowProps {
   profile: AgentProfileSummary;
+  /** The LLM profile this agent uses by default, when it has one. */
+  modelName: string | null;
   isCurrent: boolean;
   isMenuOpen: boolean;
   showSettingsLink: boolean;
@@ -163,6 +170,7 @@ interface AgentProfileRowProps {
  */
 function AgentProfileRow({
   profile,
+  modelName,
   isCurrent,
   isMenuOpen,
   showSettingsLink,
@@ -177,10 +185,10 @@ function AgentProfileRow({
   const hasActions = canSetActive || showSettingsLink;
 
   return (
-    <li role="presentation" className="flex flex-col">
+    <li role="presentation" className="flex flex-col px-3">
       <div
         className={cn(
-          "flex items-center rounded",
+          "flex items-center rounded px-2 hover:bg-interactive-hover",
           isCurrent && "bg-interactive-hover",
         )}
       >
@@ -191,14 +199,26 @@ function AgentProfileRow({
             event.stopPropagation();
             onSelect(profile);
           }}
-          className="flex min-w-0 flex-1 items-center gap-2"
+          className="flex min-w-0 flex-1 items-center gap-2 px-0 hover:bg-transparent"
         >
-          <RobotIcon width={14} height={14} className="shrink-0" aria-hidden />
-          <span
-            className="flex-1 truncate text-left text-sm leading-5"
-            title={profile.name}
-          >
-            {profile.name}
+          <AgentProfileGlyph
+            name={profile.name}
+            size={14}
+            className="shrink-0"
+            framed
+          />
+          <span className="flex min-w-0 flex-1 flex-col text-left">
+            <span className="truncate text-sm leading-5" title={profile.name}>
+              {profile.name}
+            </span>
+            {modelName && (
+              <span
+                className="truncate text-xs leading-4 text-muted"
+                data-testid="chat-input-agent-profile-model"
+              >
+                {modelName}
+              </span>
+            )}
           </span>
           {isCurrent && (
             <CheckIcon
@@ -212,7 +232,7 @@ function AgentProfileRow({
         {hasActions && (
           <button
             type="button"
-            className={cn(chatInputIconButtonClassName, "mr-1 size-6 shrink-0")}
+            className={cn(chatInputIconButtonClassName, "size-6 shrink-0")}
             aria-label={`${t(I18nKey.COMMON$MORE_OPTIONS)}: ${profile.name}`}
             aria-haspopup="menu"
             aria-expanded={isMenuOpen}
@@ -274,24 +294,68 @@ function AgentProfileRow({
  * with it) and is disabled, with an explanatory tooltip, when switching isn't
  * possible (a switch is in flight, or a cloud start task is provisioning).
  */
+interface AgentProfileGlyphProps {
+  name: string;
+  size: number;
+  className?: string;
+  testId?: string;
+  /** Wraps the icon in a small rounded grey tile (used in dropdown rows). */
+  framed?: boolean;
+}
+
+/** The profile's stable icon, tinted with its accent color. */
+export function AgentProfileGlyph({
+  name,
+  size,
+  className,
+  testId,
+  framed = false,
+}: AgentProfileGlyphProps) {
+  const Icon = AGENT_ACCENT_ICONS[agentProfileIconIndex(name)];
+  const icon = (
+    <Icon
+      width={size}
+      height={size}
+      className={className}
+      style={{ color: agentProfileAccentColor(name) }}
+      data-testid={testId}
+      aria-hidden
+    />
+  );
+  if (!framed) return icon;
+  return (
+    <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-interactive-hover">
+      {icon}
+    </span>
+  );
+}
+
 export function ChatInputAgentProfilePicker() {
   const { t } = useTranslation("openhands");
   const {
     profiles,
     currentProfileId,
     currentProfileName,
-    isInConversation,
     isLoading,
     isSwitching,
     selectProfile,
   } = useChatInputProfileState();
   const [isOpen, setIsOpen] = React.useState(false);
   const [openMenuKey, setOpenMenuKey] = React.useState<string | null>(null);
+  const [query, setQuery] = React.useState("");
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const close = React.useCallback(() => {
     setIsOpen(false);
     setOpenMenuKey(null);
+    setQuery("");
   }, []);
+  const visibleProfiles = React.useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return profiles;
+    return profiles.filter((profile) =>
+      profile.name.toLowerCase().includes(needle),
+    );
+  }, [profiles, query]);
   const popoverRef = useClickOutsideElement<HTMLUListElement>(
     close,
     triggerRef,
@@ -309,7 +373,11 @@ export function ChatInputAgentProfilePicker() {
       <button
         ref={triggerRef}
         type="button"
-        className={cn(chatInputPillButtonClassName, "max-w-40 bg-surface")}
+        className={cn(
+          chatInputPillButtonClassName,
+          chatInputModelPillClassName,
+          "max-w-50 bg-surface",
+        )}
         title={
           isSwitching
             ? t(I18nKey.CHAT$AGENT_PROFILE_SWITCH_UNAVAILABLE)
@@ -331,6 +399,13 @@ export function ChatInputAgentProfilePicker() {
           }
         }}
       >
+        <AgentProfileGlyph
+          name={currentProfileName}
+          size={14}
+          className="shrink-0"
+          testId="chat-input-agent-profile-icon"
+          framed
+        />
         <span className="truncate">{currentProfileName}</span>
         <ExpandChevron expanded={isDropdownOpen} className="size-3.5" />
       </button>
@@ -341,33 +416,72 @@ export function ChatInputAgentProfilePicker() {
           position="top"
           alignment="left"
           spacing="none"
-          className="z-[60] mb-2 min-w-56 max-w-80 max-h-[60vh] overflow-y-auto"
+          className="z-[60] mb-2 min-w-56 max-w-80 p-0"
         >
-          {profiles.map((profile) => {
-            const profileKey = profile.id ?? profile.name;
-            return (
-              <AgentProfileRow
-                key={profileKey}
-                profile={profile}
-                isCurrent={
-                  profile.id != null && profile.id === currentProfileId
-                }
-                isMenuOpen={openMenuKey === profileKey}
-                showSettingsLink={showSettingsLink}
-                onSelect={(selected) => {
-                  selectProfile(selected);
-                  close();
-                }}
-                onToggleMenu={setOpenMenuKey}
-                onClose={close}
+          <li role="presentation" className="px-3 pt-3 pb-2">
+            <div className="relative">
+              <Search
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted"
               />
-            );
-          })}
-          {isInConversation && (
-            <li role="presentation" className="px-2 pt-0.5 pb-1">
-              <Typography.Text className="text-[11px] text-text-dim leading-4">
-                {t(I18nKey.CHAT$START_NEW_WITH_PROFILE_HINT)}
-              </Typography.Text>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") event.stopPropagation();
+                }}
+                placeholder={t(I18nKey.CHAT$SEARCH_AGENT_PROFILES)}
+                aria-label={t(I18nKey.CHAT$SEARCH_AGENT_PROFILES)}
+                data-testid="chat-input-agent-profile-search"
+                className="w-full rounded-md border border-border bg-surface px-8 py-1.5 text-sm leading-5 text-foreground placeholder:text-muted transition-colors hover:border-contrast/25 focus:border-contrast/35 focus:outline-none"
+              />
+            </div>
+          </li>
+          <li role="presentation">
+            <Divider />
+          </li>
+          <li role="presentation" className="min-h-0">
+            <ul className="custom-scrollbar flex max-h-64 flex-col overflow-y-auto">
+              {visibleProfiles.map((profile) => {
+                const profileKey = profile.id ?? profile.name;
+                return (
+                  <AgentProfileRow
+                    key={profileKey}
+                    profile={profile}
+                    modelName={profile.llm_profile_ref ?? null}
+                    isCurrent={
+                      profile.id != null && profile.id === currentProfileId
+                    }
+                    isMenuOpen={openMenuKey === profileKey}
+                    showSettingsLink={showSettingsLink}
+                    onSelect={(selected) => {
+                      selectProfile(selected);
+                      close();
+                    }}
+                    onToggleMenu={setOpenMenuKey}
+                    onClose={close}
+                  />
+                );
+              })}
+            </ul>
+          </li>
+          {showSettingsLink && (
+            <li role="presentation">
+              <Divider />
+            </li>
+          )}
+          {showSettingsLink && (
+            <li role="presentation" className="px-3 pt-1">
+              <NavigationLink
+                to="/settings/agents"
+                onClick={close}
+                data-testid="chat-input-agent-profile-add"
+                className="flex h-8 items-center gap-2 rounded-md px-2 text-sm text-foreground hover:bg-interactive-hover"
+              >
+                <Plus width={14} height={14} className="shrink-0" aria-hidden />
+                <span>{t(I18nKey.SETTINGS$ADD_AGENT_PROFILE)}</span>
+              </NavigationLink>
             </li>
           )}
         </ContextMenu>

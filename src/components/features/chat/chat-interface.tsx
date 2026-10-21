@@ -59,6 +59,7 @@ import { I18nKey } from "#/i18n/declaration";
 import { hasConversationStarted } from "./components/resolve-picker-kind";
 import { ComposerDockedProvider } from "#/context/composer-docked-context";
 import { isContentEmpty } from "./utils/chat-input.utils";
+import { BANNER_SURFACE_CLASSNAME } from "#/components/shared/banner-surface";
 
 // Ctrl/Cmd+Enter in a text field that holds text belongs to that field (the
 // composer sends it); an empty field or any other target builds the plan.
@@ -720,7 +721,7 @@ export function ChatInterface({
               // the chat input. The conversation history above is still visible.
               <div
                 data-testid="archived-conversation-banner"
-                className="mx-1 px-4 py-3 rounded-lg bg-surface border border-border-subtle"
+                className={`${BANNER_SURFACE_CLASSNAME} mx-1 mb-2`}
               >
                 <p className="text-xs font-semibold text-foreground">
                   {sandboxStatus === "ERROR"
@@ -753,9 +754,12 @@ export function ChatInterface({
                       data-testid="scroll-to-bottom-wrapper"
                       inert={hitBottom}
                       className={cn(
-                        "absolute left-1/2 -translate-x-1/2 bottom-3 pointer-events-auto transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none",
+                        // Opacity and motion run on separate curves: the fade
+                        // leads, and the scale settles only slightly, so the
+                        // button never shrinks much before it disappears.
+                        "absolute left-1/2 -translate-x-1/2 bottom-3 pointer-events-auto transition-[opacity] duration-200 ease-out motion-safe:transition-[opacity,transform] motion-safe:duration-200 motion-reduce:transition-none",
                         hitBottom
-                          ? "pointer-events-none translate-y-2 scale-75 opacity-0"
+                          ? "pointer-events-none translate-y-1 scale-[0.96] opacity-0"
                           : "translate-y-0 scale-100 opacity-100",
                       )}
                     >

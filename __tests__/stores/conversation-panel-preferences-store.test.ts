@@ -98,6 +98,7 @@ describe("conversation-panel-preferences store", () => {
       "selectedAutomationNames",
       "selectedTagFacets",
       "showArchivedConversations",
+      "showDiffStats",
       "showHoverMetadata",
       "showLlmProfiles",
       "showOlderConversations",

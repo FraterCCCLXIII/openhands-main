@@ -15,6 +15,8 @@ export default [
     ),
     route("conversations/:conversationId", "routes/conversation.tsx"),
     route("launch", "routes/launch.tsx"),
+    route("mock/style-guide", "routes/mock-style-guide.tsx"),
+    route("mock/app-window", "routes/mock-app-window.tsx"),
     route("customize", "routes/extensions-hub.tsx"),
     route("skills", "routes/skills-settings.tsx"),
     route("plugins", "routes/skills-plugins.tsx"),

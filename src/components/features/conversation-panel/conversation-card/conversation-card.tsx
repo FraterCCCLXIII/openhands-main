@@ -1,5 +1,11 @@
 import React from "react";
-import { Pin } from "lucide-react";
+import {
+  Pin,
+  GitBranch,
+  GitBranchPlus,
+  GitCommitHorizontal,
+  GitMerge,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ACPModelOption } from "#/constants/acp-providers";
 import { useTracking } from "#/hooks/use-tracking";
@@ -12,6 +18,11 @@ import { ExecutionStatus } from "#/types/agent-server/core/base/common";
 import { SandboxStatus } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { RepositorySelection } from "#/api/open-hands.types";
 import { formatTimeDelta } from "#/utils/format-time-delta";
+import {
+  type ConversationGitState,
+  useConversationDiffStatsStore,
+  ConversationDiffTotals,
+} from "#/stores/conversation-diff-stats-store";
 import {
   hoverRevealActionClassName,
   hoverRevealPinnedTimestampClassName,
@@ -64,6 +75,8 @@ interface ConversationCardProps {
   tags?: Record<string, string> | null;
   /** Gates the tag-chip row; wired to the panel's "Tags" metadata toggle. */
   showTags?: boolean;
+  /** Last-known +/- totals; rendered under the title when present. */
+  diffStats?: ConversationDiffTotals | null;
   /**
    * The row's effective archived state. Leave undefined to let the card infer
    * it from `sandboxStatus` (a missing, non-resumable runtime); pass it
@@ -105,6 +118,7 @@ export function ConversationCard({
   acpModels = null,
   tags = null,
   showTags = false,
+  diffStats = null,
   isArchived,
   isPinned = false,
   onTogglePin,
@@ -259,6 +273,20 @@ export function ConversationCard({
   );
   const hasHoverActions = hasContextMenu || !!onTogglePin;
   const showPersistentPinIcon = alwaysShowPinIcon && isPinned && !!onTogglePin;
+  const diffStatsLine = diffStats ? (
+    <div
+      data-testid="conversation-card-diff-stats"
+      className="flex items-center gap-1.5 pt-0.5 pr-2 pb-1 pl-[1.625rem] text-xs tabular-nums"
+    >
+      <span className="text-status-success">
+        +{diffStats.additions.toLocaleString()}
+      </span>
+      <span className="text-status-error">
+        −{diffStats.deletions.toLocaleString()}
+      </span>
+    </div>
+  ) : null;
+
   const shouldRenderFooter =
     showRepositoryMetadata ||
     effectiveArchived ||
@@ -310,10 +338,11 @@ export function ConversationCard({
           {!showPersistentPinIcon && (createdAt ?? lastUpdatedAt) && (
             <p
               className={cn(
-                "text-xs text-muted text-right whitespace-nowrap transition-opacity -translate-x-1.5",
+                "flex items-center gap-1.5 text-xs text-muted text-right whitespace-nowrap transition-opacity -translate-x-1.5",
                 hasHoverActions && hoverRevealYieldClassName(contextMenuOpen),
               )}
             >
+              <ConversationGitStatusIcon conversationId={conversationId} />
               <time>{formatTimeDelta(lastUpdatedAt ?? createdAt)}</time>
             </p>
           )}
@@ -383,6 +412,8 @@ export function ConversationCard({
         </div>
       </div>
 
+      {diffStatsLine}
+
       {shouldRenderFooter && (
         <ConversationCardFooter
           selectedRepository={selectedRepository}
@@ -405,3 +436,45 @@ export function ConversationCard({
     </div>
   );
 }
+
+/**
+ * Git state on a row: a branch icon whose shape and color say what the
+ * workspace holds. Nothing renders until the app has seen the conversation.
+ */
+function ConversationGitStatusIcon({
+  conversationId,
+}: {
+  conversationId: string | undefined;
+}) {
+  const totals = useConversationDiffStatsStore((state) =>
+    conversationId
+      ? state.diffTotalsByConversationId[conversationId]
+      : undefined,
+  );
+  if (!totals) return null;
+  const state: ConversationGitState =
+    totals.gitState ??
+    (totals.additions + totals.deletions > 0 ? "modified" : "clean");
+  const variant = GIT_STATE_VARIANTS[state];
+  const Icon = variant.icon;
+  return (
+    <Icon
+      aria-hidden
+      data-testid="conversation-git-status"
+      data-status={state}
+      className={cn("size-3 shrink-0", variant.className)}
+    />
+  );
+}
+
+const GIT_STATE_VARIANTS: Record<
+  ConversationGitState,
+  { icon: typeof GitBranch; className: string }
+> = {
+  clean: { icon: GitBranch, className: "text-status-success" },
+  modified: { icon: GitBranch, className: "text-feedback-warning" },
+  staged: { icon: GitBranchPlus, className: "text-primary" },
+  untracked: { icon: GitBranch, className: "text-muted" },
+  ahead: { icon: GitCommitHorizontal, className: "text-status-success" },
+  conflict: { icon: GitMerge, className: "text-status-error" },
+};

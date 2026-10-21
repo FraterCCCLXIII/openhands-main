@@ -198,7 +198,7 @@ export function CommandMenu() {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-start justify-center px-3 pt-[10vh] sm:px-6"
+      className="modal-overlay-enter fixed inset-0 z-[70] flex items-start justify-center px-3 pt-[10vh] sm:px-6"
       data-testid={COMMAND_MENU_TEST_ID}
       role="dialog"
       aria-modal="true"
