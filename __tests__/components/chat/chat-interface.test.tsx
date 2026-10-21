@@ -7,6 +7,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { flushSync } from "react-dom";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -1391,5 +1392,154 @@ describe("ChatInterface - Build plan keyboard shortcut", () => {
     fireEvent.keyDown(composer, { key: "Enter", ctrlKey: true });
 
     expect(sentBuildPrompt()).toBe(false);
+  });
+});
+
+describe("ChatInterface - Agent suggestion rail", () => {
+  let queryClient: QueryClient;
+
+  const choiceMessage = (body: string): MessageEvent => ({
+    id: "agent-msg-1",
+    timestamp: "2025-07-01T00:00:00Z",
+    source: "agent",
+    llm_message: { role: "assistant", content: [{ type: "text", text: body }] },
+    activated_skills: [],
+    extended_content: [],
+  });
+
+  const CHOICE_BODY = [
+    "Which database should I use?",
+    "",
+    "```choice",
+    JSON.stringify({
+      question: "Database?",
+      options: [{ label: "Postgres" }, { label: "SQLite" }, { label: "MySQL" }],
+    }),
+    "```",
+  ].join("\n");
+
+  const sentLabels = () =>
+    mockSend.mock.calls.map(([message]) => message.args.content);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSend.mockResolvedValue({ queued: false });
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    useOptimisticUserMessageStore.getState().clearPendingMessages();
+    useErrorMessageStore.setState({ errorMessage: null });
+    (useConfig as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: {},
+    });
+    (
+      useUnifiedUploadFiles as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
+      mutateAsync: vi
+        .fn()
+        .mockResolvedValue({ skipped_files: [], uploaded_files: [] }),
+      isLoading: false,
+    });
+  });
+
+  const renderRail = (body: string) => {
+    const message = choiceMessage(body);
+    useEventStore.setState({
+      events: [message],
+      eventIds: new Set([message.id]),
+      uiEvents: [message],
+    });
+    renderWithQueryClient(<ChatInterface />, queryClient);
+    return userEvent.setup();
+  };
+
+  const pills = () =>
+    within(screen.getByRole("toolbar")).getAllByRole("button");
+
+  it("shows a numbered pill for each option of a valid choice block", () => {
+    renderRail(CHOICE_BODY);
+
+    expect(pills().map((pill) => pill.textContent)).toEqual([
+      "1Postgres",
+      "2SQLite",
+      "3MySQL",
+    ]);
+  });
+
+  it("shows no rail when the message has no valid choice block", () => {
+    renderRail("Just a plain answer.");
+
+    expect(screen.queryByRole("toolbar")).not.toBeInTheDocument();
+  });
+
+  it("sends option 2 on Alt+2 from the composer", async () => {
+    const user = renderRail(CHOICE_BODY);
+
+    await user.click(screen.getByTestId("chat-input"));
+    await user.keyboard("{Alt>}2{/Alt}");
+
+    await waitFor(() => expect(sentLabels()).toEqual(["SQLite"]));
+  });
+
+  it("focuses the first pill on ArrowUp from an empty composer, then sends the second option after ArrowRight and Enter", async () => {
+    const user = renderRail(CHOICE_BODY);
+
+    await user.click(screen.getByTestId("chat-input"));
+    await user.keyboard("{ArrowUp}");
+    expect(pills()[0]).toHaveFocus();
+
+    await user.keyboard("{ArrowRight}{Enter}");
+
+    await waitFor(() => expect(sentLabels()).toEqual(["SQLite"]));
+  });
+
+  it("leaves ArrowUp alone when the composer has text", async () => {
+    const user = renderRail(CHOICE_BODY);
+    const composer = screen.getByTestId("chat-input");
+
+    await user.click(composer);
+    await user.keyboard("draft{ArrowUp}");
+
+    expect(composer).toHaveFocus();
+  });
+
+  it("wraps around the pills with the arrow keys", async () => {
+    const user = renderRail(CHOICE_BODY);
+
+    await user.click(screen.getByTestId("chat-input"));
+    await user.keyboard("{ArrowUp}{ArrowLeft}");
+
+    expect(pills()[2]).toHaveFocus();
+  });
+
+  it("picks the matching option with a digit key inside the rail", async () => {
+    const user = renderRail(CHOICE_BODY);
+
+    await user.click(screen.getByTestId("chat-input"));
+    await user.keyboard("{ArrowUp}3");
+
+    await waitFor(() => expect(sentLabels()).toEqual(["MySQL"]));
+  });
+
+  it("returns focus to the composer on Escape without sending", async () => {
+    const user = renderRail(CHOICE_BODY);
+    const composer = screen.getByTestId("chat-input");
+
+    await user.click(composer);
+    await user.keyboard("{ArrowUp}{Escape}");
+
+    expect(composer).toHaveFocus();
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it("hides the rail once an option is selected", async () => {
+    const user = renderRail(CHOICE_BODY);
+
+    await user.click(pills()[0]);
+
+    await waitFor(() =>
+      expect(screen.queryByRole("toolbar")).not.toBeInTheDocument(),
+    );
+    expect(sentLabels()).toEqual(["Postgres"]);
   });
 });
