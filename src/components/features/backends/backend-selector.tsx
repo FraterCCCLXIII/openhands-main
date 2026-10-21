@@ -515,7 +515,7 @@ export function BackendSelector({
             }
             loading={someCloudLoading}
             options={headerOptions}
-            className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 pl-2.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
+            className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 pl-[9px] pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
         {identityHeader ? (

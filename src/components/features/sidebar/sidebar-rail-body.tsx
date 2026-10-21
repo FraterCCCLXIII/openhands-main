@@ -438,6 +438,13 @@ export function SidebarRailBody({
               "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-t-[0.5px] border-border pt-2 px-2.5",
             )}
           >
+            <span
+              data-testid="sidebar-footer-username"
+              className="block truncate px-2 text-sm text-contrast"
+              title={activeBackend.name}
+            >
+              {activeBackend.name}
+            </span>
             <div className="flex items-center justify-between gap-2">
               <NavigationLink
                 to="/settings"
