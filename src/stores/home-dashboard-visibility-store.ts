@@ -13,10 +13,11 @@ export type HomeDashboardComponentId =
   (typeof HOME_DASHBOARD_COMPONENT_IDS)[number];
 
 /**
- * Sections whose position on the launcher can be changed. Learn resources
- * stays in the header above the composer.
+ * Every section appears in the reorder list. Learn resources stays in the
+ * header above the composer, so its position only sets its place in the list.
  */
 export const HOME_DASHBOARD_REORDERABLE_IDS = [
+  "learnResources",
   "recommendedAutomations",
   "pinnedAutomations",
   "runningAutomations",
