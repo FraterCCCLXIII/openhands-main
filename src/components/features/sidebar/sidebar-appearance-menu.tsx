@@ -132,7 +132,7 @@ export function SidebarAppearanceMenu() {
                       setPrimaryColorKey(isSelected ? null : preset.key)
                     }
                     className={cn(
-                      "size-6 cursor-pointer rounded-full border-2 transition-transform hover:scale-110",
+                      "size-6 cursor-pointer rounded-full border-2 ring-1 ring-inset ring-white/20 transition-transform hover:scale-110",
                       isSelected ? "border-contrast" : "border-transparent",
                     )}
                     style={{ background: preset.swatch }}

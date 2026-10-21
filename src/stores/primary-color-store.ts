@@ -15,7 +15,7 @@ export const PRIMARY_COLOR_PRESETS = [
   {
     key: "monochrome",
     hex: "#6B7280",
-    swatch: "linear-gradient(90deg, #FFFFFF 50%, #000000 50%)",
+    swatch: "conic-gradient(#FFFFFF 0 50%, #000000 50% 100%)",
   },
 ] as const;
 
