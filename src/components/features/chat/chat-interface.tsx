@@ -687,7 +687,7 @@ export function ChatInterface({
             </div>
           </div>
 
-          <div className="mx-auto flex w-full max-w-200 shrink-0 flex-col gap-1.5 pb-4">
+          <div className="mx-auto flex w-full max-w-200 shrink-0 flex-col gap-1.5">
             <SkillInstallRestartBanner conversationId={conversationId} />
             <BtwMessages conversationId={conversationId} />
             {errorMessage && (

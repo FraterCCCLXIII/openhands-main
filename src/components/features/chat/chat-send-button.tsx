@@ -22,7 +22,7 @@ export function ChatSendButton({
     <button
       type="button"
       className={cn(
-        "flex items-center justify-center rounded-full border border-contrast size-8",
+        "flex items-center justify-center rounded-full border border-contrast size-8 bg-linear-to-b from-contrast/10 to-transparent",
         disabled
           ? "cursor-not-allowed border-muted"
           : "cursor-pointer hover:bg-contrast/10",
