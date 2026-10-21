@@ -1,4 +1,5 @@
 import { BookOpen } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { I18nKey } from "#/i18n/declaration";
@@ -20,7 +21,7 @@ const PREVIEW_ACTION_BUTTON_CLASS = cn(
 
 interface SidebarOnboardingChecklistItemPreviewProps {
   id: SidebarOnboardingChecklistItemId;
-  onActionClick?: () => void;
+  onActionClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   onDocsClick?: () => void;
 }
 

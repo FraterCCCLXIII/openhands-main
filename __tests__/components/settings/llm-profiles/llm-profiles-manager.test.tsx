@@ -30,6 +30,8 @@ vi.mock("react-i18next", () => ({
         SETTINGS$PROVIDER_CONNECTIONS_LOAD_ERROR:
           "Failed to load provider connections.",
         SETTINGS$PROVIDER_CONNECTION_ADD: "Add connection",
+        SETTINGS$PROVIDER_CONNECTED: "Connected",
+        SETTINGS$PROVIDER_CONNECT: "Connect",
         SETTINGS$PROVIDER_CONNECTION_EDIT_TITLE: "Edit provider connection",
         SETTINGS$PROVIDER_CONNECTION_DELETE_TITLE: "Delete provider connection",
         SETTINGS$PROVIDER_CONNECTION_MODEL_COUNT: `${params?.count} model(s)`,
@@ -813,5 +815,43 @@ describe("LlmProfilesManager", () => {
     expect(
       screen.queryByText('Are you sure you want to delete "claude-profile"?'),
     ).not.toBeInTheDocument();
+  });
+
+  it("filters the profile list to one model family from the top filter", async () => {
+    const user = userEvent.setup();
+    vi.mocked(ProfilesService.listProfiles).mockResolvedValue({
+      profiles: mockProfiles,
+      active_profile: "gpt-4-profile",
+    });
+
+    renderManager();
+
+    const filter = await screen.findByTestId("model-family-filter");
+    await user.click(within(filter).getByRole("button", { name: /Claude/ }));
+
+    expect(screen.getByText("claude-profile")).toBeInTheDocument();
+    expect(screen.queryByText("gpt-4-profile")).not.toBeInTheDocument();
+  });
+
+  it("opens the edit auth screen when a connected provider is clicked in the left nav", async () => {
+    const user = userEvent.setup();
+    vi.mocked(ProfilesService.listProfiles).mockResolvedValue({
+      profiles: mockProfiles,
+      active_profile: "gpt-4-profile",
+    });
+
+    renderManager({}, { connections: [makeConnection()] });
+
+    const navItems = await screen.findAllByTestId("provider-nav-item");
+    const openai = navItems.find((item) =>
+      item.textContent?.includes("OpenAI"),
+    );
+    expect(openai).toHaveTextContent("Connected");
+
+    await user.click(openai!);
+
+    expect(
+      await screen.findByText("Edit provider connection"),
+    ).toBeInTheDocument();
   });
 });

@@ -43,9 +43,13 @@ vi.mock("#/hooks/query/use-config", () => ({
   useConfig: () => ({ data: { feature_flags: {} } }),
 }));
 
+const sidebarSettings = vi.hoisted(() => ({
+  data: { email_verified: true } as Record<string, unknown>,
+}));
+
 vi.mock("#/hooks/query/use-settings", () => ({
   useSettings: () => ({
-    data: { email_verified: true },
+    data: sidebarSettings.data,
     error: null,
     isError: false,
     isFetching: false,
@@ -249,6 +253,40 @@ describe("Sidebar", () => {
   afterEach(() => {
     window.localStorage.clear();
     useSidebarStore.setState({ collapsed: false });
+    sidebarSettings.data = { email_verified: true };
+  });
+
+  it("shows the account name and email in the footer", () => {
+    sidebarSettings.data = {
+      email_verified: true,
+      git_user_name: "Paul Bloch",
+      email: "openartist@gmail.com",
+    };
+    renderSidebar("/conversations");
+
+    expect(screen.getByTestId("sidebar-footer-user-name")).toHaveTextContent(
+      "Paul Bloch",
+    );
+    expect(screen.getByTestId("sidebar-footer-user-email")).toHaveTextContent(
+      "openartist@gmail.com",
+    );
+  });
+
+  it("hides the placeholder git identity instead of showing it as the account", () => {
+    sidebarSettings.data = {
+      email_verified: true,
+      git_user_name: "openhands",
+      git_user_email: "openhands@all-hands.dev",
+    };
+    renderSidebar("/conversations");
+
+    expect(
+      screen.queryByTestId("sidebar-footer-user-name"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("sidebar-footer-user-email"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("openhands")).not.toBeInTheDocument();
   });
 
   it("opens and closes the mobile navigation drawer from the menu button", async () => {
