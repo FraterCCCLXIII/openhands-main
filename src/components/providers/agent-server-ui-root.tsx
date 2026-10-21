@@ -6,6 +6,7 @@ import {
 } from "#/styles/agent-server-ui-style-scope";
 import { useColorTheme } from "#/hooks/use-color-theme";
 import { COLOR_THEMES } from "#/themes/color-themes";
+import { BackgroundTintOverlay } from "./background-tint-overlay";
 
 export interface AgentServerUIRootProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -66,6 +67,7 @@ export function AgentServerUIRoot({
       >
         <AgentServerUIAppearanceContext.Provider value={appearance}>
           {children}
+          <BackgroundTintOverlay />
         </AgentServerUIAppearanceContext.Provider>
       </div>
     </div>

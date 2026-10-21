@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Bug,
   ChevronLeft,
   KanbanSquare,
   PanelLeftClose,
@@ -57,6 +58,7 @@ import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const ICON_SIZE = 18;
+const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
 const PLANNING_PATH = "/planning";
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
@@ -433,6 +435,17 @@ export function SidebarRailBody({
                 </span>
               </NavigationLink>
               <SidebarAppearanceMenu backendId={activeBackend.id} />
+              <a
+                href={REPORT_BUG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="sidebar-report-bug"
+                aria-label={t(I18nKey.SIDEBAR$REPORT_BUG)}
+                title={t(I18nKey.SIDEBAR$REPORT_BUG)}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast"
+              >
+                <Bug aria-hidden className="size-4" />
+              </a>
               <div className="min-w-0 flex-1 empty:hidden">
                 <AgentCanvasVersionTile hideWhenUpToDate />
               </div>

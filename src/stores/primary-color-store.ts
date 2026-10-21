@@ -30,7 +30,24 @@ export const PRIMARY_COLOR_PRESETS = [
   },
 ] as const satisfies readonly PrimaryColorPreset[];
 
-export type PrimaryColorKey = (typeof PRIMARY_COLOR_PRESETS)[number]["key"];
+export type PresetColorKey = (typeof PRIMARY_COLOR_PRESETS)[number]["key"];
+/** `custom` uses the user's picked color from `customPrimaryColor`. */
+export type PrimaryColorKey = PresetColorKey | "custom";
+
+export const DEFAULT_CUSTOM_PRIMARY_COLOR = "#3B82F6";
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/** Black or white text, whichever reads better on the given hex background. */
+function readableForeground(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((index) => {
+    const channel = parseInt(hex.slice(index, index + 2), 16) / 255;
+    return channel <= 0.03928
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? "#000000" : "#FFFFFF";
+}
 
 const STYLE_TAG_ID = "oh-primary-color-override";
 
@@ -39,12 +56,21 @@ const STYLE_TAG_ID = "oh-primary-color-override";
  * active color theme's own primary shows through. The doubled attribute
  * selector matches the theme runtime's specificity.
  */
-function applyPrimaryColor(key: PrimaryColorKey | null) {
+function applyPrimaryColor(
+  key: PrimaryColorKey | null,
+  customColor: string = DEFAULT_CUSTOM_PRIMARY_COLOR,
+) {
   if (typeof document === "undefined") return;
   const existing = document.getElementById(STYLE_TAG_ID);
-  const preset: PrimaryColorPreset | undefined = PRIMARY_COLOR_PRESETS.find(
-    (item) => item.key === key,
-  );
+  const preset: PrimaryColorPreset | undefined =
+    key === "custom" && HEX_COLOR.test(customColor)
+      ? {
+          key: "custom",
+          swatch: customColor,
+          primary: customColor,
+          accentForeground: readableForeground(customColor),
+        }
+      : PRIMARY_COLOR_PRESETS.find((item) => item.key === key);
   if (!preset) {
     existing?.remove();
     return;
@@ -66,25 +92,39 @@ function applyPrimaryColor(key: PrimaryColorKey | null) {
 interface PrimaryColorState {
   /** `null` means no override: the active color theme's primary applies. */
   primaryColorKey: PrimaryColorKey | null;
+  /** The hex color behind the `custom` option. */
+  customPrimaryColor: string;
   setPrimaryColorKey: (key: PrimaryColorKey | null) => void;
+  /** Picks a custom color and makes it the active primary. */
+  setCustomPrimaryColor: (hex: string) => void;
 }
 
 /** The single owner of the app-wide primary color override. */
 export const usePrimaryColorStore = create<PrimaryColorState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       primaryColorKey: null,
+      customPrimaryColor: DEFAULT_CUSTOM_PRIMARY_COLOR,
       setPrimaryColorKey: (key) => {
-        applyPrimaryColor(key);
+        applyPrimaryColor(key, get().customPrimaryColor);
         set({ primaryColorKey: key });
+      },
+      setCustomPrimaryColor: (hex) => {
+        if (!HEX_COLOR.test(hex)) return;
+        applyPrimaryColor("custom", hex);
+        set({ primaryColorKey: "custom", customPrimaryColor: hex });
       },
     }),
     {
       name: "primary-color",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ primaryColorKey: state.primaryColorKey }),
+      partialize: (state) => ({
+        primaryColorKey: state.primaryColorKey,
+        customPrimaryColor: state.customPrimaryColor,
+      }),
       onRehydrateStorage: () => (state) => {
-        if (state) applyPrimaryColor(state.primaryColorKey);
+        if (state)
+          applyPrimaryColor(state.primaryColorKey, state.customPrimaryColor);
       },
     },
   ),
@@ -92,6 +132,8 @@ export const usePrimaryColorStore = create<PrimaryColorState>()(
 
 // Applying a color theme replaces its own override sheet, which would drop
 // the primary color, so re-apply after every theme change.
-subscribeColorTheme(() =>
-  applyPrimaryColor(usePrimaryColorStore.getState().primaryColorKey),
-);
+subscribeColorTheme(() => {
+  const { primaryColorKey, customPrimaryColor } =
+    usePrimaryColorStore.getState();
+  applyPrimaryColor(primaryColorKey, customPrimaryColor);
+});
