@@ -21,6 +21,7 @@ import {
   usePinnedHomeRoute,
 } from "#/hooks/use-pinned-home-route";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
+import { CommandMenuTrigger } from "#/components/features/command-menu/command-menu-trigger";
 import { SidebarNavLink } from "./sidebar-nav-link";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
