@@ -163,7 +163,7 @@ export function SidebarRailBody({
             )}
           >
             {!collapsed ? (
-              <div className="pb-0.5">
+              <div className="pb-2">
                 <BackendSelector identityHeader sidebarCollapsed={false} />
               </div>
             ) : isDesktopShell() ? null : (
