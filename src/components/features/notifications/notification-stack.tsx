@@ -159,7 +159,7 @@ export function NotificationStack() {
   return (
     <div
       data-testid="notification-stack"
-      className="pointer-events-none fixed top-16 right-4 z-[110] w-[400px] max-w-[calc(100vw-2rem)]"
+      className="pointer-events-none fixed top-4 right-4 z-[110] w-[400px] max-w-[calc(100vw-2rem)]"
     >
       <div
         className="grid pointer-events-auto [grid-template-areas:'stack']"
