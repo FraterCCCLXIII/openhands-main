@@ -15,6 +15,22 @@ import {
   TEXT_SIZE_MIN_PERCENT,
   useTextSizeStore,
 } from "#/stores/text-size-store";
+import {
+  PRIMARY_COLOR_PRESETS,
+  usePrimaryColorStore,
+  type PrimaryColorKey,
+} from "#/stores/primary-color-store";
+import { cn } from "#/utils/utils";
+
+const PRIMARY_COLOR_NAME_KEYS: Record<PrimaryColorKey, I18nKey> = {
+  blue: I18nKey.COLOR$BLUE,
+  violet: I18nKey.COLOR$VIOLET,
+  pink: I18nKey.COLOR$PINK,
+  red: I18nKey.COLOR$RED,
+  orange: I18nKey.COLOR$ORANGE,
+  green: I18nKey.COLOR$GREEN,
+  teal: I18nKey.COLOR$TEAL,
+};
 
 const LIGHT_THEME: ColorThemeKey = "light-plus";
 const LIGHT_THEME_KEYS: readonly ColorThemeKey[] = [
@@ -36,6 +52,12 @@ export function SidebarAppearanceMenu() {
   );
   const textSizePercent = useTextSizeStore((state) => state.percent);
   const setTextSizePercent = useTextSizeStore((state) => state.setPercent);
+  const primaryColorKey = usePrimaryColorStore(
+    (state) => state.primaryColorKey,
+  );
+  const setPrimaryColorKey = usePrimaryColorStore(
+    (state) => state.setPrimaryColorKey,
+  );
 
   const toggleLight = () => {
     const next = !isLight;
@@ -88,6 +110,35 @@ export function SidebarAppearanceMenu() {
               }
               className="w-full cursor-pointer accent-contrast"
             />
+          </div>
+          <div className="flex flex-col gap-2 text-sm text-contrast">
+            <span>{t(I18nKey.SIDEBAR$PRIMARY_COLOR)}</span>
+            <div role="radiogroup" className="flex flex-wrap gap-2">
+              {PRIMARY_COLOR_PRESETS.map((preset) => {
+                const isSelected = primaryColorKey === preset.key;
+                const colorName = t(PRIMARY_COLOR_NAME_KEYS[preset.key]);
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    aria-label={colorName}
+                    title={colorName}
+                    data-testid={`sidebar-primary-color-${preset.key}`}
+                    onClick={() =>
+                      // Clicking the selected swatch clears the override.
+                      setPrimaryColorKey(isSelected ? null : preset.key)
+                    }
+                    className={cn(
+                      "size-6 cursor-pointer rounded-full border-2 transition-transform hover:scale-110",
+                      isSelected ? "border-contrast" : "border-transparent",
+                    )}
+                    style={{ backgroundColor: preset.hex }}
+                  />
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : null}
