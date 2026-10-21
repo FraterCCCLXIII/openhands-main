@@ -27,6 +27,9 @@ import { useFreeModels } from "#/hooks/query/use-free-models";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { formatModelNameForDisplay } from "#/utils/format-model-name";
 import { getLockedCloudHost } from "#/api/agent-server-config";
+import { Server } from "lucide-react";
+import { BackendIdentityPicker } from "#/components/features/backends/backend-identity-picker";
+import { getBackendIdentityKey } from "#/stores/backend-identity-store";
 
 const AUTOMATIC_TITLE_LLM_PROFILE_KEY = "__automatic__";
 
@@ -213,6 +216,29 @@ function AppSettingsForm() {
           />
 
           <ThemeInput />
+
+          <section className="flex flex-col gap-2">
+            <h3 className="text-sm font-medium text-contrast">
+              {t(I18nKey.BACKEND_ICON$TITLE)}
+            </h3>
+            <p className="text-xs text-muted">
+              {t(I18nKey.BACKEND_ICON$DESCRIPTION)}
+            </p>
+            <BackendIdentityPicker
+              identityKey={getBackendIdentityKey(
+                activeBackend.backend.id,
+                activeBackend.orgId,
+              )}
+              fallback={
+                <Server
+                  aria-hidden
+                  width={24}
+                  height={24}
+                  className="text-contrast"
+                />
+              }
+            />
+          </section>
 
           <SettingsSwitch
             testId="enable-analytics-switch"

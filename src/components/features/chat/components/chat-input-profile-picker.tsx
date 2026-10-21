@@ -376,7 +376,7 @@ export function ChatInputAgentProfilePicker() {
         className={cn(
           chatInputPillButtonClassName,
           chatInputModelPillClassName,
-          "max-w-50 bg-surface",
+          "group max-w-50 bg-surface",
         )}
         title={
           isSwitching
@@ -406,7 +406,13 @@ export function ChatInputAgentProfilePicker() {
           testId="chat-input-agent-profile-icon"
           framed
         />
-        <span className="truncate">{currentProfileName}</span>
+        {/* Hover (or keyboard focus) expands the name track; otherwise it
+            stays collapsed so the pill shows only the icon and chevron. */}
+        <span className="grid grid-cols-[0fr] overflow-hidden transition-[grid-template-columns] duration-200 ease-out group-hover:grid-cols-[1fr] group-focus-visible:grid-cols-[1fr]">
+          <span className="min-w-0 truncate capitalize">
+            {currentProfileName}
+          </span>
+        </span>
         <ExpandChevron expanded={isDropdownOpen} className="size-3.5" />
       </button>
       {isDropdownOpen && (

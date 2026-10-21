@@ -6,6 +6,7 @@ import { DeleteProfileModal } from "./delete-profile-modal";
 import { AddModelsModal } from "./add-models-modal";
 import { ProfilesBody } from "./profiles-body";
 import { ProviderConnectionsManager } from "./provider-connections-manager";
+import { ProviderNav } from "./provider-nav";
 import ProfilesService, {
   ProfileInfo,
   type SaveProfileRequest,
@@ -22,6 +23,11 @@ import {
   displaySuccessToast,
 } from "#/utils/custom-toast-handlers";
 import { I18nKey } from "#/i18n/declaration";
+import {
+  ALL_PROVIDERS_KEY,
+  OTHER_PROVIDER_KEY,
+  getProfileProviderId,
+} from "#/utils/llm-profile-provider";
 
 interface LlmProfilesManagerProps {
   onAddProfile?: () => void;
@@ -82,6 +88,51 @@ export function LlmProfilesManager({
     }
     return counts;
   }, [profiles]);
+
+  const connectionsById = useMemo(
+    () => Object.fromEntries(connectionList.map((c) => [c.id, c])),
+    [connectionList],
+  );
+  // Left-nav entries: "All" first, then one per provider in first-appearance
+  // order, with the unknown-provider bucket pinned last.
+  const providerNavItems = useMemo(() => {
+    const countsByProvider = new Map<string, number>();
+    for (const profile of profiles) {
+      const id = getProfileProviderId(profile, connectionsById);
+      countsByProvider.set(id, (countsByProvider.get(id) ?? 0) + 1);
+    }
+    const providerIds = [...countsByProvider.keys()].sort(
+      (a, b) =>
+        Number(a === OTHER_PROVIDER_KEY) - Number(b === OTHER_PROVIDER_KEY),
+    );
+    return [
+      { id: ALL_PROVIDERS_KEY, count: profiles.length },
+      ...providerIds.map((id) => ({
+        id,
+        count: countsByProvider.get(id) ?? 0,
+      })),
+    ];
+  }, [profiles, connectionsById]);
+  const [selectedProviderKey, setSelectedProviderKey] =
+    useState(ALL_PROVIDERS_KEY);
+  // Fall back to "All" when the selected provider no longer has any profiles
+  // (e.g. its last profile was deleted), so the list never shows empty.
+  const activeProviderKey = providerNavItems.some(
+    (item) => item.id === selectedProviderKey,
+  )
+    ? selectedProviderKey
+    : ALL_PROVIDERS_KEY;
+  const visibleProfiles = useMemo(
+    () =>
+      activeProviderKey === ALL_PROVIDERS_KEY
+        ? profiles
+        : profiles.filter(
+            (profile) =>
+              getProfileProviderId(profile, connectionsById) ===
+              activeProviderKey,
+          ),
+    [profiles, connectionsById, activeProviderKey],
+  );
 
   const handleActivate = async (name: string) => {
     try {
@@ -167,21 +218,32 @@ export function LlmProfilesManager({
             </div>
           </div>
 
-          <ProfilesBody
-            isLoading={isLoading}
-            loadError={error ?? null}
-            profiles={profiles}
-            active={active}
-            canManage={canManage}
-            connectionNamesById={connectionNamesById}
-            onActivate={handleActivate}
-            onEdit={handleEdit}
-            onRename={setProfileToRename}
-            onDuplicate={handleDuplicate}
-            onDelete={setProfileToDelete}
-            isActivating={activateProfile.isPending}
-            isModelUnlisted={isModelUnlisted}
-          />
+          <div className="flex flex-col gap-4 md:flex-row md:items-start">
+            {profiles.length > 0 ? (
+              <ProviderNav
+                items={providerNavItems}
+                selectedId={activeProviderKey}
+                onSelect={setSelectedProviderKey}
+              />
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <ProfilesBody
+                isLoading={isLoading}
+                loadError={error ?? null}
+                profiles={visibleProfiles}
+                active={active}
+                canManage={canManage}
+                connectionNamesById={connectionNamesById}
+                onActivate={handleActivate}
+                onEdit={handleEdit}
+                onRename={setProfileToRename}
+                onDuplicate={handleDuplicate}
+                onDelete={setProfileToDelete}
+                isActivating={activateProfile.isPending}
+                isModelUnlisted={isModelUnlisted}
+              />
+            </div>
+          </div>
         </div>
 
         {supportsConnections && canManage ? (
