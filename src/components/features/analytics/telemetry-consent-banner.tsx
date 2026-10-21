@@ -20,6 +20,29 @@ import { AGENT_CANVAS_CLIENT_VERSION } from "#/api/client-source";
 /** Matches `--duration-motion-base` in tailwind.css (the modal exit). */
 const CONSENT_EXIT_MS = 200;
 
+/** Browser-local flag set by "Do not show again"; hides the prompt on reloads. */
+const CONSENT_PROMPT_DISMISSED_STORAGE_KEY =
+  "openhands-telemetry-consent-prompt-dismissed";
+
+function readConsentPromptDismissed(): boolean {
+  try {
+    return (
+      window.localStorage.getItem(CONSENT_PROMPT_DISMISSED_STORAGE_KEY) ===
+      "true"
+    );
+  } catch {
+    return false;
+  }
+}
+
+function writeConsentPromptDismissed(): void {
+  try {
+    window.localStorage.setItem(CONSENT_PROMPT_DISMISSED_STORAGE_KEY, "true");
+  } catch {
+    // Storage can be unavailable (private windows, blocked site data).
+  }
+}
+
 interface TelemetryConsentBannerProps {
   onChoice?: (granted: boolean) => void;
 }
@@ -40,6 +63,7 @@ function LocalTelemetryConsentBanner({
   const [isReady, setIsReady] = React.useState(false);
   const [hasSubmittedChoice, setHasSubmittedChoice] = React.useState(false);
   const [isClosing, setIsClosing] = React.useState(false);
+  const [isPromptDismissed] = React.useState(readConsentPromptDismissed);
 
   React.useEffect(() => {
     setHasSubmittedChoice(false);
@@ -50,7 +74,8 @@ function LocalTelemetryConsentBanner({
     isBackendConnected &&
     hasLoadedSettings &&
     settings?.user_consents_to_analytics === null &&
-    !hasSubmittedChoice;
+    !hasSubmittedChoice &&
+    !isPromptDismissed;
 
   React.useEffect(() => {
     if (ready && shouldShow) {
@@ -65,12 +90,15 @@ function LocalTelemetryConsentBanner({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const granted = formData.get("analytics") === "on";
+    const doNotShowAgain = formData.get("doNotShowAgain") === "on";
 
     try {
       await saveSettings({ user_consents_to_analytics: granted });
     } catch {
       return;
     }
+
+    if (doNotShowAgain) writeConsentPromptDismissed();
 
     // Play the exit animation before the banner unmounts; the saved settings
     // flip `shouldShow` off right away, so `isClosing` keeps it mounted.
@@ -97,12 +125,17 @@ function LocalTelemetryConsentBanner({
         className="flex flex-col gap-2"
       >
         <ModalBody className="border border-border">
-          <OpenHandsLogoWhite
-            width={40}
-            height={40}
-            className="mx-auto text-contrast [&_path:not([fill=transparent])]:fill-current"
-            aria-hidden
-          />
+          <span
+            data-testid="telemetry-consent-logo"
+            className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-border bg-[linear-gradient(180deg,rgb(38_38_38),rgb(0_0_0))] shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_6px_16px_-6px_rgb(0_0_0/0.6)]"
+          >
+            <OpenHandsLogoWhite
+              width={40}
+              height={40}
+              className="text-contrast [&_path:not([fill=transparent])]:fill-current"
+              aria-hidden
+            />
+          </span>
           <div className="flex items-baseline justify-center gap-2">
             <BaseModalTitle title={t(I18nKey.ONBOARDING$TITLE)} />
             <p
@@ -157,6 +190,16 @@ function LocalTelemetryConsentBanner({
               </a>
             </p>
           </div>
+
+          <label className="flex gap-2 items-center self-start text-sm cursor-pointer">
+            <input
+              name="doNotShowAgain"
+              type="checkbox"
+              defaultChecked
+              className="oh-checkbox"
+            />
+            {t(I18nKey.TELEMETRY$DO_NOT_SHOW_AGAIN)}
+          </label>
 
           <BrandButton
             testId="confirm-telemetry-preferences"
