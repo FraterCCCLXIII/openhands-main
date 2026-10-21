@@ -123,9 +123,7 @@ function AgentServerBootstrapLoading() {
   return (
     <main className="min-h-screen bg-canvas-base px-6 py-10 text-contrast">
       <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center">
-        <div className="rounded-3xl border border-contrast/10 bg-canvas-base/80 px-8 py-10 shadow-2xl">
-          <LoadingSpinner size="large" />
-        </div>
+        <LoadingSpinner size="large" />
       </div>
     </main>
   );
