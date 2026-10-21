@@ -195,7 +195,9 @@ describe("useLoadOlderEvents", () => {
     } as ReturnType<typeof useConversationHistory>);
 
     act(() => {
-      useEventStore.getState().addEvent(makeEvent("evt-recent", "2024-06-01T00:00:00Z"));
+      useEventStore
+        .getState()
+        .addEvent(makeEvent("evt-recent", "2024-06-01T00:00:00Z"));
     });
 
     const olderPage = [

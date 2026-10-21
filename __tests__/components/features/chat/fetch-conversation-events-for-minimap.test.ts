@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { hasMoreEventSearchPages, isEventSearchExhausted } from "#/components/features/chat/conversation-minimap/fetch-conversation-events-for-minimap";
+import {
+  hasMoreEventSearchPages,
+  isEventSearchExhausted,
+} from "#/components/features/chat/conversation-minimap/fetch-conversation-events-for-minimap";
 
 describe("hasMoreEventSearchPages", () => {
   it("returns true when the server provides next_page_id", () => {

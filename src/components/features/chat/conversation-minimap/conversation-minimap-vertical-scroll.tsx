@@ -7,8 +7,8 @@ import {
   type ReactNode,
 } from "react";
 import {
-  readVerticalScrollFadeState,
-  type VerticalScrollFadeState,
+  readVerticalScrollEdgeState,
+  type VerticalScrollEdgeState,
 } from "#/utils/scroll-fade-state";
 import { cn } from "#/utils/utils";
 
@@ -50,7 +50,7 @@ export const ConversationMinimapVerticalScroll = forwardRef<
   forwardedRef,
 ) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [fadeState, setFadeState] = useState<VerticalScrollFadeState>({
+  const [fadeState, setFadeState] = useState<VerticalScrollEdgeState>({
     top: false,
     bottom: false,
   });
@@ -73,7 +73,7 @@ export const ConversationMinimapVerticalScroll = forwardRef<
     if (!element) {
       return;
     }
-    const next = readVerticalScrollFadeState(element);
+    const next = readVerticalScrollEdgeState(element);
     setFadeState((current) =>
       current.top === next.top && current.bottom === next.bottom
         ? current

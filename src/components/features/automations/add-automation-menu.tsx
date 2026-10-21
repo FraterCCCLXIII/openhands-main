@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom";
 import { ChevronDown, FileUp, Plus, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ContextMenuListItem } from "#/components/features/context-menu/context-menu-list-item";
