@@ -4,10 +4,7 @@ import { ToggleSwitch } from "#/ui/toggle-switch";
 import { I18nKey } from "#/i18n/declaration";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 import { CanvasExtensionIcon } from "./canvas-extension-icon";
-import {
-  extensionModuleCardPillClassName,
-  extensionModuleCardSurfaceClassName,
-} from "#/utils/extension-module-card-classes";
+import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
 
 interface CanvasExtensionCardProps {
   extension: InstalledCanvasExtensionInfo;
@@ -27,25 +24,16 @@ export function CanvasExtensionCard({
   const { t } = useTranslation("openhands");
   const pages = extension.manifest?.contributes?.pages ?? [];
   const displayName = extension.manifest?.display_name || extension.name;
+  const description = extension.description || extension.manifest?.description;
 
   return (
     <article
       data-testid={`canvas-extension-card-${extension.name}`}
-      className={`flex min-w-0 flex-col gap-4 p-4 ${extensionModuleCardSurfaceClassName}`}
+      className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5"
     >
-      <header className="flex items-start justify-between gap-4">
-        <CanvasExtensionIcon
-          extension={extension}
-          size={20}
-          className="mt-0.5 shrink-0"
-        />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-contrast">
-            {displayName}
-          </h3>
-          <p className="mt-0.5 truncate text-xs text-tertiary-alt">
-            {extension.source}
-          </p>
+      <div className="relative flex h-36 items-end bg-linear-to-br from-cool-grey-900 via-base-secondary to-canvas-base px-4 pb-4">
+        <div className="flex size-16 items-center justify-center rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
+          <CanvasExtensionIcon extension={extension} size={36} />
         </div>
         <ToggleSwitch
           enabled={extension.enabled}
@@ -54,70 +42,72 @@ export function CanvasExtensionCard({
           )}
           onToggle={onToggle}
           disabled={isBusy}
-          className={isBusy ? "pointer-events-none opacity-50" : undefined}
+          className={`absolute top-3 right-3 ${isBusy ? "pointer-events-none opacity-50" : ""}`}
         />
-      </header>
+      </div>
 
-      {extension.description || extension.manifest?.description ? (
-        <p className="text-xs leading-relaxed text-tertiary-light">
-          {extension.description || extension.manifest?.description}
-        </p>
-      ) : null}
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-4">
+        <h3 className="truncate text-base font-semibold text-contrast">
+          {displayName}
+        </h3>
+        <p className="truncate text-xs text-tertiary-alt">{extension.source}</p>
 
-      <div className="flex flex-wrap gap-2">
-        <span className={extensionModuleCardPillClassName}>
-          {extension.enabled
-            ? t(I18nKey.SETTINGS$SKILLS_ENABLED)
-            : t(I18nKey.SETTINGS$SKILLS_DISABLED)}
-        </span>
-        <span className={extensionModuleCardPillClassName}>
-          {t(I18nKey.SETTINGS$SKILLS_VERSION, {
-            version: extension.version,
-          })}
-        </span>
-        {pages.length ? (
+        {description ? (
+          <p className="line-clamp-2 text-xs leading-relaxed text-tertiary-light">
+            {description}
+          </p>
+        ) : null}
+
+        <div className="mt-1 flex flex-wrap gap-1.5">
           <span className={extensionModuleCardPillClassName}>
-            {t(I18nKey.SETTINGS$APPS_PAGES)}: {pages.length}
+            {extension.enabled
+              ? t(I18nKey.SETTINGS$SKILLS_ENABLED)
+              : t(I18nKey.SETTINGS$SKILLS_DISABLED)}
           </span>
+          <span className={extensionModuleCardPillClassName}>
+            {t(I18nKey.SETTINGS$SKILLS_VERSION, {
+              version: extension.version,
+            })}
+          </span>
+          {pages.length ? (
+            <span className={extensionModuleCardPillClassName}>
+              {t(I18nKey.SETTINGS$APPS_PAGES)}: {pages.length}
+            </span>
+          ) : null}
+          {pages.map((page) => (
+            <span key={page.id} className={extensionModuleCardPillClassName}>
+              {page.title}
+            </span>
+          ))}
+        </div>
+
+        {extension.resolved_ref || extension.repo_path ? (
+          <dl className="mt-1 grid min-w-0 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+            {extension.resolved_ref ? (
+              <>
+                <dt className="text-tertiary-alt">
+                  {t(I18nKey.SETTINGS$PLUGINS_REF_LABEL)}
+                </dt>
+                <dd className="min-w-0 truncate font-mono text-tertiary-light">
+                  {extension.resolved_ref}
+                </dd>
+              </>
+            ) : null}
+            {extension.repo_path ? (
+              <>
+                <dt className="text-tertiary-alt">
+                  {t(I18nKey.SETTINGS$PLUGINS_REPO_PATH_LABEL)}
+                </dt>
+                <dd className="min-w-0 truncate text-tertiary-light">
+                  {extension.repo_path}
+                </dd>
+              </>
+            ) : null}
+          </dl>
         ) : null}
       </div>
 
-      <dl className="grid min-w-0 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-        {extension.resolved_ref ? (
-          <>
-            <dt className="text-tertiary-alt">
-              {t(I18nKey.SETTINGS$PLUGINS_REF_LABEL)}
-            </dt>
-            <dd className="min-w-0 truncate font-mono text-tertiary-light">
-              {extension.resolved_ref}
-            </dd>
-          </>
-        ) : null}
-        {extension.repo_path ? (
-          <>
-            <dt className="text-tertiary-alt">
-              {t(I18nKey.SETTINGS$PLUGINS_REPO_PATH_LABEL)}
-            </dt>
-            <dd className="min-w-0 truncate text-tertiary-light">
-              {extension.repo_path}
-            </dd>
-          </>
-        ) : null}
-      </dl>
-
-      {pages.length ? (
-        <section className="flex min-w-0 flex-col gap-2">
-          <ul className="flex flex-wrap gap-2">
-            {pages.map((page) => (
-              <li key={page.id} className={extensionModuleCardPillClassName}>
-                {page.title}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <footer className="flex justify-end gap-2 border-t border-border pt-3">
+      <footer className="flex justify-end gap-2 px-4 pb-4">
         <BrandButton
           type="button"
           variant="secondary"

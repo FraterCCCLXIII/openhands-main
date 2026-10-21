@@ -7,6 +7,8 @@ import { AddModelsModal } from "./add-models-modal";
 import { ProfilesBody } from "./profiles-body";
 import { ProviderConnectionsManager } from "./provider-connections-manager";
 import { ProviderNav } from "./provider-nav";
+import { ProfileModelFamilyFilter } from "./profile-model-family-filter";
+import { ProviderConnectionModal } from "./provider-connection-modal";
 import ProfilesService, {
   ProfileInfo,
   type SaveProfileRequest,
@@ -17,16 +19,18 @@ import { useProviderConnections } from "#/hooks/query/use-provider-connections";
 import { useActivateLlmProfile } from "#/hooks/mutation/use-activate-llm-profile";
 import { useSaveLlmProfile } from "#/hooks/mutation/use-save-llm-profile";
 import { useCanManageOrgProfiles } from "#/hooks/use-can-manage-org-profiles";
+import { useSearchProviders } from "#/hooks/query/use-search-providers";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import {
   displayErrorToast,
   displaySuccessToast,
 } from "#/utils/custom-toast-handlers";
 import { I18nKey } from "#/i18n/declaration";
+import { mapProvider } from "#/utils/map-provider";
 import {
-  ALL_PROVIDERS_KEY,
-  OTHER_PROVIDER_KEY,
-  getProfileProviderId,
+  ALL_MODEL_FAMILIES_KEY,
+  type ModelFamily,
+  getProfileModelFamily,
 } from "#/utils/llm-profile-provider";
 
 interface LlmProfilesManagerProps {
@@ -93,45 +97,78 @@ export function LlmProfilesManager({
     () => Object.fromEntries(connectionList.map((c) => [c.id, c])),
     [connectionList],
   );
-  // Left-nav entries: "All" first, then one per provider in first-appearance
-  // order, with the unknown-provider bucket pinned last.
-  const providerNavItems = useMemo(() => {
-    const countsByProvider = new Map<string, number>();
-    for (const profile of profiles) {
-      const id = getProfileProviderId(profile, connectionsById);
-      countsByProvider.set(id, (countsByProvider.get(id) ?? 0) + 1);
+  // Left-nav entries: every verified provider plus any provider that already
+  // has a connection. Connected providers sort first.
+  const { data: providerCatalog } = useSearchProviders();
+  const providerAccountItems = useMemo(() => {
+    const providerIds = new Set<string>();
+    for (const provider of providerCatalog ?? []) {
+      if (provider.verified) providerIds.add(provider.name);
     }
-    const providerIds = [...countsByProvider.keys()].sort(
-      (a, b) =>
-        Number(a === OTHER_PROVIDER_KEY) - Number(b === OTHER_PROVIDER_KEY),
-    );
-    return [
-      { id: ALL_PROVIDERS_KEY, count: profiles.length },
-      ...providerIds.map((id) => ({
+    for (const connection of connectionList) {
+      providerIds.add(connection.provider);
+    }
+    return [...providerIds]
+      .map((id) => ({
         id,
-        count: countsByProvider.get(id) ?? 0,
-      })),
-    ];
+        connectionCount: connectionList.filter((c) => c.provider === id).length,
+      }))
+      .sort(
+        (a, b) =>
+          b.connectionCount - a.connectionCount ||
+          mapProvider(a.id).localeCompare(mapProvider(b.id)),
+      );
+  }, [providerCatalog, connectionList]);
+  // The provider whose auth screen is open. It edits that provider's first
+  // connection when one exists, and otherwise creates a connection for it.
+  const [authProviderId, setAuthProviderId] = useState<string | null>(null);
+  const authConnection = useMemo(
+    () => connectionList.find((c) => c.provider === authProviderId) ?? null,
+    [connectionList, authProviderId],
+  );
+
+  // Filter chips above the profile list: "All", then each model family that
+  // has at least one profile.
+  const familyCounts = useMemo(() => {
+    const counts: Record<ModelFamily, number> = {
+      claude: 0,
+      openai: 0,
+      other: 0,
+    };
+    for (const profile of profiles) {
+      counts[getProfileModelFamily(profile, connectionsById)] += 1;
+    }
+    return counts;
   }, [profiles, connectionsById]);
-  const [selectedProviderKey, setSelectedProviderKey] =
-    useState(ALL_PROVIDERS_KEY);
-  // Fall back to "All" when the selected provider no longer has any profiles
+  const modelFamilyItems = useMemo(
+    () => [
+      { id: ALL_MODEL_FAMILIES_KEY, count: profiles.length },
+      ...(["claude", "openai", "other"] as const)
+        .filter((family) => familyCounts[family] > 0)
+        .map((family) => ({ id: family, count: familyCounts[family] })),
+    ],
+    [profiles.length, familyCounts],
+  );
+  const [selectedFamilyKey, setSelectedFamilyKey] = useState(
+    ALL_MODEL_FAMILIES_KEY,
+  );
+  // Fall back to "All" when the selected family no longer has any profiles
   // (e.g. its last profile was deleted), so the list never shows empty.
-  const activeProviderKey = providerNavItems.some(
-    (item) => item.id === selectedProviderKey,
+  const activeFamilyKey = modelFamilyItems.some(
+    (item) => item.id === selectedFamilyKey,
   )
-    ? selectedProviderKey
-    : ALL_PROVIDERS_KEY;
+    ? selectedFamilyKey
+    : ALL_MODEL_FAMILIES_KEY;
   const visibleProfiles = useMemo(
     () =>
-      activeProviderKey === ALL_PROVIDERS_KEY
+      activeFamilyKey === ALL_MODEL_FAMILIES_KEY
         ? profiles
         : profiles.filter(
             (profile) =>
-              getProfileProviderId(profile, connectionsById) ===
-              activeProviderKey,
+              getProfileModelFamily(profile, connectionsById) ===
+              activeFamilyKey,
           ),
-    [profiles, connectionsById, activeProviderKey],
+    [profiles, connectionsById, activeFamilyKey],
   );
 
   const handleActivate = async (name: string) => {
@@ -219,14 +256,22 @@ export function LlmProfilesManager({
           </div>
 
           <div className="flex flex-col gap-4 md:flex-row md:items-start">
-            {profiles.length > 0 ? (
+            {supportsConnections &&
+            canManage &&
+            providerAccountItems.length > 0 ? (
               <ProviderNav
-                items={providerNavItems}
-                selectedId={activeProviderKey}
-                onSelect={setSelectedProviderKey}
+                items={providerAccountItems}
+                onSelect={setAuthProviderId}
               />
             ) : null}
-            <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              {profiles.length > 0 ? (
+                <ProfileModelFamilyFilter
+                  items={modelFamilyItems}
+                  selectedId={activeFamilyKey}
+                  onSelect={setSelectedFamilyKey}
+                />
+              ) : null}
               <ProfilesBody
                 isLoading={isLoading}
                 loadError={error ?? null}
@@ -275,6 +320,14 @@ export function LlmProfilesManager({
         existingNames={profiles.map((p) => p.name)}
         onClose={() => setShowAddModels(false)}
       />
+      {authProviderId ? (
+        <ProviderConnectionModal
+          isCreate={!authConnection}
+          connection={authConnection}
+          presetProvider={authProviderId}
+          onClose={() => setAuthProviderId(null)}
+        />
+      ) : null}
     </>
   );
 }

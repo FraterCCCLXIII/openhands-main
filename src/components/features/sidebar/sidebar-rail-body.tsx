@@ -12,6 +12,7 @@ import {
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { getLockedCloudHost } from "#/api/agent-server-config";
+import { DEFAULT_SETTINGS } from "#/services/settings";
 import {
   automationListPath,
   getInterfaceCopy,
@@ -38,6 +39,7 @@ import { SidebarConversationList } from "./sidebar-conversation-list";
 import { SidebarOnboardingChecklist } from "./sidebar-onboarding-checklist";
 import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
 import { applyThemeForBackend } from "#/stores/backend-color-theme-store";
+import { useSettings } from "#/hooks/query/use-settings";
 import AutomationsIcon from "#/icons/automations.svg?react";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
@@ -106,6 +108,20 @@ export function SidebarRailBody({
   onOpenManageBackends,
 }: SidebarRailBodyProps) {
   const { t } = useTranslation("openhands");
+  const { data: settings } = useSettings();
+  // The settings hook fills in placeholder git identity values when the user
+  // has not set one, so hide those rather than showing them as the account.
+  const gitUserName = settings?.git_user_name?.trim();
+  const userName =
+    gitUserName && gitUserName !== DEFAULT_SETTINGS.git_user_name
+      ? gitUserName
+      : undefined;
+  const gitUserEmail = settings?.git_user_email?.trim();
+  const userEmail =
+    settings?.email?.trim() ||
+    (gitUserEmail && gitUserEmail !== DEFAULT_SETTINGS.git_user_email
+      ? gitUserEmail
+      : undefined);
   const { pages: canvasExtensionPages } = useCanvasExtensionsRuntime();
   const backendCloseTimerRef = collapsedBackendCloseTimer;
   const { isPinnedRoute, togglePinnedRoute } = usePinnedHomeRoute();
@@ -438,13 +454,22 @@ export function SidebarRailBody({
               "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-t-[0.5px] border-border pt-2 px-2.5",
             )}
           >
-            <span
-              data-testid="sidebar-footer-username"
-              className="block truncate px-2 text-sm text-contrast"
-              title={activeBackend.name}
-            >
-              {activeBackend.name}
-            </span>
+            {userName ? (
+              <div
+                data-testid="sidebar-footer-user-name"
+                className="truncate px-2 text-sm font-medium text-contrast"
+              >
+                {userName}
+              </div>
+            ) : null}
+            {userEmail ? (
+              <div
+                data-testid="sidebar-footer-user-email"
+                className="truncate px-2 text-xs text-muted"
+              >
+                {userEmail}
+              </div>
+            ) : null}
             <div className="flex items-center justify-between gap-2">
               <NavigationLink
                 to="/settings"

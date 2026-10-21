@@ -70,7 +70,10 @@ export function BackendRow({
 
   return (
     <li
-      className="flex items-stretch"
+      className={cn(
+        "flex items-stretch",
+        canSelect && "transition-colors hover:bg-interactive-hover",
+      )}
       data-testid={`manage-backends-row-${backend.name}`}
     >
       <button
@@ -80,7 +83,7 @@ export function BackendRow({
         className={cn(
           "flex min-w-0 flex-1 items-center gap-3 px-3 py-3 text-left",
           canSelect
-            ? "cursor-pointer transition-colors hover:bg-interactive-hover focus-visible:bg-interactive-hover focus-visible:outline-none"
+            ? "cursor-pointer focus-visible:bg-interactive-hover focus-visible:outline-none"
             : "cursor-default",
         )}
       >

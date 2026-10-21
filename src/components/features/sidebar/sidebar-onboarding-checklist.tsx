@@ -1,5 +1,6 @@
 import { Tooltip } from "@heroui/react";
 import { Check, ChevronDown, ClipboardList, X } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { useTracking } from "#/hooks/use-tracking";
@@ -17,6 +18,12 @@ import {
 import { AnimatedCollapse } from "#/components/shared/animated-collapse";
 import { SidebarOnboardingChecklistItemPreview } from "./sidebar-onboarding-checklist-item-preview";
 import { useSidebarOnboardingChecklist } from "./use-sidebar-onboarding-checklist";
+import { useSidebarOnboardingTour } from "./sidebar-onboarding-tour";
+
+type StartTour = (
+  id: SidebarOnboardingChecklistItemId,
+  event: MouseEvent<HTMLAnchorElement>,
+) => void;
 
 const CHECKLIST_ITEM_TOOLTIP_CLASS =
   "rounded-xl border border-border bg-base-secondary p-0 text-contrast shadow-xl";
@@ -50,10 +57,12 @@ function ChecklistItem({
   id,
   isComplete,
   onActivate,
+  onStartTour,
 }: {
   id: SidebarOnboardingChecklistItemId;
   isComplete: boolean;
   onActivate?: () => void;
+  onStartTour: StartTour;
 }) {
   const { t } = useTranslation("openhands");
   const { trackOnboardingLinkClicked } = useTracking();
@@ -62,7 +71,7 @@ function ChecklistItem({
   const href = getSidebarOnboardingChecklistHref(id);
   const linkId = SIDEBAR_ONBOARDING_CHECKLIST_LINK_IDS[id];
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
     trackOnboardingLinkClicked({
       linkId,
       destinationType: SIDEBAR_ONBOARDING_CHECKLIST_DESTINATION_TYPES[id],
@@ -71,6 +80,7 @@ function ChecklistItem({
       isExternal: href.kind === "external",
     });
     onActivate?.();
+    onStartTour(id, event);
   };
 
   const handleDocsClick = () => {
@@ -143,9 +153,11 @@ function ChecklistItem({
 function NextStepButton({
   id,
   onActivate,
+  onStartTour,
 }: {
   id: SidebarOnboardingChecklistItemId;
   onActivate?: () => void;
+  onStartTour: StartTour;
 }) {
   const { t } = useTranslation("openhands");
   const href = getSidebarOnboardingChecklistHref(id);
@@ -173,6 +185,7 @@ function NextStepButton({
       to={href.href}
       data-testid="sidebar-onboarding-checklist-next-step"
       className={className}
+      onClick={(event) => onStartTour(id, event)}
     >
       {label}
     </NavigationLink>
@@ -193,6 +206,7 @@ export function SidebarOnboardingChecklist({
     toggleMinimized,
     markJoinSlackComplete,
   } = useSidebarOnboardingChecklist();
+  const startTour = useSidebarOnboardingTour();
 
   if (collapsed || !isVisible) {
     return null;
@@ -307,6 +321,7 @@ export function SidebarOnboardingChecklist({
                   ? markJoinSlackComplete
                   : undefined
               }
+              onStartTour={startTour}
             />
           ))}
         </ul>
@@ -319,6 +334,7 @@ export function SidebarOnboardingChecklist({
                   ? markJoinSlackComplete
                   : undefined
               }
+              onStartTour={startTour}
             />
             <a
               href="https://docs.openhands.dev/"
