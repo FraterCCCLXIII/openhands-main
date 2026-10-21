@@ -193,22 +193,6 @@ export function SidebarRailBody({
             </button>
           ) : null}
         </div>
-        {!collapsed && showCollapseToggle ? (
-          <button
-            type="button"
-            data-testid="sidebar-collapse-toggle"
-            aria-pressed={collapsed}
-            aria-label={collapseToggleLabel}
-            onClick={onCollapse}
-            className={cn(
-              "hidden md:inline-flex ml-auto mr-0.5",
-              SIDEBAR_ICON_BUTTON_CLASS,
-              "text-muted hover:text-contrast hover:bg-surface-raised",
-            )}
-          >
-            <PanelLeftClose width={18} height={18} aria-hidden />
-          </button>
-        ) : null}
         {!collapsed && showMobileCloseButton ? (
           <button
             type="button"
@@ -461,6 +445,22 @@ export function SidebarRailBody({
               <div className="min-w-0 flex-1 empty:hidden">
                 <AgentCanvasVersionTile hideWhenUpToDate />
               </div>
+              {showCollapseToggle ? (
+                <button
+                  type="button"
+                  data-testid="sidebar-collapse-toggle"
+                  aria-pressed={collapsed}
+                  aria-label={collapseToggleLabel}
+                  onClick={onCollapse}
+                  className={cn(
+                    "hidden md:inline-flex shrink-0",
+                    SIDEBAR_ICON_BUTTON_CLASS,
+                    "text-muted hover:text-contrast hover:bg-surface-raised",
+                  )}
+                >
+                  <PanelLeftClose width={18} height={18} aria-hidden />
+                </button>
+              ) : null}
             </div>
           </div>
         </>
