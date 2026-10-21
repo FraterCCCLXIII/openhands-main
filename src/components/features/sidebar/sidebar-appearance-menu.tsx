@@ -12,13 +12,14 @@ import {
 import type { ColorThemeKey } from "#/themes/color-theme/types";
 import {
   readPersistedColorTheme,
-  setColorTheme,
+  applyColorTheme,
 } from "#/themes/color-theme/runtime";
 import {
   TEXT_SIZE_MAX_PERCENT,
   TEXT_SIZE_MIN_PERCENT,
   useTextSizeStore,
 } from "#/stores/text-size-store";
+import { useBackendColorThemeStore } from "#/stores/backend-color-theme-store";
 import {
   PRIMARY_COLOR_PRESETS,
   usePrimaryColorStore,
@@ -45,12 +46,18 @@ const LIGHT_THEME_KEYS: readonly ColorThemeKey[] = [
 ];
 
 /** Palette button that opens a popover with a light theme toggle and a text size slider. */
-export function SidebarAppearanceMenu() {
+export function SidebarAppearanceMenu({
+  backendId,
+}: {
+  /** The connected backend whose theme the selector edits. */
+  backendId: string;
+}) {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = React.useState(false);
-  const [colorTheme, setColorThemeState] = React.useState<ColorThemeKey>(
-    readPersistedColorTheme,
+  const mappedTheme = useBackendColorThemeStore(
+    (state) => state.themeByBackendId[backendId],
   );
+  const colorTheme: ColorThemeKey = mappedTheme ?? readPersistedColorTheme();
   const themeSelectId = React.useId();
   const isLight = LIGHT_THEME_KEYS.includes(colorTheme);
   const anchorRef = React.useRef<HTMLButtonElement>(null);
@@ -80,8 +87,8 @@ export function SidebarAppearanceMenu() {
   );
 
   const selectTheme = (key: ColorThemeKey) => {
-    setColorTheme(key);
-    setColorThemeState(key);
+    useBackendColorThemeStore.getState().setThemeForBackend(backendId, key);
+    applyColorTheme(key);
   };
 
   const toggleLight = () => {

@@ -37,6 +37,7 @@ import { AgentCanvasVersionTile } from "#/components/features/settings/agent-can
 import { SidebarConversationList } from "./sidebar-conversation-list";
 import { SidebarOnboardingChecklist } from "./sidebar-onboarding-checklist";
 import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
+import { applyThemeForBackend } from "#/stores/backend-color-theme-store";
 import AutomationsIcon from "#/icons/automations.svg?react";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
@@ -120,6 +121,11 @@ export function SidebarRailBody({
       testId,
     };
   };
+
+  // Each backend keeps its own color theme; switching backends applies it.
+  React.useEffect(() => {
+    applyThemeForBackend(activeBackend.id);
+  }, [activeBackend.id]);
 
   const isCloudBackend = activeBackend.kind === "cloud";
   // `org` is consumed by the cloud settings loader so the page opens on the
@@ -442,7 +448,7 @@ export function SidebarRailBody({
                 <Settings width={16} height={16} className="shrink-0" />
                 <span className="truncate">{t(I18nKey.SIDEBAR$SETTINGS)}</span>
               </NavigationLink>
-              <SidebarAppearanceMenu />
+              <SidebarAppearanceMenu backendId={activeBackend.id} />
               <div className="min-w-0 flex-1 empty:hidden">
                 <AgentCanvasVersionTile hideWhenUpToDate />
               </div>
