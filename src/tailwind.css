@@ -11,6 +11,12 @@
 
 /* Motion tokens: every modal, overlay, and popover animates with these. */
 @theme {
+  /* Slightly rounder than Tailwind's defaults across every rounded control. */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
   --duration-motion-fast: 150ms;
   --duration-motion-base: 200ms;
   --duration-motion-slow: 280ms;
