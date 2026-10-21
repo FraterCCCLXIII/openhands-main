@@ -37202,7 +37202,8 @@
     "es": "Minimapa de conversación, {{count}} turnos",
     "ca": "Minimapa de conversa, {{count}} torns",
     "tr": "Konuşma minimap, {{count}} tur",
-    "uk": "Мінімапа розмови, {{count}} ходів"
+    "uk": "Мінімапа розмови, {{count}} ходів",
+    "id": "Peta mini percakapan, {{count}} giliran"
   },
   "CHAT_INTERFACE$MINIMAP_EMPTY_PREVIEW": {
     "en": "Message without text",
@@ -37219,7 +37220,8 @@
     "es": "Mensaje sin texto",
     "ca": "Missatge sense text",
     "tr": "Metinsiz mesaj",
-    "uk": "Повідомлення без тексту"
+    "uk": "Повідомлення без тексту",
+    "id": "Pesan tanpa teks"
   },
   "SETTINGS$CREATE_PROFILE": {
     "en": "Create Profile",
