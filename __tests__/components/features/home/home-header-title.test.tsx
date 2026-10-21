@@ -5,12 +5,15 @@ import { HomeHeaderTitle } from "#/components/features/home/home-header/home-hea
 
 describe("HomeHeaderTitle", () => {
   it("frames the splash copy around engineering work, not greenfield building", () => {
+    // Pin the random subtitle pick to the translated engineering-tasks line.
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
     renderWithProviders(<HomeHeaderTitle />);
 
     expect(screen.getByText("HOME$WHAT_TO_WORK_ON")).toBeInTheDocument();
     expect(screen.getByTestId("home-header-subtitle")).toHaveTextContent(
       "HOME$ENGINEERING_TASKS_SUBHEADER",
     );
+    randomSpy.mockRestore();
   });
 
   describe("welcome-back message", () => {
