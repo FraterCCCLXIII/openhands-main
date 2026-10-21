@@ -526,21 +526,34 @@ export function ChatInputActions({
               <ChangeAgentButton />
             </div>
           )}
-          {showAgentProfileSwitch && (
-            <div
-              ref={agentProfileRef}
-              className={cn(!showAgentProfileInline && "hidden")}
-            >
-              <ChatInputAgentProfilePicker />
+          {/* One joined pill: model segment first, then the agent-profile
+              segment. A divider shows only between two rendered segments. The
+              "+" menu keeps its own agent-profile entry for widths where the
+              pill collapses into the overflow menu. */}
+          <div
+            data-testid="chat-input-model-agent-pill"
+            className={cn(
+              "flex min-w-0 items-center rounded-[100px] border border-transparent has-[button]:border-border-subtle",
+              "[&>*:has(button)~*:has(button)]:border-l [&>*:has(button)~*:has(button)]:border-border-subtle",
+              !showModelInline && "hidden",
+            )}
+          >
+            <div ref={modelRef}>
+              {/* Picker depends on backend + ACP context; see the
+                  `pickerKind` cases above. */}
+              {pickerKind === "model" ? (
+                <ChatInputModel />
+              ) : (
+                <ChatInputLlmProfilePicker />
+              )}
             </div>
-          )}
-          <div ref={modelRef} className={cn(!showModelInline && "hidden")}>
-            {/* Picker depends on backend + ACP context; see the `pickerKind`
-                cases above. */}
-            {pickerKind === "model" ? (
-              <ChatInputModel />
-            ) : (
-              <ChatInputLlmProfilePicker />
+            {showAgentProfileSwitch && (
+              <div
+                ref={agentProfileRef}
+                className={cn(!showAgentProfileInline && "hidden")}
+              >
+                <ChatInputAgentProfilePicker />
+              </div>
             )}
           </div>
 
