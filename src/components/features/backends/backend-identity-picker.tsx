@@ -12,6 +12,17 @@ import {
 } from "./backend-identity-icons";
 import { AccountIdentityTile } from "./backend-identity-tile";
 
+/** Preset backgrounds for an account icon; the first choice clears the color. */
+const BACKGROUND_SWATCHES = [
+  { key: "blue", color: "#3B82F6", labelKey: I18nKey.COLOR$BLUE },
+  { key: "violet", color: "#8B5CF6", labelKey: I18nKey.COLOR$VIOLET },
+  { key: "pink", color: "#EC4899", labelKey: I18nKey.COLOR$PINK },
+  { key: "red", color: "#EF4444", labelKey: I18nKey.COLOR$RED },
+  { key: "orange", color: "#F97316", labelKey: I18nKey.COLOR$ORANGE },
+  { key: "green", color: "#22C55E", labelKey: I18nKey.COLOR$GREEN },
+  { key: "teal", color: "#14B8A6", labelKey: I18nKey.COLOR$TEAL },
+] as const;
+
 /** Uploads are drawn at this size and stored as data URLs in local storage. */
 const UPLOAD_EDGE_PX = 128;
 export const UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
@@ -92,6 +103,12 @@ export function BackendIdentityPicker({
   );
   const setBackendIdentity = useBackendIdentityStore(
     (state) => state.setBackendIdentity,
+  );
+  const backgroundColor = useBackendIdentityStore(
+    (state) => state.backgroundByKey[identityKey],
+  );
+  const setBackgroundColor = useBackendIdentityStore(
+    (state) => state.setBackgroundColor,
   );
   const [tab, setTab] = React.useState<PickerTab>(
     identity?.type === "icon"
@@ -232,6 +249,49 @@ export function BackendIdentityPicker({
             ) : null}
           </div>
         ) : null}
+
+        <div className="flex flex-col gap-2 border-t border-border-subtle pt-3">
+          <span className="text-xs text-muted">
+            {t(I18nKey.BACKEND_ICON$BACKGROUND)}
+          </span>
+          <div role="radiogroup" className="flex flex-wrap gap-2">
+            {[
+              {
+                // eslint-disable-next-line i18next/no-literal-string -- internal key, never shown
+                key: "none",
+                color: null,
+                label: t(I18nKey.BACKEND_ICON$BACKGROUND_NONE),
+              },
+              ...BACKGROUND_SWATCHES.map((swatch) => ({
+                key: swatch.key,
+                color: swatch.color as string | null,
+                label: t(swatch.labelKey),
+              })),
+            ].map((swatch) => {
+              const isSelected = (backgroundColor ?? null) === swatch.color;
+              return (
+                <button
+                  key={swatch.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={swatch.label}
+                  title={swatch.label}
+                  data-testid={`backend-icon-background-${swatch.key}`}
+                  onClick={() => setBackgroundColor(identityKey, swatch.color)}
+                  className={cn(
+                    "size-6 cursor-pointer rounded-full border-2 transition-transform hover:scale-110",
+                    isSelected ? "border-contrast" : "border-transparent",
+                    swatch.color ? "" : "bg-surface-raised",
+                  )}
+                  style={
+                    swatch.color ? { backgroundColor: swatch.color } : undefined
+                  }
+                />
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

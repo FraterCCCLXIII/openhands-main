@@ -26,6 +26,8 @@ export interface BackendIdentityTileProps {
   /** Shown when no identity is set, such as the OpenHands mark. */
   fallback: React.ReactNode;
   size?: BackendIdentityTileSize;
+  /** Overrides the tile fill with the account's chosen background color. */
+  background?: string | null;
   className?: string;
 }
 
@@ -38,11 +40,13 @@ export function BackendIdentityTile({
   identity,
   fallback,
   size = "md",
+  background,
   className,
 }: BackendIdentityTileProps) {
   return (
     <span
       data-testid="backend-identity-tile"
+      style={background ? { backgroundColor: background } : undefined}
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-gradient-to-b from-white/10 to-white/5 shadow-[0_1px_2px_rgba(0,0,0,0.25)]",
         SIZE_CLASSES[size],
@@ -104,7 +108,15 @@ export function AccountIdentityTile({
   const identity = useBackendIdentityStore(
     (state) => state.identityByKey[identityKey],
   );
+  const background = useBackendIdentityStore(
+    (state) => state.backgroundByKey[identityKey],
+  );
   return (
-    <BackendIdentityTile identity={identity} fallback={fallback} size={size} />
+    <BackendIdentityTile
+      identity={identity}
+      fallback={fallback}
+      size={size}
+      background={background}
+    />
   );
 }

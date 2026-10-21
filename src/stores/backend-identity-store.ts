@@ -24,6 +24,9 @@ export function getBackendIdentityKey(
 interface BackendIdentityState {
   identityByKey: Record<string, BackendIdentity>;
   setBackendIdentity: (key: string, identity: BackendIdentity | null) => void;
+  /** CSS color behind an account's icon; absent means the default tile fill. */
+  backgroundByKey: Record<string, string>;
+  setBackgroundColor: (key: string, color: string | null) => void;
 }
 
 /**
@@ -42,11 +45,22 @@ export const useBackendIdentityStore = create<BackendIdentityState>()(
           else delete next[key];
           return { identityByKey: next };
         }),
+      backgroundByKey: {},
+      setBackgroundColor: (key, color) =>
+        set((state) => {
+          const next = { ...state.backgroundByKey };
+          if (color) next[key] = color;
+          else delete next[key];
+          return { backgroundByKey: next };
+        }),
     }),
     {
       name: "backend-identities",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ identityByKey: state.identityByKey }),
+      partialize: (state) => ({
+        identityByKey: state.identityByKey,
+        backgroundByKey: state.backgroundByKey,
+      }),
     },
   ),
 );

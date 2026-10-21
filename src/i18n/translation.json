@@ -55276,5 +55276,41 @@
     "uk": "Центр навчання",
     "ca": "Centre d'aprenentatge",
     "id": "Pusat pembelajaran"
+  },
+  "BACKEND_ICON$BACKGROUND": {
+    "en": "Background",
+    "ja": "背景",
+    "zh-CN": "背景",
+    "zh-TW": "背景",
+    "ko-KR": "배경",
+    "no": "Bakgrunn",
+    "it": "Sfondo",
+    "pt": "Fundo",
+    "es": "Fondo",
+    "ar": "الخلفية",
+    "fr": "Arrière-plan",
+    "tr": "Arka plan",
+    "de": "Hintergrund",
+    "uk": "Фон",
+    "ca": "Fons",
+    "id": "Latar belakang"
+  },
+  "BACKEND_ICON$BACKGROUND_NONE": {
+    "en": "None",
+    "ja": "なし",
+    "zh-CN": "无",
+    "zh-TW": "無",
+    "ko-KR": "없음",
+    "no": "Ingen",
+    "it": "Nessuno",
+    "pt": "Nenhum",
+    "es": "Ninguno",
+    "ar": "لا شيء",
+    "fr": "Aucun",
+    "tr": "Yok",
+    "de": "Keine",
+    "uk": "Немає",
+    "ca": "Cap",
+    "id": "Tidak ada"
   }
 }
