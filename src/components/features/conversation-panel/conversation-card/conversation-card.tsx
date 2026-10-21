@@ -10,6 +10,8 @@ import { useTranslation } from "react-i18next";
 import type { ACPModelOption } from "#/constants/acp-providers";
 import { useTracking } from "#/hooks/use-tracking";
 import { cn } from "#/utils/utils";
+import { RollingNumber } from "#/components/shared/rolling-number";
+import { ConversationCardCommitAction } from "./conversation-card-commit-action";
 import { I18nKey } from "#/i18n/declaration";
 import { transformVSCodeUrl } from "#/utils/vscode-url-helper";
 import ConversationService from "#/api/conversation-service/conversation-service.api";
@@ -88,6 +90,8 @@ interface ConversationCardProps {
   onTogglePin?: () => void;
   /** When true and pinned, keep the pin icon visible without hovering. */
   alwaysShowPinIcon?: boolean;
+  /** Compact control rendered beside the title (e.g. a collapsed subagent pill). */
+  titleAdornment?: React.ReactNode;
 }
 
 export function ConversationCard({
@@ -123,6 +127,7 @@ export function ConversationCard({
   isPinned = false,
   onTogglePin,
   alwaysShowPinIcon = false,
+  titleAdornment,
 }: ConversationCardProps) {
   const { t } = useTranslation("openhands");
   const { trackDownloadVsCodeButtonClicked } = useTracking();
@@ -276,14 +281,21 @@ export function ConversationCard({
   const diffStatsLine = diffStats ? (
     <div
       data-testid="conversation-card-diff-stats"
-      className="flex items-center gap-1.5 pt-0.5 pr-2 pb-1 pl-[1.625rem] text-xs tabular-nums"
+      className="flex items-center justify-between gap-2 pt-0.5 pr-2 pb-1 pl-[1.625rem] text-xs tabular-nums"
     >
-      <span className="text-status-success">
-        +{diffStats.additions.toLocaleString()}
-      </span>
-      <span className="text-status-error">
-        −{diffStats.deletions.toLocaleString()}
-      </span>
+      <div className="flex items-center gap-1.5">
+        <RollingNumber
+          value={diffStats.additions}
+          prefix="+"
+          className="text-status-success"
+        />
+        <RollingNumber
+          value={diffStats.deletions}
+          prefix="−"
+          className="text-status-error"
+        />
+      </div>
+      <ConversationCardCommitAction gitState={diffStats.gitState} />
     </div>
   ) : null;
 
@@ -315,6 +327,7 @@ export function ConversationCard({
             sandboxStatus={sandboxStatus}
             isArchived={effectiveArchived}
           />
+          {titleAdornment}
           {sandboxStatus === "ERROR" && !effectiveArchived && (
             <ConversationStatusBadges />
           )}

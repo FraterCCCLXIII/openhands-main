@@ -1,10 +1,12 @@
 import React, { useLayoutEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import {
+  Activity,
   FolderGit2,
   GitBranch,
   GitCommitHorizontal,
   Laptop,
+  MessagesSquare,
 } from "lucide-react";
 import { LuFileDiff } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
@@ -69,6 +71,16 @@ const OVERVIEW_MENU_ITEMS_BY_SECTION: Record<
     section: CONVERSATION_OVERVIEW_SECTION.workspace,
     icon: Laptop,
     i18nKey: I18nKey.CONVERSATION$OVERVIEW_WORKSPACE,
+  },
+  [CONVERSATION_OVERVIEW_SECTION.thread]: {
+    section: CONVERSATION_OVERVIEW_SECTION.thread,
+    icon: MessagesSquare,
+    i18nKey: I18nKey.CONVERSATION$OVERVIEW_THREAD,
+  },
+  [CONVERSATION_OVERVIEW_SECTION.activity]: {
+    section: CONVERSATION_OVERVIEW_SECTION.activity,
+    icon: Activity,
+    i18nKey: I18nKey.CONVERSATION$OVERVIEW_ACTIVITY,
   },
 };
 

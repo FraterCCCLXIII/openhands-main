@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Bot, Search } from "lucide-react";
 import React from "react";
 import { Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -1146,6 +1146,29 @@ export function ConversationPanel({
               isPinned={isPinned}
               onTogglePin={() => togglePin(activeBackend.id, conversation.id)}
               alwaysShowPinIcon={isPinned && !options?.inPinnedSection}
+              titleAdornment={
+                !options?.isNestedChild &&
+                collapsedParentIds.has(conversation.id) &&
+                childrenByParentId.get(conversation.id)?.length ? (
+                  <button
+                    type="button"
+                    aria-expanded={false}
+                    aria-label={t(I18nKey.CONVERSATION_PANEL$SUBAGENTS)}
+                    data-testid="conversation-subagent-toggle"
+                    onClick={(event) => {
+                      // The card sits inside a navigation link; expanding the
+                      // tree must not also open the conversation.
+                      event.preventDefault();
+                      event.stopPropagation();
+                      toggleSubagentsCollapsed(conversation.id);
+                    }}
+                    className="flex shrink-0 items-center gap-1 rounded-full border border-border-subtle bg-surface px-1.5 py-px text-xs text-muted transition-colors hover:text-foreground"
+                  >
+                    <Bot className="size-3" aria-hidden />
+                    {childrenByParentId.get(conversation.id)?.length}
+                  </button>
+                ) : undefined
+              }
             />
           </NavigationLink>
         </Tooltip>
@@ -1174,6 +1197,10 @@ export function ConversationPanel({
       showDiffStats,
       diffTotalsByConversationId,
       togglePin,
+      childrenByParentId,
+      collapsedParentIds,
+      toggleSubagentsCollapsed,
+      t,
     ],
   );
 
@@ -1420,19 +1447,20 @@ export function ConversationPanel({
                 {renderConversationCard(conversation)}
                 {childrenByParentId.get(conversation.id)?.length ? (
                   <div className="ml-4">
-                    <button
-                      type="button"
-                      aria-expanded={!collapsedParentIds.has(conversation.id)}
-                      data-testid="conversation-subagent-toggle"
-                      onClick={() => toggleSubagentsCollapsed(conversation.id)}
-                      className="flex items-center gap-1.5 rounded px-2 py-0.5 text-xs text-muted transition-colors hover:text-foreground"
-                    >
-                      <ExpandChevron
-                        expanded={!collapsedParentIds.has(conversation.id)}
-                        className="size-3"
-                      />
-                      {t(I18nKey.CONVERSATION_PANEL$SUBAGENTS)}
-                    </button>
+                    {collapsedParentIds.has(conversation.id) ? null : (
+                      <button
+                        type="button"
+                        aria-expanded
+                        data-testid="conversation-subagent-toggle"
+                        onClick={() =>
+                          toggleSubagentsCollapsed(conversation.id)
+                        }
+                        className="flex items-center gap-1.5 rounded px-2 py-0.5 text-xs text-muted transition-colors hover:text-foreground"
+                      >
+                        <ExpandChevron expanded className="size-3" />
+                        {t(I18nKey.CONVERSATION_PANEL$SUBAGENTS)}
+                      </button>
+                    )}
                     {!collapsedParentIds.has(conversation.id) ? (
                       <div data-testid="conversation-subagent-children">
                         {orderedChildrenOf(conversation.id).map(
