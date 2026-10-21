@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useMatch, useNavigate } from "react-router";
-import { Cloud, Plus, Server, Settings } from "lucide-react";
+import { Cloud, Plus, Settings } from "lucide-react";
+import OpenHandsLogo from "#/assets/branding/openhands-logo.svg?react";
 import { Dropdown } from "#/ui/dropdown/dropdown";
 import { DropdownOption } from "#/ui/dropdown/types";
 import { getLockedCloudHost } from "#/api/agent-server-config";
@@ -28,7 +29,7 @@ import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useConversationStore } from "#/stores/conversation-store";
 import { AddBackendModal } from "./add-backend-modal";
 import { BackendStatusDot } from "./backend-status-dot";
-import { AccountIdentityTile } from "./backend-identity-tile";
+import { EditableAccountIdentityTile } from "./backend-identity-editable-tile";
 import { getBackendIdentityKey } from "#/stores/backend-identity-store";
 import { ManageBackendsModal } from "./manage-backends-modal";
 import { cn } from "#/utils/utils";
@@ -55,8 +56,19 @@ function parseOptionValue(value: string): {
 
 /** Icon for an account with no picked identity: a server or a cloud. */
 function accountFallbackIcon(kind: Backend["kind"] | undefined) {
-  const Icon = kind === "cloud" ? Cloud : Server;
-  return <Icon aria-hidden width={16} height={16} className="text-contrast" />;
+  if (kind === "cloud") {
+    return (
+      <Cloud aria-hidden width={16} height={16} className="!text-contrast" />
+    );
+  }
+  return (
+    <OpenHandsLogo
+      aria-hidden
+      width={16}
+      height={16}
+      className="!text-contrast [&_path[fill=white]]:fill-current"
+    />
+  );
 }
 
 function buildStatusPrefix(health: BackendHealth | undefined) {
@@ -211,7 +223,7 @@ export function BackendSelector({
             return {
               ...option,
               prefix: (
-                <AccountIdentityTile
+                <EditableAccountIdentityTile
                   identityKey={option.value}
                   fallback={accountFallbackIcon(kind)}
                   size="sm"
@@ -425,7 +437,7 @@ export function BackendSelector({
             }
             loading={someCloudLoading}
             options={headerOptions}
-            className="h-10 px-2 py-0 bg-transparent border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
+            className="-ml-2.5 h-10 pl-2.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
         {!hideTrigger && !identityHeader ? (

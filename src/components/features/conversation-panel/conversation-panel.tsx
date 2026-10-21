@@ -1355,9 +1355,9 @@ export function ConversationPanel({
         {!compact && showEmptyState && (
           <div
             data-testid="conversation-panel-empty-state"
-            className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8"
+            className="flex min-h-0 flex-1 flex-col items-center justify-start px-2 pt-2"
           >
-            <p className="text-xs text-muted">
+            <p className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-muted">
               {t(
                 emptyDueToAutomationFilter
                   ? I18nKey.CONVERSATION_PANEL$NO_AUTOMATION_MATCHES
@@ -1365,6 +1365,18 @@ export function ConversationPanel({
                     ? I18nKey.CONVERSATION_PANEL$NO_TAG_MATCHES
                     : I18nKey.CONVERSATION$NO_CONVERSATIONS,
               )}
+              {!emptyDueToAutomationFilter && !emptyDueToTagFilter ? (
+                <>
+                  {" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/conversations")}
+                    className="font-medium text-white hover:underline"
+                  >
+                    {t(I18nKey.CONVERSATION_PANEL$START_ONE)}
+                  </button>
+                </>
+              ) : null}
             </p>
           </div>
         )}

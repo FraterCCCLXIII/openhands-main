@@ -35,16 +35,16 @@ describe("HomeHeaderTitle", () => {
       });
       const partial = message.textContent ?? "";
       expect(partial.length).toBeGreaterThan(0);
-      expect("Welcome back").toMatch(new RegExp(`^${partial}`));
+      expect("Welcome back!").toMatch(new RegExp(`^${partial}`));
 
       // Each character schedules the next after a re-render, so step past the
       // full reveal in small increments.
-      for (let elapsed = 0; elapsed < 1100; elapsed += 100) {
+      for (let elapsed = 0; elapsed < 1500; elapsed += 20) {
         act(() => {
-          vi.advanceTimersByTime(100);
+          vi.advanceTimersByTime(20);
         });
       }
-      expect(message).toHaveTextContent("Welcome back");
+      expect(message).toHaveTextContent("Welcome back!");
     });
   });
 });

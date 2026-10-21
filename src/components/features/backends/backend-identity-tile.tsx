@@ -30,9 +30,9 @@ export interface BackendIdentityTileProps {
 }
 
 /**
- * A rounded square with a subtle raised edge: a top highlight, a soft
- * gradient and a drop shadow. The content is an emoji, a library icon, an
- * uploaded image, or the fallback.
+ * A rounded square with a flat fill, a hairline border and a faint top
+ * highlight. The content is an emoji, a library icon, an uploaded image, or
+ * the fallback.
  */
 export function BackendIdentityTile({
   identity,
@@ -44,7 +44,7 @@ export function BackendIdentityTile({
     <span
       data-testid="backend-identity-tile"
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-white/15 bg-gradient-to-b from-white/15 to-white/5 ring-1 ring-inset ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_4px_rgba(0,0,0,0.35)]",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-gradient-to-b from-white/10 to-white/5 shadow-[0_1px_2px_rgba(0,0,0,0.25)]",
         SIZE_CLASSES[size],
         className,
       )}

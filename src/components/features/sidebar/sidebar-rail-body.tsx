@@ -2,8 +2,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
-  ChevronRight,
   KanbanSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Server,
   Settings,
@@ -35,6 +36,7 @@ import { BackendStatusDot } from "#/components/features/backends/backend-status-
 import { AgentCanvasVersionTile } from "#/components/features/settings/agent-canvas-version-tile";
 import { SidebarConversationList } from "./sidebar-conversation-list";
 import { SidebarOnboardingChecklist } from "./sidebar-onboarding-checklist";
+import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
 import AutomationsIcon from "#/icons/automations.svg?react";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
@@ -185,7 +187,7 @@ export function SidebarRailBody({
                   : "opacity-0 pointer-events-none",
               )}
             >
-              <ChevronRight width={14} height={14} />
+              <PanelLeftOpen width={16} height={16} aria-hidden />
             </button>
           ) : null}
         </div>
@@ -197,12 +199,12 @@ export function SidebarRailBody({
             aria-label={collapseToggleLabel}
             onClick={onCollapse}
             className={cn(
-              "hidden md:inline-flex ml-auto",
+              "hidden md:inline-flex ml-auto mr-0.5",
               SIDEBAR_ICON_BUTTON_CLASS,
               "text-muted hover:text-contrast hover:bg-surface-raised",
             )}
           >
-            <ChevronLeft width={14} height={14} />
+            <PanelLeftClose width={18} height={18} aria-hidden />
           </button>
         ) : null}
         {!collapsed && showMobileCloseButton ? (
@@ -235,11 +237,11 @@ export function SidebarRailBody({
               className={cn(
                 chatInputIconButtonClassName,
                 chatInputAddButtonSurfaceClassName,
-                "size-5",
+                "size-4.5",
               )}
               aria-hidden="true"
             >
-              <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
+              <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={3} />
             </span>
           }
         />
@@ -448,11 +450,13 @@ export function SidebarRailBody({
                 to="/settings"
                 data-testid="sidebar-footer-settings-link"
                 aria-label={t(I18nKey.SIDEBAR$SETTINGS)}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast"
+                className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-sm text-muted hover:bg-surface-raised hover:text-contrast"
               >
-                <Settings width={16} height={16} />
+                <Settings width={16} height={16} className="shrink-0" />
+                <span className="truncate">{t(I18nKey.SIDEBAR$SETTINGS)}</span>
               </NavigationLink>
-              <div className="min-w-0 flex-1">
+              <SidebarAppearanceMenu />
+              <div className="min-w-0 flex-1 empty:hidden">
                 <AgentCanvasVersionTile hideWhenUpToDate />
               </div>
             </div>

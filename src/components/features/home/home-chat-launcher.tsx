@@ -50,6 +50,8 @@ import { OpenLauncherButton } from "./open-launcher-button";
 import { OpenWorkspaceDialog } from "./open-workspace-dialog";
 import { OpenRepositoryDialog } from "./open-repository-dialog";
 import { HomeGitControlBarPreview } from "./home-git-control-bar-preview";
+import { HomeDashboardComponentsMenu } from "./home-dashboard-components-menu";
+import { HomeDashboardSection } from "./home-dashboard-section";
 
 export function HomeChatLauncher() {
   const { t } = useTranslation("openhands");
@@ -371,17 +373,27 @@ export function HomeChatLauncher() {
           />
         </div>
 
+        <div className="mt-4 flex w-full justify-end">
+          <HomeDashboardComponentsMenu />
+        </div>
+
         <div className="mt-8 flex w-full flex-col gap-8">
           {/* @spec HL-002 — Only Home's rail is dismissible; dismissal unmounts it, inset included */}
           {!isRecommendedAutomationsDismissed && (
-            <RecommendedAutomationsLauncher
-              variant="rail"
-              dismissible
-              onDismiss={() => writeHomeRecommendedAutomationsDismissed(true)}
-            />
+            <HomeDashboardSection id="recommendedAutomations">
+              <RecommendedAutomationsLauncher
+                variant="rail"
+                dismissible
+                onDismiss={() => writeHomeRecommendedAutomationsDismissed(true)}
+              />
+            </HomeDashboardSection>
           )}
-          <PinnedAutomationsDashboard />
-          <RunningAutomationsList />
+          <HomeDashboardSection id="pinnedAutomations">
+            <PinnedAutomationsDashboard />
+          </HomeDashboardSection>
+          <HomeDashboardSection id="runningAutomations">
+            <RunningAutomationsList />
+          </HomeDashboardSection>
         </div>
       </div>
 

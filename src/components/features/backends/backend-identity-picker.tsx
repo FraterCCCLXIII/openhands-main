@@ -14,7 +14,7 @@ import { AccountIdentityTile } from "./backend-identity-tile";
 
 /** Uploads are drawn at this size and stored as data URLs in local storage. */
 const UPLOAD_EDGE_PX = 128;
-const UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
+export const UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
 
 type PickerTab = "emoji" | "icon" | "upload";
 

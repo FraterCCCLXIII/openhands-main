@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Typography } from "#/ui/typography";
 import { I18nKey } from "#/i18n/declaration";
+import { HomeDashboardSection } from "../home-dashboard-section";
 import { HomeLearnResources } from "./home-learn-resources";
 
 /** Welcome-back lines; one is picked at random on every page load. */
 const WELCOME_BACK_MESSAGES = [
-  "Welcome back",
-  "Good to see you again",
-  "Ready when you are",
-  "Nice to have you back",
-  "Let's pick up where you left off",
+  "Welcome back!",
+  "Good to see you again!",
+  "Ready when you are.",
+  "Nice to have you back!",
+  "Let's pick up where you left off.",
 ];
 
 /** Same pace as the composer placeholder typewriter (1.1s across the text). */
@@ -79,7 +80,9 @@ export function HomeHeaderTitle() {
       >
         {t(I18nKey.HOME$ENGINEERING_TASKS_SUBHEADER)}
       </p>
-      <HomeLearnResources />
+      <HomeDashboardSection id="learnResources">
+        <HomeLearnResources />
+      </HomeDashboardSection>
     </div>
   );
 }
