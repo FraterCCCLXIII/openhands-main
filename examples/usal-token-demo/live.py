@@ -33,6 +33,11 @@ USAL_FORMAT_EXAMPLE = """PATCH F7
 COMMIT"""
 
 
+def function_line(name):
+    start = MODULE.index(f"export function {name}(")
+    return MODULE[:start].count("\n") + 1
+
+
 def build_prompt(arm, task):
     if arm == "A":
         return (
@@ -41,7 +46,8 @@ def build_prompt(arm, task):
         )
     if arm == "A2":
         return (
-            f"{task.instruction}\n\nFunction from physics.ts:\n```ts\n{function_block(MODULE, task.target)}```\n"
+            f"{task.instruction}\n\nFunction from physics.ts (it begins at line {function_line(task.target)} of the file):\n"
+            f"```ts\n{function_block(MODULE, task.target)}```\n"
             "Return only a unified diff against physics.ts (headers a/physics.ts and b/physics.ts) "
             "in one ```diff code block and nothing else."
         )

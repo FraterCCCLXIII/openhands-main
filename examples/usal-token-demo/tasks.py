@@ -15,8 +15,18 @@ from typing import Callable
 HERE = Path(__file__).parent
 MODULE = (HERE / "physics.ts").read_text()
 
-LEGEND = """Legend: F=function P=parameter N=node TYPE=type.
-Ops: FIELD(x.f) MUL ADD CLAMP REDUCE RET. '+' adds, '~' rewires or sets, INSERT_AFTER places, COMMIT applies."""
+LEGEND = """Code graph notation (USAL spec section 9):
+Operations: O1 FIELD(P0.name) reads a field; O2 MUL(a,b); O3 ADD(a,b); O4 CLAMP(x,lo,hi); O5 REDUCE(source, ADD|MUL, init, expr).
+Graph lines: F<n> name(P0:type,...) -> type; N<k> OP(args); RET N<k>.
+Patch lines, in order, between PATCH F<n> and COMMIT:
+  + P<i> name:type = default     add a parameter
+  + N<k> = OP(args)              add a node (k must be unused)
+  + RET N<k>                     set the return node
+  ~ N<k>.left|right|argI = ref   rewire an argument
+  ~ F<n>.name = ident            rename a function
+  + F<n> name(P0:type) -> type   add a new function
+  + INSERT_AFTER F<n>            place a new function after F<n>
+Any other line rejects the whole patch."""
 
 
 def function_block(src: str, name: str) -> str:

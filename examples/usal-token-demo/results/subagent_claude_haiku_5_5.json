@@ -1,0 +1,74 @@
+[
+  {
+    "task": "clamp_velocity",
+    "arm": "A",
+    "prompt_tokens": 402,
+    "output_tokens": 373,
+    "pass": true,
+    "error": "ok clamp_velocity"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "A2",
+    "prompt_tokens": 100,
+    "output_tokens": 106,
+    "pass": false,
+    "error": "ExecError: patch failed: 1 out of 1 hunks failed--saving rejects to physics.ts.rej"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "B",
+    "prompt_tokens": 195,
+    "output_tokens": 64,
+    "pass": false,
+    "error": "ExecError: unknown patch line: + P2:number = 10"
+  },
+  {
+    "task": "rename_export",
+    "arm": "A",
+    "prompt_tokens": 385,
+    "output_tokens": 350,
+    "pass": true,
+    "error": "ok rename_export"
+  },
+  {
+    "task": "rename_export",
+    "arm": "A2",
+    "prompt_tokens": 89,
+    "output_tokens": 73,
+    "pass": false,
+    "error": "ExecError: patch failed: 1 out of 1 hunks failed--saving rejects to physics.ts.rej"
+  },
+  {
+    "task": "rename_export",
+    "arm": "B",
+    "prompt_tokens": 147,
+    "output_tokens": 22,
+    "pass": false,
+    "error": "ExecError: unknown patch line: ~ F5.name = \"sumKineticEnergy\""
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A",
+    "prompt_tokens": 398,
+    "output_tokens": 380,
+    "pass": true,
+    "error": "ok add_momentum"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A2",
+    "prompt_tokens": 102,
+    "output_tokens": 95,
+    "pass": false,
+    "error": "ExecError: patch failed: 1 out of 1 hunks failed--saving rejects to physics.ts.rej"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "B",
+    "prompt_tokens": 172,
+    "output_tokens": 82,
+    "pass": false,
+    "error": "ExecError: unknown patch line: + F6 = exported momentum(P1:Body[]) -> number"
+  }
+]
