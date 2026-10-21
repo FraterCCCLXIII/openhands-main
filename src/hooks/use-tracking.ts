@@ -37,6 +37,32 @@ export type OnboardingLinkDestinationType =
 /** Onboarding surface that presented the link. */
 export type OnboardingLinkSurface = "landing_checklist" | "onboarding_modal";
 
+/** Controlled company size bucket for `customer_intake_submitted`. */
+export type CustomerCompanySize =
+  | "solo"
+  | "2_10"
+  | "11_50"
+  | "51_200"
+  | "201_1000"
+  | "1000_plus";
+
+/** Controlled company type bucket for `customer_intake_submitted`. */
+export type CustomerCompanyType =
+  | "startup"
+  | "agency"
+  | "enterprise"
+  | "education"
+  | "nonprofit"
+  | "government"
+  | "other";
+
+/** Destination chosen on the customer intake final step. */
+export type CustomerIntakeAction =
+  | "download_repo"
+  | "download_desktop"
+  | "get_mobile_app"
+  | "add_teams";
+
 /**
  * Hook that provides tracking functions with automatic data collection
  * from available hooks (settings, etc.)
@@ -469,6 +495,37 @@ export const useTracking = () => {
     });
   };
 
+  /**
+   * Customer intake form. Name and email are sent as event properties so the
+   * consented PostHog stream can follow up with the person who submitted.
+   */
+  const trackCustomerIntakeSubmitted = ({
+    name,
+    email,
+    companySize,
+    companyType,
+  }: {
+    name?: string;
+    email: string;
+    companySize: CustomerCompanySize;
+    companyType: CustomerCompanyType;
+  }) => {
+    track("customer_intake_submitted", {
+      customer_name: name,
+      customer_email: email,
+      company_size: companySize,
+      company_type: companyType,
+    });
+  };
+
+  const trackCustomerIntakeActionClicked = ({
+    action,
+  }: {
+    action: CustomerIntakeAction;
+  }) => {
+    track("customer_intake_action_clicked", { action });
+  };
+
   return {
     trackLoginButtonClick,
     trackConversationCreated,
@@ -504,5 +561,7 @@ export const useTracking = () => {
     trackOnboardingCompleted,
     trackOnboardingSkipped,
     trackOnboardingLinkClicked,
+    trackCustomerIntakeSubmitted,
+    trackCustomerIntakeActionClicked,
   };
 };
