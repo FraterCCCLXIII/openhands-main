@@ -1,13 +1,12 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import ArrowDown from "#/icons/angle-down-solid.svg?react";
-import ArrowUp from "#/icons/angle-up-solid.svg?react";
 import { SuccessIndicator } from "./success-indicator";
 import { ObservationResultStatus } from "#/components/conversation-events/chat/event-content-helpers/get-observation-result";
 import { MarkdownRenderer } from "../markdown/markdown-renderer";
 import { cn } from "#/utils/utils";
 import { I18nKey } from "#/i18n/declaration";
-import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
+import { ExpandChevron } from "#/components/shared/expand-chevron";
+import { AnimatedCollapse } from "#/components/shared/animated-collapse";
 import { formatEventTimestamp } from "#/utils/format-event-timestamp";
 
 interface GenericEventMessageProps {
@@ -36,55 +35,49 @@ export function GenericEventMessage({
 }: GenericEventMessageProps) {
   const { t, i18n } = useTranslation("openhands");
   const [showDetails, setShowDetails] = React.useState(initiallyExpanded);
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [hasFocusWithin, setHasFocusWithin] = React.useState(false);
   const timestampLabel = formatEventTimestamp(timestamp, i18n?.language);
 
+  const toggleDetails = (event: React.MouseEvent<HTMLElement>) => {
+    setShowDetails((prev) => !prev);
+    if (event.detail > 0) {
+      event.currentTarget.blur();
+    }
+  };
+
   const chevron = details ? (
-    <button
-      type="button"
-      onClick={(event) => {
-        setShowDetails((prev) => !prev);
-        if (event.detail > 0) {
-          setIsHovered(false);
-          event.currentTarget.blur();
-        }
-      }}
-      className="cursor-pointer text-left"
-      aria-label={
-        showDetails ? t(I18nKey.BUTTON$COLLAPSE) : t(I18nKey.BUTTON$EXPAND)
-      }
-    >
-      {showDetails ? (
-        <ArrowUp
-          className={cn(
-            "h-4 w-4 inline fill-muted",
-            chevronPosition === "after" ? "ml-2" : "mr-2",
-          )}
-        />
-      ) : (
-        <ArrowDown
-          className={cn(
-            "h-4 w-4 inline fill-muted",
-            chevronPosition === "after" ? "ml-2" : "mr-2",
-          )}
-        />
+    <ExpandChevron
+      expanded={showDetails}
+      className={cn(
+        "h-3 w-3 inline fill-muted",
+        chevronPosition === "after" ? "ml-1.5" : "mr-1.5",
       )}
-    </button>
+    />
   ) : null;
 
+  // With details, the whole title row is the disclosure button, so clicking
+  // the text opens it as well as clicking the caret.
+  const disclosureProps = details
+    ? {
+        type: "button" as const,
+        onClick: toggleDetails,
+        "aria-expanded": showDetails,
+        "aria-label": showDetails
+          ? t(I18nKey.BUTTON$COLLAPSE)
+          : t(I18nKey.BUTTON$EXPAND),
+      }
+    : {};
+
+  const TitleTag = details ? "button" : "div";
+
   const titleContent = (
-    <div
+    <TitleTag
       data-testid="generic-event-message-title"
-      className="flex items-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocusCapture={() => setHasFocusWithin(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setHasFocusWithin(false);
-        }
-      }}
+      className={cn(
+        "flex items-center",
+        details &&
+          "w-fit cursor-pointer text-left rounded-xl py-0.5 pl-2.5 pr-3 -my-0.5 -ml-1 transition-colors hover:bg-interactive-hover hover:text-foreground",
+      )}
+      {...disclosureProps}
     >
       {chevronPosition === "before" && chevron}
       {titleIcon}
@@ -94,24 +87,26 @@ export function GenericEventMessage({
           anonymous flex items. */}
       <span>{title}</span>
       {chevronPosition === "after" && chevron}
-    </div>
+    </TitleTag>
   );
 
-  const titleContentWithTimestamp = timestampLabel ? (
-    <StyledTooltip
-      content={<time dateTime={timestamp}>{timestampLabel}</time>}
-      placement="top"
-      isOpen={isHovered || hasFocusWithin}
+  // The timestamp sits to the right of the caret. It keeps its space and fades
+  // in when the row is hovered or focused, so the title does not shift.
+  const timeLabel = timestampLabel ? (
+    <time
+      dateTime={timestamp}
+      className="ml-1.5 whitespace-nowrap text-xs text-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
     >
-      {titleContent}
-    </StyledTooltip>
-  ) : (
-    titleContent
-  );
+      {timestampLabel}
+    </time>
+  ) : null;
 
   const titleRow = (
-    <div className="flex items-center justify-between font-normal text-muted">
-      {titleContentWithTimestamp}
+    <div className="group flex items-center justify-between font-normal text-muted">
+      <div className="flex min-w-0 items-center">
+        {titleContent}
+        {timeLabel}
+      </div>
       <div className="flex items-center">
         {titleTrailing}
         {success && <SuccessIndicator status={success} />}
@@ -122,12 +117,15 @@ export function GenericEventMessage({
   return (
     <div className="flex flex-col gap-1.5 my-1 py-1 text-sm w-full">
       {titleRow}
-      {showDetails &&
-        (typeof details === "string" ? (
-          <MarkdownRenderer>{details}</MarkdownRenderer>
-        ) : (
-          details
-        ))}
+      {details ? (
+        <AnimatedCollapse open={showDetails}>
+          {typeof details === "string" ? (
+            <MarkdownRenderer>{details}</MarkdownRenderer>
+          ) : (
+            details
+          )}
+        </AnimatedCollapse>
+      ) : null}
     </div>
   );
 }

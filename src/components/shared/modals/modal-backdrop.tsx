@@ -14,6 +14,8 @@ interface ModalBackdropProps {
    *  modals (used by the telemetry consent banner over the onboarding modal).
    *  Defaults to false. */
   elevated?: boolean;
+  /** When true, plays the exit animation. Callers keep the modal mounted until it ends. */
+  exiting?: boolean;
   "aria-label"?: string;
 }
 
@@ -23,6 +25,7 @@ export function ModalBackdrop({
   closeOnEscape = true,
   closeOnBackdropClick = true,
   elevated = false,
+  exiting = false,
   "aria-label": ariaLabel,
 }: ModalBackdropProps) {
   const focus = useModalFocus({ elevated });
@@ -70,9 +73,19 @@ export function ModalBackdrop({
     >
       <div
         onClick={handleClick}
-        className="fixed inset-0 bg-black opacity-60"
+        className={`fixed inset-0 bg-black opacity-60 ${
+          exiting ? "modal-fade-out-anim" : "modal-overlay-enter"
+        }`}
       />
-      <div className="relative">{children}</div>
+      <div
+        className={`relative ${
+          exiting
+            ? "modal-pop-out-anim pointer-events-none"
+            : "modal-content-enter"
+        }`}
+      >
+        {children}
+      </div>
     </div>,
     document.body,
   );

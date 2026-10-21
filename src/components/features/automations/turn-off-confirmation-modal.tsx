@@ -21,7 +21,7 @@ export function TurnOffConfirmationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="modal-overlay-enter fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/60"
         onClick={onCancel}
@@ -34,7 +34,7 @@ export function TurnOffConfirmationModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="turn-off-automation-title"
-        className="relative w-full max-w-sm rounded-xl border border-border bg-surface p-6"
+        className="relative w-full max-w-sm rounded-3xl border border-border bg-surface p-6"
       >
         <button
           type="button"

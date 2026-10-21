@@ -1371,7 +1371,7 @@ function AddBackendChooser({
           type="button"
           data-testid="add-backend-provider-digitalocean"
           onClick={onSelectProvider}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-base-secondary px-4 py-3 text-left transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-3xl border border-border bg-base-secondary px-4 py-3 text-left transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           <span
             className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-raised"
@@ -1732,7 +1732,7 @@ export function BackendFormModal({
             hideCloseButton ? "onboarding-modal" : "add-backend-modal"
           }
           className={cn(
-            "relative max-h-[92vh] w-180 overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-base-secondary p-6",
+            "relative max-h-[92vh] w-180 overflow-x-hidden overflow-y-auto rounded-3xl border border-border bg-base-secondary p-6",
             MODAL_MAX_WIDTH_VIEWPORT,
           )}
         >
@@ -1760,7 +1760,7 @@ export function BackendFormModal({
       <div
         data-testid={`${testIdRoot}-modal`}
         className={cn(
-          "relative max-h-[92dvh] bg-base-secondary p-6 rounded-xl flex flex-col gap-4 border border-border",
+          "relative max-h-[92dvh] bg-base-secondary p-6 rounded-3xl flex flex-col gap-4 border border-border",
           modalWidthClassName("md"),
           MODAL_MAX_WIDTH_VIEWPORT,
         )}

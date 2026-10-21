@@ -4,6 +4,8 @@ import { LuFileDiff } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useConversationOverviewGitDiffStats } from "#/hooks/use-conversation-overview-git-diff-stats";
+import { useOptionalConversationId } from "#/hooks/use-conversation-id";
+import { useConversationDiffStatsStore } from "#/stores/conversation-diff-stats-store";
 import { useSelectConversationTab } from "#/hooks/use-select-conversation-tab";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
@@ -46,12 +48,31 @@ export function ConversationOverviewDiffsRow() {
   const { navigateToChanges } = useSelectConversationTab();
   const overviewDrawer = useConversationOverviewDrawerOptional();
   const { data: conversation } = useActiveConversation();
-  const { additions, deletions, isLoading } =
+  const { conversationId } = useOptionalConversationId();
+  const { additions, deletions, isLoading, isError } =
     useConversationOverviewGitDiffStats();
+  const setConversationDiffTotals = useConversationDiffStatsStore(
+    (state) => state.setConversationDiffTotals,
+  );
   const gitProvider =
     (conversation?.git_provider as Provider | undefined) ?? "github";
   const [isGitMenuOpen, setIsGitMenuOpen] = useState(false);
   const gitActionButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Remember the totals so the sidebar row can show them without a fetch.
+  useEffect(() => {
+    if (!conversationId || isLoading || isError) {
+      return;
+    }
+    setConversationDiffTotals(conversationId, { additions, deletions });
+  }, [
+    conversationId,
+    additions,
+    deletions,
+    isLoading,
+    isError,
+    setConversationDiffTotals,
+  ]);
 
   useEffect(() => {
     if (!isGitMenuOpen) {

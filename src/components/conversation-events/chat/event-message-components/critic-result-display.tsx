@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import ArrowDown from "#/icons/angle-down-solid.svg?react";
-import ArrowUp from "#/icons/angle-up-solid.svg?react";
+import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { useSettings } from "#/hooks/query/use-settings";
 import { I18nKey } from "#/i18n/declaration";
 import type {
@@ -221,11 +220,10 @@ export function CriticResultDisplay({
                 : t(I18nKey.BUTTON$EXPAND_DETAILS)
             }
           >
-            {expanded ? (
-              <ArrowUp className="h-3 w-3 inline fill-text-tertiary" />
-            ) : (
-              <ArrowDown className="h-3 w-3 inline fill-text-tertiary" />
-            )}
+            <ExpandChevron
+              expanded={expanded}
+              className="h-3 w-3 inline text-text-tertiary"
+            />
           </button>
         )}
       </div>

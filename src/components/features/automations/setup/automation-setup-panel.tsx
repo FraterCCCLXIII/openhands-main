@@ -112,6 +112,8 @@ import {
   removeAutomationDraftTags,
 } from "#/utils/automation-draft-tags";
 import { setupDraftFromAutomation } from "#/utils/automation-edit-draft";
+import { isMacDesktopShell } from "#/utils/desktop-shell";
+import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const DEFAULT_TIMEZONE = "America/New_York";
 const DEFAULT_TIME = "09:00";
@@ -645,6 +647,8 @@ export function AutomationSetupPanel({
   showInlineHeader = true,
   reserveComposerSpace = false,
 }: AutomationSetupPanelProps) {
+  const isFullScreen = useDesktopFullScreen();
+  const showTitleBand = isMacDesktopShell() && !isFullScreen;
   const { t } = useTranslation("openhands");
   const { navigate } = useNavigation();
   const deploymentCapabilities = useDeploymentCapabilities();
@@ -1869,7 +1873,13 @@ export function AutomationSetupPanel({
         className="flex h-full min-h-0 flex-col bg-canvas-base"
       >
         {showInlineHeader ? (
-          <header className="flex h-10 min-h-10 shrink-0 items-center justify-between gap-2 border-b border-[var(--oh-border)] bg-canvas-base px-3">
+          <header
+            className={cn(
+              "flex h-10 min-h-10 shrink-0 items-center justify-between gap-2 border-b border-[var(--oh-border)] bg-canvas-base px-3",
+              // Desktop title band: the header takes the traffic-light row.
+              showTitleBand && "-mt-7 mb-7",
+            )}
+          >
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="min-w-0 truncate text-sm font-medium text-content">
                 {name.trim() || t(I18nKey.AUTOMATION_SETUP$TITLE)}
@@ -2019,6 +2029,10 @@ export function AutomationSetupPanel({
                       }
                       model={model}
                       onModelChange={(value) => updateField("model", value)}
+                      agentProfileId={agentProfileId}
+                      onAgentProfileChange={(value) =>
+                        updateField("agentProfileId", value)
+                      }
                     />
                   ) : hasExistingCustomBundle ? (
                     <ExistingCustomBundleSummary

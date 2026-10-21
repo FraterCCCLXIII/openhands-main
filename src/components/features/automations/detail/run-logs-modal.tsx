@@ -258,7 +258,7 @@ export function RunLogsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="modal-overlay-enter fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={t(I18nKey.AUTOMATIONS$DETAIL$LOGS_TITLE)}
@@ -273,7 +273,7 @@ export function RunLogsModal({
       />
       <div
         data-testid="run-logs-body"
-        className="relative flex max-h-[80vh] w-full max-w-3xl flex-col overflow-y-auto overscroll-contain rounded-xl border border-border bg-surface"
+        className="relative flex max-h-[80vh] w-full max-w-3xl flex-col overflow-y-auto overscroll-contain rounded-3xl border border-border bg-surface"
       >
         <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-4 bg-surface px-6 pb-4 pt-6">
           <h2 className={modalTitleLgMediumClassName}>

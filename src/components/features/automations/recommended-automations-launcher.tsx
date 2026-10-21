@@ -37,7 +37,10 @@ import {
 import { isResponderAutomation } from "#/utils/responder-deployment";
 import { useAutomationHealth } from "#/hooks/query/use-automation-health";
 import { useAutomations } from "#/hooks/query/use-automations";
-import { useNativeGitIntegrations } from "#/hooks/query/use-native-git-integrations";
+import {
+  isNativeGitCandidate,
+  useNativeGitIntegrations,
+} from "#/hooks/query/use-native-git-integrations";
 import { cloudIntegrationsUrl } from "#/utils/cloud-integrations-url";
 import { BuiltInIntegrationChoiceModal } from "./built-in-integration-choice-modal";
 import { RecommendedAutomationsRail } from "./recommended-automations-rail";
@@ -268,10 +271,12 @@ export function RecommendedAutomationsLauncher({
       return;
     }
 
-    // A built-in integration already covers this workflow; let the user choose
-    // between connecting it and setting up the polling automation.
+    // A built-in integration already covers this workflow. A git provider the
+    // instance connects natively is the preferred route, so it goes straight to
+    // the native connect flow (or launches when connected) instead of offering
+    // polling. Other built-ins (Jira, Linear) still let the user choose.
     const builtInIntegration = getBuiltInIntegration(automation);
-    if (builtInIntegration) {
+    if (builtInIntegration && !isNativeGitCandidate(builtInIntegration.id)) {
       setBuiltInChoice({ automation, integration: builtInIntegration });
       return;
     }

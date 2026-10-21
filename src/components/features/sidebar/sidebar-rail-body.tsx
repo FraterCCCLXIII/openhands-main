@@ -2,7 +2,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
-  ChevronRight,
+  KanbanSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Server,
   Settings,
@@ -20,16 +22,22 @@ import {
   usePinnedHomeRoute,
 } from "#/hooks/use-pinned-home-route";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
+import { CommandMenuTrigger } from "#/components/features/command-menu/command-menu-trigger";
 import { SidebarNavLink } from "./sidebar-nav-link";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
+import {
+  chatInputAddButtonSurfaceClassName,
+  chatInputIconButtonClassName,
+} from "#/utils/form-control-classes";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { BackendSelector } from "#/components/features/backends/backend-selector";
 import { BackendStatusDot } from "#/components/features/backends/backend-status-dot";
-import { CommandMenuTrigger } from "#/components/features/command-menu/command-menu-trigger";
 import { AgentCanvasVersionTile } from "#/components/features/settings/agent-canvas-version-tile";
 import { SidebarConversationList } from "./sidebar-conversation-list";
 import { SidebarOnboardingChecklist } from "./sidebar-onboarding-checklist";
+import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
+import { applyThemeForBackend } from "#/stores/backend-color-theme-store";
 import AutomationsIcon from "#/icons/automations.svg?react";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
@@ -44,8 +52,11 @@ import {
 import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/canvas-extension-icon";
 import type { Backend } from "#/api/backend-registry/types";
+import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
+import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const ICON_SIZE = 18;
+const PLANNING_PATH = "/planning";
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 
@@ -111,6 +122,11 @@ export function SidebarRailBody({
     };
   };
 
+  // Each backend keeps its own color theme; switching backends applies it.
+  React.useEffect(() => {
+    applyThemeForBackend(activeBackend.id);
+  }, [activeBackend.id]);
+
   const isCloudBackend = activeBackend.kind === "cloud";
   // `org` is consumed by the cloud settings loader so the page opens on the
   // org that is active here instead of the cloud's last-used org.
@@ -124,15 +140,24 @@ export function SidebarRailBody({
   // the cloud host itself, so cloud settings open in this tab and Back
   // returns here (OHE-3242). Standalone / Electron keep the new tab.
   const isLockedToCloud = getLockedCloudHost() !== null;
+  const isFullScreen = useDesktopFullScreen();
+  const showTitleBand = isMacDesktopShell() && !isFullScreen;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className={sidebarHeaderRowClassName(collapsed)}>
+      <div
+        className={cn(
+          sidebarHeaderRowClassName(collapsed),
+          // Desktop title-band: the header shares the traffic-light row, with
+          // the collapse control at the right and the lights kept clear.
+          showTitleBand && !collapsed && "-mt-7 mb-7 justify-end pl-20",
+        )}
+      >
         <div
           className={cn(
             collapsed && showCollapseToggle
               ? SIDEBAR_COLLAPSED_LOGO_WRAPPER_CLASS
-              : "flex min-w-0 shrink-0 items-center",
+              : "flex min-w-0 flex-1 items-center",
           )}
         >
           <div
@@ -141,14 +166,21 @@ export function SidebarRailBody({
                 showCollapseToggle &&
                 "flex h-full w-full items-center justify-start pl-2.5 transition-opacity duration-150",
               collapsed && showCollapsedExpandButton && "opacity-0",
+              !collapsed && "min-w-0 flex-1",
             )}
           >
-            <OpenHandsLogoButton
-              logoWidth={SIDEBAR_LOGO_WIDTH}
-              logoHeight={SIDEBAR_LOGO_HEIGHT}
-              logoClassName="max-w-none"
-              className={cn(SIDEBAR_ICON_SLOT_CLASS, "overflow-visible")}
-            />
+            {!collapsed ? (
+              <div className="w-full pb-2">
+                <BackendSelector identityHeader sidebarCollapsed={false} />
+              </div>
+            ) : isDesktopShell() ? null : (
+              <OpenHandsLogoButton
+                logoWidth={SIDEBAR_LOGO_WIDTH}
+                logoHeight={SIDEBAR_LOGO_HEIGHT}
+                logoClassName="max-w-none"
+                className={cn(SIDEBAR_ICON_SLOT_CLASS, "overflow-visible")}
+              />
+            )}
           </div>
           {collapsed && showCollapseToggle ? (
             <button
@@ -164,26 +196,10 @@ export function SidebarRailBody({
                   : "opacity-0 pointer-events-none",
               )}
             >
-              <ChevronRight width={14} height={14} />
+              <PanelLeftOpen width={16} height={16} aria-hidden />
             </button>
           ) : null}
         </div>
-        {!collapsed && showCollapseToggle ? (
-          <button
-            type="button"
-            data-testid="sidebar-collapse-toggle"
-            aria-pressed={collapsed}
-            aria-label={collapseToggleLabel}
-            onClick={onCollapse}
-            className={cn(
-              "hidden md:inline-flex ml-auto",
-              SIDEBAR_ICON_BUTTON_CLASS,
-              "text-muted hover:text-contrast hover:bg-surface-raised",
-            )}
-          >
-            <ChevronLeft width={14} height={14} />
-          </button>
-        ) : null}
         {!collapsed && showMobileCloseButton ? (
           <button
             type="button"
@@ -202,14 +218,25 @@ export function SidebarRailBody({
       </div>
 
       <nav className={sidebarNavListClassName(collapsed)}>
-        <CommandMenuTrigger collapsed={collapsed} />
+        {collapsed ? <CommandMenuTrigger collapsed /> : null}
         <SidebarNavLink
           to="/conversations"
           end
           label={t(I18nKey.SIDEBAR$NEW_CHAT)}
           testId="sidebar-conversations-link"
           collapsed={collapsed}
-          icon={<Plus width={ICON_SIZE} height={ICON_SIZE} />}
+          icon={
+            <span
+              className={cn(
+                chatInputIconButtonClassName,
+                chatInputAddButtonSurfaceClassName,
+                "size-4.5",
+              )}
+              aria-hidden="true"
+            >
+              <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={3} />
+            </span>
+          }
         />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}
@@ -264,6 +291,13 @@ export function SidebarRailBody({
             )}
           />
         )}
+        <SidebarNavLink
+          to={PLANNING_PATH}
+          label={t(I18nKey.PLANNING$TITLE)}
+          testId="sidebar-planning-link"
+          collapsed={collapsed}
+          icon={<KanbanSquare width={ICON_SIZE} height={ICON_SIZE} />}
+        />
         {canvasExtensionPages.map((page) => (
           <SidebarNavLink
             key={`${page.extension.name}:${page.contribution.id}`}
@@ -401,11 +435,40 @@ export function SidebarRailBody({
           <div
             className={cn(
               "flex flex-col items-stretch max-w-none box-border shrink-0 gap-2",
-              "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-border pt-2 px-2.5",
+              "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-t-[0.5px] border-border pt-2 px-2.5",
             )}
           >
-            <AgentCanvasVersionTile hideWhenUpToDate />
-            <BackendSelector sidebarCollapsed={collapsed} openUpward />
+            <div className="flex items-center justify-between gap-2">
+              <NavigationLink
+                to="/settings"
+                data-testid="sidebar-footer-settings-link"
+                aria-label={t(I18nKey.SIDEBAR$SETTINGS)}
+                className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-sm text-muted hover:bg-surface-raised hover:text-contrast"
+              >
+                <Settings width={16} height={16} className="shrink-0" />
+                <span className="truncate">{t(I18nKey.SIDEBAR$SETTINGS)}</span>
+              </NavigationLink>
+              <SidebarAppearanceMenu backendId={activeBackend.id} />
+              <div className="min-w-0 flex-1 empty:hidden">
+                <AgentCanvasVersionTile hideWhenUpToDate />
+              </div>
+              {showCollapseToggle ? (
+                <button
+                  type="button"
+                  data-testid="sidebar-collapse-toggle"
+                  aria-pressed={collapsed}
+                  aria-label={collapseToggleLabel}
+                  onClick={onCollapse}
+                  className={cn(
+                    "hidden md:inline-flex shrink-0",
+                    SIDEBAR_ICON_BUTTON_CLASS,
+                    "text-muted hover:text-contrast hover:bg-surface-raised",
+                  )}
+                >
+                  <PanelLeftClose width={18} height={18} aria-hidden />
+                </button>
+              ) : null}
+            </div>
           </div>
         </>
       ) : null}

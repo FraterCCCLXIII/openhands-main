@@ -40,6 +40,8 @@ interface ConversationPanelPreferencesState {
   showLlmProfiles: boolean;
   showTagsMetadata: boolean;
   showHoverMetadata: boolean;
+  /** Shows last-known +/- line totals under each row. Off by default. */
+  showDiffStats: boolean;
   organizeMode: OrganizeMode;
   conversationSort: ConversationSortField;
   threadScope: ThreadScope;
@@ -47,6 +49,8 @@ interface ConversationPanelPreferencesState {
   selectedAutomationNames: string[];
   selectedTagFacets: string[];
   groupFolderOrder: string[];
+  /** Manual drag order per list: "top" for top-level rows, else a parent id. */
+  conversationOrderByList: Record<string, string[]>;
 }
 
 /** The complete preference bundle controlled by conversation layout presets. */
@@ -87,6 +91,8 @@ interface ConversationPanelPreferencesActions {
   toggleShowTagsMetadata: () => void;
   setShowHoverMetadata: (value: boolean) => void;
   toggleShowHoverMetadata: () => void;
+  setShowDiffStats: (value: boolean) => void;
+  toggleShowDiffStats: () => void;
   setOrganizeMode: (value: OrganizeMode) => void;
   setConversationSort: (value: ConversationSortField) => void;
   setThreadScope: (value: ThreadScope) => void;
@@ -105,6 +111,7 @@ interface ConversationPanelPreferencesActions {
   /** Applies a layout preset's partial bundle in one set(). */
   applyLayoutSettings: (settings: Partial<LayoutSettingsSlice>) => void;
   setGroupFolderOrder: (order: readonly string[]) => void;
+  setConversationOrder: (listKey: string, order: readonly string[]) => void;
 }
 
 type ConversationPanelPreferencesStore = ConversationPanelPreferencesState &
@@ -114,10 +121,12 @@ const initialState: ConversationPanelPreferencesState = {
   ...DEFAULT_LAYOUT_SETTINGS,
   olderConversationCutoff: DEFAULT_OLDER_CONVERSATION_CUTOFF,
   showArchivedConversations: false,
+  showDiffStats: true,
   automationFilterMode: "all",
   selectedAutomationNames: [],
   selectedTagFacets: [],
   groupFolderOrder: [],
+  conversationOrderByList: {},
 };
 
 export const useConversationPanelPreferencesStore =
@@ -173,6 +182,10 @@ export const useConversationPanelPreferencesStore =
             showHoverMetadata: !state.showHoverMetadata,
           })),
 
+        setShowDiffStats: (value) => set(() => ({ showDiffStats: value })),
+        toggleShowDiffStats: () =>
+          set((state) => ({ showDiffStats: !state.showDiffStats })),
+
         setOrganizeMode: (value) => set(() => ({ organizeMode: value })),
         setConversationSort: (value) =>
           set(() => ({ conversationSort: value })),
@@ -209,6 +222,13 @@ export const useConversationPanelPreferencesStore =
           })),
         setGroupFolderOrder: (order) =>
           set(() => ({ groupFolderOrder: [...order] })),
+        setConversationOrder: (listKey, order) =>
+          set((state) => ({
+            conversationOrderByList: {
+              ...state.conversationOrderByList,
+              [listKey]: [...order],
+            },
+          })),
 
         applyLayoutSettings: (settings) => set(() => ({ ...settings })),
       }),
@@ -228,6 +248,7 @@ export const useConversationPanelPreferencesStore =
           showLlmProfiles: state.showLlmProfiles,
           showTagsMetadata: state.showTagsMetadata,
           showHoverMetadata: state.showHoverMetadata,
+          showDiffStats: state.showDiffStats,
           organizeMode: state.organizeMode,
           conversationSort: state.conversationSort,
           threadScope: state.threadScope,
@@ -235,6 +256,7 @@ export const useConversationPanelPreferencesStore =
           selectedAutomationNames: state.selectedAutomationNames,
           selectedTagFacets: state.selectedTagFacets,
           groupFolderOrder: state.groupFolderOrder,
+          conversationOrderByList: state.conversationOrderByList,
         }),
       },
     ),

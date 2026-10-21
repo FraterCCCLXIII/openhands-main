@@ -457,7 +457,7 @@ export function SetupDialog({ entry, onClose }: SetupDialogProps) {
     <ModalBackdrop onClose={onClose} aria-label={entry.name}>
       <div
         data-testid="setup-dialog"
-        className="relative flex max-h-[85vh] w-[min(36rem,calc(100vw-2rem))] flex-col rounded-xl border border-[var(--oh-border)] bg-base-secondary"
+        className="relative flex max-h-[85vh] w-[min(36rem,calc(100vw-2rem))] flex-col rounded-3xl border border-[var(--oh-border)] bg-base-secondary"
       >
         <ModalCloseButton
           onClose={onClose}
@@ -482,7 +482,7 @@ export function SetupDialog({ entry, onClose }: SetupDialogProps) {
             automationName={entry.name}
           />
         ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto px-6">
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6">
             {isLoading && (
               <div className="flex justify-center py-6">
                 <LoadingSpinner size="small" />

@@ -7,11 +7,11 @@ const contextMenuVariants = cva("z-50 overflow-hidden text-foreground", {
   variants: {
     theme: {
       default:
-        "absolute rounded-md border border-border-subtle bg-tertiary px-1 py-1 shadow-lg",
+        "absolute rounded-xl border border-border-subtle bg-tertiary px-1.5 py-1.5 shadow-[0_14px_32px_-8px_rgba(0,0,0,0.55),0_4px_12px_-2px_rgba(0,0,0,0.4)] animate-[context-menu-fade-up_140ms_ease-out_both] motion-reduce:animate-none",
       naked: "relative",
       /** In document-body portal; coordinates come from inline `style`. */
       popover:
-        "relative rounded-md border border-border-subtle bg-tertiary px-1 py-1 shadow-lg",
+        "relative rounded-xl border border-border-subtle bg-tertiary px-1.5 py-1.5 shadow-[0_14px_32px_-8px_rgba(0,0,0,0.55),0_4px_12px_-2px_rgba(0,0,0,0.4)] animate-[context-menu-fade-up_140ms_ease-out_both] motion-reduce:animate-none",
     },
     size: {
       compact: "py-1 px-1",

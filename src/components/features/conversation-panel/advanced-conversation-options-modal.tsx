@@ -7,6 +7,7 @@ import {
   Clock3,
   ClockArrowDown,
   EyeOff,
+  FileDiff,
   Folder,
   GitBranch,
   MessageCircle,
@@ -273,6 +274,14 @@ export function AdvancedConversationOptionsModal({
               variant="toggle"
               testId="toggle-repo-branch-metadata"
               onClick={preferences.toggleShowRepoBranchMetadata}
+            />
+            <MenuRow
+              icon={FileDiff}
+              label={t(I18nKey.CONVERSATION_PANEL$DIFF_STATS)}
+              selected={preferences.showDiffStats}
+              variant="toggle"
+              testId="toggle-diff-stats-metadata"
+              onClick={preferences.toggleShowDiffStats}
             />
             <MenuRow
               icon={Bot}

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderWithProviders } from "test-utils";
 import { setStoredConversationMetadata } from "#/api/conversation-metadata-store";
@@ -242,6 +242,153 @@ describe("ChatInputAgentProfilePicker", () => {
     );
 
     expect(activateProfileMutate).toHaveBeenCalledWith("id-codex");
+  });
+
+  describe("in a started conversation", () => {
+    beforeEach(() => {
+      useAgentProfilesMock.mockReturnValue({
+        data: { profiles: PROFILES, active_agent_profile_id: "id-default" },
+        isLoading: false,
+      });
+      useActiveConversationMock.mockReturnValue({
+        data: {
+          id: "conv-1",
+          launched_agent_profile: {
+            agent_profile_id: "id-default",
+            revision: 1,
+          },
+        },
+        isLoading: false,
+      });
+    });
+
+    const renderStarted = () =>
+      renderWithProviders(<ChatInputAgentProfilePicker />, {
+        navigation: { conversationId: "conv-1" },
+      });
+
+    it("names the conversation's agent profile", () => {
+      renderStarted();
+
+      expect(screen.getByTestId("chat-input-agent-profile")).toHaveTextContent(
+        "Default",
+      );
+    });
+
+    it("lists every profile with a three-dot button and marks the active one", () => {
+      renderStarted();
+      fireEvent.click(screen.getByTestId("chat-input-agent-profile"));
+
+      const popover = screen.getByTestId("chat-input-agent-profile-popover");
+      PROFILES.forEach((profile) => {
+        expect(
+          within(popover).getByTestId(
+            `chat-input-agent-profile-option-${profile.name}`,
+          ),
+        ).toHaveTextContent(profile.name);
+        expect(
+          within(popover).getByTestId(
+            `chat-input-agent-profile-more-${profile.name}`,
+          ),
+        ).toBeInTheDocument();
+      });
+      const activeRow = screen.getByTestId(
+        "chat-input-agent-profile-option-Default",
+      );
+      const otherRow = screen.getByTestId(
+        "chat-input-agent-profile-option-Codex",
+      );
+      expect(activeRow.querySelector("svg:last-child")).not.toBeNull();
+      expect(otherRow.querySelectorAll("svg")).toHaveLength(1);
+    });
+
+    it("selects the profile when its row is clicked", () => {
+      renderStarted();
+      fireEvent.click(screen.getByTestId("chat-input-agent-profile"));
+      fireEvent.click(
+        screen.getByTestId("chat-input-agent-profile-option-Codex"),
+      );
+
+      expect(createConversationMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ agentProfileId: "id-codex" }),
+      );
+    });
+
+    it("does not select the profile when the three-dot button is clicked", () => {
+      renderStarted();
+      fireEvent.click(screen.getByTestId("chat-input-agent-profile"));
+      fireEvent.click(
+        screen.getByTestId("chat-input-agent-profile-more-Codex"),
+      );
+
+      expect(createConversationMutate).not.toHaveBeenCalled();
+      expect(
+        screen.getByTestId("chat-input-agent-profile-menu-Codex"),
+      ).toBeInTheDocument();
+    });
+
+    it("offers Set as active and agent settings for an inactive profile", () => {
+      renderStarted();
+      fireEvent.click(screen.getByTestId("chat-input-agent-profile"));
+      fireEvent.click(
+        screen.getByTestId("chat-input-agent-profile-more-Codex"),
+      );
+
+      const menu = screen.getByTestId("chat-input-agent-profile-menu-Codex");
+      expect(
+        within(menu).getByTestId("chat-input-agent-profile-set-active-Codex"),
+      ).toBeInTheDocument();
+      expect(
+        within(menu).getByTestId("chat-input-agent-profile-settings-Codex"),
+      ).toHaveAttribute("href", "/settings/agents");
+
+      fireEvent.click(
+        within(menu).getByTestId("chat-input-agent-profile-set-active-Codex"),
+      );
+      expect(createConversationMutate).toHaveBeenCalledWith(
+        expect.objectContaining({ agentProfileId: "id-codex" }),
+      );
+    });
+
+    it("omits Set as active for the already-active profile", () => {
+      renderStarted();
+      fireEvent.click(screen.getByTestId("chat-input-agent-profile"));
+      fireEvent.click(
+        screen.getByTestId("chat-input-agent-profile-more-Default"),
+      );
+
+      const menu = screen.getByTestId("chat-input-agent-profile-menu-Default");
+      expect(
+        within(menu).queryByTestId(
+          "chat-input-agent-profile-set-active-Default",
+        ),
+      ).not.toBeInTheDocument();
+      expect(
+        within(menu).getByTestId("chat-input-agent-profile-settings-Default"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("shows the pill but disables the dropdown when switching is not allowed", () => {
+    useAgentProfilesMock.mockReturnValue({
+      data: { profiles: PROFILES, active_agent_profile_id: "id-default" },
+      isLoading: false,
+    });
+    renderWithProviders(<ChatInputAgentProfilePicker />, {
+      navigation: { conversationId: "task-start-1" },
+    });
+
+    const pill = screen.getByTestId("chat-input-agent-profile");
+    expect(pill).toHaveTextContent("Default");
+    expect(pill).toBeDisabled();
+    expect(pill).toHaveAttribute(
+      "title",
+      "CHAT$AGENT_PROFILE_SWITCH_UNAVAILABLE",
+    );
+    fireEvent.click(pill);
+    expect(
+      screen.queryByTestId("chat-input-agent-profile-popover"),
+    ).not.toBeInTheDocument();
   });
 
   it("stays hidden without an active profile", () => {

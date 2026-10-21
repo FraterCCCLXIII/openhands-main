@@ -34,7 +34,7 @@ export function ModalBody({
     <div
       data-testid={testID}
       className={cn(
-        "bg-base-secondary flex flex-col gap-6 items-center p-6 rounded-xl",
+        "bg-base-secondary modal-surface-gradient flex flex-col gap-6 items-center p-6 rounded-3xl",
         modalWidthClassName(width),
         className,
       )}

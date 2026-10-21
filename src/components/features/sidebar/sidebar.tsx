@@ -13,6 +13,8 @@ import { useSidebarStore } from "#/stores/sidebar-store";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { useCloseOnEscape } from "#/hooks/use-close-on-escape";
 import { useBackendsHealth } from "#/hooks/query/use-backends-health";
+import { isMacDesktopShell } from "#/utils/desktop-shell";
+import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 // The LLM settings modal is only mounted when the settings query 404s and
 // LLM settings aren't hidden — keep it out of the sidebar's eager graph.
 const SettingsModal = React.lazy(() =>
@@ -191,6 +193,8 @@ export function Sidebar() {
     onOpenManageBackends: () => setManageBackendsModalOpen(true),
   };
 
+  const isFullScreen = useDesktopFullScreen();
+  const showTitleBand = isMacDesktopShell() && !isFullScreen;
   return (
     <>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the aside acts as a hit-area for the collapsed rail; nested controls handle their own keyboard interactions. */}
@@ -208,7 +212,10 @@ export function Sidebar() {
         }}
         className={cn(
           "max-md:hidden flex bg-canvas-base flex-col min-h-0 transition-[width,min-width] duration-200",
-          "md:border-r md:border-border md:h-full",
+          "md:border-r md:border-r-[0.5px] md:border-border md:h-full",
+          // With the title-bar band, the divider runs to the window's top edge;
+          // the band padding moves inside so the content keeps its position.
+          showTitleBand && "md:-mt-7 md:h-[calc(100%+1.75rem)] md:pt-7",
           collapsed
             ? "md:w-15 md:min-w-15 md:px-2.5"
             : "md:w-75 md:min-w-75 pb-2 md:pl-2.5 md:pr-0",
@@ -242,7 +249,7 @@ export function Sidebar() {
             aria-hidden={!mobileDrawerVisible}
             className={cn(
               "fixed inset-y-0 left-0 z-50 flex min-h-0 w-[min(300px,85vw)] flex-col bg-canvas-base",
-              "border-r border-border pb-2 pl-2.5 pr-0 md:hidden",
+              "border-r border-r-[0.5px] border-border pb-2 pl-2.5 pr-0 md:hidden",
               "transition-transform ease-in-out motion-reduce:transition-none",
               mobileDrawerVisible ? "translate-x-0" : "-translate-x-full",
             )}

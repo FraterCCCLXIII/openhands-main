@@ -50,6 +50,9 @@ import { OpenLauncherButton } from "./open-launcher-button";
 import { OpenWorkspaceDialog } from "./open-workspace-dialog";
 import { OpenRepositoryDialog } from "./open-repository-dialog";
 import { HomeGitControlBarPreview } from "./home-git-control-bar-preview";
+import { HomeDashboardComponentsMenu } from "./home-dashboard-components-menu";
+import { HomeDashboardSection } from "./home-dashboard-section";
+import { useHomeDashboardVisibilityStore } from "#/stores/home-dashboard-visibility-store";
 
 export function HomeChatLauncher() {
   const { t } = useTranslation("openhands");
@@ -66,6 +69,9 @@ export function HomeChatLauncher() {
   const [pendingProvider, setPendingProvider] = useState<Provider | null>(null);
   const [workspaceMode, setWorkspaceModeState] = useState<WorkspaceMode>(() =>
     readStoredLocalWorkspaceMode(),
+  );
+  const homeDashboardOrder = useHomeDashboardVisibilityStore(
+    (state) => state.order,
   );
   const isRecommendedAutomationsDismissed =
     useHomeRecommendedAutomationsDismissed();
@@ -369,19 +375,44 @@ export function HomeChatLauncher() {
             onClick={() => setIsPluginPickerOpen(true)}
             disabled={isCreating || isAutomateMode}
           />
+          <div className="ml-auto">
+            <HomeDashboardComponentsMenu />
+          </div>
         </div>
 
         <div className="mt-8 flex w-full flex-col gap-8">
           {/* @spec HL-002 — Only Home's rail is dismissible; dismissal unmounts it, inset included */}
-          {!isRecommendedAutomationsDismissed && (
-            <RecommendedAutomationsLauncher
-              variant="rail"
-              dismissible
-              onDismiss={() => writeHomeRecommendedAutomationsDismissed(true)}
-            />
-          )}
-          <PinnedAutomationsDashboard />
-          <RunningAutomationsList />
+          {homeDashboardOrder.map((id) => {
+            switch (id) {
+              case "recommendedAutomations":
+                return isRecommendedAutomationsDismissed ? null : (
+                  <HomeDashboardSection key={id} id={id}>
+                    <RecommendedAutomationsLauncher
+                      variant="rail"
+                      dismissible
+                      onDismiss={() =>
+                        writeHomeRecommendedAutomationsDismissed(true)
+                      }
+                    />
+                  </HomeDashboardSection>
+                );
+              case "pinnedAutomations":
+                return (
+                  <HomeDashboardSection key={id} id={id}>
+                    <PinnedAutomationsDashboard />
+                  </HomeDashboardSection>
+                );
+              case "runningAutomations":
+                return (
+                  <HomeDashboardSection key={id} id={id}>
+                    <RunningAutomationsList />
+                  </HomeDashboardSection>
+                );
+              default:
+                // Learn resources renders in the header above the composer.
+                return null;
+            }
+          })}
         </div>
       </div>
 

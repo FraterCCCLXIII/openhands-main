@@ -94,7 +94,9 @@ export function useScrollToBottom(
     let frame = 0;
     const follow = () => {
       const bottom = dom.scrollHeight - dom.clientHeight;
-      if (autoscrollRef.current) {
+      // A disclosure that is opening or closing keeps its header in place
+      // (set by `holdChatFollow`), so do not drag the view to the bottom.
+      if (autoscrollRef.current && dom.dataset.holdFollow !== "true") {
         // Content shrinking also lowers scrollTop, but leaves it at the bottom.
         if (dom.scrollTop < lastTop - 1 && dom.scrollTop < bottom - 1) {
           autoscrollRef.current = false;

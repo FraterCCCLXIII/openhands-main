@@ -3,7 +3,6 @@ import { Pin } from "lucide-react";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useNavigation } from "#/context/navigation-context";
-import { hoverRevealActionClassName } from "#/utils/hover-reveal-classes";
 import { cn } from "#/utils/utils";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
 import {
@@ -137,7 +136,10 @@ export function SidebarNavLink({
             "absolute right-1.5 top-1/2 -translate-y-1/2",
             "flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1",
             "text-muted hover:bg-contrast/10 hover:text-contrast",
-            hoverRevealActionClassName(pinAction.pinned),
+            // Pinned stays visible; unpinned appears on row hover, focus, or on touch.
+            pinAction.pinned
+              ? "opacity-100"
+              : "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100",
           )}
         >
           <Pin

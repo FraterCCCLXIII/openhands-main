@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "test-utils";
+import useMetricsStore from "#/stores/metrics-store";
 import { EventGroup } from "#/components/conversation-events/chat/event-message-components/event-group";
 import {
   ActionEvent,
@@ -343,5 +344,169 @@ describe("EventGroup", () => {
       toggle.querySelector('[data-testid="path-component-link"]'),
     ).toBeNull();
     expect(toggle.querySelectorAll("button")).toHaveLength(0);
+  });
+
+  describe("rail variant", () => {
+    it("opens itself while the group is the live tail with an action in flight", () => {
+      const events = [
+        makeBashObservation("o1", "a1", "ls"),
+        makeBashAction("a2", "echo hello"),
+      ];
+
+      renderWithProviders(
+        <EventGroup events={events} variant="rail">
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+      expect(screen.getByText("child")).toBeInTheDocument();
+      expect(screen.getByTestId("rail-marker")).toHaveAttribute(
+        "data-running",
+        "true",
+      );
+    });
+
+    it("stays collapsed once the group is finalized", () => {
+      const events = [
+        makeBashAction("a1", "echo hello"),
+        makeBashObservation("o1", "a1", "hello"),
+      ];
+
+      renderWithProviders(
+        <EventGroup events={events} variant="rail" isFinalized>
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+      expect(screen.getByTestId("event-group-content")).toHaveAttribute(
+        "inert",
+      );
+    });
+
+    it("respects a reader's manual toggle over the auto-open rule", async () => {
+      const user = userEvent.setup();
+      const events = [makeBashAction("a1", "echo hello")];
+
+      renderWithProviders(
+        <EventGroup events={events} variant="rail">
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      const toggle = screen.getByTestId("event-group-toggle");
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+      expect(screen.getByTestId("event-group-content")).toHaveAttribute(
+        "inert",
+      );
+    });
+
+    it("shows skeleton rows only while the live tail is still running", () => {
+      const running = [makeBashAction("a1", "echo hello")];
+      const done = [
+        makeBashAction("a2", "ls"),
+        makeBashObservation("o2", "a2", "ls"),
+      ];
+
+      const { unmount } = renderWithProviders(
+        <EventGroup events={running} variant="rail">
+          <div>child</div>
+        </EventGroup>,
+      );
+      expect(screen.getByTestId("rail-skeleton")).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+      unmount();
+
+      renderWithProviders(
+        <EventGroup events={done} variant="rail" isFinalized>
+          <div>child</div>
+        </EventGroup>,
+      );
+      expect(screen.queryByTestId("rail-skeleton")).not.toBeInTheDocument();
+    });
+
+    describe("token meter", () => {
+      afterEach(() => useMetricsStore.getState().resetMetrics());
+
+      const setUsage = (per_turn_token: number, context_window: number) =>
+        useMetricsStore.getState().setMetrics({
+          cost: null,
+          max_budget_per_task: null,
+          usage: {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            cache_read_tokens: 0,
+            cache_write_tokens: 0,
+            context_window,
+            per_turn_token,
+          },
+        });
+
+      it("shows a compact count and a bar clamped to the context window", () => {
+        setUsage(250000, 200000);
+
+        renderWithProviders(
+          <EventGroup events={[makeBashAction("a1", "ls")]} variant="rail">
+            <div>child</div>
+          </EventGroup>,
+        );
+
+        const meter = screen.getByTestId("token-meter");
+        expect(meter).toHaveAttribute("title", "CONVERSATION$TOKEN_USAGE");
+        expect(meter).toHaveTextContent("250K");
+        expect(screen.getByTestId("token-meter-fill")).toHaveStyle({
+          width: "100%",
+        });
+      });
+
+      it("is hidden once finalized or without a context window", () => {
+        setUsage(1200, 0);
+        const events = [makeBashAction("a1", "ls")];
+        const { unmount } = renderWithProviders(
+          <EventGroup events={events} variant="rail">
+            <div>child</div>
+          </EventGroup>,
+        );
+        expect(screen.queryByTestId("token-meter")).not.toBeInTheDocument();
+        unmount();
+
+        setUsage(1200, 8000);
+        renderWithProviders(
+          <EventGroup events={events} variant="rail" isFinalized>
+            <div>child</div>
+          </EventGroup>,
+        );
+        expect(screen.queryByTestId("token-meter")).not.toBeInTheDocument();
+      });
+    });
+
+    it("keeps the classic variant collapsed while running", () => {
+      const events = [makeBashAction("a1", "echo hello")];
+
+      renderWithProviders(
+        <EventGroup events={events}>
+          <div>child</div>
+        </EventGroup>,
+      );
+
+      expect(screen.getByTestId("event-group-toggle")).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
+      expect(screen.queryByTestId("rail-marker")).not.toBeInTheDocument();
+    });
   });
 });

@@ -10,12 +10,15 @@ import { I18nKey } from "#/i18n/declaration";
 import { OPENHANDS_I18N_NAMESPACE } from "#/i18n";
 import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalBody } from "#/components/shared/modals/modal-body";
-import {
-  BaseModalTitle,
-  BaseModalDescription,
-} from "#/components/shared/modals/confirmation-modals/base-modal";
+import OpenHandsLogoWhite from "#/assets/branding/openhands-logo-white.svg?react";
+import { BaseModalTitle } from "#/components/shared/modals/confirmation-modals/base-modal";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { setTelemetryConsent } from "#/services/telemetry";
+import { useNavigation } from "#/context/navigation-context";
+import { AGENT_CANVAS_CLIENT_VERSION } from "#/api/client-source";
+
+/** Matches `--duration-motion-base` in tailwind.css (the modal exit). */
+const CONSENT_EXIT_MS = 200;
 
 interface TelemetryConsentBannerProps {
   onChoice?: (granted: boolean) => void;
@@ -28,6 +31,7 @@ function LocalTelemetryConsentBanner({
   backend: Backend;
 }) {
   const { t, ready } = useTranslation(OPENHANDS_I18N_NAMESPACE);
+  const { navigate } = useNavigation();
   const health = useBackendsHealth([backend]);
   const isBackendConnected = health[backend.id]?.isConnected === true;
   const { data: settings, isSuccess: hasLoadedSettings } = useSettings();
@@ -35,9 +39,11 @@ function LocalTelemetryConsentBanner({
     useSaveSettings();
   const [isReady, setIsReady] = React.useState(false);
   const [hasSubmittedChoice, setHasSubmittedChoice] = React.useState(false);
+  const [isClosing, setIsClosing] = React.useState(false);
 
   React.useEffect(() => {
     setHasSubmittedChoice(false);
+    setIsClosing(false);
   }, [backend.id]);
 
   const shouldShow =
@@ -66,41 +72,91 @@ function LocalTelemetryConsentBanner({
       return;
     }
 
+    // Play the exit animation before the banner unmounts; the saved settings
+    // flip `shouldShow` off right away, so `isClosing` keeps it mounted.
+    setIsClosing(true);
+    await new Promise((resolve) => setTimeout(resolve, CONSENT_EXIT_MS));
     setHasSubmittedChoice(true);
+    // Unmount after the exit animation; `shouldShow` is already false.
+    setIsClosing(false);
     await setTelemetryConsent(granted ? "granted" : "denied");
     onChoice?.(granted);
   };
 
-  if (!shouldShow || !isReady) return null;
+  if (!isClosing && (!shouldShow || !isReady)) return null;
 
   return (
-    <ModalBackdrop elevated aria-label={t(I18nKey.TELEMETRY$CONSENT_TITLE)}>
+    <ModalBackdrop
+      elevated
+      exiting={isClosing}
+      aria-label={t(I18nKey.TELEMETRY$CONSENT_TITLE)}
+    >
       <form
         data-testid="telemetry-consent-form"
         onSubmit={handleSubmit}
         className="flex flex-col gap-2"
       >
         <ModalBody className="border border-border">
-          <BaseModalTitle title={t(I18nKey.TELEMETRY$CONSENT_TITLE)} />
-          <BaseModalDescription>
-            {t(I18nKey.TELEMETRY$CONSENT_DESCRIPTION)}
-          </BaseModalDescription>
-          <p className="text-xs text-contrast">
-            {t(I18nKey.TELEMETRY$BACKEND_SCOPE, {
-              name: backend.name,
-              host: backend.host,
-            })}
+          <OpenHandsLogoWhite
+            width={40}
+            height={40}
+            className="mx-auto text-contrast [&_path:not([fill=transparent])]:fill-current"
+            aria-hidden
+          />
+          <div className="flex items-baseline justify-center gap-2">
+            <BaseModalTitle title={t(I18nKey.ONBOARDING$TITLE)} />
+            <p
+              data-testid="telemetry-consent-version"
+              className="text-xs text-muted tabular-nums"
+            >
+              {`v${AGENT_CANVAS_CLIENT_VERSION}`}
+            </p>
+          </div>
+          <p className="text-center text-pretty text-sm font-medium text-muted">
+            {t(I18nKey.TELEMETRY$CONSENT_TITLE)}
           </p>
+          <div className="w-full rounded-xl border border-border-subtle bg-surface-raised px-3 py-2">
+            <p className="text-xs text-contrast">
+              {t(I18nKey.TELEMETRY$BACKEND_SCOPE, {
+                name: backend.name,
+                host: backend.host,
+              })}
+            </p>
+          </div>
 
-          <label className="flex gap-2 items-center self-start text-sm cursor-pointer">
-            <input
-              name="analytics"
-              type="checkbox"
-              defaultChecked
-              className="w-4 h-4 cursor-pointer"
-            />
-            {t(I18nKey.TELEMETRY$SEND_ANONYMOUS_DATA)}
-          </label>
+          <div className="flex w-full flex-col gap-1">
+            <div className="flex w-full items-center justify-between gap-3">
+              <label className="flex gap-2 items-center self-start text-sm cursor-pointer">
+                <input
+                  name="analytics"
+                  type="checkbox"
+                  defaultChecked
+                  className="oh-checkbox"
+                />
+                {t(I18nKey.TELEMETRY$SEND_ANONYMOUS_DATA)}
+              </label>
+              <BrandButton
+                testId="telemetry-review-settings"
+                type="button"
+                variant="secondary"
+                className="h-7 min-h-0 rounded-md px-3 text-xs"
+                onClick={() => navigate("/settings")}
+              >
+                {t(I18nKey.SETUP$REVIEW_TITLE)}
+              </BrandButton>
+            </div>
+            <p className="pl-6 text-xs text-muted">
+              {t(I18nKey.TELEMETRY$CONSENT_DESCRIPTION)}{" "}
+              <a
+                href="https://docs.openhands.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground"
+              >
+                {t(I18nKey.TELEMETRY$REVIEW_SECURITY)}
+              </a>
+            </p>
+          </div>
 
           <BrandButton
             testId="confirm-telemetry-preferences"
@@ -109,7 +165,7 @@ function LocalTelemetryConsentBanner({
             className="w-full"
             isDisabled={isSavingSettings}
           >
-            {t(I18nKey.TELEMETRY$CONFIRM_PREFERENCES)}
+            {t(I18nKey.BUTTON$CONTINUE)}
           </BrandButton>
         </ModalBody>
       </form>

@@ -3,7 +3,7 @@ import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-
 import { cn } from "#/utils/utils";
 
 export const automationPreviewListClassName =
-  "custom-scrollbar-always mx-6 flex min-h-0 flex-1 flex-col divide-y divide-[var(--oh-border)] overflow-y-auto rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-raised)] py-4";
+  "custom-scrollbar-always mx-6 flex min-h-0 flex-1 flex-col divide-y divide-[var(--oh-border)] overflow-y-auto rounded-3xl border border-[var(--oh-border)] bg-[var(--oh-surface-raised)] py-4";
 
 type AutomationPreviewFieldLayout = "inline" | "stacked";
 

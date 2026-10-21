@@ -72,7 +72,12 @@ export const EXTENSIONS_NAV_ITEMS: ExtensionNavItem[] = [
   },
 ];
 
-export function ExtensionsNavigation() {
+interface ExtensionsNavigationProps {
+  /** Page-specific controls shown beneath the links (e.g. Skills filters). */
+  children?: React.ReactNode;
+}
+
+export function ExtensionsNavigation({ children }: ExtensionsNavigationProps) {
   const { t } = useTranslation("openhands");
 
   return (
@@ -84,6 +89,7 @@ export function ExtensionsNavigation() {
         {t(I18nKey.NAV$CUSTOMIZE)}
       </span>
       <ExtensionsNavigationLinks />
+      {children ? <div className="px-2 pt-3">{children}</div> : null}
       <div className="px-2 pt-3">
         <BackendSyncedSettingsBadge />
       </div>
