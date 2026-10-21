@@ -24,6 +24,7 @@ import {
   WORKSPACES_HANDLERS,
   resetMockWorkspaces,
 } from "./workspaces-handlers";
+import { PLUGINS_HANDLERS } from "./plugins-handlers";
 import {
   CANVAS_EXTENSIONS_HANDLERS,
   resetCanvasExtensionsMockData,
@@ -43,6 +44,7 @@ export const handlers = [
   ...MCP_HANDLERS,
   ...WORKSPACES_HANDLERS,
   ...CANVAS_EXTENSIONS_HANDLERS,
+  ...PLUGINS_HANDLERS,
 ];
 
 export {

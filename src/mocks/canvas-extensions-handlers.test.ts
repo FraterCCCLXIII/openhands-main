@@ -1,11 +1,15 @@
 /* eslint-disable local/no-direct-agent-server-fetch --
    These fetches deliberately bypass the typed client to exercise the MSW
    network-interception layer that dev:mock relies on. */
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   CANVAS_EXTENSION_DEMO_SOURCE,
   resetCanvasExtensionsMockData,
 } from "#/mocks/canvas-extensions-handlers";
+
+beforeEach(() => {
+  resetCanvasExtensionsMockData();
+});
 
 afterEach(() => {
   resetCanvasExtensionsMockData();
