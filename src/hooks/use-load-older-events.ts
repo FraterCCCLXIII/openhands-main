@@ -9,6 +9,7 @@ import {
 import { isTaskConversationId } from "#/utils/conversation-local-storage";
 import { seedModelSwitchesFromHistory } from "#/hooks/chat/record-model-switch-message";
 import type { OpenHandsEvent } from "#/types/agent-server/core";
+import { isEventSearchExhausted } from "#/components/features/chat/conversation-minimap/fetch-conversation-events-for-minimap";
 
 const getEventTimestamp = (event: OpenHandsEvent): string | undefined =>
   "timestamp" in event ? event.timestamp : undefined;
@@ -31,15 +32,13 @@ interface UseLoadOlderEventsResult {
 
 /**
  * REST-side companion to `useConversationHistory`: paginates older events
- * (`timestamp < oldest known`) into the event store on demand. Used by the
- * chat scroll handler to lazily backfill history when the user scrolls up.
+ * into the event store on demand. Used by the chat scroll handler to lazily
+ * backfill history when the user scrolls up.
  *
- * Server dependency: cloud pagination requires the timestamp comparison
- * fix from OpenHands/OpenHands#14399. The `EventService.searchEvents`
- * cloud path includes a fallback that returns an empty page to stop
- * pagination if the full request fails, so older-event pages will
- * gracefully degrade to a no-op on unpatched backends rather than
- * surfacing errors.
+ * Pagination prefers the server's `next_page_id` chain from the initial REST
+ * tail fetch. Timestamp cursors are only used as a fallback when no page id is
+ * available — `timestamp__lt` breaks when multiple events share the same
+ * timestamp (common in seeded/demo transcripts).
  */
 export const useLoadOlderEvents = (
   conversationId?: string | null,
@@ -57,6 +56,7 @@ export const useLoadOlderEvents = (
   const [hasMore, setHasMore] = React.useState(true);
   const isLoadingRef = React.useRef(false);
   const hasMoreRef = React.useRef(true);
+  const nextPageIdRef = React.useRef<string | null>(null);
   const activeLoadMarkerRef = React.useRef<object | null>(null);
 
   React.useEffect(() => {
@@ -68,6 +68,7 @@ export const useLoadOlderEvents = (
   React.useEffect(() => {
     isLoadingRef.current = false;
     setIsLoading(false);
+    nextPageIdRef.current = null;
 
     if (isTaskConversation) {
       hasMoreRef.current = false;
@@ -79,12 +80,12 @@ export const useLoadOlderEvents = (
     setHasMore(true);
   }, [conversationId, isTaskConversation]);
 
-  // Mirror the initial REST page: if the tail fetch already returned
-  // everything, don't auto-trigger an older-events request on short chats.
+  // Seed the page-id cursor from the initial REST tail fetch.
   React.useEffect(() => {
     if (isTaskConversation || !isInitialHistoryFetched || !initialHistory) {
       return;
     }
+    nextPageIdRef.current = initialHistory.nextPageId;
     if (!initialHistory.hasMore) {
       hasMoreRef.current = false;
       setHasMore(false);
@@ -93,6 +94,7 @@ export const useLoadOlderEvents = (
     isTaskConversation,
     isInitialHistoryFetched,
     initialHistory?.hasMore,
+    initialHistory?.nextPageId,
     realConversationId,
   ]);
 
@@ -115,13 +117,14 @@ export const useLoadOlderEvents = (
 
     const { events } = useEventStore.getState();
     const oldest = events[0];
+    const pageId = nextPageIdRef.current;
 
     // No anchor yet — defer until the initial REST load has populated the
     // store (avoids fetching twice with the same `TIMESTAMP_DESC` window).
-    if (!oldest) return;
+    if (!oldest && !pageId) return;
 
-    const oldestTimestamp = getEventTimestamp(oldest);
-    if (!oldestTimestamp) {
+    const oldestTimestamp = oldest ? getEventTimestamp(oldest) : undefined;
+    if (!pageId && !oldestTimestamp) {
       // Nothing paginate-able — treat as exhausted rather than surfacing an
       // error banner on brand-new conversations.
       hasMoreRef.current = false;
@@ -145,7 +148,7 @@ export const useLoadOlderEvents = (
         {
           limit: INITIAL_HISTORY_PAGE_SIZE,
           sortOrder: "TIMESTAMP_DESC",
-          timestampLt: oldestTimestamp,
+          ...(pageId ? { pageId } : { timestampLt: oldestTimestamp }),
         },
       );
 
@@ -174,12 +177,10 @@ export const useLoadOlderEvents = (
           useEventStore.getState().uiEvents,
         );
       }
-      // Stop once the server signals there are no more pages, OR — for
-      // servers that don't fill in `next_page_id` for filtered queries —
-      // when we get back a short page.
-      const exhausted =
-        !page.next_page_id || page.items.length < INITIAL_HISTORY_PAGE_SIZE;
-      if (exhausted) {
+
+      nextPageIdRef.current = page.next_page_id ?? null;
+
+      if (isEventSearchExhausted(page)) {
         hasMoreRef.current = false;
         setHasMore(false);
       }

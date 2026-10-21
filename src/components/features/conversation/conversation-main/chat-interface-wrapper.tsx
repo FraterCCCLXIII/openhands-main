@@ -9,6 +9,8 @@ import {
   CONVERSATION_OVERVIEW_COLUMN_WIDTH_PX,
   CONVERSATION_OVERVIEW_PANEL_TRANSITION,
 } from "../conversation-overview-panel.constants";
+import { ConversationMinimapProvider } from "../../chat/conversation-minimap/conversation-minimap-context";
+import { ConversationMinimapHost } from "../../chat/conversation-minimap/conversation-minimap";
 
 interface ChatInterfaceWrapperProps {
   isRightPanelShown: boolean;
@@ -48,47 +50,50 @@ export function ChatInterfaceWrapper({
   const showOverviewPanel = wantsOverviewPanel && hasOverviewColumnSpace;
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-full min-h-0 w-full overflow-hidden"
-    >
-      <div className="flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden">
-        <div className={THREAD_CLASSNAME}>
-          <ChatInterface
-            showGitControlBar={showGitControlBar}
-            showEmptyStateSuggestions={showEmptyStateSuggestions}
-            composerDockTarget={composerDockTarget}
-            onDockedComposerSubmit={onDockedComposerSubmit}
-            minimalComposer={minimalComposer}
-            composerPlaceholder={composerPlaceholder}
-          />
+    <ConversationMinimapProvider>
+      <div
+        ref={containerRef}
+        className="relative flex h-full min-h-0 w-full overflow-hidden"
+      >
+        <div className="flex min-h-0 min-w-0 flex-1 justify-center overflow-hidden">
+          <div className={THREAD_CLASSNAME}>
+            <ChatInterface
+              showGitControlBar={showGitControlBar}
+              showEmptyStateSuggestions={showEmptyStateSuggestions}
+              composerDockTarget={composerDockTarget}
+              onDockedComposerSubmit={onDockedComposerSubmit}
+              minimalComposer={minimalComposer}
+              composerPlaceholder={composerPlaceholder}
+            />
+          </div>
         </div>
-      </div>
-      <AnimatePresence>
-        {showOverviewPanel ? (
-          <motion.div
-            key="conversation-overview-column"
-            data-testid="conversation-overview-column"
-            initial={enableOverviewMotion ? { width: 0, opacity: 0 } : false}
-            animate={{
-              width: CONVERSATION_OVERVIEW_COLUMN_WIDTH_PX,
-              opacity: 1,
-            }}
-            exit={
-              enableOverviewMotion ? { width: 0, opacity: 0 } : { opacity: 0 }
-            }
-            transition={CONVERSATION_OVERVIEW_PANEL_TRANSITION}
-            className="flex shrink-0 flex-col items-start overflow-hidden pt-4 pl-3 pr-4"
-          >
-            <div
-              className="w-full shrink-0"
-              style={{ width: CONVERSATION_OVERVIEW_COLUMN_WIDTH_PX }}
+        <ConversationMinimapHost />
+        <AnimatePresence>
+          {showOverviewPanel ? (
+            <motion.div
+              key="conversation-overview-column"
+              data-testid="conversation-overview-column"
+              initial={enableOverviewMotion ? { width: 0, opacity: 0 } : false}
+              animate={{
+                width: CONVERSATION_OVERVIEW_COLUMN_WIDTH_PX,
+                opacity: 1,
+              }}
+              exit={
+                enableOverviewMotion ? { width: 0, opacity: 0 } : { opacity: 0 }
+              }
+              transition={CONVERSATION_OVERVIEW_PANEL_TRANSITION}
+              className="flex shrink-0 flex-col items-start overflow-hidden pt-4 pl-3 pr-4"
             >
-              <ConversationOverviewPanel />
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </div>
+              <div
+                className="w-full shrink-0"
+                style={{ width: CONVERSATION_OVERVIEW_COLUMN_WIDTH_PX }}
+              >
+                <ConversationOverviewPanel />
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
+    </ConversationMinimapProvider>
   );
 }

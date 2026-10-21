@@ -9,6 +9,7 @@ import {
   CANVAS_DEMO_FILE_PATH,
   CANVAS_DEMO_MARKDOWN,
 } from "#/fixtures/canvas-demo-conversation";
+import { MINIMAP_DEMO_CONVERSATION_ID } from "#/fixtures/minimap-demo-conversation";
 import { TABLE_DEMO_CONVERSATION_ID } from "#/fixtures/table-demo-conversation";
 import { server } from "#/mocks/node";
 import { ExecutionStatus } from "#/types/agent-server/core";
@@ -93,7 +94,7 @@ describe("mock conversation handlers", () => {
 
   it("returns adapted conversation pages for search", async () => {
     const page = await AgentServerConversationService.searchConversations({
-      limit: 10,
+      limit: 20,
     });
 
     expect(page.items.length).toBeGreaterThan(0);
@@ -691,5 +692,33 @@ describe("mock conversation handlers", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/markdown");
     await expect(response.text()).resolves.toBe(CANVAS_DEMO_MARKDOWN);
+  });
+
+  it("returns the minimap demo conversation with paginated history", async () => {
+    const [conversation] =
+      await AgentServerConversationService.batchGetAppConversations([
+        MINIMAP_DEMO_CONVERSATION_ID,
+      ]);
+    const firstPage = await EventService.searchEvents(
+      MINIMAP_DEMO_CONVERSATION_ID,
+      null,
+      null,
+      { limit: 50, sortOrder: "TIMESTAMP_DESC" },
+    );
+    const secondPage = await EventService.searchEvents(
+      MINIMAP_DEMO_CONVERSATION_ID,
+      null,
+      null,
+      {
+        limit: 50,
+        sortOrder: "TIMESTAMP_DESC",
+        timestampLt: firstPage.items.at(-1)?.timestamp ?? undefined,
+      },
+    );
+
+    expect(conversation?.title).toBe("Minimap demo (55 turns)");
+    expect(firstPage.items).toHaveLength(50);
+    expect(firstPage.next_page_id).toBe("next-page");
+    expect(secondPage.items.length).toBeGreaterThan(0);
   });
 });

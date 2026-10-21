@@ -1,5 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { readVerticalScrollEdgeState } from "#/utils/scroll-fade-state";
+import {
+  readScrollFadeState,
+  readVerticalScrollEdgeState,
+} from "#/utils/scroll-fade-state";
+
+function mockHorizontalScrollMetrics(
+  element: HTMLElement,
+  metrics: { scrollWidth: number; clientWidth: number; scrollLeft: number },
+) {
+  Object.defineProperty(element, "scrollWidth", {
+    configurable: true,
+    value: metrics.scrollWidth,
+  });
+  Object.defineProperty(element, "clientWidth", {
+    configurable: true,
+    value: metrics.clientWidth,
+  });
+  Object.defineProperty(element, "scrollLeft", {
+    configurable: true,
+    writable: true,
+    value: metrics.scrollLeft,
+  });
+}
 
 function mockVerticalScrollMetrics(
   element: HTMLElement,
@@ -19,6 +41,19 @@ function mockVerticalScrollMetrics(
     value: metrics.scrollTop,
   });
 }
+
+describe("readScrollFadeState", () => {
+  it("hides both fades when content fits horizontally", () => {
+    const element = document.createElement("div");
+    mockHorizontalScrollMetrics(element, {
+      scrollWidth: 400,
+      clientWidth: 400,
+      scrollLeft: 0,
+    });
+
+    expect(readScrollFadeState(element)).toEqual({ left: false, right: false });
+  });
+});
 
 describe("readVerticalScrollEdgeState", () => {
   it("hides both edges when the content fits", () => {

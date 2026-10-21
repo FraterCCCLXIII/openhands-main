@@ -58,6 +58,9 @@ import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { setConversationState } from "#/utils/conversation-local-storage";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { I18nKey } from "#/i18n/declaration";
+import { useRegisterConversationMinimapScroll } from "./conversation-minimap/conversation-minimap-context";
+import { navigateToConversationTurn } from "./conversation-minimap/conversation-minimap-turn";
+import { useEventStore } from "#/stores/use-event-store";
 import { hasConversationStarted } from "./components/resolve-picker-kind";
 import { AgentSuggestionRail } from "./agent-suggestion-rail";
 import { ComposerDockedProvider } from "#/context/composer-docked-context";
@@ -272,6 +275,7 @@ export function ChatInterface({
     scrollHeight: number;
     scrollTop: number;
   } | null>(null);
+  const skipAutoScrollForMinimapRef = React.useRef(false);
 
   React.useEffect(() => {
     // A pending history load may be discarded during a conversation switch.
@@ -312,6 +316,45 @@ export function ChatInterface({
       setErrorMessage,
       t,
     ],
+  );
+
+  const navigateToTurn = React.useCallback(
+    async (userEventId: string) => {
+      const container = scrollRef.current;
+      if (!container || isProvisioningTask) {
+        return;
+      }
+
+      skipAutoScrollForMinimapRef.current = true;
+      setAutoScroll(false);
+
+      try {
+        await navigateToConversationTurn(container, userEventId, {
+          loadOlder: async () => {
+            try {
+              await loadOlder();
+            } catch (error) {
+              const message =
+                error instanceof Error && error.message
+                  ? error.message
+                  : t(I18nKey.ERROR$GENERIC);
+              setErrorMessage(message);
+              throw error;
+            }
+          },
+          isEventInStore: (eventId) =>
+            useEventStore
+              .getState()
+              .events.some(
+                (event) => "id" in event && String(event.id) === eventId,
+              ),
+          getEventCount: () => useEventStore.getState().events.length,
+        });
+      } finally {
+        skipAutoScrollForMinimapRef.current = false;
+      }
+    },
+    [isProvisioningTask, loadOlder, setAutoScroll, setErrorMessage, t],
   );
 
   const handleWheelForPagination = React.useCallback(
@@ -517,6 +560,10 @@ export function ChatInterface({
       return;
     }
 
+    if (skipAutoScrollForMinimapRef.current) {
+      return;
+    }
+
     if (autoScroll) {
       scrollDomToBottom();
     }
@@ -573,6 +620,12 @@ export function ChatInterface({
     isStopStatus,
     curAgentState,
   });
+  useRegisterConversationMinimapScroll({
+    scrollContainerRef: scrollRef,
+    visible: showConversationMessages && renderableEvents.length > 0,
+    navigateToTurn,
+  });
+
   const serverStatusText = getStatusText({
     isPausing,
     isTask,
