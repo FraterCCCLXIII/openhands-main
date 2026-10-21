@@ -144,7 +144,7 @@ export function KanbanBoard() {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
-      <h1 className="text-xl font-semibold text-content">
+      <h1 className="font-inter text-[22px] font-normal text-content">
         {t(I18nKey.KANBAN$TITLE)}
       </h1>
       <div className="flex gap-4 overflow-x-auto pb-2">

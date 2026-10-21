@@ -24,7 +24,7 @@ export function PlanningBoard() {
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold text-content">
+        <h1 className="font-inter text-xl font-normal text-content">
           {t(I18nKey.PLANNING$TITLE)}
         </h1>
         <div className="flex gap-2">

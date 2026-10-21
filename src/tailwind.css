@@ -17,6 +17,7 @@
   --radius-lg: 0.625rem;
   --radius-xl: 0.875rem;
   --radius-2xl: 1.125rem;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
   --duration-motion-fast: 150ms;
   --duration-motion-base: 200ms;
   --duration-motion-slow: 280ms;
