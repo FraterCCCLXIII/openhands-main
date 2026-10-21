@@ -872,6 +872,39 @@ describe("BackendSelector", () => {
     });
   });
 
+  it("shows a clickable tile per backend once tile view is toggled on", async () => {
+    renderWithProviders(
+      <TestSeed
+        onMount={(ctx) => {
+          ctx.addBackend(SEED_LOCAL_1);
+        }}
+      >
+        <BackendSelector identityHeader />
+      </TestSeed>,
+    );
+
+    expect(screen.queryByTestId("backend-tile-column")).not.toBeInTheDocument();
+    const user = await openDropdown();
+    await user.click(screen.getByTestId("tile-view-menu-item"));
+
+    const column = await screen.findByTestId("backend-tile-column");
+    const tiles = within(column).getAllByRole("button");
+    expect(tiles.length).toBeGreaterThanOrEqual(2);
+    expect(
+      tiles.some((tile) => tile.getAttribute("aria-pressed") === "true"),
+    ).toBe(true);
+    const inactive = tiles.find(
+      (tile) => tile.getAttribute("aria-pressed") === "false",
+    ) as HTMLElement;
+
+    const before = activeBackendSnapshot();
+    await user.click(inactive);
+    await settleBackendSwitch(before);
+    await waitFor(() => {
+      expect(inactive).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
   it("hides add-backend footer action when locked to Cloud", async () => {
     vi.stubEnv("VITE_LOCK_TO_CLOUD", "https://app.all-hands.dev");
 

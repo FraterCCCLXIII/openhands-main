@@ -33641,6 +33641,24 @@
     "ca": "Gestiona els backends",
     "id": "Kelola Backend"
   },
+  "BACKEND$TILE_VIEW": {
+    "en": "Tile view",
+    "ja": "タイル表示",
+    "zh-CN": "磁贴视图",
+    "zh-TW": "磚塊檢視",
+    "ko-KR": "타일 보기",
+    "no": "Flisvisning",
+    "it": "Vista a riquadri",
+    "pt": "Visualização em blocos",
+    "es": "Vista de mosaico",
+    "ar": "عرض البلاطات",
+    "fr": "Vue en tuiles",
+    "tr": "Kutucuk görünümü",
+    "de": "Kachelansicht",
+    "uk": "Плиточний вигляд",
+    "ca": "Vista de mosaic",
+    "id": "Tampilan ubin"
+  },
   "BACKEND$MANAGE_TITLE": {
     "en": "Manage backends",
     "ja": "バックエンドを管理",

@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useMatch, useNavigate } from "react-router";
-import { Cloud, Plus, Settings } from "lucide-react";
+import { Cloud, LayoutGrid, Plus, Settings } from "lucide-react";
 import OpenHandsLogo from "#/assets/branding/openhands-logo.svg?react";
 import { Dropdown } from "#/ui/dropdown/dropdown";
 import { DropdownOption } from "#/ui/dropdown/types";
@@ -31,6 +31,8 @@ import { AddBackendModal } from "./add-backend-modal";
 import { BackendStatusDot } from "./backend-status-dot";
 import { EditableAccountIdentityTile } from "./backend-identity-editable-tile";
 import { getBackendIdentityKey } from "#/stores/backend-identity-store";
+import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
+import { AccountIdentityTile } from "./backend-identity-tile";
 import { ManageBackendsModal } from "./manage-backends-modal";
 import { cn } from "#/utils/utils";
 import { formControlTransitionClassName } from "#/utils/form-control-classes";
@@ -191,6 +193,9 @@ export function BackendSelector({
   const [addBackendModalOpen, setAddBackendModalOpen] = React.useState(false);
   const [manageBackendsModalOpen, setManageBackendsModalOpen] =
     React.useState(false);
+
+  const tileViewEnabled = useBackendTileViewStore((state) => state.enabled);
+  const toggleTileView = useBackendTileViewStore((state) => state.toggle);
 
   const personalWorkspaceLabel = t(I18nKey.BACKEND$PERSONAL_WORKSPACE);
 
@@ -354,6 +359,28 @@ export function BackendSelector({
           {t(I18nKey.BACKEND$ADD)}
         </button>
       )}
+      {identityHeader ? (
+        <button
+          type="button"
+          data-testid="tile-view-menu-item"
+          aria-pressed={tileViewEnabled}
+          onMouseDown={preventDropdownMenuClose}
+          onTouchStart={preventDropdownMenuClose}
+          onClick={(event) => {
+            preventDropdownMenuClose(event);
+            toggleTileView();
+          }}
+          className={cn(
+            dropdownFooterActionClassName,
+            "cursor-pointer rounded-md",
+          )}
+        >
+          <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
+            <LayoutGrid width={16} height={16} />
+          </span>
+          {t(I18nKey.BACKEND$TILE_VIEW)}
+        </button>
+      ) : null}
       <button
         type="button"
         data-testid="manage-backends-menu-item"
@@ -416,6 +443,49 @@ export function BackendSelector({
   return (
     <>
       <div className="group relative flex items-center gap-2 w-full">
+        {identityHeader && tileViewEnabled ? (
+          <div
+            data-testid="backend-tile-column"
+            className="flex shrink-0 flex-col gap-1"
+          >
+            {options.map((option) => {
+              const backendId = option.value.split(VALUE_SEPARATOR)[0];
+              const kind = backends.find((b) => b.id === backendId)?.kind;
+              const isActive =
+                !noBackendSelected && option.value === activeValue;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  data-testid={`backend-tile-${option.value}`}
+                  aria-label={option.label}
+                  title={option.label}
+                  aria-pressed={isActive}
+                  onClick={() => void handleSelectBackend(option.value)}
+                  className={cn(
+                    "relative inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border",
+                    isActive
+                      ? "border-contrast bg-surface-raised"
+                      : "border-transparent hover:bg-surface-raised",
+                    formControlTransitionClassName,
+                  )}
+                >
+                  <AccountIdentityTile
+                    identityKey={option.value}
+                    fallback={accountFallbackIcon(kind)}
+                    size="sm"
+                  />
+                  <BackendStatusDot
+                    isConnected={
+                      healthByBackendId[backendId]?.isConnected ?? null
+                    }
+                    className="absolute right-0 top-0 z-[1]"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <div className="flex-1 min-w-0">
           <Dropdown
             testId="backend-selector"
