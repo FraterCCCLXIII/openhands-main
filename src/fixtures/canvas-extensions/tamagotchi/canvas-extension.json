@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "tamagotchi",
+  "display_name": "ASCII Tamagotchi",
+  "version": "0.1.0",
+  "description": "A dependency-free ASCII pet with feeding, play, naps, cleanup, medicine, and a journal.",
+  "entrypoint": "extension.js",
+  "contributes": {
+    "pages": [
+      {
+        "id": "home",
+        "title": "Tamagotchi",
+        "path": "/home",
+        "nav_label": "Tamagotchi"
+      },
+      {
+        "id": "journal",
+        "title": "Tamagotchi journal",
+        "path": "/journal",
+        "nav_label": "Journal"
+      }
+    ]
+  }
+}
