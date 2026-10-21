@@ -1,5 +1,5 @@
 import React from "react";
-import { createPortal } from "react-dom";
+import { AppearancePortal } from "#/components/shared/appearance-portal";
 import { useNavigate } from "react-router";
 import { useTracking } from "#/hooks/use-tracking";
 import { useTranslation } from "react-i18next";
@@ -616,9 +616,13 @@ export function ChatInterface({
       {composer}
     </AgentSuggestionRail>
   );
-  const dockedOrInlineComposer = composerDockTarget
-    ? createPortal(composerWithSuggestions, composerDockTarget)
-    : composerWithSuggestions;
+  const dockedOrInlineComposer = composerDockTarget ? (
+    <AppearancePortal container={composerDockTarget}>
+      {composerWithSuggestions}
+    </AppearancePortal>
+  ) : (
+    composerWithSuggestions
+  );
 
   return (
     <WorkspaceFilesForChatProvider>
