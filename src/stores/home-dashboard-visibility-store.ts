@@ -1,30 +1,29 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import {
+  HOME_DASHBOARD_WIDGETS,
+  type HomeDashboardWidgetId,
+} from "#/components/features/home/home-dashboard-widgets";
 
-/** Home dashboard sections that can be hidden from the HUD. */
-export const HOME_DASHBOARD_COMPONENT_IDS = [
-  "learnResources",
-  "recommendedAutomations",
-  "pinnedAutomations",
-  "runningAutomations",
-] as const;
+/** Home dashboard widgets, derived from the widget registry. */
+export const HOME_DASHBOARD_COMPONENT_IDS = HOME_DASHBOARD_WIDGETS.map(
+  (widget) => widget.id,
+) as HomeDashboardWidgetId[];
 
-export type HomeDashboardComponentId =
-  (typeof HOME_DASHBOARD_COMPONENT_IDS)[number];
+export type HomeDashboardComponentId = HomeDashboardWidgetId;
 
 /**
- * Every section appears in the reorder list. Learn resources stays in the
- * header above the composer, so its position only sets its place in the list.
+ * Every widget appears in the reorder list. Header-placed widgets (Learn
+ * resources) render above the composer, so their position only sets their
+ * place in the list.
  */
-export const HOME_DASHBOARD_REORDERABLE_IDS = [
-  "learnResources",
-  "recommendedAutomations",
-  "pinnedAutomations",
-  "runningAutomations",
-] as const;
+export const HOME_DASHBOARD_REORDERABLE_IDS = HOME_DASHBOARD_COMPONENT_IDS;
 
-export type HomeDashboardReorderableId =
-  (typeof HOME_DASHBOARD_REORDERABLE_IDS)[number];
+export type HomeDashboardReorderableId = HomeDashboardComponentId;
+
+const DEFAULT_VISIBLE = new Map<string, boolean>(
+  HOME_DASHBOARD_WIDGETS.map((widget) => [widget.id, widget.defaultVisible]),
+);
 
 const DEFAULT_ORDER: HomeDashboardReorderableId[] = [
   ...HOME_DASHBOARD_REORDERABLE_IDS,
@@ -54,13 +53,25 @@ function normalizeOrder(order: unknown): HomeDashboardReorderableId[] {
 }
 
 interface HomeDashboardVisibilityState {
-  /** Only hidden ids are stored; anything absent is visible. */
+  /** Default-on widgets the user hid; anything absent keeps its default. */
   hiddenIds: Partial<Record<HomeDashboardComponentId, true>>;
+  /** Default-off widgets the user turned on. */
+  shownIds: Partial<Record<HomeDashboardComponentId, true>>;
   /** Always a full, valid ordering of the reorderable sections. */
   order: HomeDashboardReorderableId[];
   setHidden: (id: HomeDashboardComponentId, hidden: boolean) => void;
   /** Moves a reorderable section to `index` in the order. */
   moveTo: (id: HomeDashboardReorderableId, index: number) => void;
+}
+
+/** Whether a widget is currently hidden, honoring its registry default. */
+export function isHomeDashboardComponentHidden(
+  state: Pick<HomeDashboardVisibilityState, "hiddenIds" | "shownIds">,
+  id: HomeDashboardComponentId,
+): boolean {
+  return DEFAULT_VISIBLE.get(id) === false
+    ? !state.shownIds[id]
+    : Boolean(state.hiddenIds[id]);
 }
 
 /**
@@ -73,9 +84,16 @@ export const useHomeDashboardVisibilityStore =
     persist(
       (set) => ({
         hiddenIds: {},
+        shownIds: {},
         order: DEFAULT_ORDER,
         setHidden: (id, hidden) =>
           set((state) => {
+            if (DEFAULT_VISIBLE.get(id) === false) {
+              const shown = { ...state.shownIds };
+              if (hidden) delete shown[id];
+              else shown[id] = true;
+              return { shownIds: shown };
+            }
             const next = { ...state.hiddenIds };
             if (hidden) next[id] = true;
             else delete next[id];
@@ -93,6 +111,7 @@ export const useHomeDashboardVisibilityStore =
         storage: createJSONStorage(() => localStorage),
         partialize: (state) => ({
           hiddenIds: state.hiddenIds,
+          shownIds: state.shownIds,
           order: state.order,
         }),
         merge: (persisted, current) => {
@@ -100,6 +119,7 @@ export const useHomeDashboardVisibilityStore =
           return {
             ...current,
             hiddenIds: saved.hiddenIds ?? current.hiddenIds,
+            shownIds: saved.shownIds ?? current.shownIds,
             order: normalizeOrder(saved.order),
           };
         },

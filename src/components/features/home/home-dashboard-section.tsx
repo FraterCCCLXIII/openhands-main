@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { I18nKey } from "#/i18n/declaration";
 import {
+  isHomeDashboardComponentHidden,
   useHomeDashboardVisibilityStore,
   type HomeDashboardComponentId,
 } from "#/stores/home-dashboard-visibility-store";
@@ -22,7 +23,7 @@ export function HomeDashboardSection({
 }: HomeDashboardSectionProps) {
   const { t } = useTranslation("openhands");
   const isHidden = useHomeDashboardVisibilityStore((state) =>
-    Boolean(state.hiddenIds[id]),
+    isHomeDashboardComponentHidden(state, id),
   );
   const setHidden = useHomeDashboardVisibilityStore((state) => state.setHidden);
 
