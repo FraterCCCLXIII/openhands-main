@@ -2,22 +2,33 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { subscribeColorTheme } from "#/themes/color-theme/runtime";
 
+interface PrimaryColorPreset {
+  key: string;
+  /** CSS background of the swatch in the palette popover. */
+  swatch: string;
+  /** Value for --oh-color-primary (main buttons) and --oh-accent. */
+  primary: string;
+  /** Value for --oh-accent-foreground when it must differ from the theme's. */
+  accentForeground?: string;
+}
+
 /** The preset primary colors offered in the palette popover. */
 export const PRIMARY_COLOR_PRESETS = [
-  { key: "blue", hex: "#3B82F6", swatch: "#3B82F6" },
-  { key: "violet", hex: "#8B5CF6", swatch: "#8B5CF6" },
-  { key: "pink", hex: "#EC4899", swatch: "#EC4899" },
-  { key: "red", hex: "#EF4444", swatch: "#EF4444" },
-  { key: "orange", hex: "#F97316", swatch: "#F97316" },
-  { key: "green", hex: "#22C55E", swatch: "#22C55E" },
-  { key: "teal", hex: "#14B8A6", swatch: "#14B8A6" },
-  // Neutral override; the swatch is split white and black.
+  { key: "blue", swatch: "#3B82F6", primary: "#3B82F6" },
+  { key: "violet", swatch: "#8B5CF6", primary: "#8B5CF6" },
+  { key: "pink", swatch: "#EC4899", primary: "#EC4899" },
+  { key: "red", swatch: "#EF4444", primary: "#EF4444" },
+  { key: "orange", swatch: "#F97316", primary: "#F97316" },
+  { key: "green", swatch: "#22C55E", primary: "#22C55E" },
+  { key: "teal", swatch: "#14B8A6", primary: "#14B8A6" },
+  // Black buttons in light themes and white buttons in dark ones, with text in the opposite color.
   {
     key: "monochrome",
-    hex: "#6B7280",
     swatch: "conic-gradient(#FFFFFF 0 50%, #000000 50% 100%)",
+    primary: "light-dark(#000000, #FFFFFF)",
+    accentForeground: "light-dark(#FFFFFF, #000000)",
   },
-] as const;
+] as const satisfies readonly PrimaryColorPreset[];
 
 export type PrimaryColorKey = (typeof PRIMARY_COLOR_PRESETS)[number]["key"];
 
@@ -31,14 +42,23 @@ const STYLE_TAG_ID = "oh-primary-color-override";
 function applyPrimaryColor(key: PrimaryColorKey | null) {
   if (typeof document === "undefined") return;
   const existing = document.getElementById(STYLE_TAG_ID);
-  const hex = PRIMARY_COLOR_PRESETS.find((preset) => preset.key === key)?.hex;
-  if (!hex) {
+  const preset: PrimaryColorPreset | undefined = PRIMARY_COLOR_PRESETS.find(
+    (item) => item.key === key,
+  );
+  if (!preset) {
     existing?.remove();
     return;
   }
+  const declarations = [
+    `  --oh-color-primary: ${preset.primary};`,
+    `  --oh-accent: ${preset.primary};`,
+    ...(preset.accentForeground
+      ? [`  --oh-accent-foreground: ${preset.accentForeground};`]
+      : []),
+  ];
   const style = existing ?? document.createElement("style");
   style.id = STYLE_TAG_ID;
-  style.textContent = `[data-agent-server-ui][data-agent-server-ui] {\n  --oh-color-primary: ${hex};\n  --oh-accent: ${hex};\n}`;
+  style.textContent = `[data-agent-server-ui][data-agent-server-ui] {\n${declarations.join("\n")}\n}`;
   // Re-append so the override stays after the theme sheet in document order.
   document.head.appendChild(style);
 }
