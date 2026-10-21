@@ -503,7 +503,7 @@ export function BackendSelector({
             }
             loading={someCloudLoading}
             options={headerOptions}
-            className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 [&_input]:text-base [&_input]:font-normal [&_input::placeholder]:text-contrast text-contrast pl-[5px] pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
+            className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 [&_input]:text-[15px] [&_input]:font-normal [&_input::placeholder]:text-contrast text-contrast [&_[data-testid=dropdown-trigger]]:text-muted pl-1.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
         {identityHeader ? (
