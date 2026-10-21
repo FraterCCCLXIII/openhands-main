@@ -1,0 +1,245 @@
+[
+  {
+    "task": "clamp_velocity",
+    "arm": "A",
+    "seed": 0,
+    "prompt_tokens": 428,
+    "output_tokens": 375,
+    "pass": true,
+    "error": "ok clamp_velocity"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "A",
+    "seed": 1,
+    "prompt_tokens": 428,
+    "output_tokens": 377,
+    "pass": true,
+    "error": "ok clamp_velocity"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "A",
+    "seed": 2,
+    "prompt_tokens": 428,
+    "output_tokens": 375,
+    "pass": true,
+    "error": "ok clamp_velocity"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "A2",
+    "seed": 0,
+    "prompt_tokens": 125,
+    "output_tokens": 82,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "A2",
+    "seed": 1,
+    "prompt_tokens": 125,
+    "output_tokens": 99,
+    "pass": false,
+    "error": "patch failed: patch: **** malformed patch at line 11:"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "A2",
+    "seed": 2,
+    "prompt_tokens": 125,
+    "output_tokens": 88,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "B",
+    "seed": 0,
+    "prompt_tokens": 222,
+    "output_tokens": 67,
+    "pass": false,
+    "error": "unknown patch line: + N0 FIELD(P0.position)"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "B",
+    "seed": 1,
+    "prompt_tokens": 222,
+    "output_tokens": 67,
+    "pass": false,
+    "error": "unknown patch line: + N0 FIELD(P0.position)"
+  },
+  {
+    "task": "clamp_velocity",
+    "arm": "B",
+    "seed": 2,
+    "prompt_tokens": 222,
+    "output_tokens": 67,
+    "pass": false,
+    "error": "unknown patch line: + N0 FIELD(P0.position)"
+  },
+  {
+    "task": "rename_export",
+    "arm": "A",
+    "seed": 0,
+    "prompt_tokens": 411,
+    "output_tokens": 351,
+    "pass": true,
+    "error": "ok rename_export"
+  },
+  {
+    "task": "rename_export",
+    "arm": "A",
+    "seed": 1,
+    "prompt_tokens": 411,
+    "output_tokens": 351,
+    "pass": true,
+    "error": "ok rename_export"
+  },
+  {
+    "task": "rename_export",
+    "arm": "A",
+    "seed": 2,
+    "prompt_tokens": 411,
+    "output_tokens": 351,
+    "pass": true,
+    "error": "ok rename_export"
+  },
+  {
+    "task": "rename_export",
+    "arm": "A2",
+    "seed": 0,
+    "prompt_tokens": 114,
+    "output_tokens": 79,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "rename_export",
+    "arm": "A2",
+    "seed": 1,
+    "prompt_tokens": 114,
+    "output_tokens": 79,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "rename_export",
+    "arm": "A2",
+    "seed": 2,
+    "prompt_tokens": 114,
+    "output_tokens": 79,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "rename_export",
+    "arm": "B",
+    "seed": 0,
+    "prompt_tokens": 173,
+    "output_tokens": 37,
+    "pass": false,
+    "error": "no usal block"
+  },
+  {
+    "task": "rename_export",
+    "arm": "B",
+    "seed": 1,
+    "prompt_tokens": 173,
+    "output_tokens": 18,
+    "pass": false,
+    "error": "no usal block"
+  },
+  {
+    "task": "rename_export",
+    "arm": "B",
+    "seed": 2,
+    "prompt_tokens": 173,
+    "output_tokens": 112,
+    "pass": false,
+    "error": "no usal block"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A",
+    "seed": 0,
+    "prompt_tokens": 424,
+    "output_tokens": 391,
+    "pass": true,
+    "error": "ok add_momentum"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A",
+    "seed": 1,
+    "prompt_tokens": 424,
+    "output_tokens": 387,
+    "pass": true,
+    "error": "ok add_momentum"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A",
+    "seed": 2,
+    "prompt_tokens": 424,
+    "output_tokens": 391,
+    "pass": true,
+    "error": "ok add_momentum"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A2",
+    "seed": 0,
+    "prompt_tokens": 127,
+    "output_tokens": 71,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A2",
+    "seed": 1,
+    "prompt_tokens": 127,
+    "output_tokens": 85,
+    "pass": false,
+    "error": "patch failed: patch: **** malformed patch at line 13:"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "A2",
+    "seed": 2,
+    "prompt_tokens": 127,
+    "output_tokens": 71,
+    "pass": false,
+    "error": "patch failed: I can't seem to find a patch in there anywhere."
+  },
+  {
+    "task": "add_momentum",
+    "arm": "B",
+    "seed": 0,
+    "prompt_tokens": 198,
+    "output_tokens": 126,
+    "pass": false,
+    "error": "node added with no function: + N9 = MUL(N8, P1)"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "B",
+    "seed": 1,
+    "prompt_tokens": 198,
+    "output_tokens": 56,
+    "pass": false,
+    "error": "node added with no function: + N10 = MUL(N9, P1)"
+  },
+  {
+    "task": "add_momentum",
+    "arm": "B",
+    "seed": 2,
+    "prompt_tokens": 198,
+    "output_tokens": 102,
+    "pass": false,
+    "error": "node added with no function: + N10 = MUL(N9.mass, N9.velocity)"
+  }
+]
