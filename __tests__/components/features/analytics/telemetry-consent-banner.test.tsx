@@ -1,7 +1,15 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TelemetryConsentBanner } from "#/components/features/analytics/telemetry-consent-banner";
 import type { Backend } from "#/api/backend-registry/types";
+
+const CONSENT_EXIT_MS = 200;
 
 const localBackend: Backend = {
   id: "local",
@@ -30,6 +38,7 @@ const translations: Record<string, string> = {
   TELEMETRY$CONSENT_DESCRIPTION:
     "We collect anonymous usage data to improve the product.",
   TELEMETRY$SEND_ANONYMOUS_DATA: "Send anonymous usage data",
+  TELEMETRY$DO_NOT_SHOW_AGAIN: "Do not show again",
   TELEMETRY$CONFIRM_PREFERENCES: "Confirm preferences",
   TELEMETRY$BACKEND_SCOPE: "Scope:",
 };
@@ -115,6 +124,8 @@ async function submitForm() {
   const event = new Event("submit", { bubbles: true, cancelable: true });
   await act(async () => {
     form.dispatchEvent(event);
+    // The banner waits out its exit animation before reporting the choice.
+    await vi.advanceTimersByTimeAsync(CONSENT_EXIT_MS);
   });
   return event;
 }
@@ -123,6 +134,7 @@ afterEach(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.clearAllMocks();
+  window.localStorage.clear();
 });
 
 describe("telemetry consent banner", () => {
@@ -302,6 +314,35 @@ describe("telemetry consent banner", () => {
     expect(
       screen.queryByTestId("telemetry-consent-form"),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the prompt hidden on later visits after Do not show again", async () => {
+    renderBanner();
+    advanceBy(50);
+    await submitForm();
+
+    cleanup();
+    renderBanner();
+    advanceBy(50);
+
+    expect(
+      screen.queryByTestId("telemetry-consent-form"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the prompt again on later visits when Do not show again is unchecked", async () => {
+    renderBanner();
+    advanceBy(50);
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Do not show again" }),
+    );
+    await submitForm();
+
+    cleanup();
+    renderBanner();
+    advanceBy(50);
+
+    expect(screen.getByTestId("telemetry-consent-form")).toBeInTheDocument();
   });
 
   it("denies consent when the checkbox is unchecked", async () => {
