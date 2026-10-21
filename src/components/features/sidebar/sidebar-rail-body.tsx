@@ -163,7 +163,9 @@ export function SidebarRailBody({
             )}
           >
             {!collapsed ? (
-              <BackendSelector identityHeader sidebarCollapsed={false} />
+              <div className="pb-0.5">
+                <BackendSelector identityHeader sidebarCollapsed={false} />
+              </div>
             ) : isDesktopShell() ? null : (
               <OpenHandsLogoButton
                 logoWidth={SIDEBAR_LOGO_WIDTH}

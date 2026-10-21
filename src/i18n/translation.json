@@ -55258,5 +55258,23 @@
     "uk": "Монохромний",
     "ca": "Monocrom",
     "id": "Monokrom"
+  },
+  "SIDEBAR$LEARNING_CENTER": {
+    "en": "Learning Center",
+    "ja": "ラーニングセンター",
+    "zh-CN": "学习中心",
+    "zh-TW": "學習中心",
+    "ko-KR": "학습 센터",
+    "no": "Læringssenter",
+    "it": "Centro di apprendimento",
+    "pt": "Centro de aprendizagem",
+    "es": "Centro de aprendizaje",
+    "ar": "مركز التعلّم",
+    "fr": "Centre d'apprentissage",
+    "tr": "Öğrenme merkezi",
+    "de": "Lernzentrum",
+    "uk": "Центр навчання",
+    "ca": "Centre d'aprenentatge",
+    "id": "Pusat pembelajaran"
   }
 }

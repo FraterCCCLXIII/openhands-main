@@ -320,6 +320,15 @@ export function SidebarOnboardingChecklist({
                   : undefined
               }
             />
+            <a
+              href="https://docs.openhands.dev/"
+              target="_blank"
+              rel="noreferrer"
+              data-testid="sidebar-onboarding-checklist-learning-center"
+              className="mt-2 flex w-full items-center justify-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted hover:text-contrast transition-opacity hover:opacity-90"
+            >
+              {t(I18nKey.SIDEBAR$LEARNING_CENTER)}
+            </a>
           </div>
         ) : null}
       </AnimatedCollapse>
