@@ -1,5 +1,7 @@
 import { useCallback, useRef } from "react";
+import { AgentNotifications } from "./agent-notifications";
 import { CustomChatInput } from "./custom-chat-input";
+import { useAgentNotifications } from "#/hooks/chat/use-agent-notifications";
 import { useBtwInterceptor } from "#/hooks/chat/use-btw-interceptor";
 import { useGoalInterceptor } from "#/hooks/chat/use-goal-interceptor";
 import { useModelInterceptor } from "#/hooks/chat/use-model-interceptor";
@@ -10,6 +12,7 @@ import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { GitControlBar } from "./git-control-bar";
 import { useConversationStore } from "#/stores/conversation-store";
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import { useAgentState } from "#/hooks/use-agent-state";
 import { useSubConversationTaskPolling } from "#/hooks/query/use-sub-conversation-task-polling";
 import { partitionImagesForUpload } from "#/components/features/chat/utils/chat-input.utils";
@@ -20,6 +23,7 @@ interface InteractiveChatBoxProps {
   onSubmit: (message: string, images: File[], files: File[]) => void;
   disabled?: boolean;
   hasStartedConversation?: boolean;
+  showAgentNotifications?: boolean;
   showGitControlBar?: boolean;
   placeholder?: string;
   /** Whether the composer saves and restores a draft; see CustomChatInput. */
@@ -30,17 +34,16 @@ export function InteractiveChatBox({
   onSubmit,
   disabled = false,
   hasStartedConversation,
+  showAgentNotifications = false,
   showGitControlBar = true,
   placeholder,
   persistDraft = true,
 }: InteractiveChatBoxProps) {
-  const {
-    images,
-    files,
-    imagesMarkedUploadAsFile,
-    clearAllFiles,
-    subConversationTaskId,
-  } = useConversationStore();
+  const subConversationTaskId = useConversationStore(
+    (state) => state.subConversationTaskId,
+  );
+  const { images, files, imagesMarkedUploadAsFile, clearAllFiles } =
+    useConversationComposer();
   const { curAgentState } = useAgentState();
   const { data: conversation } = useActiveConversation();
   const { conversationId: routeConversationId } = useOptionalConversationId();
@@ -96,6 +99,11 @@ export function InteractiveChatBox({
     handleSubmit(suggestion);
   };
 
+  const agentNotifications = useAgentNotifications({
+    conversationId,
+    enabled: showAgentNotifications,
+  });
+
   const isDisabled =
     disabled ||
     curAgentState === AgentState.AWAITING_USER_CONFIRMATION ||
@@ -110,6 +118,16 @@ export function InteractiveChatBox({
           : undefined
       }
     >
+      {agentNotifications.isVisible ? (
+        <AgentNotifications
+          agentNotifications={agentNotifications.agentNotifications}
+          onCreateAll={agentNotifications.createAll}
+          onDismiss={agentNotifications.dismiss}
+          onRemove={agentNotifications.remove}
+          disabled={isDisabled}
+          isCreating={agentNotifications.isCreating}
+        />
+      ) : null}
       {showGitControlBar ? (
         <div className="mb-2" data-testid="chat-git-control-bar">
           <GitControlBar onSuggestionsClick={handleSuggestionsClick} />

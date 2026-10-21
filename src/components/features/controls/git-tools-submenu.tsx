@@ -1,3 +1,4 @@
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import { useTranslation } from "react-i18next";
 import { ContextMenu } from "#/ui/context-menu";
 import { ContextMenuListItem } from "../context-menu/context-menu-list-item";
@@ -10,7 +11,6 @@ import {
   getCreatePRPrompt,
   getCreateNewBranchPrompt,
 } from "#/utils/utils";
-import { useConversationStore } from "#/stores/conversation-store";
 
 import ArrowUpIcon from "#/icons/u-arrow-up.svg?react";
 import ArrowDownIcon from "#/icons/u-arrow-down.svg?react";
@@ -26,7 +26,7 @@ interface GitToolsSubmenuProps {
 
 export function GitToolsSubmenu({ onClose }: GitToolsSubmenuProps) {
   const { t } = useTranslation("openhands");
-  const { setMessageToSend } = useConversationStore();
+  const { setMessageToSend } = useConversationComposer();
   const { data: conversation } = useActiveConversation();
 
   const currentGitProvider = conversation?.git_provider as Provider;

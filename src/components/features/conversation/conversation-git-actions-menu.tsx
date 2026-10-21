@@ -1,3 +1,4 @@
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import React, { useLayoutEffect, useState } from "react";
 import { GitCommitHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +7,6 @@ import ArrowUpIcon from "#/icons/u-arrow-up.svg?react";
 import CodeBranchIcon from "#/icons/u-code-branch.svg?react";
 import PrIcon from "#/icons/u-pr.svg?react";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
-import { useConversationStore } from "#/stores/conversation-store";
 import { ContextMenu } from "#/ui/context-menu";
 import { ContextMenuListItem } from "#/components/features/context-menu/context-menu-list-item";
 import { ToolsContextMenuIconText } from "#/components/features/controls/tools-context-menu-icon-text";
@@ -43,9 +43,7 @@ export function ConversationGitActionsMenu({
 }: ConversationGitActionsMenuProps) {
   const { t } = useTranslation("openhands");
   const menuRef = useClickOutsideElement<HTMLUListElement>(onClose);
-  const setMessageToSend = useConversationStore(
-    (state) => state.setMessageToSend,
-  );
+  const { setMessageToSend } = useConversationComposer();
   const [portalStyle, setPortalStyle] = useState<React.CSSProperties>();
 
   useLayoutEffect(() => {
@@ -118,7 +116,7 @@ export function ConversationGitActionsMenu({
         >
           <ToolsContextMenuIconText
             icon={<GitCommitHorizontal className="size-4" aria-hidden />}
-            text={t(I18nKey.DIFF_VIEWER$COMMITS)}
+            text={t(I18nKey.COMMON$COMMIT)}
           />
         </ContextMenuListItem>
         <ContextMenuListItem

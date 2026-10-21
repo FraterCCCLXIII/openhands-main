@@ -2,7 +2,10 @@ import { act, renderHook } from "@testing-library/react";
 import type { RefObject } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useChatSubmission } from "#/hooks/chat/use-chat-submission";
-import { useConversationStore } from "#/stores/conversation-store";
+import {
+  HOME_COMPOSER_KEY,
+  useConversationStore,
+} from "#/stores/conversation-store";
 
 interface SubmissionProps {
   chatInputRef: RefObject<HTMLDivElement | null>;
@@ -64,7 +67,11 @@ const setAttachments = ({
 }: {
   images?: File[];
   files?: File[];
-} = {}) => useConversationStore.setState({ images, files });
+} = {}) => {
+  useConversationStore.getState().clearComposer(HOME_COMPOSER_KEY);
+  useConversationStore.getState().addImages(HOME_COMPOSER_KEY, images);
+  useConversationStore.getState().addFiles(HOME_COMPOSER_KEY, files);
+};
 
 afterEach(() => {
   setAttachments();

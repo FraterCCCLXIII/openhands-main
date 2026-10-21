@@ -17,8 +17,7 @@ import { useConversationLocalStorageState } from "#/utils/conversation-local-sto
 import { useSelectConversationTab } from "#/hooks/use-select-conversation-tab";
 import { I18nKey } from "#/i18n/declaration";
 import PrIcon from "#/icons/u-pr.svg?react";
-import PillIcon from "#/icons/pill.svg?react";
-import PillFillIcon from "#/icons/pill-fill.svg?react";
+import { PinToggleIcon } from "#/components/shared/pin-toggle-icon";
 import { cn } from "#/utils/utils";
 import {
   dropdownInstantColorClassName,
@@ -141,19 +140,7 @@ function OverviewPinButton({
       aria-label={pinned ? pinnedLabel : unpinnedLabel}
       onClick={onClick}
     >
-      <span
-        className={cn(
-          "ml-auto overflow-hidden",
-          dropdownMenuRowIconWrapperClassName,
-        )}
-        aria-hidden
-      >
-        {pinned ? (
-          <PillFillIcon className="size-4" width={16} height={16} />
-        ) : (
-          <PillIcon className="size-4" width={16} height={16} />
-        )}
-      </span>
+      <PinToggleIcon pinned={pinned} />
     </button>
   );
 }

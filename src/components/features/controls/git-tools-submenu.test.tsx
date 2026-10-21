@@ -16,8 +16,8 @@ vi.mock("react-i18next", () => ({
   useTranslation: mocks.useTranslation,
 }));
 
-vi.mock("#/stores/conversation-store", () => ({
-  useConversationStore: () => ({ setMessageToSend: mocks.setMessageToSend }),
+vi.mock("#/hooks/use-conversation-composer", () => ({
+  useConversationComposer: () => ({ setMessageToSend: mocks.setMessageToSend }),
 }));
 
 vi.mock("#/hooks/query/use-active-conversation", () => ({

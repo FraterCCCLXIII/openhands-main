@@ -14,8 +14,7 @@ import { I18nKey } from "#/i18n/declaration";
 import { Gauge, Globe, ListTodo, SquareChevronRight } from "lucide-react";
 import { LuFileDiff } from "react-icons/lu";
 import DocumentIcon from "#/icons/document.svg?react";
-import PillIcon from "#/icons/pill.svg?react";
-import PillFillIcon from "#/icons/pill-fill.svg?react";
+import { PinToggleIcon } from "#/components/shared/pin-toggle-icon";
 import DoubleCheckIcon from "#/icons/double-check.svg?react";
 import { useTaskList } from "#/hooks/use-task-list";
 import { useSelectConversationTab } from "#/hooks/use-select-conversation-tab";
@@ -239,27 +238,7 @@ export function ConversationTabsContextMenu({
                   }
                   onClick={(e) => handlePinToggle(tab, e)}
                 >
-                  {pinned ? (
-                    <span
-                      className={cn(
-                        "-mr-1.25 ml-auto",
-                        dropdownMenuRowIconWrapperClassName,
-                      )}
-                      aria-hidden
-                    >
-                      <PillFillIcon className="h-7 w-7" />
-                    </span>
-                  ) : (
-                    <span
-                      className={cn(
-                        "ml-auto",
-                        dropdownMenuRowIconWrapperClassName,
-                      )}
-                      aria-hidden
-                    >
-                      <PillIcon className="h-4.5 w-4.5" />
-                    </span>
-                  )}
+                  <PinToggleIcon pinned={pinned} />
                 </button>
               </div>
             </ArchivedDisabledTooltip>
