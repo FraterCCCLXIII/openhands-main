@@ -352,6 +352,22 @@ describe("ChatInputActions — Switch agent profile gate (OSS-5735)", () => {
     ).toBeInTheDocument();
   });
 
+  it("joins the model and agent-profile segments in one pill, model first", async () => {
+    renderWithProviders(<ChatInputActions disabled={false} />, {
+      navigation: { conversationId: null },
+    });
+
+    const agentSegment = await screen.findByTestId("agent-profile-pill-stub");
+    const pill = screen.getByTestId("chat-input-model-agent-pill");
+    const modelSegment = within(pill).getByTestId("llm-profile-picker-stub");
+
+    expect(pill).toContainElement(agentSegment);
+    expect(
+      modelSegment.compareDocumentPosition(agentSegment) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("offers Switch agent profile in a blank (unstarted) conversation", async () => {
     useActiveConversationMock.mockReturnValue({
       data: { conversation_id: "conv-blank", llm_model: null },
