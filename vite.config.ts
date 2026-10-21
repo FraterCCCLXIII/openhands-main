@@ -305,9 +305,8 @@ export default defineConfig(({ mode }) => {
         "mdast-util-from-markdown",
         "remark-gfm",
         "remark-breaks",
-        "react-syntax-highlighter",
+        "react-syntax-highlighter/dist/esm/prism-light",
         "react-syntax-highlighter/dist/esm/styles/prism",
-        "react-syntax-highlighter/dist/esm/styles/hljs",
         // Terminal dependencies - added to prevent runtime optimization
         "@xterm/addon-fit",
         "@xterm/xterm",
