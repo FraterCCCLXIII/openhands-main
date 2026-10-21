@@ -533,7 +533,7 @@ export function ChatInputActions({
           <div
             data-testid="chat-input-model-agent-pill"
             className={cn(
-              "flex min-w-0 items-center rounded-[100px] border border-transparent has-[button]:border-border-subtle",
+              "flex min-w-0 items-center rounded-[100px] border border-transparent",
               "[&>*:has(button)~*:has(button)]:border-l [&>*:has(button)~*:has(button)]:border-border-subtle",
               !showModelInline && "hidden",
             )}

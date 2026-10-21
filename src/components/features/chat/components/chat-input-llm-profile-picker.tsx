@@ -15,7 +15,10 @@ import { Divider } from "#/ui/divider";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { getLockedCloudHost } from "#/api/agent-server-config";
-import { chatInputPillButtonClassName } from "#/utils/form-control-classes";
+import {
+  chatInputModelPillClassName,
+  chatInputPillButtonClassName,
+} from "#/utils/form-control-classes";
 import { useFreeModels } from "#/hooks/query/use-free-models";
 import { formatModelPrettyLabel } from "#/utils/format-model-name";
 import { useModelCatalogWarning } from "#/hooks/use-model-catalog-warning";
@@ -200,7 +203,11 @@ export function ChatInputLlmProfilePicker() {
       <button
         ref={triggerRef}
         type="button"
-        className={cn(chatInputPillButtonClassName, "max-w-50")}
+        className={cn(
+          chatInputPillButtonClassName,
+          chatInputModelPillClassName,
+          "max-w-50",
+        )}
         title={currentProfileModel ?? currentProfileName ?? undefined}
         data-testid="chat-input-llm-profile"
         aria-expanded={isPopoverOpen}

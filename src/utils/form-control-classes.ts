@@ -53,6 +53,10 @@ export const chatInputPillButtonClassName = cn(
   formControlMutedHoverClassName,
 );
 
+/** Model pill extras: roomier padding; brighter hairline and fill on hover. */
+export const chatInputModelPillClassName =
+  "px-2.5 py-1 duration-150 hover:ring-white/25 hover:bg-white/5";
+
 /** Circular icon triggers in the chat input actions row. */
 export const chatInputIconButtonClassName = cn(
   "flex items-center justify-center rounded-full text-muted cursor-pointer",
