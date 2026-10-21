@@ -233,7 +233,7 @@ export function BackendSelector({
                     isConnected={
                       healthByBackendId[backendId]?.isConnected ?? null
                     }
-                    className="absolute -right-0.5 -bottom-0.5 z-[1]"
+                    className="absolute -right-0.5 -top-0.5 z-[1]"
                   />
                 </span>
               ),
@@ -415,7 +415,7 @@ export function BackendSelector({
 
   return (
     <>
-      <div className="group flex items-center gap-2 w-full">
+      <div className="group relative flex items-center gap-2 w-full">
         <div className="flex-1 min-w-0">
           <Dropdown
             testId="backend-selector"
@@ -445,7 +445,7 @@ export function BackendSelector({
             }
             loading={someCloudLoading}
             options={headerOptions}
-            className="-ml-2.5 h-10 pl-2.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
+            className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 pl-2.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
         {identityHeader ? (
@@ -453,7 +453,7 @@ export function BackendSelector({
             to="/settings"
             data-testid="backend-selector-header-settings"
             aria-label={settingsLabel}
-            className="inline-flex items-center justify-center shrink-0 w-9 h-9 rounded-md text-muted opacity-0 transition-opacity hover:text-contrast hover:bg-surface-raised group-hover:opacity-100 focus-visible:opacity-100"
+            className="absolute right-1 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md bg-surface-raised text-muted opacity-0 transition-opacity hover:text-contrast group-hover:opacity-100 focus-visible:opacity-100"
           >
             <Settings width={16} height={16} />
           </NavigationLink>
