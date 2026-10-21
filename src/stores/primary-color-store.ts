@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { subscribeColorTheme } from "#/themes/color-theme/runtime";
+import { accentForegroundFor } from "#/utils/accent-foreground";
 
 interface PrimaryColorPreset {
   key: string;
@@ -45,17 +46,22 @@ function applyPrimaryColor(key: PrimaryColorKey | null) {
   const preset: PrimaryColorPreset | undefined = PRIMARY_COLOR_PRESETS.find(
     (item) => item.key === key,
   );
-  if (!preset) {
+  // Button text follows the fill: white on dark, near-black on light. Measured
+  // from the resolved fill, so the theme's own primary is covered too.
+  const accentForeground =
+    preset?.accentForeground ??
+    accentForegroundFor(preset?.primary ?? "var(--oh-color-primary)");
+  const declarations = [
+    ...(preset ? [`  --oh-color-primary: ${preset.primary};`] : []),
+    ...(preset ? [`  --oh-accent: ${preset.primary};`] : []),
+    ...(accentForeground
+      ? [`  --oh-accent-foreground: ${accentForeground};`]
+      : []),
+  ];
+  if (declarations.length === 0) {
     existing?.remove();
     return;
   }
-  const declarations = [
-    `  --oh-color-primary: ${preset.primary};`,
-    `  --oh-accent: ${preset.primary};`,
-    ...(preset.accentForeground
-      ? [`  --oh-accent-foreground: ${preset.accentForeground};`]
-      : []),
-  ];
   const style = existing ?? document.createElement("style");
   style.id = STYLE_TAG_ID;
   style.textContent = `[data-agent-server-ui][data-agent-server-ui] {\n${declarations.join("\n")}\n}`;
