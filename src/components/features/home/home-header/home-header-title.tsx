@@ -14,6 +14,16 @@ const WELCOME_BACK_MESSAGES = [
   "Let's pick up where you left off.",
 ];
 
+/** Extra subtitle lines, shuffled in alongside the translated subheader. */
+const SUBTITLE_MESSAGES = [
+  "Bugs fear you. Let's get to work.",
+  "Small steps, big commits. What are we building?",
+  "Your codebase called. It wants a little attention.",
+  "Tests are optional. Confidence is not. Let's go.",
+  "Every great app started as a blank prompt.",
+  "Ship something good today.",
+];
+
 /** Same pace as the composer placeholder typewriter (1.1s across the text). */
 const TYPE_DURATION_MS = 1100;
 
@@ -67,6 +77,13 @@ function WelcomeBackHeading({ message }: { message: string }) {
 export function HomeHeaderTitle() {
   const { t } = useTranslation("openhands");
   const [welcomeMessage] = useState(pickWelcomeBackMessage);
+  const [subtitle] = useState(() => {
+    const options = [
+      t(I18nKey.HOME$ENGINEERING_TASKS_SUBHEADER),
+      ...SUBTITLE_MESSAGES,
+    ];
+    return options[Math.floor(Math.random() * options.length)];
+  });
 
   return (
     <div className="flex w-full flex-col items-center gap-2 py-2">
@@ -78,7 +95,7 @@ export function HomeHeaderTitle() {
         data-testid="home-header-subtitle"
         className="text-center text-[var(--oh-text-tertiary)]"
       >
-        {t(I18nKey.HOME$ENGINEERING_TASKS_SUBHEADER)}
+        {subtitle}
       </p>
       <HomeDashboardSection id="learnResources">
         <HomeLearnResources />
