@@ -223,11 +223,19 @@ export function BackendSelector({
             return {
               ...option,
               prefix: (
-                <EditableAccountIdentityTile
-                  identityKey={option.value}
-                  fallback={accountFallbackIcon(kind)}
-                  size="sm"
-                />
+                <span className="relative inline-flex shrink-0">
+                  <EditableAccountIdentityTile
+                    identityKey={option.value}
+                    fallback={accountFallbackIcon(kind)}
+                    size="sm"
+                  />
+                  <BackendStatusDot
+                    isConnected={
+                      healthByBackendId[backendId]?.isConnected ?? null
+                    }
+                    className="absolute -right-0.5 -bottom-0.5 z-[1]"
+                  />
+                </span>
               ),
             };
           })
@@ -407,7 +415,7 @@ export function BackendSelector({
 
   return (
     <>
-      <div className="flex items-center gap-2 w-full">
+      <div className="group flex items-center gap-2 w-full">
         <div className="flex-1 min-w-0">
           <Dropdown
             testId="backend-selector"
@@ -440,6 +448,16 @@ export function BackendSelector({
             className="-ml-2.5 h-10 pl-2.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
+        {identityHeader ? (
+          <NavigationLink
+            to="/settings"
+            data-testid="backend-selector-header-settings"
+            aria-label={settingsLabel}
+            className="inline-flex items-center justify-center shrink-0 w-9 h-9 rounded-md text-muted opacity-0 transition-opacity hover:text-contrast hover:bg-surface-raised group-hover:opacity-100 focus-visible:opacity-100"
+          >
+            <Settings width={16} height={16} />
+          </NavigationLink>
+        ) : null}
         {!hideTrigger && !identityHeader ? (
           <StyledTooltip
             content={settingsLabel}
