@@ -24,15 +24,20 @@ import {
   PADDING_MIN_PERCENT,
   usePaddingStore,
 } from "#/stores/padding-store";
+import {
+  BACKGROUND_TINT_MAX_PERCENT,
+  BACKGROUND_TINT_MIN_PERCENT,
+  useBackgroundTintStore,
+} from "#/stores/background-tint-store";
 import { useBackendColorThemeStore } from "#/stores/backend-color-theme-store";
 import {
   PRIMARY_COLOR_PRESETS,
   usePrimaryColorStore,
-  type PrimaryColorKey,
+  type PresetColorKey,
 } from "#/stores/primary-color-store";
 import { cn } from "#/utils/utils";
 
-const PRIMARY_COLOR_NAME_KEYS: Record<PrimaryColorKey, I18nKey> = {
+const PRIMARY_COLOR_NAME_KEYS: Record<PresetColorKey, I18nKey> = {
   blue: I18nKey.COLOR$BLUE,
   violet: I18nKey.COLOR$VIOLET,
   pink: I18nKey.COLOR$PINK,
@@ -43,7 +48,7 @@ const PRIMARY_COLOR_NAME_KEYS: Record<PrimaryColorKey, I18nKey> = {
   monochrome: I18nKey.COLOR$MONOCHROME,
 };
 
-const POPOVER_WIDTH_PX = 288;
+const POPOVER_WIDTH_PX = 320;
 const LIGHT_THEME: ColorThemeKey = "light-plus";
 const LIGHT_THEME_KEYS: readonly ColorThemeKey[] = [
   "light-plus",
@@ -86,11 +91,19 @@ export function SidebarAppearanceMenu({
   const setTextSizePercent = useTextSizeStore((state) => state.setPercent);
   const paddingPercent = usePaddingStore((state) => state.percent);
   const setPaddingPercent = usePaddingStore((state) => state.setPercent);
+  const tintPercent = useBackgroundTintStore((state) => state.percent);
+  const setTintPercent = useBackgroundTintStore((state) => state.setPercent);
   const primaryColorKey = usePrimaryColorStore(
     (state) => state.primaryColorKey,
   );
   const setPrimaryColorKey = usePrimaryColorStore(
     (state) => state.setPrimaryColorKey,
+  );
+  const customPrimaryColor = usePrimaryColorStore(
+    (state) => state.customPrimaryColor,
+  );
+  const setCustomPrimaryColor = usePrimaryColorStore(
+    (state) => state.setCustomPrimaryColor,
   );
 
   const selectTheme = (key: ColorThemeKey) => {
@@ -121,7 +134,7 @@ export function SidebarAppearanceMenu({
               ref={menuRef}
               data-testid="sidebar-appearance-menu"
               style={menuStyle}
-              className="fixed z-50 flex w-72 flex-col gap-3 rounded-xl border border-border-subtle bg-tertiary p-3 shadow-lg"
+              className="fixed z-50 flex w-80 flex-col gap-3 rounded-xl border border-border-subtle bg-tertiary p-3 shadow-lg"
             >
               <div className="flex items-center justify-between gap-2 text-sm text-contrast">
                 <span>{t(I18nKey.SIDEBAR$LIGHT_THEME)}</span>
@@ -190,6 +203,25 @@ export function SidebarAppearanceMenu({
                 />
               </div>
               <div className="flex flex-col gap-2 text-sm text-contrast">
+                <span className="flex items-center justify-between">
+                  <span>{t(I18nKey.SIDEBAR$BACKGROUND_TINT)}</span>
+                  <span className="text-muted">{tintPercent}%</span>
+                </span>
+                <input
+                  type="range"
+                  aria-label={t(I18nKey.SIDEBAR$BACKGROUND_TINT)}
+                  data-testid="sidebar-background-tint-slider"
+                  min={BACKGROUND_TINT_MIN_PERCENT}
+                  max={BACKGROUND_TINT_MAX_PERCENT}
+                  step={5}
+                  value={tintPercent}
+                  onChange={(event) =>
+                    setTintPercent(Number(event.currentTarget.value))
+                  }
+                  className="w-full cursor-pointer accent-contrast"
+                />
+              </div>
+              <div className="flex flex-col gap-2 text-sm text-contrast">
                 <span>{t(I18nKey.SIDEBAR$PRIMARY_COLOR)}</span>
                 <div role="radiogroup" className="flex flex-wrap gap-2">
                   {PRIMARY_COLOR_PRESETS.map((preset) => {
@@ -216,6 +248,32 @@ export function SidebarAppearanceMenu({
                       />
                     );
                   })}
+                  <label
+                    title={t(I18nKey.COLOR$CUSTOM)}
+                    className={cn(
+                      "relative size-6 cursor-pointer overflow-hidden rounded-full border-2 ring-1 ring-inset ring-white/20 outline outline-1 outline-white/35 outline-offset-0 transition-transform hover:scale-110",
+                      primaryColorKey === "custom"
+                        ? "border-contrast"
+                        : "border-transparent",
+                    )}
+                    style={{
+                      background:
+                        primaryColorKey === "custom"
+                          ? customPrimaryColor
+                          : "conic-gradient(#EF4444, #F59E0B, #22C55E, #14B8A6, #3B82F6, #8B5CF6, #EC4899, #EF4444)",
+                    }}
+                  >
+                    <input
+                      type="color"
+                      aria-label={t(I18nKey.COLOR$CUSTOM)}
+                      data-testid="sidebar-primary-color-custom"
+                      value={customPrimaryColor}
+                      onChange={(event) =>
+                        setCustomPrimaryColor(event.currentTarget.value)
+                      }
+                      className="absolute inset-0 size-full cursor-pointer opacity-0"
+                    />
+                  </label>
                 </div>
               </div>
             </div>,

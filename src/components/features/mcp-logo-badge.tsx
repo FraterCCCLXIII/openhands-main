@@ -63,7 +63,7 @@ export function McpLogoBadge({
       data-testid={testId}
       className={cn(
         "inline-flex shrink-0 items-center justify-center overflow-hidden",
-        "border border-contrast/10 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--oh-contrast)_18%,transparent)]",
+        "border border-contrast/5 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--oh-contrast)_7%,transparent)]",
         sizeClassNames[size],
         className,
       )}
