@@ -149,7 +149,7 @@ export function SidebarRailBody({
           className={cn(
             collapsed && showCollapseToggle
               ? SIDEBAR_COLLAPSED_LOGO_WRAPPER_CLASS
-              : "flex min-w-0 shrink-0 items-center",
+              : "flex min-w-0 flex-1 items-center",
           )}
         >
           <div
@@ -160,7 +160,9 @@ export function SidebarRailBody({
               collapsed && showCollapsedExpandButton && "opacity-0",
             )}
           >
-            {isDesktopShell() ? null : (
+            {!collapsed ? (
+              <BackendSelector identityHeader sidebarCollapsed={false} />
+            ) : isDesktopShell() ? null : (
               <OpenHandsLogoButton
                 logoWidth={SIDEBAR_LOGO_WIDTH}
                 logoHeight={SIDEBAR_LOGO_HEIGHT}
@@ -233,10 +235,11 @@ export function SidebarRailBody({
               className={cn(
                 chatInputIconButtonClassName,
                 chatInputAddButtonSurfaceClassName,
+                "size-5",
               )}
               aria-hidden="true"
             >
-              <Plus className="h-3.25 w-3.25 shrink-0" strokeWidth={2} />
+              <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
             </span>
           }
         />
@@ -440,8 +443,19 @@ export function SidebarRailBody({
               "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-border pt-2 px-2.5",
             )}
           >
-            <AgentCanvasVersionTile hideWhenUpToDate />
-            <BackendSelector sidebarCollapsed={collapsed} openUpward />
+            <div className="flex items-center justify-between gap-2">
+              <NavigationLink
+                to="/settings"
+                data-testid="sidebar-footer-settings-link"
+                aria-label={t(I18nKey.SIDEBAR$SETTINGS)}
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast"
+              >
+                <Settings width={16} height={16} />
+              </NavigationLink>
+              <div className="min-w-0 flex-1">
+                <AgentCanvasVersionTile hideWhenUpToDate />
+              </div>
+            </div>
           </div>
         </>
       ) : null}

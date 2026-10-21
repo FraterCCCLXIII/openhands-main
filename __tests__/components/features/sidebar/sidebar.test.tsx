@@ -334,14 +334,15 @@ describe("Sidebar", () => {
     expect(sidebar.dataset.collapsed).toBe("false");
   });
 
-  it("shows the version tile above the backend selector when expanded", () => {
+  it("shows the version tile in the footer beside the settings link when expanded", () => {
     renderSidebar("/conversations");
 
     const versionTile = screen.getByTestId("agent-canvas-version-tile");
-    const backendSelector = screen.getByTestId("backend-selector");
-    expect(versionTile.compareDocumentPosition(backendSelector)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    const footerSettings = screen.getByTestId("sidebar-footer-settings-link");
+    expect(
+      footerSettings.compareDocumentPosition(versionTile) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("hides the version tile when the sidebar is collapsed", () => {
@@ -485,19 +486,19 @@ describe("Sidebar", () => {
     }
   });
 
-  it("renders the Getting Started checklist above the bottom backend bar", () => {
+  it("renders the Getting Started checklist above the footer", () => {
     renderSidebar("/conversations");
 
     const automations = screen.getByTestId("sidebar-automations-link");
     const checklist = screen.getByTestId("sidebar-onboarding-checklist");
-    const backendBar = screen.getByTestId("backend-selector");
+    const footer = screen.getByTestId("sidebar-footer-settings-link");
 
     expect(
       automations.compareDocumentPosition(checklist) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      checklist.compareDocumentPosition(backendBar) &
+      checklist.compareDocumentPosition(footer) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });

@@ -141,7 +141,11 @@ function SkillsSettingsScreen() {
       data-testid="skills-settings-screen"
       className="flex h-full gap-4 lg:gap-10 lg:pl-10"
     >
-      <ExtensionsNavigation />
+      <ExtensionsNavigation>
+        {!isLoading && allSkills.length > 0 ? (
+          <SkillFacetRail groups={groups} onToggle={handleToggleFacet} />
+        ) : null}
+      </ExtensionsNavigation>
       <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
         <div
           data-testid="skills-page"
@@ -220,12 +224,6 @@ function SkillsSettingsScreen() {
               />
 
               <div className="flex min-w-0 gap-6">
-                <SkillFacetRail
-                  groups={groups}
-                  onToggle={handleToggleFacet}
-                  className="hidden w-60 shrink-0 self-start md:flex"
-                />
-
                 <section className="flex min-w-0 flex-1 flex-col gap-3">
                   <div className="flex items-center justify-between gap-3 text-xs text-tertiary-light">
                     <span data-testid="skills-result-summary">
