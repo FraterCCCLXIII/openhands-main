@@ -50,7 +50,7 @@ import { useTaskPolling } from "#/hooks/query/use-task-polling";
 import { matchesPendingConversationId } from "#/utils/pending-task-message-link";
 import { useConversationWebSocket } from "#/contexts/conversation-websocket-context";
 import ChatStatusIndicator from "./chat-status-indicator";
-import { getStatusColor, getStatusText } from "#/utils/utils";
+import { cn, getStatusColor, getStatusText } from "#/utils/utils";
 import { useNewConversationCommand } from "#/hooks/mutation/use-new-conversation-command";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { setConversationState } from "#/utils/conversation-local-storage";
@@ -618,7 +618,7 @@ export function ChatInterface({
               maybeLoadOlder(e.currentTarget);
             }}
             onWheel={handleWheelForPagination}
-            className="custom-scrollbar-always flex min-h-0 grow flex-col gap-2 overflow-x-hidden overflow-y-auto px-0 pt-4 pb-8 md:px-4"
+            className="custom-scrollbar-always flex min-h-0 grow flex-col gap-2 overflow-x-hidden overflow-y-auto px-0 pt-4 pb-8 md:px-4 [mask-image:linear-gradient(to_bottom,black_calc(100%-2.5rem),transparent)]"
           >
             <div className="mx-auto flex w-full max-w-200 min-w-0 flex-col gap-2">
               {isChatLoading && isReturningToConversation && (
@@ -735,13 +735,6 @@ export function ChatInterface({
               </div>
             ) : (
               <div className="relative">
-                {/* Fades and shadows whatever scrolls up against the composer
-                    top, so messages and buttons dissolve instead of clipping. */}
-                <div
-                  aria-hidden
-                  data-testid="composer-top-fade"
-                  className="pointer-events-none absolute inset-x-0 bottom-full z-10 h-10 bg-linear-to-t from-canvas-base to-transparent shadow-[0_-10px_16px_-6px_rgba(0,0,0,0.5)]"
-                />
                 <div className="pointer-events-none absolute inset-x-0 bottom-full mb-1 z-20">
                   <div className="flex justify-between relative">
                     <div className="flex items-end gap-1 pointer-events-auto">
@@ -754,18 +747,27 @@ export function ChatInterface({
                       )}
                     </div>
 
-                    {!hitBottom ? (
-                      <div className="absolute left-1/2 transform -translate-x-1/2 bottom-0 pointer-events-auto">
-                        <ScrollToBottomButton onClick={scrollDomToBottom} />
-                      </div>
-                    ) : (
+                    {/* Stays mounted so it can fade in and out with the scroll
+                        position; inert while hidden so it cannot take focus. */}
+                    <div
+                      data-testid="scroll-to-bottom-wrapper"
+                      inert={hitBottom}
+                      className={cn(
+                        "absolute left-1/2 -translate-x-1/2 bottom-0 pointer-events-auto transition-opacity duration-200 ease-out motion-reduce:transition-none",
+                        hitBottom
+                          ? "opacity-0 pointer-events-none"
+                          : "opacity-100",
+                      )}
+                    >
+                      <ScrollToBottomButton onClick={scrollDomToBottom} />
+                    </div>
+                    {hitBottom &&
                       (curAgentState === AgentState.RUNNING ||
                         isPlanningAgentRunning) && (
                         <div className="pointer-events-none absolute inset-x-9 bottom-0 flex justify-center">
                           <TypingIndicator events={allConversationEvents} />
                         </div>
-                      )
-                    )}
+                      )}
                   </div>
                 </div>
 

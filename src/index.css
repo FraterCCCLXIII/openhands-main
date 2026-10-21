@@ -184,6 +184,33 @@ code {
   }
 }
 
+/* Send button becomes active: a quick pop into its solid state. */
+@keyframes send-button-in {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Composer bubbles in once when the chat loads. */
+@keyframes composer-bubble-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    transform: none;
+  }
+}
+
 /* Dropdown open: a quick fade up into place. */
 @keyframes context-menu-fade-up {
   from {

@@ -113,7 +113,7 @@ export function InteractiveChatBox({
         onFilesPaste={handleUpload}
       />
       {showGitControlBar ? (
-        <div className="mt-3 pb-3" data-testid="chat-git-control-bar">
+        <div className="mt-3" data-testid="chat-git-control-bar">
           <GitControlBar onSuggestionsClick={handleSuggestionsClick} />
         </div>
       ) : null}
