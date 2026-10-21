@@ -35,9 +35,6 @@ export function HomeLearnResources() {
       data-testid="home-learn-resources"
       className="flex flex-col items-center gap-3 pb-3"
     >
-      <span className="text-sm font-medium text-foreground">
-        {t(I18nKey.HOME$LEARN_ABOUT_OPENHANDS)}
-      </span>
       <div className="flex flex-wrap items-center justify-center gap-3">
         {LEARN_RESOURCES.map(({ key, label, href, Icon }) => (
           <a
