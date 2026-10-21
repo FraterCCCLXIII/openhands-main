@@ -23,6 +23,10 @@ import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
 import { SidebarNavLink } from "./sidebar-nav-link";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
+import {
+  chatInputAddButtonSurfaceClassName,
+  chatInputIconButtonClassName,
+} from "#/utils/form-control-classes";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { BackendSelector } from "#/components/features/backends/backend-selector";
 import { BackendStatusDot } from "#/components/features/backends/backend-status-dot";
@@ -222,7 +226,17 @@ export function SidebarRailBody({
           label={t(I18nKey.SIDEBAR$NEW_CHAT)}
           testId="sidebar-conversations-link"
           collapsed={collapsed}
-          icon={<Plus width={ICON_SIZE} height={ICON_SIZE} />}
+          icon={
+            <span
+              className={cn(
+                chatInputIconButtonClassName,
+                chatInputAddButtonSurfaceClassName,
+              )}
+              aria-hidden="true"
+            >
+              <Plus className="h-3.25 w-3.25 shrink-0" strokeWidth={2} />
+            </span>
+          }
         />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}

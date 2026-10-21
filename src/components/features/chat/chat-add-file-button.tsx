@@ -3,7 +3,10 @@ import { Paperclip, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
-import { chatInputIconButtonClassName } from "#/utils/form-control-classes";
+import {
+  chatInputAddButtonSurfaceClassName,
+  chatInputIconButtonClassName,
+} from "#/utils/form-control-classes";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useCloseOnEscape } from "#/hooks/use-close-on-escape";
@@ -76,7 +79,7 @@ export function ChatAddFileButton({
         type="button"
         className={cn(
           chatInputIconButtonClassName,
-          "relative shrink-0 size-7 ring-[0.5px] ring-inset ring-white/15 bg-linear-to-b from-contrast/10 to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_2px_rgba(0,0,0,0.4)]",
+          chatInputAddButtonSurfaceClassName,
           disabled ? "cursor-not-allowed text-text-subtle" : undefined,
           menuOpen && !disabled && "text-contrast bg-contrast/10",
         )}
