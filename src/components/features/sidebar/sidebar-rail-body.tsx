@@ -160,10 +160,11 @@ export function SidebarRailBody({
                 showCollapseToggle &&
                 "flex h-full w-full items-center justify-start pl-2.5 transition-opacity duration-150",
               collapsed && showCollapsedExpandButton && "opacity-0",
+              !collapsed && "min-w-0 flex-1",
             )}
           >
             {!collapsed ? (
-              <div className="pb-2">
+              <div className="w-full pb-2">
                 <BackendSelector identityHeader sidebarCollapsed={false} />
               </div>
             ) : isDesktopShell() ? null : (
@@ -428,7 +429,7 @@ export function SidebarRailBody({
           <div
             className={cn(
               "flex flex-col items-stretch max-w-none box-border shrink-0 gap-2",
-              "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-border pt-2 px-2.5",
+              "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-t-[0.5px] border-border pt-2 px-2.5",
             )}
           >
             <div className="flex items-center justify-between gap-2">

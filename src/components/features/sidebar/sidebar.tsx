@@ -212,7 +212,7 @@ export function Sidebar() {
         }}
         className={cn(
           "max-md:hidden flex bg-canvas-base flex-col min-h-0 transition-[width,min-width] duration-200",
-          "md:border-r md:border-border md:h-full",
+          "md:border-r md:border-r-[0.5px] md:border-border md:h-full",
           // With the title-bar band, the divider runs to the window's top edge;
           // the band padding moves inside so the content keeps its position.
           showTitleBand && "md:-mt-7 md:h-[calc(100%+1.75rem)] md:pt-7",
@@ -249,7 +249,7 @@ export function Sidebar() {
             aria-hidden={!mobileDrawerVisible}
             className={cn(
               "fixed inset-y-0 left-0 z-50 flex min-h-0 w-[min(300px,85vw)] flex-col bg-canvas-base",
-              "border-r border-border pb-2 pl-2.5 pr-0 md:hidden",
+              "border-r border-r-[0.5px] border-border pb-2 pl-2.5 pr-0 md:hidden",
               "transition-transform ease-in-out motion-reduce:transition-none",
               mobileDrawerVisible ? "translate-x-0" : "-translate-x-full",
             )}
