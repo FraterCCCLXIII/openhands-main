@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ShieldCheck, X } from "lucide-react";
 import {
   ExtensionsNavigation,
   ExtensionsCompactNavigation,
@@ -25,7 +25,6 @@ import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { settingsLikeMainScrollClassName } from "#/utils/settings-like-page-layout-classes";
 import {
-  extensionModuleCardGridClassName,
   extensionModuleCardGridContainerClassName,
   extensionModuleEmptyStateClassName,
 } from "#/utils/extension-module-card-classes";
@@ -43,6 +42,8 @@ export default function CanvasExtensionsScreen() {
   const { t } = useTranslation("openhands");
   const { backend } = useActiveBackend();
   const [showAddModal, setShowAddModal] = React.useState(false);
+  const [isTrustNoticeDismissed, setIsTrustNoticeDismissed] =
+    React.useState(false);
   const [pendingAction, setPendingAction] =
     React.useState<PendingAction | null>(null);
   const query = useCanvasExtensions();
@@ -102,35 +103,53 @@ export default function CanvasExtensionsScreen() {
               <p className="max-w-2xl text-sm text-tertiary-light">
                 {t(I18nKey.SETTINGS$APPS_PAGE_DESCRIPTION)}
               </p>
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-2">
               <a
                 href={CANVAS_EXTENSIONS_DOCS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-white px-3 py-2 text-sm font-medium text-black hover:opacity-90"
               >
                 {t(I18nKey.SETTINGS$APPS_BUILD_LINK)}
                 <ExternalLink className="size-3.5" aria-hidden />
               </a>
+              <BrandButton
+                type="button"
+                variant="secondary"
+                testId="canvas-extensions-add-button"
+                isDisabled={
+                  !backendCanSupportExtensions || unsupported || query.isLoading
+                }
+                className="flex-shrink-0 whitespace-nowrap"
+                onClick={() => setShowAddModal(true)}
+              >
+                {t(I18nKey.SETTINGS$APPS_ADD_BUTTON)}
+              </BrandButton>
             </div>
-            <BrandButton
-              type="button"
-              variant="secondary"
-              testId="canvas-extensions-add-button"
-              isDisabled={
-                !backendCanSupportExtensions || unsupported || query.isLoading
-              }
-              className="flex-shrink-0 whitespace-nowrap"
-              onClick={() => setShowAddModal(true)}
-            >
-              {t(I18nKey.SETTINGS$APPS_ADD_BUTTON)}
-            </BrandButton>
           </div>
 
-          <div className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-feedback-warning">
-            {t(I18nKey.SETTINGS$APPS_TRUST_NOTICE)}
-          </div>
+          {isTrustNoticeDismissed ? null : (
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-base-secondary px-4 py-3 text-sm text-muted">
+              <ShieldCheck
+                className="mt-0.5 size-4 shrink-0 text-primary"
+                aria-hidden
+              />
+              <p className="min-w-0 flex-1">
+                {t(I18nKey.SETTINGS$APPS_TRUST_NOTICE)}
+              </p>
+              <button
+                type="button"
+                aria-label={t(I18nKey.BUTTON$CLOSE)}
+                onClick={() => setIsTrustNoticeDismissed(true)}
+                className="shrink-0 rounded-md p-0.5 text-muted transition-colors hover:text-contrast"
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </div>
+          )}
 
-          <h3 className="text-base font-semibold text-foreground">
+          <h3 className="text-lg font-bold text-contrast">
             {t(I18nKey.SETTINGS$APPS_INSTALLED)}
           </h3>
 
@@ -176,7 +195,7 @@ export default function CanvasExtensionsScreen() {
             </div>
           ) : query.data?.length ? (
             <div className={extensionModuleCardGridContainerClassName}>
-              <div className={extensionModuleCardGridClassName}>
+              <div className="grid min-w-0 grid-cols-1 gap-5 @min-[560px]:grid-cols-2">
                 {query.data.map((extension) => (
                   <CanvasExtensionCard
                     key={extension.name}
