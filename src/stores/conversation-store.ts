@@ -18,25 +18,24 @@ export type ConversationMode = "code" | "plan";
 
 export type CommitsPaneSection = "uncommitted";
 
-/**
- * The composer a queued message is meant for: the open conversation's, or the
- * Home composer at `/conversations`, which has no conversation id.
- */
-export type MessageToSendTarget = "conversation" | "home";
-
 export interface IMessageToSend {
   text: string;
   timestamp: number;
-  /** Absent means "conversation". */
-  target?: MessageToSendTarget;
 }
 
-interface ConversationState {
-  isRightPanelShown: boolean;
-  isOverviewPanelShown: boolean;
-  isOverviewPanelPeeked: boolean;
-  selectedTab: ConversationTab | null;
-  commitsAutoExpandSection: CommitsPaneSection | null;
+/**
+ * Composer bucket key used on the home page (and other surfaces with no
+ * conversation id yet). Attachments / programmatic sends for an in-progress
+ * launch live here until a real conversation id exists.
+ */
+export const HOME_COMPOSER_KEY = "__home__";
+
+/**
+ * Mutable composer state for one conversation (or the home launcher).
+ * Keyed separately from process-wide chrome so primary + popout composers do
+ * not share attachments, drafts, or one-shot message commands.
+ */
+export interface ConversationComposerBucket {
   images: File[];
   files: File[];
   /** Image file names (e.g. pasted screenshots) to send via file upload instead of vision embed. */
@@ -48,14 +47,48 @@ interface ConversationState {
   messageToSend: IMessageToSend | null;
   /** One-shot restore request consumed by the chat input when empty. */
   messageRestoreIfEmpty: IMessageToSend | null;
-  shouldShownAgentLoading: boolean;
   submittedMessage: string | null;
+}
+
+export const EMPTY_COMPOSER_BUCKET: ConversationComposerBucket = Object.freeze({
+  images: Object.freeze([]) as unknown as File[],
+  files: Object.freeze([]) as unknown as File[],
+  imagesMarkedUploadAsFile: Object.freeze([]) as unknown as string[],
+  pastedImageNames: Object.freeze([]) as unknown as string[],
+  loadingFiles: Object.freeze([]) as unknown as string[],
+  loadingImages: Object.freeze([]) as unknown as string[],
+  messageToSend: null,
+  messageRestoreIfEmpty: null,
+  submittedMessage: null,
+});
+
+const createComposerBucket = (): ConversationComposerBucket => ({
+  images: [],
+  files: [],
+  imagesMarkedUploadAsFile: [],
+  pastedImageNames: [],
+  loadingFiles: [],
+  loadingImages: [],
+  messageToSend: null,
+  messageRestoreIfEmpty: null,
+  submittedMessage: null,
+});
+
+interface ConversationState {
+  isRightPanelShown: boolean;
+  isOverviewPanelShown: boolean;
+  isOverviewPanelPeeked: boolean;
+  selectedTab: ConversationTab | null;
+  commitsAutoExpandSection: CommitsPaneSection | null;
+  shouldShownAgentLoading: boolean;
   shouldHideSuggestions: boolean; // New state to hide suggestions when input expands
   hasRightPanelToggled: boolean;
   planContent: string | null;
   conversationMode: ConversationMode;
   subConversationTaskId: string | null; // Task ID for cloud sub-conversation creation
   localPlanningConversationId: string | null;
+  /** Composer state keyed by conversation id (or HOME_COMPOSER_KEY). */
+  byConversation: Record<string, ConversationComposerBucket>;
 }
 
 interface ConversationActions {
@@ -68,25 +101,26 @@ interface ConversationActions {
   ) => void;
   setShouldShownAgentLoading: (shouldShownAgentLoading: boolean) => void;
   setShouldHideSuggestions: (shouldHideSuggestions: boolean) => void;
-  addImages: (images: File[]) => void;
-  addFiles: (files: File[]) => void;
-  toggleImageUploadAsFile: (fileName: string) => void;
-  markImagesAsPasted: (fileNames: string[]) => void;
-  removeImage: (index: number) => void;
-  removeFile: (index: number) => void;
-  clearImages: () => void;
-  clearFiles: () => void;
-  clearAllFiles: () => void;
-  addFileLoading: (fileName: string) => void;
-  removeFileLoading: (fileName: string) => void;
-  addImageLoading: (imageName: string) => void;
-  removeImageLoading: (imageName: string) => void;
-  clearAllLoading: () => void;
-  setMessageToSend: (text: string, target?: MessageToSendTarget) => void;
-  clearMessageToSend: () => void;
-  restoreMessageToInputIfEmpty: (text: string) => void;
-  clearMessageRestoreIfEmpty: () => void;
-  setSubmittedMessage: (message: string | null) => void;
+  addImages: (conversationId: string, images: File[]) => void;
+  addFiles: (conversationId: string, files: File[]) => void;
+  toggleImageUploadAsFile: (conversationId: string, fileName: string) => void;
+  markImagesAsPasted: (conversationId: string, fileNames: string[]) => void;
+  removeImage: (conversationId: string, index: number) => void;
+  removeFile: (conversationId: string, index: number) => void;
+  clearImages: (conversationId: string) => void;
+  clearFiles: (conversationId: string) => void;
+  clearAllFiles: (conversationId: string) => void;
+  addFileLoading: (conversationId: string, fileName: string) => void;
+  removeFileLoading: (conversationId: string, fileName: string) => void;
+  addImageLoading: (conversationId: string, imageName: string) => void;
+  removeImageLoading: (conversationId: string, imageName: string) => void;
+  clearAllLoading: (conversationId: string) => void;
+  setMessageToSend: (conversationId: string, text: string) => void;
+  clearMessageToSend: (conversationId: string) => void;
+  restoreMessageToInputIfEmpty: (conversationId: string, text: string) => void;
+  clearMessageRestoreIfEmpty: (conversationId: string) => void;
+  setSubmittedMessage: (conversationId: string, message: string | null) => void;
+  clearComposer: (conversationId: string) => void;
   resetConversationState: () => void;
   setHasRightPanelToggled: (hasRightPanelToggled: boolean) => void;
   setConversationMode: (conversationMode: ConversationMode) => void;
@@ -120,6 +154,38 @@ const getInitialConversationMode = (): ConversationMode => {
   return state.conversationMode;
 };
 
+export const getComposerBucket = (
+  state: Pick<ConversationState, "byConversation">,
+  conversationId: string,
+): ConversationComposerBucket =>
+  state.byConversation[conversationId] ?? EMPTY_COMPOSER_BUCKET;
+
+const withComposerBucket = (
+  state: ConversationState,
+  conversationId: string,
+  bucket: ConversationComposerBucket,
+): ConversationState => ({
+  ...state,
+  byConversation: {
+    ...state.byConversation,
+    [conversationId]: bucket,
+  },
+});
+
+const updateComposerBucket = (
+  state: ConversationState,
+  conversationId: string,
+  updater: (bucket: ConversationComposerBucket) => ConversationComposerBucket,
+): ConversationState => {
+  const current =
+    state.byConversation[conversationId] ?? createComposerBucket();
+  const next = updater(current);
+  if (next === current && state.byConversation[conversationId]) {
+    return state;
+  }
+  return withComposerBucket(state, conversationId, next);
+};
+
 export const useConversationStore = create<ConversationStore>()(
   devtools(
     (set) => ({
@@ -139,22 +205,14 @@ export const useConversationStore = create<ConversationStore>()(
       isOverviewPanelPeeked: false,
       selectedTab: "files" as ConversationTab,
       commitsAutoExpandSection: null,
-      images: [],
-      files: [],
-      imagesMarkedUploadAsFile: [],
-      pastedImageNames: [],
-      loadingFiles: [],
-      loadingImages: [],
-      messageToSend: null,
-      messageRestoreIfEmpty: null,
       shouldShownAgentLoading: false,
-      submittedMessage: null,
       shouldHideSuggestions: false,
       hasRightPanelToggled: false,
       planContent: null,
       conversationMode: getInitialConversationMode(),
       subConversationTaskId: null,
       localPlanningConversationId: null,
+      byConversation: {},
 
       // Actions
       setIsRightPanelShown: (isRightPanelShown) =>
@@ -182,184 +240,276 @@ export const useConversationStore = create<ConversationStore>()(
       setShouldHideSuggestions: (shouldHideSuggestions) =>
         set({ shouldHideSuggestions }, false, "setShouldHideSuggestions"),
 
-      addImages: (images) =>
+      addImages: (conversationId, images) =>
         set(
-          (state) => ({ images: [...state.images, ...images] }),
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              images: [...bucket.images, ...images],
+            })),
           false,
           "addImages",
         ),
 
-      addFiles: (files) =>
+      addFiles: (conversationId, files) =>
         set(
-          (state) => ({ files: [...state.files, ...files] }),
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              files: [...bucket.files, ...files],
+            })),
           false,
           "addFiles",
         ),
 
-      toggleImageUploadAsFile: (fileName) =>
+      toggleImageUploadAsFile: (conversationId, fileName) =>
         set(
-          (state) => {
-            const marked = new Set(state.imagesMarkedUploadAsFile);
-            if (marked.has(fileName)) {
-              marked.delete(fileName);
-            } else {
-              marked.add(fileName);
-            }
-            return { imagesMarkedUploadAsFile: [...marked] };
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => {
+              const marked = new Set(bucket.imagesMarkedUploadAsFile);
+              if (marked.has(fileName)) {
+                marked.delete(fileName);
+              } else {
+                marked.add(fileName);
+              }
+              return { ...bucket, imagesMarkedUploadAsFile: [...marked] };
+            }),
           false,
           "toggleImageUploadAsFile",
         ),
 
-      markImagesAsPasted: (fileNames) =>
+      markImagesAsPasted: (conversationId, fileNames) =>
         set(
-          (state) => {
-            const merged = new Set([...state.pastedImageNames, ...fileNames]);
-            return { pastedImageNames: [...merged] };
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => {
+              const merged = new Set([
+                ...bucket.pastedImageNames,
+                ...fileNames,
+              ]);
+              return { ...bucket, pastedImageNames: [...merged] };
+            }),
           false,
           "markImagesAsPasted",
         ),
 
-      removeImage: (index) =>
+      removeImage: (conversationId, index) =>
         set(
-          (state) => {
-            const removed = state.images[index];
-            const newImages = [...state.images];
-            newImages.splice(index, 1);
-            return {
-              images: newImages,
-              imagesMarkedUploadAsFile: removed
-                ? state.imagesMarkedUploadAsFile.filter(
-                    (name) => name !== removed.name,
-                  )
-                : state.imagesMarkedUploadAsFile,
-              pastedImageNames: removed
-                ? state.pastedImageNames.filter((name) => name !== removed.name)
-                : state.pastedImageNames,
-            };
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => {
+              const removed = bucket.images[index];
+              const newImages = [...bucket.images];
+              newImages.splice(index, 1);
+              return {
+                ...bucket,
+                images: newImages,
+                imagesMarkedUploadAsFile: removed
+                  ? bucket.imagesMarkedUploadAsFile.filter(
+                      (name) => name !== removed.name,
+                    )
+                  : bucket.imagesMarkedUploadAsFile,
+                pastedImageNames: removed
+                  ? bucket.pastedImageNames.filter(
+                      (name) => name !== removed.name,
+                    )
+                  : bucket.pastedImageNames,
+              };
+            }),
           false,
           "removeImage",
         ),
 
-      removeFile: (index) =>
+      removeFile: (conversationId, index) =>
         set(
-          (state) => {
-            const newFiles = [...state.files];
-            newFiles.splice(index, 1);
-            return { files: newFiles };
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => {
+              const newFiles = [...bucket.files];
+              newFiles.splice(index, 1);
+              return { ...bucket, files: newFiles };
+            }),
           false,
           "removeFile",
         ),
 
-      clearImages: () => set({ images: [] }, false, "clearImages"),
-
-      clearFiles: () => set({ files: [] }, false, "clearFiles"),
-
-      clearAllFiles: () =>
+      clearImages: (conversationId) =>
         set(
-          {
-            images: [],
-            files: [],
-            imagesMarkedUploadAsFile: [],
-            pastedImageNames: [],
-            loadingFiles: [],
-            loadingImages: [],
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              images: [],
+            })),
+          false,
+          "clearImages",
+        ),
+
+      clearFiles: (conversationId) =>
+        set(
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              files: [],
+            })),
+          false,
+          "clearFiles",
+        ),
+
+      clearAllFiles: (conversationId) =>
+        set(
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              images: [],
+              files: [],
+              imagesMarkedUploadAsFile: [],
+              pastedImageNames: [],
+              loadingFiles: [],
+              loadingImages: [],
+            })),
           false,
           "clearAllFiles",
         ),
 
-      addFileLoading: (fileName) =>
+      addFileLoading: (conversationId, fileName) =>
         set(
-          (state) => {
-            if (!state.loadingFiles.includes(fileName)) {
-              return { loadingFiles: [...state.loadingFiles, fileName] };
-            }
-            return state;
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => {
+              if (bucket.loadingFiles.includes(fileName)) {
+                return bucket;
+              }
+              return {
+                ...bucket,
+                loadingFiles: [...bucket.loadingFiles, fileName],
+              };
+            }),
           false,
           "addFileLoading",
         ),
 
-      removeFileLoading: (fileName) =>
+      removeFileLoading: (conversationId, fileName) =>
         set(
-          (state) => ({
-            loadingFiles: state.loadingFiles.filter(
-              (name) => name !== fileName,
-            ),
-          }),
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              loadingFiles: bucket.loadingFiles.filter(
+                (name) => name !== fileName,
+              ),
+            })),
           false,
           "removeFileLoading",
         ),
 
-      addImageLoading: (imageName) =>
+      addImageLoading: (conversationId, imageName) =>
         set(
-          (state) => {
-            if (!state.loadingImages.includes(imageName)) {
-              return { loadingImages: [...state.loadingImages, imageName] };
-            }
-            return state;
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => {
+              if (bucket.loadingImages.includes(imageName)) {
+                return bucket;
+              }
+              return {
+                ...bucket,
+                loadingImages: [...bucket.loadingImages, imageName],
+              };
+            }),
           false,
           "addImageLoading",
         ),
 
-      removeImageLoading: (imageName) =>
+      removeImageLoading: (conversationId, imageName) =>
         set(
-          (state) => ({
-            loadingImages: state.loadingImages.filter(
-              (name) => name !== imageName,
-            ),
-          }),
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              loadingImages: bucket.loadingImages.filter(
+                (name) => name !== imageName,
+              ),
+            })),
           false,
           "removeImageLoading",
         ),
 
-      clearAllLoading: () =>
-        set({ loadingFiles: [], loadingImages: [] }, false, "clearAllLoading"),
-
-      setMessageToSend: (text, target = "conversation") =>
+      clearAllLoading: (conversationId) =>
         set(
-          {
-            messageToSend: {
-              text,
-              timestamp: Date.now(),
-              target,
-            },
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              loadingFiles: [],
+              loadingImages: [],
+            })),
+          false,
+          "clearAllLoading",
+        ),
+
+      setMessageToSend: (conversationId, text) =>
+        set(
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              messageToSend: {
+                text,
+                timestamp: Date.now(),
+              },
+            })),
           false,
           "setMessageToSend",
         ),
 
       // One-shot consume: clear after the composer applies it, so a never-sent
       // value can't replay into another conversation's composer on remount.
-      clearMessageToSend: () =>
-        set({ messageToSend: null }, false, "clearMessageToSend"),
-
-      restoreMessageToInputIfEmpty: (text) =>
+      clearMessageToSend: (conversationId) =>
         set(
-          {
-            messageRestoreIfEmpty: {
-              text,
-              timestamp: Date.now(),
-            },
-          },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              messageToSend: null,
+            })),
+          false,
+          "clearMessageToSend",
+        ),
+
+      restoreMessageToInputIfEmpty: (conversationId, text) =>
+        set(
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              messageRestoreIfEmpty: {
+                text,
+                timestamp: Date.now(),
+              },
+            })),
           false,
           "restoreMessageToInputIfEmpty",
         ),
 
-      clearMessageRestoreIfEmpty: () =>
+      clearMessageRestoreIfEmpty: (conversationId) =>
         set(
-          { messageRestoreIfEmpty: null },
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              messageRestoreIfEmpty: null,
+            })),
           false,
           "clearMessageRestoreIfEmpty",
         ),
 
-      setSubmittedMessage: (submittedMessage) =>
-        set({ submittedMessage }, false, "setSubmittedMessage"),
+      setSubmittedMessage: (conversationId, submittedMessage) =>
+        set(
+          (state) =>
+            updateComposerBucket(state, conversationId, (bucket) => ({
+              ...bucket,
+              submittedMessage,
+            })),
+          false,
+          "setSubmittedMessage",
+        ),
+
+      clearComposer: (conversationId) =>
+        set((state) => {
+          if (!(conversationId in state.byConversation)) {
+            return state;
+          }
+          const { [conversationId]: _removed, ...byConversation } =
+            state.byConversation;
+          return { byConversation };
+        }),
 
       resetConversationState: () =>
         set(

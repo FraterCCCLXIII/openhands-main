@@ -39,8 +39,8 @@ vi.mock("#/utils/custom-toast-handlers", () => ({
   displayErrorToast: (...args: unknown[]) => displayErrorToastMock(...args),
 }));
 
-vi.mock("#/stores/conversation-store", () => ({
-  useConversationStore: () => store,
+vi.mock("#/hooks/use-conversation-composer", () => ({
+  useConversationComposer: () => store,
 }));
 
 const createFile = (name: string, type: string) =>

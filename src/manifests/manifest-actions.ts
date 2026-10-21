@@ -102,7 +102,10 @@ export function useSetupAction() {
           draftMessage: message,
         });
       }
-      window.setTimeout(() => setMessageToSend(message), 0);
+      window.setTimeout(
+        () => setMessageToSend(conversation.conversation_id, message),
+        0,
+      );
 
       return { response: { ...conversation } };
     },

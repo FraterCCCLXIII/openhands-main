@@ -1,3 +1,4 @@
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import { useTranslation } from "react-i18next";
 import { ContextMenu } from "#/ui/context-menu";
 import { ContextMenuListItem } from "../context-menu/context-menu-list-item";
@@ -8,7 +9,6 @@ import PrStatusIcon from "#/icons/pr-status.svg?react";
 import DocumentIcon from "#/icons/document.svg?react";
 import WaterIcon from "#/icons/u-water.svg?react";
 import { I18nKey } from "#/i18n/declaration";
-import { useConversationStore } from "#/stores/conversation-store";
 import { REPO_SUGGESTIONS } from "#/utils/suggestions/repo-suggestions";
 
 const submenuListItemClassName = "!w-auto whitespace-nowrap";
@@ -19,7 +19,7 @@ interface MacrosSubmenuProps {
 
 export function MacrosSubmenu({ onClose }: MacrosSubmenuProps) {
   const { t } = useTranslation("openhands");
-  const { setMessageToSend } = useConversationStore();
+  const { setMessageToSend } = useConversationComposer();
 
   const onIncreaseTestCoverage = () => {
     setMessageToSend(REPO_SUGGESTIONS.INCREASE_TEST_COVERAGE);

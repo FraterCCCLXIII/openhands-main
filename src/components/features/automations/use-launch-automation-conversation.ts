@@ -70,7 +70,11 @@ export function useLaunchAutomationConversation() {
 
             navigate(`/conversations/${conversation.conversation_id}`);
             options.onSuccess?.();
-            window.setTimeout(() => setMessageToSend(request.prompt), 0);
+            window.setTimeout(
+              () =>
+                setMessageToSend(conversation.conversation_id, request.prompt),
+              0,
+            );
           },
           onError: () => {
             options.onError?.();

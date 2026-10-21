@@ -3,10 +3,8 @@ import {
   isContentEmpty,
   getTextContent,
 } from "#/components/features/chat/utils/chat-input.utils";
-import {
-  type MessageToSendTarget,
-  useConversationStore,
-} from "#/stores/conversation-store";
+import { useConversationStore } from "#/stores/conversation-store";
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { useDraftPersistence } from "./use-draft-persistence";
 
@@ -25,14 +23,20 @@ export const useChatInputLogic = ({
   // scoped, so it no-ops when this is undefined.
   const { conversationId } = useOptionalConversationId();
 
+  // Composer state is scoped to this composer's conversation (or Home), so
+  // a message queued for another conversation can never land here.
   const {
-    messageToSend: rawMessageToSend,
+    messageToSend,
     messageRestoreIfEmpty,
-    hasRightPanelToggled,
     setMessageToSend,
     clearMessageRestoreIfEmpty,
-    setIsRightPanelShown,
-  } = useConversationStore();
+  } = useConversationComposer();
+  const hasRightPanelToggled = useConversationStore(
+    (state) => state.hasRightPanelToggled,
+  );
+  const setIsRightPanelShown = useConversationStore(
+    (state) => state.setIsRightPanelShown,
+  );
 
   // Draft persistence - saves to localStorage/sessionStorage, restores on mount
   const { saveDraft, clearDraft } = useDraftPersistence(
@@ -40,18 +44,6 @@ export const useChatInputLogic = ({
     chatInputRef,
     { persist: persistDraft },
   );
-
-  // Apply only messages queued for this composer. On the home page (no
-  // conversationId) a stale conversation value left in the store would make
-  // useAutoResize overwrite the just-restored sessionStorage draft, so Home
-  // takes only messages a launch queued for it explicitly (target "home").
-  const composerTarget: MessageToSendTarget = conversationId
-    ? "conversation"
-    : "home";
-  const messageToSend =
-    (rawMessageToSend?.target ?? "conversation") === composerTarget
-      ? rawMessageToSend
-      : null;
 
   // Restore a cancelled pending send (or, on the home page, a prompt whose
   // launch failed) back into the input only when empty.

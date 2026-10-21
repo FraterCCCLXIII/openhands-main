@@ -4,8 +4,8 @@ import { UploadedFiles } from "./uploaded-files";
 
 const mockUseConversationStore = vi.hoisted(() => vi.fn());
 
-vi.mock("#/stores/conversation-store", () => ({
-  useConversationStore: mockUseConversationStore,
+vi.mock("#/hooks/use-conversation-composer", () => ({
+  useConversationComposer: mockUseConversationStore,
 }));
 
 vi.mock("./uploaded-file", () => ({

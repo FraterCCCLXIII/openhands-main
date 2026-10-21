@@ -2,7 +2,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ConversationOverviewDiffsRow } from "#/components/features/conversation/conversation-overview-diffs-row";
-import { useConversationStore } from "#/stores/conversation-store";
+import {
+  HOME_COMPOSER_KEY,
+  useConversationStore,
+} from "#/stores/conversation-store";
 
 const navigateToTabMock = vi.fn();
 const closeDrawerMock = vi.fn();
@@ -49,7 +52,7 @@ vi.mock(
 describe("ConversationOverviewDiffsRow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useConversationStore.setState({ messageToSend: null });
+    useConversationStore.getState().clearComposer(HOME_COMPOSER_KEY);
   });
 
   it("opens the git actions menu and sends commit, pull, push, and create PR prompts", async () => {
@@ -63,9 +66,10 @@ describe("ConversationOverviewDiffsRow", () => {
     await user.click(
       await screen.findByTestId("conversation-overview-diffs-git-commit"),
     );
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "commit",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("commit");
 
     await user.click(
       screen.getByTestId("conversation-overview-diffs-git-action"),
@@ -73,9 +77,10 @@ describe("ConversationOverviewDiffsRow", () => {
     await user.click(
       screen.getByTestId("conversation-overview-diffs-git-pull"),
     );
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "pull",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("pull");
 
     await user.click(
       screen.getByTestId("conversation-overview-diffs-git-action"),
@@ -83,9 +88,10 @@ describe("ConversationOverviewDiffsRow", () => {
     await user.click(
       screen.getByTestId("conversation-overview-diffs-git-push"),
     );
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "push",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("push");
 
     await user.click(
       screen.getByTestId("conversation-overview-diffs-git-action"),
@@ -93,9 +99,10 @@ describe("ConversationOverviewDiffsRow", () => {
     await user.click(
       screen.getByTestId("conversation-overview-diffs-git-create-pr"),
     );
-    expect(useConversationStore.getState().messageToSend?.text).toContain(
-      "pull request",
-    );
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend?.text,
+    ).toContain("pull request");
   });
 
   it("keeps diff numbers hidden while the git menu is open", async () => {

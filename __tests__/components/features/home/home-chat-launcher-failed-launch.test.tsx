@@ -12,7 +12,10 @@ import ProfilesService from "#/api/profiles-service/profiles-service.api";
 import WorkspacesService from "#/api/workspaces-service/workspaces-service.api";
 import { HOME_PROMPT_DRAFT_KEY } from "#/hooks/chat/use-draft-persistence";
 import { createAgentServerQueryClient } from "#/query-client-config";
-import { useConversationStore } from "#/stores/conversation-store";
+import {
+  HOME_COMPOSER_KEY,
+  useConversationStore,
+} from "#/stores/conversation-store";
 
 // The launch failure path is exercised end to end: the real composer, the real
 // conversation store, the real toast handlers and the app's query client (with
@@ -172,7 +175,7 @@ describe("HomeChatLauncher failed launch", () => {
     }
     toast.remove();
     sessionStorage.removeItem(HOME_PROMPT_DRAFT_KEY);
-    useConversationStore.getState().clearMessageRestoreIfEmpty();
+    useConversationStore.getState().clearComposer(HOME_COMPOSER_KEY);
     vi.restoreAllMocks();
   });
 
