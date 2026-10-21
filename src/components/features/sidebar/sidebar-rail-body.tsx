@@ -38,6 +38,7 @@ import { AgentCanvasVersionTile } from "#/components/features/settings/agent-can
 import { SidebarConversationList } from "./sidebar-conversation-list";
 import { SidebarOnboardingChecklist } from "./sidebar-onboarding-checklist";
 import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
+import { SidebarCreateMenu } from "./sidebar-create-menu";
 import { applyThemeForBackend } from "#/stores/backend-color-theme-store";
 import { useSettings } from "#/hooks/query/use-settings";
 import AutomationsIcon from "#/icons/automations.svg?react";
@@ -235,25 +236,30 @@ export function SidebarRailBody({
 
       <nav className={sidebarNavListClassName(collapsed)}>
         {collapsed ? <CommandMenuTrigger collapsed /> : null}
-        <SidebarNavLink
-          to="/conversations"
-          end
-          label={t(I18nKey.SIDEBAR$NEW_CHAT)}
-          testId="sidebar-conversations-link"
-          collapsed={collapsed}
-          icon={
-            <span
-              className={cn(
-                chatInputIconButtonClassName,
-                chatInputAddButtonSurfaceClassName,
-                "size-4.5",
-              )}
-              aria-hidden="true"
-            >
-              <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={3} />
-            </span>
-          }
-        />
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1">
+            <SidebarNavLink
+              to="/conversations"
+              end
+              label={t(I18nKey.SIDEBAR$NEW_CHAT)}
+              testId="sidebar-conversations-link"
+              collapsed={collapsed}
+              icon={
+                <span
+                  className={cn(
+                    chatInputIconButtonClassName,
+                    chatInputAddButtonSurfaceClassName,
+                    "size-4.5",
+                  )}
+                  aria-hidden="true"
+                >
+                  <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={3} />
+                </span>
+              }
+            />
+          </div>
+          {collapsed ? null : <SidebarCreateMenu />}
+        </div>
         <SidebarNavLink
           to={CUSTOMIZE_PATH}
           label={t(I18nKey.NAV$CUSTOMIZE)}
