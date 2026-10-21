@@ -165,10 +165,10 @@ export function ChangeAgentButton() {
         onClick={handleButtonClick}
         disabled={isButtonDisabled}
         className={cn(
-          "flex items-center rounded-[100px]",
+          "flex h-7 items-center rounded-full px-2.5",
           formControlTransitionClassName,
           isExecutionAgent
-            ? "border border-transparent text-muted"
+            ? "border border-transparent bg-surface text-muted"
             : "border border-[#597FF4] bg-[#4A67BD] text-white",
           !isButtonDisabled &&
             isExecutionAgent &&
