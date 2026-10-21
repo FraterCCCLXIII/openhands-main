@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useMatch, useNavigate } from "react-router";
-import { Plus, Settings } from "lucide-react";
+import { Cloud, Plus, Server, Settings } from "lucide-react";
 import { Dropdown } from "#/ui/dropdown/dropdown";
 import { DropdownOption } from "#/ui/dropdown/types";
 import { getLockedCloudHost } from "#/api/agent-server-config";
@@ -28,6 +28,8 @@ import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useConversationStore } from "#/stores/conversation-store";
 import { AddBackendModal } from "./add-backend-modal";
 import { BackendStatusDot } from "./backend-status-dot";
+import { AccountIdentityTile } from "./backend-identity-tile";
+import { getBackendIdentityKey } from "#/stores/backend-identity-store";
 import { ManageBackendsModal } from "./manage-backends-modal";
 import { cn } from "#/utils/utils";
 import { formControlTransitionClassName } from "#/utils/form-control-classes";
@@ -40,7 +42,7 @@ import {
 const VALUE_SEPARATOR = "::";
 
 function makeOptionValue(backendId: string, orgId: string | null): string {
-  return orgId ? `${backendId}${VALUE_SEPARATOR}${orgId}` : backendId;
+  return getBackendIdentityKey(backendId, orgId);
 }
 
 function parseOptionValue(value: string): {
@@ -49,6 +51,12 @@ function parseOptionValue(value: string): {
 } {
   const [backendId, orgId] = value.split(VALUE_SEPARATOR);
   return { backendId, orgId: orgId ?? null };
+}
+
+/** Icon for an account with no picked identity: a server or a cloud. */
+function accountFallbackIcon(kind: Backend["kind"] | undefined) {
+  const Icon = kind === "cloud" ? Cloud : Server;
+  return <Icon aria-hidden width={16} height={16} className="text-contrast" />;
 }
 
 function buildStatusPrefix(health: BackendHealth | undefined) {
@@ -135,6 +143,11 @@ interface BackendSelectorProps {
   /** Same as onOpenAddBackend but for the Manage Backends modal. */
   onOpenManageBackends?: () => void;
   /**
+   * Render the active account as an identity tile plus name in place of the
+   * logo, with the account menu opening from it.
+   */
+  identityHeader?: boolean;
+  /**
    * Whether the surrounding sidebar rail is in its collapsed variant. Passed
    * down from `SidebarRailBody` so the mobile drawer (which always renders
    * the expanded rail) can override the persisted desktop value.
@@ -150,6 +163,7 @@ export function BackendSelector({
   onOpenAddBackend,
   onOpenManageBackends,
   sidebarCollapsed = false,
+  identityHeader = false,
 }: BackendSelectorProps = {}) {
   const { t } = useTranslation("openhands");
   const { backends, active, setActive } = useActiveBackendContext();
@@ -184,6 +198,29 @@ export function BackendSelector({
       currentUserIds,
       healthByBackendId,
     ],
+  );
+
+  // In the header the account's tile replaces the status dot on every row, so
+  // the menu and the trigger show the same icon the user picked for it.
+  const headerOptions = React.useMemo(
+    () =>
+      identityHeader
+        ? options.map((option) => {
+            const backendId = option.value.split(VALUE_SEPARATOR)[0];
+            const kind = backends.find((b) => b.id === backendId)?.kind;
+            return {
+              ...option,
+              prefix: (
+                <AccountIdentityTile
+                  identityKey={option.value}
+                  fallback={accountFallbackIcon(kind)}
+                  size="sm"
+                />
+              ),
+            };
+          })
+        : options,
+    [identityHeader, options, backends],
   );
 
   const noBackendSelected = isNoBackend(active.backend);
@@ -387,11 +424,11 @@ export function BackendSelector({
                 : (activeOption?.label ?? active.backend.name)
             }
             loading={someCloudLoading}
-            options={options}
+            options={headerOptions}
             className="h-10 px-2 py-0 bg-transparent border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
-        {!hideTrigger ? (
+        {!hideTrigger && !identityHeader ? (
           <StyledTooltip
             content={settingsLabel}
             placement={settingsTooltipPlacement}
