@@ -371,10 +371,9 @@ export function HomeChatLauncher() {
             onClick={() => setIsPluginPickerOpen(true)}
             disabled={isCreating || isAutomateMode}
           />
-        </div>
-
-        <div className="mt-4 flex w-full justify-end">
-          <HomeDashboardComponentsMenu />
+          <div className="ml-auto">
+            <HomeDashboardComponentsMenu />
+          </div>
         </div>
 
         <div className="mt-8 flex w-full flex-col gap-8">
