@@ -142,92 +142,97 @@ export function BackendIdentityPicker({
         </button>
       </div>
 
-      <div role="tablist" className="flex gap-1">
-        {TABS.map((value) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={tab === value}
-            onClick={() => setTab(value)}
-            className={cn(
-              "rounded-md px-2.5 py-1 text-xs",
-              tab === value
-                ? "bg-surface-raised text-contrast"
-                : "text-muted hover:text-contrast",
-            )}
-          >
-            {t(TAB_LABEL_KEYS[value])}
-          </button>
-        ))}
-      </div>
-
-      {tab === "emoji" ? (
-        <div className="flex flex-col gap-2">
-          <input
-            type="text"
-            inputMode="text"
-            maxLength={8}
-            placeholder={t(I18nKey.BACKEND_ICON$EMOJI_PLACEHOLDER)}
-            aria-label={t(I18nKey.BACKEND_ICON$EMOJI_PLACEHOLDER)}
-            onChange={(event) => {
-              const value = event.target.value.trim();
-              if (value) choose({ type: "emoji", value });
-            }}
-            className="h-8 w-32 rounded-md bg-surface-raised px-2 text-sm text-contrast"
-          />
-          <div className="grid grid-cols-10 gap-1">
-            {BACKEND_EMOJI_CHOICES.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                aria-label={emoji}
-                onClick={() => choose({ type: "emoji", value: emoji })}
-                className="flex size-8 items-center justify-center rounded-md text-lg hover:bg-surface-raised"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {tab === "icon" ? (
-        <div className="grid grid-cols-8 gap-1">
-          {Object.entries(BACKEND_ICON_LIBRARY).map(([name, Icon]) => (
+      <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-base-secondary p-3">
+        <div
+          role="tablist"
+          className="flex w-fit gap-0.5 rounded-lg bg-surface-raised p-0.5"
+        >
+          {TABS.map((value) => (
             <button
-              key={name}
+              key={value}
               type="button"
-              aria-label={name}
-              onClick={() => choose({ type: "icon", name })}
-              className="flex size-8 items-center justify-center rounded-md text-contrast hover:bg-surface-raised"
+              role="tab"
+              aria-selected={tab === value}
+              onClick={() => setTab(value)}
+              className={cn(
+                "rounded-md px-3 py-1 text-xs transition-colors",
+                tab === value
+                  ? "bg-tertiary text-contrast shadow-sm"
+                  : "text-muted hover:text-contrast",
+              )}
             >
-              <Icon aria-hidden size={18} />
+              {t(TAB_LABEL_KEYS[value])}
             </button>
           ))}
         </div>
-      ) : null}
 
-      {tab === "upload" ? (
-        <div className="flex flex-col gap-2">
-          <input
-            type="file"
-            accept="image/*"
-            aria-label={t(I18nKey.BACKEND_ICON$UPLOAD)}
-            onChange={(event) => {
-              const input = event.currentTarget;
-              void handleFile(input.files?.[0]);
-              input.value = "";
-            }}
-            className="text-xs text-muted"
-          />
-          {uploadError ? (
-            <p role="alert" className="text-xs text-status-error">
-              {uploadError}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+        {tab === "emoji" ? (
+          <div className="flex flex-col gap-2">
+            <input
+              type="text"
+              inputMode="text"
+              maxLength={8}
+              placeholder={t(I18nKey.BACKEND_ICON$EMOJI_PLACEHOLDER)}
+              aria-label={t(I18nKey.BACKEND_ICON$EMOJI_PLACEHOLDER)}
+              onChange={(event) => {
+                const value = event.target.value.trim();
+                if (value) choose({ type: "emoji", value });
+              }}
+              className="h-8 w-32 rounded-md bg-surface-raised px-2 text-sm text-contrast"
+            />
+            <div className="grid grid-cols-10 gap-1">
+              {BACKEND_EMOJI_CHOICES.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  aria-label={emoji}
+                  onClick={() => choose({ type: "emoji", value: emoji })}
+                  className="flex size-8 items-center justify-center rounded-md text-lg hover:bg-surface-raised"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {tab === "icon" ? (
+          <div className="grid grid-cols-8 gap-1">
+            {Object.entries(BACKEND_ICON_LIBRARY).map(([name, Icon]) => (
+              <button
+                key={name}
+                type="button"
+                aria-label={name}
+                onClick={() => choose({ type: "icon", name })}
+                className="flex size-8 items-center justify-center rounded-md text-contrast hover:bg-surface-raised"
+              >
+                <Icon aria-hidden size={18} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {tab === "upload" ? (
+          <div className="flex flex-col gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              aria-label={t(I18nKey.BACKEND_ICON$UPLOAD)}
+              onChange={(event) => {
+                const input = event.currentTarget;
+                void handleFile(input.files?.[0]);
+                input.value = "";
+              }}
+              className="text-xs text-muted"
+            />
+            {uploadError ? (
+              <p role="alert" className="text-xs text-status-error">
+                {uploadError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
