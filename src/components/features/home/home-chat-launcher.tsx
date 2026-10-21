@@ -1,5 +1,5 @@
 import { useConversationWorkspace } from "#/hooks/query/use-conversation-workspace";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { CustomChatInput } from "#/components/features/chat/custom-chat-input";
@@ -36,11 +36,6 @@ import type { PluginSpec } from "#/api/conversation-service/agent-server-convers
 import { markAutomationSetupHandoff } from "#/api/automation-setup-handoff-store";
 import { PluginPickerModal } from "#/components/features/plugins/plugin-picker-modal";
 import { PluginPickerTrigger } from "#/components/features/plugins/plugin-picker-trigger";
-import { RecommendedAutomationsLauncher } from "#/components/features/automations/recommended-automations-launcher";
-import { useHomeRecommendedAutomationsDismissed } from "./use-home-recommended-automations-dismissed";
-import { writeHomeRecommendedAutomationsDismissed } from "./home-recommended-automations-storage";
-import { PinnedAutomationsDashboard } from "./featured-automations/pinned-automations-dashboard";
-import { RunningAutomationsList } from "./featured-automations/running-automations-list";
 import { HomeHeaderTitle } from "./home-header/home-header-title";
 import {
   HomeLauncherModeToggle,
@@ -52,6 +47,7 @@ import { OpenRepositoryDialog } from "./open-repository-dialog";
 import { HomeGitControlBarPreview } from "./home-git-control-bar-preview";
 import { HomeDashboardComponentsMenu } from "./home-dashboard-components-menu";
 import { HomeDashboardSection } from "./home-dashboard-section";
+import { getHomeDashboardWidget } from "./home-dashboard-widgets";
 import { useHomeDashboardVisibilityStore } from "#/stores/home-dashboard-visibility-store";
 
 export function HomeChatLauncher() {
@@ -73,8 +69,6 @@ export function HomeChatLauncher() {
   const homeDashboardOrder = useHomeDashboardVisibilityStore(
     (state) => state.order,
   );
-  const isRecommendedAutomationsDismissed =
-    useHomeRecommendedAutomationsDismissed();
   const [selectedPlugins, setSelectedPlugins] = useState<PluginSpec[]>([]);
   const [isPluginPickerOpen, setIsPluginPickerOpen] = useState(false);
   const [launcherMode, setLauncherMode] = useState<HomeLauncherMode>("code");
@@ -383,35 +377,14 @@ export function HomeChatLauncher() {
         <div className="mt-8 flex w-full flex-col gap-8">
           {/* @spec HL-002 — Only Home's rail is dismissible; dismissal unmounts it, inset included */}
           {homeDashboardOrder.map((id) => {
-            switch (id) {
-              case "recommendedAutomations":
-                return isRecommendedAutomationsDismissed ? null : (
-                  <HomeDashboardSection key={id} id={id}>
-                    <RecommendedAutomationsLauncher
-                      variant="rail"
-                      dismissible
-                      onDismiss={() =>
-                        writeHomeRecommendedAutomationsDismissed(true)
-                      }
-                    />
-                  </HomeDashboardSection>
-                );
-              case "pinnedAutomations":
-                return (
-                  <HomeDashboardSection key={id} id={id}>
-                    <PinnedAutomationsDashboard />
-                  </HomeDashboardSection>
-                );
-              case "runningAutomations":
-                return (
-                  <HomeDashboardSection key={id} id={id}>
-                    <RunningAutomationsList />
-                  </HomeDashboardSection>
-                );
-              default:
-                // Learn resources renders in the header above the composer.
-                return null;
-            }
+            const widget = getHomeDashboardWidget(id);
+            // Header-placed widgets (Learn resources) render above the composer.
+            if (widget.placement === "header") return null;
+            return (
+              <HomeDashboardSection key={id} id={id}>
+                <Suspense fallback={null}>{widget.render()}</Suspense>
+              </HomeDashboardSection>
+            );
           })}
         </div>
       </div>
