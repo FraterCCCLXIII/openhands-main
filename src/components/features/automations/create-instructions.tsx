@@ -1,12 +1,14 @@
 import { useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { Plus, Sparkles } from "lucide-react";
 import { I18nKey } from "#/i18n/declaration";
 import ChevronDownIcon from "#/icons/chevron-down.svg?react";
-import MessageSquareShareIcon from "#/icons/message-square-share.svg?react";
 import { cn } from "#/utils/utils";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { useStartAutomationSetup } from "#/hooks/use-start-automation-setup";
 import { getAutomationsDocsUrl } from "#/manifests/automation-interface";
+import { AutomationConversationLaunchModal } from "./automation-conversation-launch-modal";
+import type { AutomationConversationLaunchRequest } from "./use-launch-automation-conversation";
 
 function InlineExampleWrap({ children }: { children?: ReactNode }) {
   return <span className="whitespace-nowrap">{children}</span>;
@@ -44,41 +46,66 @@ interface CreateInstructionsProps {
 export function CreateInstructionsContent() {
   const { t } = useTranslation("openhands");
   const { startSetup, isPending } = useStartAutomationSetup();
+  const [launchRequest, setLaunchRequest] =
+    useState<AutomationConversationLaunchRequest | null>(null);
+
+  const handleFindOpportunities = () => {
+    setLaunchRequest({
+      intent: "find_opportunities",
+      source: "empty_state",
+      prompt: t(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT),
+    });
+  };
 
   return (
-    <div className="flex flex-col gap-5">
-      <p className="text-sm leading-relaxed text-tertiary-light">
-        <Trans
-          ns="openhands"
-          i18nKey={I18nKey.AUTOMATIONS$EMPTY_OPTION_CONVERSATION_DESC}
-          components={CREATE_INSTRUCTIONS_INLINE_COMPONENTS}
-        />{" "}
-        {t(I18nKey.AUTOMATIONS$CREATE_INSTRUCTIONS_GUIDANCE)}{" "}
-        <a
-          href={getAutomationsDocsUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-muted underline transition-colors hover:text-foreground"
-        >
-          {t(I18nKey.AUTOMATIONS$EMPTY_LEARN_MORE)}
-        </a>
-      </p>
+    <>
+      <div className="flex flex-col gap-5">
+        <p className="text-sm leading-relaxed text-tertiary-light">
+          <Trans
+            ns="openhands"
+            i18nKey={I18nKey.AUTOMATIONS$EMPTY_OPTION_CONVERSATION_DESC}
+            components={CREATE_INSTRUCTIONS_INLINE_COMPONENTS}
+          />{" "}
+          {t(I18nKey.AUTOMATIONS$CREATE_INSTRUCTIONS_GUIDANCE)}{" "}
+          <a
+            href={getAutomationsDocsUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted underline transition-colors hover:text-foreground"
+          >
+            {t(I18nKey.AUTOMATIONS$EMPTY_LEARN_MORE)}
+          </a>
+        </p>
 
-      <div className="flex justify-center">
-        <BrandButton
-          type="button"
-          variant="primary"
-          testId="automations-create-automation"
-          isDisabled={isPending}
-          onClick={startSetup}
-          startContent={
-            <MessageSquareShareIcon className="size-4" aria-hidden />
-          }
-        >
-          {t(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_BUTTON)}
-        </BrandButton>
+        <div className="flex flex-wrap justify-center gap-2">
+          <BrandButton
+            type="button"
+            variant="primary"
+            testId="automations-create-automation"
+            isDisabled={isPending}
+            onClick={startSetup}
+            startContent={<Plus className="size-4" aria-hidden />}
+          >
+            {t(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_BUTTON)}
+          </BrandButton>
+          <BrandButton
+            type="button"
+            variant="secondary"
+            testId="automations-find-opportunities"
+            onClick={handleFindOpportunities}
+            startContent={<Sparkles className="size-4" aria-hidden />}
+          >
+            {t(I18nKey.AUTOMATIONS$FIND_OPPORTUNITIES_BUTTON)}
+          </BrandButton>
+        </div>
       </div>
-    </div>
+      {launchRequest ? (
+        <AutomationConversationLaunchModal
+          request={launchRequest}
+          onClose={() => setLaunchRequest(null)}
+        />
+      ) : null}
+    </>
   );
 }
 

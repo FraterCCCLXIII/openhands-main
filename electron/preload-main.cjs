@@ -44,6 +44,15 @@ contextBridge.exposeInMainWorld("desktopShell", {
   },
 });
 
+// Actions for the startup overlay (see boot-overlay.mjs). The main process
+// checks the sender, so only this window can reach them.
+contextBridge.exposeInMainWorld("desktopBoot", {
+  /** Copy the full buffered startup log to the clipboard. */
+  copyLogs: () => ipcRenderer.invoke("boot-overlay:copy"),
+  /** Quit the app (failure-state action). */
+  quit: () => ipcRenderer.invoke("boot-overlay:quit"),
+});
+
 contextBridge.exposeInMainWorld("marsBridge", {
   /** Stored connections plus whether OAuth is configured in this build. */
   getAuthState: () => ipcRenderer.invoke("mars:getAuthState"),

@@ -10,7 +10,7 @@
  *   Packaged (macOS example):
  *     Contents/Resources/app/     ← __dirname (main.mjs lives here)
  *       main.mjs
- *       loading.html
+ *       boot-overlay.mjs
  *       scripts/                  ← copied from repo scripts/
  *       config/                   ← copied from repo config/
  *       build/                    ← static frontend
@@ -54,6 +54,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
+import { installBootOverlay } from "./boot-overlay.mjs";
 import { isExternalBrowsableUrl, isLoopbackAppUrl } from "./lib/window-url-policy.mjs";
 import { resolveBundledRuntimeDir } from "./lib/bundled-runtime-dir.mjs";
 
@@ -312,75 +313,16 @@ async function waitForAgentServer(
 
 // ── Windows ───────────────────────────────────────────────────────────────────
 
-let loadingWin = null;
 let mainWin = null;
 /** MARS session bridge (port-forward tunnels, MARSOHS-1429) — created in app.whenReady(). */
 let marsTunnelBridge = null;
 
-// Collapsed splash size — loading.html's .container height must match. The
-// expanded height reveals the startup-log console below it ("Show details").
-const LOADING_WIN_WIDTH = 460;
-const LOADING_WIN_HEIGHT = 360;
-const LOADING_WIN_EXPANDED_HEIGHT = 560;
-
-/**
- * Grow or shrink the loading window to reveal/hide the startup-log console.
- * Keeps the top edge fixed so the splash content doesn't jump. Invoked from
- * the renderer ("Show details" toggle) and from showStartupFailure().
- */
-function setLoadingWindowExpanded(expanded) {
-  if (!loadingWin || loadingWin.isDestroyed()) return;
-  const bounds = loadingWin.getBounds();
-  const height = expanded ? LOADING_WIN_EXPANDED_HEIGHT : LOADING_WIN_HEIGHT;
-  if (bounds.height === height) return;
-  // macOS ignores programmatic resizes of resizable:false windows on some
-  // Electron versions — lift the flag around the change.
-  loadingWin.setResizable(true);
-  loadingWin.setBounds({ ...bounds, height }, true);
-  loadingWin.setResizable(false);
-}
-
-function createLoadingWindow() {
-  bootLogReady = false;
-  loadingWin = new BrowserWindow({
-    width: LOADING_WIN_WIDTH,
-    // Tall enough to fit the streaming status line + the "first launch can
-    // take a few minutes" hint without scrollbars.
-    height: LOADING_WIN_HEIGHT,
-    resizable: false,
-    frame: false,
-    center: true,
-    show: false,
-    // Pre-paint window color; must match --oh-background in loading.html.
-    backgroundColor: "#0b0e14",
-    icon: appIconPath,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      // Bridges the startup-log console over IPC (see preload.cjs).
-      preload: join(__dirname, "preload.cjs"),
-    },
-  });
-
-  // The renderer can only receive IPC once the page has loaded — replay the
-  // lines buffered until now, then stream live batches (see appendBootLog).
-  loadingWin.webContents.on("did-finish-load", () => {
-    if (!loadingWin || loadingWin.isDestroyed()) return;
-    clearTimeout(bootLogFlushTimer);
-    bootLogFlushTimer = null;
-    bootLogPending = [];
-    if (bootLog.length) {
-      loadingWin.webContents.send("boot-log:batch", bootLog.slice());
-    }
-    bootLogReady = true;
-    if (fatalSummary) {
-      loadingWin.webContents.send("boot-log:fatal", fatalSummary);
-    }
-  });
-
-  loadingWin.loadFile(join(__dirname, "loading.html"));
-  loadingWin.once("ready-to-show", () => loadingWin?.show());
-}
+const APP_URL = "http://localhost:8000";
+// Blank page the window shows until the ingress is up; the startup overlay is
+// drawn on top of it, then on top of the app once the app page loads.
+const BOOT_SHELL_URL = `data:text/html;charset=utf-8,${encodeURIComponent(
+  '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#0b0e14"></body>',
+)}`;
 
 function createMainWindow() {
   mainWin = new BrowserWindow({
@@ -414,14 +356,18 @@ function createMainWindow() {
   mainWin.on("enter-full-screen", sendFullScreenState);
   mainWin.on("leave-full-screen", sendFullScreenState);
 
-  mainWin.loadURL("http://localhost:8000");
+  // Reattach the startup overlay after every page load (the app page replaces
+  // the shell page, and a dismissed overlay is only drawn again on failure).
+  mainWin.webContents.on("did-finish-load", () => {
+    if (!bootUi.dismissed) renderBootOverlay();
+  });
 
   mainWin.once("ready-to-show", () => {
-    loadingWin?.destroy();
-    loadingWin = null;
     mainWin?.show();
     mainWin?.maximize();
   });
+
+  mainWin.loadURL(bootUi.backendReady ? APP_URL : BOOT_SHELL_URL);
 
   // Route window.open() calls appropriately.
   mainWin.webContents.setWindowOpenHandler(({ url }) => {
@@ -476,12 +422,12 @@ function createMainWindow() {
 // ── Startup log buffer ────────────────────────────────────────────────────────
 //
 // Every service log line (all services, all levels, sanitized) is kept in a
-// bounded buffer and streamed to the loading window's console in batches over
-// IPC (see preload.cjs + loading.html). The buffer is the single source of
-// truth: it is replayed once the page loads (lines emitted earlier would
-// otherwise be lost) and it backs the "Copy logs" action. In a packaged app
-// this console is the only log surface — stdout/stderr go to /dev/null when
-// launched from Finder, and the winston file logger is a no-op there (see
+// bounded buffer and streamed to the startup overlay's console in batches (see
+// boot-overlay.mjs). The buffer is the single source of truth: the overlay
+// replays it whenever it is drawn (lines emitted earlier would otherwise be
+// lost) and it backs the "Copy logs" action. In a packaged app this console is
+// the only log surface — stdout/stderr go to /dev/null when launched from
+// Finder, and the winston file logger is a no-op there (see
 // `.agents/skills/desktop-electron/references/guide.md` on dependency stripping).
 
 const BOOT_LOG_MAX_LINES = 2000;
@@ -490,8 +436,47 @@ const BOOT_LOG_FLUSH_MS = 200;
 const bootLog = []; // {name, line, level}[] — level: stdout|stderr|info|warn|error
 let bootLogPending = [];
 let bootLogFlushTimer = null;
-let bootLogReady = false; // true once loading.html has loaded and can receive
-let fatalSummary = null;
+// What the startup overlay shows. `fatal` is the failure summary, `dismissed`
+// means the stack is up and the overlay has been removed.
+const bootUi = {
+  status: "",
+  fatal: null,
+  dismissed: false,
+  backendReady: false,
+};
+let bootIcon = null;
+
+/** Run `script` in the main window's page, if it is still alive. Best-effort. */
+function runInBootPage(script) {
+  if (!mainWin || mainWin.isDestroyed()) return;
+  mainWin.webContents.executeJavaScript(script, true).catch(() => {});
+}
+
+/**
+ * Draw or update the startup overlay on the main window. The page-side install
+ * is idempotent (see boot-overlay.mjs), so this also reattaches an overlay
+ * that was dismissed earlier.
+ */
+function renderBootOverlay() {
+  bootIcon ??= nativeImage
+    .createFromPath(appIconPath)
+    .resize({ width: 128 })
+    .toDataURL();
+  const state = {
+    status: bootUi.status,
+    fatal: bootUi.fatal,
+    icon: bootIcon,
+    log: bootLog,
+  };
+  runInBootPage(
+    `(${installBootOverlay.toString()})(${JSON.stringify(state)});`,
+  );
+}
+
+function dismissBootOverlay() {
+  bootUi.dismissed = true;
+  runInBootPage("window.__ohBoot && window.__ohBoot.dismiss();");
+}
 
 // SGR color codes AND cursor-control CSI sequences (uv/uvicorn can emit
 // either when they mis-detect a TTY).
@@ -529,57 +514,46 @@ function flushBootLog() {
   if (!bootLogPending.length) return;
   const batch = bootLogPending;
   bootLogPending = [];
-  // Not ready / window gone: drop the batch — the entries stay in bootLog,
-  // which did-finish-load replays wholesale.
-  if (bootLogReady && loadingWin && !loadingWin.isDestroyed()) {
-    loadingWin.webContents.send("boot-log:batch", batch);
+  // Entries stay in bootLog; a page that loads later replays it in full.
+  if (!bootUi.dismissed) {
+    runInBootPage(
+      `window.__ohBoot && window.__ohBoot.append(${JSON.stringify(batch)});`,
+    );
   }
 }
 
 /**
- * Switch the splash into its failure state: expand the console and show the
- * error summary with Copy logs / Quit actions, keeping the window open so the
- * user can actually read why startup failed. Returns false when the loading
- * window is gone (caller falls back to a native dialog).
+ * Switch the overlay into its failure state: the error summary with Copy logs
+ * and Quit actions, with the console expanded so the log can be read. Reopens
+ * the overlay if it was already dismissed (the automation backend can fail
+ * after the app is up).
  */
-function showStartupFailure(summary) {
-  if (!loadingWin || loadingWin.isDestroyed()) return false;
-  fatalSummary = summary;
-  setLoadingWindowExpanded(true);
-  if (bootLogReady) {
-    flushBootLog();
-    loadingWin.webContents.send("boot-log:fatal", summary);
-  }
-  // If the page hasn't loaded yet, did-finish-load replays the buffer and
-  // then delivers fatalSummary.
-  return true;
+function showBootFailure(summary) {
+  bootUi.fatal = summary;
+  bootUi.dismissed = false;
+  renderBootOverlay();
 }
 
-// IPC surface for the loading window (see preload.cjs). Guarded to that
-// window's webContents so the main app window can never reach these.
-function isLoadingWinEvent(event) {
+// IPC surface for the startup overlay (see preload-main.cjs). The overlay runs
+// in the app page, so only the main window's webContents may reach these.
+function isMainWinEvent(event) {
   return (
-    loadingWin !== null &&
-    !loadingWin.isDestroyed() &&
-    event.sender === loadingWin.webContents
+    mainWin !== null &&
+    !mainWin.isDestroyed() &&
+    event.sender === mainWin.webContents
   );
 }
 
-ipcMain.handle("boot-log:set-expanded", (event, expanded) => {
-  if (!isLoadingWinEvent(event)) return;
-  setLoadingWindowExpanded(Boolean(expanded));
-});
-
-ipcMain.handle("boot-log:copy", (event) => {
-  if (!isLoadingWinEvent(event)) return 0;
+ipcMain.handle("boot-overlay:copy", (event) => {
+  if (!isMainWinEvent(event)) return 0;
   clipboard.writeText(bootLog.map((e) => `[${e.name}] ${e.line}`).join("\n"));
   return bootLog.length;
 });
 
-// The frameless splash has no close control; the failure state shows a Quit
-// button instead.
-ipcMain.handle("boot-log:quit", (event) => {
-  if (!isLoadingWinEvent(event)) return;
+// The overlay has no window chrome to close the app with; the failure state
+// shows a Quit button instead.
+ipcMain.handle("boot-overlay:quit", (event) => {
+  if (!isMainWinEvent(event)) return;
   app.quit();
 });
 
@@ -593,30 +567,23 @@ ipcMain.on("window:full-screen:get", (event) => {
 // ── Backend stack ─────────────────────────────────────────────────────────────
 
 /**
- * Update the status line on the loading window, if it's still alive.
+ * Update the status line of the startup overlay. The status is kept in
+ * bootUi, so a page that loads later shows the current line.
  *
- * The loading screen exposes a global `window.__setLoadingStatus(line)`
- * function (see loading.html) that swaps the status text. We call it via
- * `executeJavaScript` so no preload script / IPC plumbing is needed.
- *
- * Best-effort: any failure (window destroyed, JS not loaded yet, etc.) is
+ * Best-effort: any failure (window destroyed, page not ready, etc.) is
  * swallowed — this is purely a UX nicety and must never crash the launcher.
  */
 function setLoadingStatus(line) {
-  if (!loadingWin || loadingWin.isDestroyed()) return;
-  // Limit to a single line, max ~120 chars, to keep the splash readable.
+  // Limit to a single line, max ~120 chars, to keep the overlay readable.
   const oneLine = String(line ?? "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 120);
   if (!oneLine) return;
-  const safe = JSON.stringify(oneLine);
-  loadingWin.webContents
-    .executeJavaScript(
-      `window.__setLoadingStatus && window.__setLoadingStatus(${safe});`,
-      true,
-    )
-    .catch(() => {});
+  bootUi.status = oneLine;
+  runInBootPage(
+    `window.__ohBoot && window.__ohBoot.setStatus(${JSON.stringify(oneLine)});`,
+  );
 }
 
 /**
@@ -712,9 +679,8 @@ async function startStack() {
 let startupFailed = false;
 
 /**
- * Show why startup failed on the splash, keeping the full startup log
- * readable and copyable. The automation backend can fail after the main
- * window has opened, so the splash is reopened in its place when needed.
+ * Show why startup failed in the startup overlay, keeping the full startup log
+ * readable and copyable. Falls back to a native dialog when the window is gone.
  */
 function failStartup(err) {
   if (startupFailed) return;
@@ -727,16 +693,11 @@ function failStartup(err) {
   console.error("[desktop] Startup failed:", err);
   appendBootLog("desktop", summary, "error");
   if (mainWin && !mainWin.isDestroyed()) {
-    // Open the splash before closing the main window so window-all-closed
-    // does not quit the app.
-    if (!loadingWin || loadingWin.isDestroyed()) createLoadingWindow();
-    mainWin.destroy();
+    // The overlay stays up in its failure state; the app quits via its Quit
+    // button (or Cmd+Q / closing the window).
+    showBootFailure(summary);
+    return;
   }
-  // Keep the splash open in its failure state so the full startup log can
-  // be read and copied; the app quits via the splash's Quit button (or
-  // Cmd+Q / closing the window).
-  if (showStartupFailure(summary)) return;
-  // Loading window already gone — fall back to the old dialog-and-quit.
   const errorTail = recentServiceErrors.length
     ? `\n\nRecent service errors:\n${recentServiceErrors.join("\n")}`
     : "";
@@ -788,15 +749,18 @@ app.whenReady().then(async () => {
     return;
   }
 
-  createLoadingWindow();
+  createMainWindow();
 
   try {
     setBootPhase("Starting backend services…");
     await startStack();
 
-    // Stage 1: ingress proxy is bound (anything < 500 on /).
+    // Stage 1: ingress proxy is bound (anything < 500 on /). The app page
+    // loads now, with the startup overlay drawn on top of it.
     setBootPhase("Waiting for proxy…");
-    await waitForUrl("http://localhost:8000");
+    await waitForUrl(APP_URL);
+    bootUi.backendReady = true;
+    mainWin?.loadURL(APP_URL);
 
     // Stage 2: the agent-server behind the proxy is actually serving
     // requests. `startStack()` already waited for this internally, but we
@@ -808,7 +772,7 @@ app.whenReady().then(async () => {
 
     if (startupFailed) return;
     setBootPhase("Ready.");
-    createMainWindow();
+    dismissBootOverlay();
   } catch (err) {
     failStartup(err);
   }
