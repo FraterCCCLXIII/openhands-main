@@ -4,6 +4,11 @@ import { CopyableContentWrapper } from "#/components/shared/buttons/copyable-con
 import { useColorTheme } from "#/hooks/use-color-theme";
 import { getSyntaxHighlighterTheme } from "#/themes/syntax-highlighter-themes";
 import { cn } from "#/utils/utils";
+import {
+  CHOICE_TEMPLATE_LANGUAGE,
+  parseChoiceTemplate,
+} from "#/utils/choice-template";
+import { MultipleChoiceCard } from "./multiple-choice-card";
 import { SyntaxHighlighter } from "./syntax-highlighter";
 
 // See https://github.com/remarkjs/react-markdown?tab=readme-ov-file#use-custom-components-syntax-highlight
@@ -49,6 +54,13 @@ function Code({
         </pre>
       </CopyableContentWrapper>
     );
+  }
+
+  if (match[1] === CHOICE_TEMPLATE_LANGUAGE) {
+    const template = parseChoiceTemplate(codeString);
+    if (template) {
+      return <MultipleChoiceCard template={template} />;
+    }
   }
 
   return (
