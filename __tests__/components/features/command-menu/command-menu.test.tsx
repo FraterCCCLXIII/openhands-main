@@ -6,6 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { CommandMenu } from "#/components/features/command-menu/command-menu";
@@ -37,7 +38,6 @@ vi.mock("react-i18next", async (importOriginal) => ({
 
 const SEARCH_LABEL_KEY = "COMMAND_MENU$SEARCH_LABEL";
 const CLEAR_SEARCH_LABEL_KEY = "COMMAND_MENU$CLEAR_SEARCH_LABEL";
-const NO_RESULTS_TITLE_KEY = "COMMAND_MENU$NO_RESULTS_TITLE";
 const NAVIGATION_GROUP_KEY = "COMMAND_MENU$GROUP_NAVIGATION";
 const SETTINGS_GROUP_KEY = "COMMAND_MENU$GROUP_SETTINGS";
 const ACTIONS_GROUP_KEY = "COMMAND_MENU$GROUP_ACTIONS";
@@ -300,7 +300,7 @@ describe("CommandMenu", () => {
       "titlecommand",
     );
 
-    expect(screen.getByText(NO_RESULTS_TITLE_KEY)).toBeInTheDocument();
+    expect(await screen.findByText(SEARCH_NO_RESULTS_KEY)).toBeInTheDocument();
   });
 
   it("navigates to the selected command and closes the menu", async () => {
@@ -393,7 +393,7 @@ describe("CommandMenu", () => {
 
     await user.type(searchInput, "no matching command");
 
-    expect(screen.getByText(NO_RESULTS_TITLE_KEY)).toBeInTheDocument();
+    expect(await screen.findByText(SEARCH_NO_RESULTS_KEY)).toBeInTheDocument();
     expect(searchInput).not.toHaveAttribute("aria-activedescendant");
 
     await user.keyboard("{ArrowDown}{ArrowUp}{Enter}");
@@ -601,7 +601,13 @@ describe("CommandMenu", () => {
     });
 
     try {
-      expect(renderToStaticMarkup(<ServerCommandMenu />)).toBe("");
+      expect(
+        renderToStaticMarkup(
+          <QueryClientProvider client={new QueryClient()}>
+            <ServerCommandMenu />
+          </QueryClientProvider>,
+        ),
+      ).toBe("");
     } finally {
       Object.defineProperty(globalThis, "document", {
         configurable: true,
