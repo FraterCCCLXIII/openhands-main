@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Padding slider overrides; regenerate with `npm run make-padding-scale`. */
+@import "./padding-scale.generated.css";
 
 @plugin '../hero.ts';
 @config "../tailwind.config.js";
