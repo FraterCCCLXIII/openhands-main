@@ -224,6 +224,18 @@
 }
 
 @layer base {
+  /* Browser autofill paints saved fields with its own blue. Keep them on the
+     field surface and text color so they match the empty fields. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--oh-color-base-secondary) inset;
+    -webkit-text-fill-color: var(--oh-foreground);
+    caret-color: var(--oh-foreground);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
   /* Every scrollbar in the app uses the custom style: thin, transparent until
      hovered. Explicit .custom-scrollbar / .custom-scrollbar-always rules below
      take precedence because they carry a class selector. */
