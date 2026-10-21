@@ -1,4 +1,5 @@
 import React from "react";
+import { KeyRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SecretForm } from "#/components/features/settings/secrets-settings/secret-form";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
@@ -35,7 +36,8 @@ export function SecretRequestCard({ request }: { request: SecretRequest }) {
       className="mt-4 flex flex-col gap-3 rounded-xl border border-border bg-surface p-4"
     >
       <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-contrast">
+        <span className="flex items-center gap-2 text-sm font-medium text-contrast">
+          <KeyRound className="size-4 shrink-0" aria-hidden="true" />
           {t(I18nKey.SECRETS$REQUEST_TITLE)}
         </span>
         {request.reason ? (
@@ -49,6 +51,7 @@ export function SecretRequestCard({ request }: { request: SecretRequest }) {
         selectedSecret={null}
         defaultName={request.name}
         keepOpenOnError
+        submitFirst
         valueRows={2}
         onSaved={(secret) => void completeSecretRequest(request, secret)}
         onCancel={() => void completeSecretRequest(request, null)}

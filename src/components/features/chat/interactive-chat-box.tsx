@@ -102,7 +102,19 @@ export function InteractiveChatBox({
     isTaskPolling(subConversationTaskStatus);
 
   return (
-    <div data-testid="interactive-chat-box">
+    <div
+      data-testid="interactive-chat-box"
+      className={
+        showGitControlBar
+          ? "pb-[calc(1rem*var(--oh-padding-scale,1))]"
+          : undefined
+      }
+    >
+      {showGitControlBar ? (
+        <div className="mb-2" data-testid="chat-git-control-bar">
+          <GitControlBar onSuggestionsClick={handleSuggestionsClick} />
+        </div>
+      ) : null}
       <CustomChatInput
         disabled={isDisabled}
         isNewConversationPending={disabled}
@@ -112,11 +124,6 @@ export function InteractiveChatBox({
         onSubmit={handleSubmit}
         onFilesPaste={handleUpload}
       />
-      {showGitControlBar ? (
-        <div className="mt-3" data-testid="chat-git-control-bar">
-          <GitControlBar onSuggestionsClick={handleSuggestionsClick} />
-        </div>
-      ) : null}
     </div>
   );
 }

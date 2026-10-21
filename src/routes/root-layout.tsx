@@ -10,6 +10,7 @@ import { I18nKey } from "#/i18n/declaration";
 import i18n from "#/i18n";
 import { useConfig } from "#/hooks/query/use-config";
 import { Sidebar } from "#/components/features/sidebar/sidebar";
+import { BackendLeftRail } from "#/components/features/backends/backend-left-rail";
 import { SidebarMobileNavProvider } from "#/components/features/sidebar/sidebar-mobile-nav-context";
 import { SidebarMobileMenuBar } from "#/components/features/sidebar/sidebar-mobile-menu-bar";
 import { useSettings } from "#/hooks/query/use-settings";
@@ -182,9 +183,10 @@ function MainAppContent() {
           >
             <title>{appTitle}</title>
             <TitleBarDragRegion />
+            <BackendLeftRail />
             <Sidebar />
 
-            <div className="flex min-h-0 flex-col w-full min-w-0 h-full gap-3">
+            <div className="flex min-h-0 flex-col w-full min-w-0 h-full gap-[calc(0.75rem*var(--oh-padding-scale,1))]">
               {!hideMobileSidebarMenuBar ? <SidebarMobileMenuBar /> : null}
               {config.data &&
                 (config.data.maintenance_start_time ||

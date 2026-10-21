@@ -51,6 +51,8 @@ interface SidebarNavLinkProps {
   forceActive?: boolean;
   /** Pin-as-home toggle; rendered only when the sidebar is expanded. */
   pinAction?: SidebarNavLinkPinAction;
+  /** Control nested at the row's right edge; rendered only when expanded. */
+  trailing?: React.ReactNode;
 }
 
 export function SidebarNavLink({
@@ -65,10 +67,12 @@ export function SidebarNavLink({
   hoverContent,
   forceActive = false,
   pinAction,
+  trailing,
 }: SidebarNavLinkProps) {
   const { currentPath } = useNavigation();
   const active = forceActive || isPathActive(currentPath, to, end);
   const showPinAction = !collapsed && pinAction != null;
+  const showTrailing = !collapsed && trailing != null;
 
   const link = (
     <NavigationLink
@@ -97,7 +101,7 @@ export function SidebarNavLink({
         disabled && "opacity-50",
         disabled && "pointer-events-none",
         // Constant right reserve so label truncation doesn't reflow on hover.
-        showPinAction && "pr-9",
+        (showPinAction || showTrailing) && "pr-9",
       )}
     >
       {icon ? (
@@ -114,6 +118,16 @@ export function SidebarNavLink({
   );
 
   if (!collapsed) {
+    if (showTrailing) {
+      return (
+        <div className="relative">
+          {link}
+          <div className="absolute inset-y-0 right-1 z-20 flex items-center">
+            {trailing}
+          </div>
+        </div>
+      );
+    }
     if (!pinAction) return link;
 
     // NavigationLink renders an <a>, so the pin toggle is an absolutely

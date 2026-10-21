@@ -18,10 +18,7 @@ import {
   getInterfaceCopy,
   hasAutomationInterface,
 } from "#/manifests/automation-interface";
-import {
-  CUSTOMIZE_PATH,
-  usePinnedHomeRoute,
-} from "#/hooks/use-pinned-home-route";
+import { CUSTOMIZE_PATH } from "#/hooks/use-pinned-home-route";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
 import { CommandMenuTrigger } from "#/components/features/command-menu/command-menu-trigger";
 import { SidebarNavLink } from "./sidebar-nav-link";
@@ -125,19 +122,6 @@ export function SidebarRailBody({
       : undefined);
   const { pages: canvasExtensionPages } = useCanvasExtensionsRuntime();
   const backendCloseTimerRef = collapsedBackendCloseTimer;
-  const { isPinnedRoute, togglePinnedRoute } = usePinnedHomeRoute();
-
-  const buildPinAction = (path: string, testId: string) => {
-    const pinned = isPinnedRoute(path);
-    return {
-      pinned,
-      onToggle: () => togglePinnedRoute(path),
-      label: pinned
-        ? t(I18nKey.SIDEBAR$UNPIN_AS_HOME)
-        : t(I18nKey.SIDEBAR$PIN_AS_HOME),
-      testId,
-    };
-  };
 
   // Each backend keeps its own color theme; switching backends applies it.
   React.useEffect(() => {
@@ -236,40 +220,32 @@ export function SidebarRailBody({
 
       <nav className={sidebarNavListClassName(collapsed)}>
         {collapsed ? <CommandMenuTrigger collapsed /> : null}
-        <div className="flex items-center gap-1">
-          <div className="min-w-0 flex-1">
-            <SidebarNavLink
-              to="/conversations"
-              end
-              label={t(I18nKey.SIDEBAR$NEW_CHAT)}
-              testId="sidebar-conversations-link"
-              collapsed={collapsed}
-              icon={
-                <span
-                  className={cn(
-                    chatInputIconButtonClassName,
-                    chatInputAddButtonSurfaceClassName,
-                    "size-4.5",
-                  )}
-                  aria-hidden="true"
-                >
-                  <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={3} />
-                </span>
-              }
-            />
-          </div>
-          {collapsed ? null : <SidebarCreateMenu />}
-        </div>
+        <SidebarNavLink
+          to="/conversations"
+          end
+          label={t(I18nKey.SIDEBAR$NEW_CHAT)}
+          testId="sidebar-conversations-link"
+          collapsed={collapsed}
+          icon={
+            <span
+              className={cn(
+                chatInputIconButtonClassName,
+                chatInputAddButtonSurfaceClassName,
+                "size-4.5",
+              )}
+              aria-hidden="true"
+            >
+              <Plus className="h-2.5 w-2.5 shrink-0" strokeWidth={3} />
+            </span>
+          }
+          trailing={<SidebarCreateMenu />}
+        />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}
           label={t(I18nKey.NAV$CUSTOMIZE)}
           testId="sidebar-skills-link"
           collapsed={collapsed}
           forceActive={isExtensionsActive}
-          pinAction={buildPinAction(
-            CUSTOMIZE_PATH,
-            "sidebar-pin-home-toggle-customize",
-          )}
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -307,10 +283,6 @@ export function SidebarRailBody({
             testId="sidebar-automations-link"
             collapsed={collapsed}
             icon={<AutomationsIcon width={ICON_SIZE} height={ICON_SIZE} />}
-            pinAction={buildPinAction(
-              automationListPath(),
-              "sidebar-pin-home-toggle-automations",
-            )}
           />
         )}
         <SidebarNavLink
@@ -468,14 +440,6 @@ export function SidebarRailBody({
                 {userName}
               </div>
             ) : null}
-            {userEmail ? (
-              <div
-                data-testid="sidebar-footer-user-email"
-                className="truncate px-2 text-xs text-muted"
-              >
-                {userEmail}
-              </div>
-            ) : null}
             <div className="flex items-center justify-between gap-2">
               <NavigationLink
                 to="/settings"
@@ -484,7 +448,14 @@ export function SidebarRailBody({
                 className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-sm text-muted hover:bg-surface-raised hover:text-contrast"
               >
                 <Settings width={16} height={16} className="shrink-0" />
-                <span className="truncate">{t(I18nKey.SIDEBAR$SETTINGS)}</span>
+                <span
+                  data-testid={
+                    userEmail ? "sidebar-footer-user-email" : undefined
+                  }
+                  className="truncate"
+                >
+                  {userEmail ?? t(I18nKey.SIDEBAR$SETTINGS)}
+                </span>
               </NavigationLink>
               <SidebarAppearanceMenu backendId={activeBackend.id} />
               <div className="min-w-0 flex-1 empty:hidden">

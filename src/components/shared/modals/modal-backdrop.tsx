@@ -74,7 +74,7 @@ export function ModalBackdrop({
       >
         <div
           onClick={handleClick}
-          className={`fixed inset-0 bg-black opacity-60 ${
+          className={`fixed inset-0 bg-black/60 ${
             exiting ? "modal-fade-out-anim" : "modal-overlay-enter"
           }`}
         />

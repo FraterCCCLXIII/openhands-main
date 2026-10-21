@@ -681,7 +681,7 @@ export function ChatInterface({
     <WorkspaceFilesForChatProvider>
       <ScrollProvider value={scrollProviderValue}>
         <div
-          className="relative flex h-full flex-col justify-between px-4"
+          className="relative flex h-full flex-col justify-between px-[calc(1rem*var(--oh-padding-scale,1))]"
           data-testid="chat-interface"
         >
           {!hasSubstantiveAgentActions &&

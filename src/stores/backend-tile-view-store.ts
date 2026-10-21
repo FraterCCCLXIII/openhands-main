@@ -7,7 +7,7 @@ interface BackendTileViewState {
 }
 
 /**
- * The single owner of the sidebar's "Tile view" preference. The backend
+ * The single owner of the left rail preference. The backend
  * dropdown footer is the only writer; it is stored per viewer in localStorage.
  */
 export const useBackendTileViewStore = create<BackendTileViewState>()(

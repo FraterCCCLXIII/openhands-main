@@ -65,6 +65,7 @@ export function DropdownMenu({
                 index,
                 className: cn(
                   dropdownMenuRowClassName,
+                  "group relative",
                   "focus:outline-none",
                   selectedItem?.value === option.value &&
                     "bg-interactive-selected text-contrast",
@@ -79,6 +80,7 @@ export function DropdownMenu({
               <HoverMarqueeLabel className="flex-1">
                 {option.label}
               </HoverMarqueeLabel>
+              {option.suffix}
             </li>
           ))}
       </ul>
