@@ -109,12 +109,14 @@ const generatePendingId = (): string =>
   `pending-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 const latestServerTimestamp = (conversationId: string): number | undefined => {
-  const { events, loadedConversationId } = useEventStore.getState();
-  if (
-    !loadedConversationId ||
-    !matchesPendingConversationId(loadedConversationId, conversationId)
-  )
-    return undefined;
+  // A pending message may still be keyed to a cloud task id while its events
+  // already stream into the real conversation's bucket.
+  const { byConversation } = useEventStore.getState();
+  const loadedConversationId = Object.keys(byConversation).find((id) =>
+    matchesPendingConversationId(id, conversationId),
+  );
+  if (!loadedConversationId) return undefined;
+  const { events } = byConversation[loadedConversationId];
 
   let latest: number | undefined;
   for (const event of events) {

@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { PictureInPicture2 } from "lucide-react";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { ContextMenu } from "#/ui/context-menu";
@@ -24,6 +25,8 @@ interface ConversationCardContextMenuProps {
   onStop?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onEdit?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onEditTags?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  /** Open this conversation in a floating popout window instead of navigating. */
+  onOpenInPopout?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onDisplayCost?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onShowAgentTools?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   onShowSkills?: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -46,6 +49,7 @@ export function ConversationCardContextMenu({
   onStop,
   onEdit,
   onEditTags,
+  onOpenInPopout,
   onDisplayCost,
   onShowAgentTools,
   onShowSkills,
@@ -102,6 +106,24 @@ export function ConversationCardContextMenu({
           : "z-[200] mt-0"
       }
     >
+      {generateSection(
+        [
+          onOpenInPopout && (
+            <ContextMenuListItem
+              key="open-in-popout-button"
+              testId="open-in-popout-button"
+              onClick={onOpenInPopout}
+            >
+              <ConversationNameContextMenuIconText
+                icon={<PictureInPicture2 size={16} aria-hidden />}
+                text={t(I18nKey.POPOUT$OPEN)}
+              />
+            </ContextMenuListItem>
+          ),
+        ],
+        // eslint-disable-next-line i18next/no-literal-string -- internal section id, not user-facing
+        "open-section",
+      )}
       {generateSection(
         [
           onEdit && (

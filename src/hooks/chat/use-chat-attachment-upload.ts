@@ -7,7 +7,7 @@ import { isFileImage } from "#/utils/is-file-image";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { validateFiles } from "#/utils/file-validation";
 import { processFiles, processImages } from "#/utils/file-processing";
-import { useConversationStore } from "#/stores/conversation-store";
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 
 /**
  * Shared attachment pipeline for home and conversation chat inputs.
@@ -23,7 +23,7 @@ export function useChatAttachmentUpload() {
     addImageLoading,
     removeImageLoading,
     markImagesAsPasted,
-  } = useConversationStore();
+  } = useConversationComposer();
 
   const handleUpload = useCallback(
     async (selectedFiles: File[], _options?: ChatAttachmentUploadOptions) => {

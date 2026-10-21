@@ -128,7 +128,19 @@ const makeAgentReply = (): MessageEvent => ({
   extended_content: [],
 });
 
-const eventIds = () => useEventStore.getState().events.map((event) => event.id);
+const eventIds = (conversationId?: string) => {
+  const { byConversation } = useEventStore.getState();
+  if (conversationId) {
+    return (byConversation[conversationId]?.events ?? []).map(
+      (event) => event.id,
+    );
+  }
+  // Default: flatten every bucket (tests that switch conversations assert on
+  // the active one's history via the explicit-id overload).
+  return Object.values(byConversation).flatMap((bucket) =>
+    bucket.events.map((event) => event.id),
+  );
+};
 
 describe("ConversationWebSocketProvider — conversation-scoped event store", () => {
   let queryClient: QueryClient;
@@ -158,12 +170,7 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
       defaultOptions: { queries: { retry: false } },
     });
 
-    useEventStore.setState({
-      events: [],
-      eventIds: new Set(),
-      uiEvents: [],
-      loadedConversationId: null,
-    });
+    useEventStore.getState().clearEvents();
     useOptimisticUserMessageStore.getState().clearPendingMessages();
     useBrowserStore.getState().reset();
     useMetricsStore.getState().resetMetrics();
@@ -1028,10 +1035,12 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
     });
   });
 
-  it("clears the previous conversation's events when switching conversations", async () => {
+  it("keeps conversation event streams in independent buckets when switching", async () => {
     // Arrange + Act: open conversation A.
     const { rerender } = renderProvider("conv-a");
-    await waitFor(() => expect(eventIds()).toEqual(["user-msg-conv-a"]));
+    await waitFor(() =>
+      expect(eventIds("conv-a")).toEqual(["user-msg-conv-a"]),
+    );
 
     // Act: switch to conversation B.
     rerender(
@@ -1045,13 +1054,19 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
       </QueryClientProvider>,
     );
 
-    // Assert: B's history replaced A's — A did not leak into B.
-    await waitFor(() => expect(eventIds()).toEqual(["user-msg-conv-b"]));
+    // Assert: B has its own history; A's bucket is untouched (so a popout
+    // still showing A would keep streaming against the right events).
+    await waitFor(() =>
+      expect(eventIds("conv-b")).toEqual(["user-msg-conv-b"]),
+    );
+    expect(eventIds("conv-a")).toEqual(["user-msg-conv-a"]);
   });
 
   it("resets browser-panel state when switching conversations", async () => {
     const { rerender } = renderProvider("conv-a");
-    await waitFor(() => expect(eventIds()).toEqual(["user-msg-conv-a"]));
+    await waitFor(() =>
+      expect(eventIds("conv-a")).toEqual(["user-msg-conv-a"]),
+    );
 
     useBrowserStore.setState({
       url: "https://example.com",
@@ -1112,9 +1127,11 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
     // Arrange: open conversation A, then receive an agent reply over the socket
     // that is not part of the cached REST history page.
     const { unmount } = renderProvider("conv-a");
-    await waitFor(() => expect(eventIds()).toEqual(["user-msg-conv-a"]));
+    await waitFor(() =>
+      expect(eventIds("conv-a")).toEqual(["user-msg-conv-a"]),
+    );
     act(() => {
-      useEventStore.getState().addEvent(makeAgentReply());
+      useEventStore.getState().addEvent("conv-a", makeAgentReply());
     });
 
     // Act: leave (e.g. to Settings) and return to the same conversation.
@@ -1123,11 +1140,11 @@ describe("ConversationWebSocketProvider — conversation-scoped event store", ()
 
     // Assert: both the user message and the streamed reply survive re-entry.
     await waitFor(() =>
-      expect(eventIds()).toEqual(["user-msg-conv-a", AGENT_REPLY_ID]),
+      expect(eventIds("conv-a")).toEqual(["user-msg-conv-a", AGENT_REPLY_ID]),
     );
     // ...and the re-seed deduped against the existing user message rather than
     // appending a second copy — exactly two events, no double-insertion.
-    expect(eventIds()).toHaveLength(2);
+    expect(eventIds("conv-a")).toHaveLength(2);
   });
 
   const itemStarted = (itemId: string, anchorSeq: number | null = null) =>

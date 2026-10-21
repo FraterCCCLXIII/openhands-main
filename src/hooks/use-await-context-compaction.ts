@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import useMetricsStore from "#/stores/metrics-store";
-import { useEventStore } from "#/stores/use-event-store";
+import {
+  getConversationEvents,
+  useEventStore,
+} from "#/stores/use-event-store";
+import { useScopedConversationId } from "#/hooks/use-conversation-events";
 import { isCondensationEvent } from "#/types/agent-server/type-guards";
 
 /** How long to wait after a Condensation event for a lower per_turn_token. */
@@ -65,6 +69,7 @@ export function useAwaitContextCompaction({
   onComplete,
   timeoutMs = DEFAULT_TIMEOUT_MS,
 }: UseAwaitContextCompactionOptions) {
+  const conversationId = useScopedConversationId();
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
@@ -78,7 +83,9 @@ export function useAwaitContextCompaction({
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
     const knownEventIds = baselineEventIds
       ? new Set(baselineEventIds)
-      : new Set(useEventStore.getState().eventIds);
+      : new Set(
+          useEventStore.getState().byConversation[conversationId ?? ""]?.eventIds,
+        );
 
     const readAfterToken = () =>
       useMetricsStore.getState().usage?.per_turn_token ?? beforeToken;
@@ -110,7 +117,7 @@ export function useAwaitContextCompaction({
     };
 
     const scanForNewCondensation = () => {
-      for (const event of useEventStore.getState().events) {
+      for (const event of getConversationEvents(conversationId)) {
         const eventId = "id" in event ? event.id : undefined;
         if (eventId !== undefined) {
           if (knownEventIds.has(eventId)) {

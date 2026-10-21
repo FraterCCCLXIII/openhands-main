@@ -1,6 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { useEventStore } from "#/stores/use-event-store";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  EMPTY_EVENTS,
+  useEventStore,
+} from "#/stores/use-event-store";
 import {
   ActionEvent,
   MessageEvent,
@@ -8,6 +11,9 @@ import {
   SecurityRisk,
 } from "#/types/agent-server/core";
 import { StreamingDeltaEvent } from "#/types/agent-server/core/events/streaming-delta-event";
+
+const CONV_A = "conv-a";
+const CONV_B = "conv-b";
 
 const mockUserMessageEvent: MessageEvent = {
   id: "test-event-1",
@@ -91,80 +97,96 @@ const makeUserMessageEvent = (id: string, timestamp: string): MessageEvent => ({
   timestamp,
 });
 
+const bucket = (conversationId: string) =>
+  useEventStore.getState().byConversation[conversationId];
+
 describe("useEventStore", () => {
+  beforeEach(() => {
+    useEventStore.getState().clearEvents();
+  });
+
   it("should render initial state correctly", () => {
     const { result } = renderHook(() => useEventStore());
-    expect(result.current.events).toEqual([]);
+    expect(result.current.byConversation).toEqual({});
   });
 
-  it("should add an event to the store", () => {
+  it("should add an event to a conversation bucket", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.addEvent(mockUserMessageEvent);
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
     });
 
-    expect(result.current.events).toEqual([mockUserMessageEvent]);
+    expect(bucket(CONV_A)?.events).toEqual([mockUserMessageEvent]);
   });
 
-  it("should retrieve events whose actions are replaced by their observations", () => {
+  it("should keep conversations' event streams independent", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.addEvent(mockUserMessageEvent);
-      result.current.addEvent(mockActionEvent);
-      result.current.addEvent(mockObservationEvent);
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
+      result.current.addEvent(CONV_B, mockActionEvent);
     });
 
-    expect(result.current.uiEvents).toEqual([
+    expect(bucket(CONV_A)?.events).toEqual([mockUserMessageEvent]);
+    expect(bucket(CONV_B)?.events).toEqual([mockActionEvent]);
+  });
+
+  it("should project uiEvents within a conversation bucket", () => {
+    const { result } = renderHook(() => useEventStore());
+
+    act(() => {
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
+      result.current.addEvent(CONV_A, mockActionEvent);
+      result.current.addEvent(CONV_A, mockObservationEvent);
+    });
+
+    expect(bucket(CONV_A)?.uiEvents).toEqual([
       mockUserMessageEvent,
       mockObservationEvent,
     ]);
   });
 
-  it("should bulk-add events and sort them chronologically", () => {
+  it("should bulk-add and sort older pages into a conversation", () => {
     const { result } = renderHook(() => useEventStore());
+    const newest = makeUserMessageEvent("newest", "2024-03-03T00:00:00Z");
+    const middle = makeUserMessageEvent("middle", "2024-03-02T00:00:00Z");
+    const oldest = makeUserMessageEvent("oldest", "2024-03-01T00:00:00Z");
 
-    const newest = makeUserMessageEvent("evt-newest", "2024-03-01T00:00:00Z");
-    const middle = makeUserMessageEvent("evt-middle", "2024-02-01T00:00:00Z");
-    const oldest = makeUserMessageEvent("evt-oldest", "2024-01-01T00:00:00Z");
-
-    // Seed with the newest event, then bulk-prepend older ones (the
-    // pagination-on-scroll case). The store should re-sort chronologically.
     act(() => {
-      result.current.addEvent(newest);
-      result.current.addEvents([oldest, middle]);
+      result.current.addEvent(CONV_A, newest);
+      result.current.addEvents(CONV_A, [oldest, middle]);
     });
 
-    expect(result.current.events.map((event) => event.id)).toEqual([
-      "evt-oldest",
-      "evt-middle",
-      "evt-newest",
+    expect(bucket(CONV_A)?.events.map((event) => event.id)).toEqual([
+      "oldest",
+      "middle",
+      "newest",
     ]);
   });
 
-  it("should de-duplicate events on bulk add", () => {
+  it("should de-duplicate events by id within a conversation", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.addEvent(mockUserMessageEvent);
-      result.current.addEvents([mockUserMessageEvent, mockActionEvent]);
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
+      result.current.addEvents(CONV_A, [mockUserMessageEvent, mockActionEvent]);
     });
 
-    expect(result.current.events).toHaveLength(2);
+    expect(bucket(CONV_A)?.events).toHaveLength(2);
   });
 
   it("keeps streaming slots out of the durable event log and eventIds", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.addEvent(mockUserMessageEvent);
-      result.current.openStreamingSlot({
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
+      result.current.openStreamingSlot(CONV_A, {
         type: "item_started",
         item_id: "item-1",
       });
       for (let i = 0; i < 1000; i += 1) {
-        result.current.appendStreamingDeltas([
+        result.current.appendStreamingDeltas(CONV_A, [
           {
             type: "delta",
             item_id: "item-1",
@@ -179,11 +201,11 @@ describe("useEventStore", () => {
     // The slot renders, but `events` and `eventIds` only ever hold durable
     // records — the slot's id IS the coming message's id, so tracking it would
     // dedupe the real message away.
-    expect(result.current.events).toEqual([mockUserMessageEvent]);
-    expect(result.current.eventIds.size).toBe(1);
-    expect(result.current.uiEvents).toHaveLength(2);
+    expect(bucket(CONV_A)?.events).toEqual([mockUserMessageEvent]);
+    expect(bucket(CONV_A)?.eventIds.size).toBe(1);
+    expect(bucket(CONV_A)?.uiEvents).toHaveLength(2);
     expect(
-      (result.current.uiEvents[1] as StreamingDeltaEvent).content,
+      (bucket(CONV_A)?.uiEvents[1] as StreamingDeltaEvent).content,
     ).toHaveLength(1000);
   });
 
@@ -191,11 +213,11 @@ describe("useEventStore", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.openStreamingSlot({
+      result.current.openStreamingSlot(CONV_A, {
         type: "item_started",
         item_id: mockAgentMessageEvent.id,
       });
-      result.current.appendStreamingDeltas([
+      result.current.appendStreamingDeltas(CONV_A, [
         {
           type: "delta",
           item_id: mockAgentMessageEvent.id,
@@ -204,75 +226,83 @@ describe("useEventStore", () => {
           content: "partial",
         },
       ]);
-      result.current.addEvent(mockAgentMessageEvent);
+      result.current.addEvent(CONV_A, mockAgentMessageEvent);
     });
 
-    expect(result.current.uiEvents).toEqual([mockAgentMessageEvent]);
-    expect(result.current.events).toEqual([mockAgentMessageEvent]);
+    expect(bucket(CONV_A)?.uiEvents).toEqual([mockAgentMessageEvent]);
+    expect(bucket(CONV_A)?.events).toEqual([mockAgentMessageEvent]);
   });
 
   it("clears only the addressed socket's slots", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.openStreamingSlot({
+      result.current.openStreamingSlot(CONV_A, {
         type: "item_started",
         item_id: "main-item",
       });
       result.current.openStreamingSlot(
+        CONV_A,
         { type: "item_started", item_id: "plan-item" },
         { isFromPlanningAgent: true },
       );
-      result.current.clearStreamingSlots();
+      result.current.clearStreamingSlots(CONV_A);
     });
 
-    expect(result.current.uiEvents.map((event) => event.id)).toEqual([
+    expect(bucket(CONV_A)?.uiEvents.map((event) => event.id)).toEqual([
       "plan-item",
     ]);
 
     act(() => {
-      result.current.clearStreamingSlots(true);
+      result.current.clearStreamingSlots(CONV_A, true);
     });
-    expect(result.current.uiEvents).toEqual([]);
+    expect(bucket(CONV_A)?.uiEvents).toEqual([]);
   });
 
-  it("should apply action-to-observation UI replacement during bulk add", () => {
+  it("loadConversation creates an empty bucket and is idempotent on remount", () => {
     const { result } = renderHook(() => useEventStore());
 
     act(() => {
-      result.current.addEvents([
-        mockUserMessageEvent,
-        mockActionEvent,
-        mockObservationEvent,
-      ]);
+      result.current.loadConversation(CONV_A);
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
     });
+    expect(result.current.isConversationLoaded(CONV_A)).toBe(true);
+    expect(bucket(CONV_A)?.events).toHaveLength(1);
 
-    expect(result.current.uiEvents).toEqual([
-      mockUserMessageEvent,
-      mockObservationEvent,
-    ]);
+    // Remounting the same conversation must NOT wipe its events — the WS
+    // provider treats an already-loaded id as a no-op.
+    act(() => {
+      // Simulate the provider's guard: only load when not already loaded.
+      if (!result.current.isConversationLoaded(CONV_A)) {
+        result.current.loadConversation(CONV_A);
+      }
+    });
+    expect(bucket(CONV_A)?.events).toEqual([mockUserMessageEvent]);
   });
 
-  it("should clear all events when clearEvents is called", () => {
+  it("clearConversation drops only the named bucket", () => {
     const { result } = renderHook(() => useEventStore());
 
-    // Add some events first
     act(() => {
-      result.current.addEvent(mockUserMessageEvent);
-      result.current.addEvent(mockActionEvent);
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
+      result.current.addEvent(CONV_B, mockActionEvent);
+      result.current.clearConversation(CONV_A);
     });
 
-    // Verify events were added
-    expect(result.current.events).toHaveLength(2);
-    expect(result.current.uiEvents).toHaveLength(2);
+    expect(bucket(CONV_A)).toBeUndefined();
+    expect(bucket(CONV_B)?.events).toEqual([mockActionEvent]);
+  });
 
-    // Clear events
+  it("clearEvents drops every conversation", () => {
+    const { result } = renderHook(() => useEventStore());
+
     act(() => {
+      result.current.addEvent(CONV_A, mockUserMessageEvent);
+      result.current.addEvent(CONV_B, mockActionEvent);
       result.current.clearEvents();
     });
 
-    // Verify events were cleared
-    expect(result.current.events).toEqual([]);
-    expect(result.current.uiEvents).toEqual([]);
+    expect(result.current.byConversation).toEqual({});
+    expect(EMPTY_EVENTS).toEqual([]);
   });
 });

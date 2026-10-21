@@ -10,7 +10,10 @@ import {
   ADD_SKILL_EXAMPLE_COMMAND,
   ADD_SKILL_SKILL_NAME,
 } from "#/constants/skills-docs";
-import { useConversationStore } from "#/stores/conversation-store";
+import {
+  HOME_COMPOSER_KEY,
+  useConversationStore,
+} from "#/stores/conversation-store";
 import type { SkillInfo } from "#/types/settings";
 
 const navigateMock = vi.fn();
@@ -167,8 +170,8 @@ describe("SkillDetailModal", () => {
     expect(onClose).toHaveBeenCalled();
     expect(navigateMock).toHaveBeenCalledWith("/conversations");
     expect(setMessageToSend).toHaveBeenCalledWith(
+      HOME_COMPOSER_KEY,
       ADD_SKILL_EXAMPLE_COMMAND,
-      "home",
     );
   });
 
@@ -177,7 +180,9 @@ describe("SkillDetailModal", () => {
     // for a conversation composer that never consumed it.
     const user = userEvent.setup();
     sessionStorage.setItem(HOME_PROMPT_DRAFT_KEY, "earlier home draft");
-    useConversationStore.getState().setMessageToSend("for a conversation");
+    useConversationStore
+      .getState()
+      .setMessageToSend("conv-other", "for a conversation");
     const skill = buildSkill({ name: "docker" });
     // The modal really closes, as on the Skills page; an open modal would keep
     // focus inside itself rather than let the composer behind it take it.
@@ -210,7 +215,10 @@ describe("SkillDetailModal", () => {
     // Assert
     await waitFor(() => expect(composer.textContent).toBe("/docker "));
     expect(composer).toHaveFocus();
-    expect(useConversationStore.getState().messageToSend).toBeNull();
+    expect(
+      useConversationStore.getState().byConversation[HOME_COMPOSER_KEY]
+        ?.messageToSend,
+    ).toBeNull();
   });
 
   it("disables Use skill when the skill is turned off", async () => {

@@ -82,6 +82,11 @@ function ErrorShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+const PopoutHost = React.lazy(() =>
+  import("#/components/features/popout/popout-host").then((m) => ({
+    default: m.PopoutHost,
+  })),
+);
 
 export function ErrorBoundary() {
   const error = useRouteError();
@@ -211,6 +216,7 @@ function MainAppContent() {
           <React.Suspense fallback={null}>
             <EnvironmentSwitchOverlay />
             <CommandMenu />
+            <PopoutHost />
           </React.Suspense>
           <NavigationLink
             to="/settings"
