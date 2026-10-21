@@ -52612,5 +52612,41 @@
     "uk": "Постачальники моделей",
     "ca": "Proveïdors de models",
     "id": "Penyedia model"
+  },
+  "CHAT$OPEN_AGENT_SETTINGS": {
+    "en": "Open agent settings",
+    "ja": "エージェント設定を開く",
+    "zh-CN": "打开智能体设置",
+    "zh-TW": "開啟代理設定",
+    "ko-KR": "에이전트 설정 열기",
+    "no": "Åpne agentinnstillinger",
+    "it": "Apri impostazioni agente",
+    "pt": "Abrir configurações do agente",
+    "es": "Abrir configuración del agente",
+    "ar": "فتح إعدادات الوكيل",
+    "fr": "Ouvrir les paramètres de l'agent",
+    "tr": "Ajan ayarlarını aç",
+    "de": "Agent-Einstellungen öffnen",
+    "uk": "Відкрити налаштування агента",
+    "ca": "Obre la configuració de l'agent",
+    "id": "Buka pengaturan agen"
+  },
+  "CHAT$AGENT_PROFILE_SWITCH_UNAVAILABLE": {
+    "en": "Agent profile can't be changed right now",
+    "ja": "現在、エージェントプロファイルは変更できません",
+    "zh-CN": "目前无法更改智能体配置文件",
+    "zh-TW": "目前無法變更代理設定檔",
+    "ko-KR": "지금은 에이전트 프로필을 변경할 수 없습니다",
+    "no": "Agentprofilen kan ikke endres akkurat nå",
+    "it": "Il profilo agente non può essere modificato in questo momento",
+    "pt": "O perfil do agente não pode ser alterado agora",
+    "es": "El perfil del agente no se puede cambiar ahora",
+    "ar": "لا يمكن تغيير ملف الوكيل الآن",
+    "fr": "Le profil d'agent ne peut pas être modifié pour le moment",
+    "tr": "Ajan profili şu anda değiştirilemiyor",
+    "de": "Das Agentenprofil kann derzeit nicht geändert werden",
+    "uk": "Наразі профіль агента змінити не можна",
+    "ca": "El perfil de l'agent no es pot canviar ara",
+    "id": "Profil agen tidak dapat diubah saat ini"
   }
 }
