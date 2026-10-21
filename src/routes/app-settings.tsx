@@ -13,6 +13,7 @@ import { LanguageInput } from "#/components/features/settings/app-settings/langu
 import { ThemeInput } from "#/components/features/settings/app-settings/theme-input";
 import { GettingStartedChecklistSwitch } from "#/components/features/settings/app-settings/getting-started-checklist-switch";
 import { RecommendedAutomationsSwitch } from "#/components/features/settings/app-settings/recommended-automations-switch";
+import { MobileAppSetupSection } from "#/components/features/settings/app-settings/mobile-app-setup-section";
 import { VoiceInputSettings } from "#/components/features/settings/app-settings/voice-input-settings";
 import {
   displayErrorToast,
@@ -241,6 +242,8 @@ function AppSettingsForm() {
               }
             />
           </section>
+
+          <MobileAppSetupSection />
 
           <SettingsSwitch
             testId="enable-analytics-switch"
