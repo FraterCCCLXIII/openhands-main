@@ -73,6 +73,8 @@ export interface HomeDashboardWidget {
   placement: "header" | "body";
   /** Widgets with `false` stay off until the user turns them on. */
   defaultVisible: boolean;
+  /** Widgets that render their own dismiss control skip the section X. */
+  ownsDismiss?: boolean;
   render: () => React.ReactNode;
 }
 
@@ -93,6 +95,7 @@ export const HOME_DASHBOARD_WIDGETS = [
     labelKey: I18nKey.HOME$DASHBOARD_RECOMMENDED_AUTOMATIONS,
     placement: "body",
     defaultVisible: true,
+    ownsDismiss: true,
     render: () => <RecommendedAutomationsWidget />,
   },
   {
