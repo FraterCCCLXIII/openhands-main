@@ -10,6 +10,7 @@ import { I18nKey } from "#/i18n/declaration";
 import { OPENHANDS_I18N_NAMESPACE } from "#/i18n";
 import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalBody } from "#/components/shared/modals/modal-body";
+import OpenHandsLogoWhite from "#/assets/branding/openhands-logo-white.svg?react";
 import { BaseModalTitle } from "#/components/shared/modals/confirmation-modals/base-modal";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { setTelemetryConsent } from "#/services/telemetry";
@@ -96,6 +97,12 @@ function LocalTelemetryConsentBanner({
         className="flex flex-col gap-2"
       >
         <ModalBody className="border border-border">
+          <OpenHandsLogoWhite
+            width={40}
+            height={40}
+            className="mx-auto text-contrast [&_path:not([fill=transparent])]:fill-current"
+            aria-hidden
+          />
           <div className="flex items-baseline justify-center gap-2">
             <BaseModalTitle title={t(I18nKey.ONBOARDING$TITLE)} />
             <p
@@ -105,7 +112,7 @@ function LocalTelemetryConsentBanner({
               {`v${AGENT_CANVAS_CLIENT_VERSION}`}
             </p>
           </div>
-          <p className="mt-2 text-sm font-medium text-muted">
+          <p className="text-center text-pretty text-sm font-medium text-muted">
             {t(I18nKey.TELEMETRY$CONSENT_TITLE)}
           </p>
           <div className="w-full rounded-xl border border-border-subtle bg-surface-raised px-3 py-2">

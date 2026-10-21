@@ -15,6 +15,7 @@ import "./index.css";
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
+import { NotificationStack } from "#/components/features/notifications/notification-stack";
 import {
   clearCachedAgentServerInfo,
   isAgentServerUnavailableError,
@@ -108,6 +109,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <ColorThemeApplier />
           {children}
           <Toaster toastOptions={TOAST_OPTIONS} />
+          <NotificationStack />
           <div id="modal-portal-exit" />
         </AgentServerUIRoot>
         <ScrollRestoration />

@@ -24,9 +24,17 @@ async function prepareApp() {
   if (shouldStartMockWorker()) {
     const { worker } = await import("./mocks/browser");
 
-    await worker.start({
-      onUnhandledRequest: "bypass",
-    });
+    // A failed mock worker must not block rendering: the app then runs unmocked.
+    await worker
+      .start({
+        onUnhandledRequest: "bypass",
+      })
+      .catch((error: unknown) => {
+        console.warn(
+          "[MSW] Mock worker failed to start; rendering without mocks.",
+          error,
+        );
+      });
   }
 
   if (import.meta.env.DEV) {
