@@ -112,10 +112,7 @@ export function useChatInputProfileState(): ChatInputProfileState {
     currentProfileId,
     currentProfileName,
     isInConversation,
-    isLoading:
-      isLoadingProfiles ||
-      isTaskRoute ||
-      (isInConversation && isLoadingConversation),
+    isLoading: isLoadingProfiles || (isInConversation && isLoadingConversation),
     isSwitching,
     selectProfile,
   };

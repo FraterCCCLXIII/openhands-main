@@ -80,18 +80,21 @@ export function ChatInputActions({
   const isCloud = backend.kind === "cloud";
   const modelState = useChatInputModelState();
   const llmProfileState = useChatInputLlmProfileState();
-  // Agent-profile switching lives in the "+" tools menu while the conversation
-  // hasn't started (OSS-5735) — the pill itself is always an LLM selector. The
-  // gate is computed here (not in the menu) so ToolsContextMenu only mounts the
-  // profile submenu when it can actually be used: pre-start, not on a task
-  // route, and only when the backend has profiles (#1571 fallback). Fetch is
-  // limited to the pre-start window.
+  // The agent-profile pill is visible in every conversation state whenever the
+  // backend has profiles (#1571 fallback); it disables itself when switching is
+  // not possible (see ChatInputAgentProfilePicker). Previously the pill shared
+  // the "+" menu's pre-start gate, so it vanished once a conversation started.
+  const agentProfiles = useAgentProfiles();
+  const showAgentProfilePill = (agentProfiles.data?.profiles?.length ?? 0) > 0;
+  // The "+" tools menu offers its own agent-profile entry (OSS-5735) only
+  // while the conversation hasn't started. The gate is computed here (not in
+  // the menu) so ToolsContextMenu only mounts the profile submenu when it can
+  // actually be used: pre-start, not on a task route, with profiles.
   const isPreStart = !conversationId || hasStartedConversation === false;
-  const agentProfilesForStart = useAgentProfiles({ enabled: isPreStart });
   const showAgentProfileSwitch =
     isPreStart &&
     !(conversationId?.startsWith("task-") ?? false) &&
-    (agentProfilesForStart.data?.profiles?.length ?? 0) > 0;
+    showAgentProfilePill;
   // Code/Plan mode switching is a cloud OpenHands feature — it doesn't apply
   // to ACP conversations (which have no "plan" mode), so hide it when ACP.
   const showChangeAgentButton = isCloud && !modelState.isAcpContext;
@@ -180,7 +183,7 @@ export function ChatInputActions({
     syncWidths();
 
     return () => observer.disconnect();
-  }, [showChangeAgentButton, showAgentProfileSwitch]);
+  }, [showChangeAgentButton, showAgentProfilePill]);
 
   const handlePauseAgent = () => {
     if (!conversationId) return;
@@ -205,7 +208,6 @@ export function ChatInputActions({
       const next = {
         showCodeInline: false,
         showModelInline: false,
-        showAgentProfileInline: false,
       };
 
       if (showChangeAgentButton && remaining >= codeWidth) {
@@ -215,27 +217,25 @@ export function ChatInputActions({
 
       if (remaining >= modelWidth) {
         next.showModelInline = true;
-        remaining -= modelWidth + INLINE_GAP;
-      }
-
-      // Drops first: the "+" menu also switches the agent profile.
-      if (showAgentProfileSwitch && remaining >= agentProfileWidth) {
-        next.showAgentProfileInline = true;
       }
 
       return next;
     },
-    [
-      showChangeAgentButton,
-      codeWidth,
-      modelWidth,
-      showAgentProfileSwitch,
-      agentProfileWidth,
-    ],
+    [showChangeAgentButton, codeWidth, modelWidth],
   );
 
+  // The agent pill never moves to the overflow menu; it truncates instead, so
+  // its width is reserved before the optional items are fitted.
+  const agentProfileReserve = showAgentProfilePill
+    ? agentProfileWidth + INLINE_GAP
+    : 0;
   const leftBaseWidth =
-    actionsRowWidth - rightSectionWidth - ROOT_GAP - addFileWidth - INLINE_GAP;
+    actionsRowWidth -
+    rightSectionWidth -
+    ROOT_GAP -
+    addFileWidth -
+    INLINE_GAP -
+    agentProfileReserve;
 
   const fitWithoutOverflow = fitOptionalItems(leftBaseWidth);
   const allOptionalFit =
@@ -250,7 +250,6 @@ export function ChatInputActions({
     ? false
     : fitWithOverflow.showCodeInline;
   const showModelInline = fitWithOverflow.showModelInline;
-  const showAgentProfileInline = fitWithOverflow.showAgentProfileInline;
   const showAddFileInline = true;
   const showAgentStatusInline = actionsRowWidth >= 360;
 
@@ -526,36 +525,27 @@ export function ChatInputActions({
               <ChangeAgentButton />
             </div>
           )}
-          {/* One joined pill: model segment first, then the agent-profile
-              segment. A divider shows only between two rendered segments. The
-              "+" menu keeps its own agent-profile entry for widths where the
-              pill collapses into the overflow menu. */}
+          {/* The model pill and the agent-profile pill are separate pills side
+              by side. The "+" menu keeps its own agent-profile entry (pre-start
+              only) for widths where the model pill collapses into overflow. */}
           <div
-            data-testid="chat-input-model-agent-pill"
-            className={cn(
-              "flex min-w-0 items-center rounded-[100px] border border-transparent has-[button]:border-border-subtle",
-              "[&>*:has(button)~*:has(button)]:border-l [&>*:has(button)~*:has(button)]:border-border-subtle",
-              !showModelInline && "hidden",
-            )}
+            ref={modelRef}
+            data-testid="chat-input-model-pill"
+            className={cn("min-w-0", !showModelInline && "hidden")}
           >
-            <div ref={modelRef}>
-              {/* Picker depends on backend + ACP context; see the
-                  `pickerKind` cases above. */}
-              {pickerKind === "model" ? (
-                <ChatInputModel />
-              ) : (
-                <ChatInputLlmProfilePicker />
-              )}
-            </div>
-            {showAgentProfileSwitch && (
-              <div
-                ref={agentProfileRef}
-                className={cn(!showAgentProfileInline && "hidden")}
-              >
-                <ChatInputAgentProfilePicker />
-              </div>
+            {/* Picker depends on backend + ACP context; see the
+                `pickerKind` cases above. */}
+            {pickerKind === "model" ? (
+              <ChatInputModel />
+            ) : (
+              <ChatInputLlmProfilePicker />
             )}
           </div>
+          {showAgentProfilePill && (
+            <div ref={agentProfileRef} className="min-w-0">
+              <ChatInputAgentProfilePicker />
+            </div>
+          )}
 
           {hasOverflowItems && (
             <div className="relative shrink-0">
