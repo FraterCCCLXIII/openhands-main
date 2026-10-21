@@ -4,7 +4,10 @@ import { Palette } from "lucide-react";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { I18nKey } from "#/i18n/declaration";
 import { ToggleSwitch } from "#/ui/toggle-switch";
-import { DEFAULT_COLOR_THEME } from "#/themes/color-theme/definitions";
+import {
+  AVAILABLE_COLOR_THEMES,
+  DEFAULT_COLOR_THEME,
+} from "#/themes/color-theme/definitions";
 import type { ColorThemeKey } from "#/themes/color-theme/types";
 import {
   readPersistedColorTheme,
@@ -43,9 +46,11 @@ const LIGHT_THEME_KEYS: readonly ColorThemeKey[] = [
 export function SidebarAppearanceMenu() {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = React.useState(false);
-  const [isLight, setIsLight] = React.useState(() =>
-    LIGHT_THEME_KEYS.includes(readPersistedColorTheme()),
+  const [colorTheme, setColorThemeState] = React.useState<ColorThemeKey>(
+    readPersistedColorTheme,
   );
+  const themeSelectId = React.useId();
+  const isLight = LIGHT_THEME_KEYS.includes(colorTheme);
   const anchorRef = React.useRef<HTMLButtonElement>(null);
   const menuRef = useClickOutsideElement<HTMLDivElement>(
     () => setOpen(false),
@@ -60,10 +65,13 @@ export function SidebarAppearanceMenu() {
     (state) => state.setPrimaryColorKey,
   );
 
+  const selectTheme = (key: ColorThemeKey) => {
+    setColorTheme(key);
+    setColorThemeState(key);
+  };
+
   const toggleLight = () => {
-    const next = !isLight;
-    setColorTheme(next ? LIGHT_THEME : DEFAULT_COLOR_THEME);
-    setIsLight(next);
+    selectTheme(isLight ? DEFAULT_COLOR_THEME : LIGHT_THEME);
   };
 
   return (
@@ -92,6 +100,26 @@ export function SidebarAppearanceMenu() {
               label={t(I18nKey.SIDEBAR$LIGHT_THEME)}
               onToggle={toggleLight}
             />
+          </div>
+          <div className="flex flex-col gap-2 text-sm text-contrast">
+            <label htmlFor={themeSelectId}>
+              {t(I18nKey.SETTINGS$COLOR_THEME)}
+            </label>
+            <select
+              id={themeSelectId}
+              data-testid="sidebar-color-theme-select"
+              value={colorTheme}
+              onChange={(event) =>
+                selectTheme(event.currentTarget.value as ColorThemeKey)
+              }
+              className="h-8 w-full rounded-md bg-surface-raised px-2 text-sm text-contrast"
+            >
+              {AVAILABLE_COLOR_THEMES.map((theme) => (
+                <option key={theme.key} value={theme.key}>
+                  {theme.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex flex-col gap-2 text-sm text-contrast">
             <span className="flex items-center justify-between">
