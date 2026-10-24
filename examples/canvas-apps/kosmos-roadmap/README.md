@@ -8,8 +8,8 @@ documents, which kosmos-engine's `tools/pm/refresh.mjs` generates.
 ## Files
 
 - `kosmos-gantt.html`: the page, unchanged from the artifact. It has the
-  graphite theme and seven views: Schedule, Board, List, Pipeline, Agents,
-  History and Decisions.
+  graphite theme and nine views: Schedule, Board, List, Calendar, Pipeline,
+  Agents, Costs, History and Decisions.
 - `roadmap-db.js`: stands in for the artifact runtime's `db` API
   (`collection(name).onSnapshot`, `collection(name).doc(id).set/update/delete`).
 - `entry.js`: the `activate(host)` entry. It registers the `/roadmap` page,

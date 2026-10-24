@@ -218,6 +218,32 @@ section.card { background: var(--panel); border: 1px solid var(--rule); border-r
 @media (max-width: 960px) { .charts2 { grid-template-columns: minmax(0, 1fr) } }
 
 /* Decisions */
+.study { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 13px; max-width: 72ch }
+/* Calendar */
+.cal-wrap { overflow-x: auto }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(92px, 1fr)); gap: 6px; min-width: 680px }
+.cal .wd { font: 400 10px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 2px 4px 4px }
+.day { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 8px 9px; min-height: 132px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 5px; cursor: pointer; text-align: left; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); color: var(--ink); font: inherit; min-width: 0 }
+.day:hover { border-color: rgba(255,255,255,.28) }
+.day[aria-pressed="true"] { background: var(--raised); color: var(--ink); border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand) }
+.day.out { background: transparent; border-style: dashed; box-shadow: none; cursor: default; opacity: .45 }
+.day.idle { opacity: .7 }
+.day.today .dn { color: var(--on-brand); background: var(--brand); border-radius: 999px; padding: 1px 6px }
+.day .top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px }
+.day .dn { font: 400 11px/1.3 var(--mono); color: var(--muted) }
+.day .runs { font: 500 20px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0 }
+.day .runs small { font-size: 10px; color: var(--muted); font-weight: 400; margin-left: 3px }
+.sprites { display: flex; flex-wrap: wrap; gap: 4px 6px; min-height: 16px }
+.sprite { display: inline-flex; align-items: center; gap: 2px; font: 400 10px/1 var(--mono); color: var(--soft) }
+.sprite svg { width: 14px; height: 14px; image-rendering: pixelated; display: block }
+.day .spark { display: block; width: 100%; height: 22px }
+.day .costbar { display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: var(--grid) }
+.day .costbar i { display: block; height: 100% }
+.day .meta { font: 400 10.5px/1.3 var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 8px }
+.day .meta b { color: var(--ink); font-weight: 500 }
+.cal-detail { display: grid; gap: 12px }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; font: 400 11px var(--mono); color: var(--muted); align-items: center }
+.study b { font-weight: 500 }
 .dec { display: grid; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--grid) }
 .dec:last-child { border-bottom: none }
 .dec .q { font-size: 13.5px }
@@ -309,8 +335,25 @@ label { display: grid; gap: 4px; font: 500 11px var(--mono); color: var(--muted)
       <select id="l-track" class="inline"><option value="">All tracks</option></select>
       <span class="sep"></span><span class="sub" id="l-count"></span>
     </div>
-    <div class="scroll"><table class="tbl" id="ltable"><thead><tr><th data-sort="id">Card</th><th data-sort="t">Title</th><th data-sort="track">Track</th><th data-sort="tier">Tier</th><th data-sort="size">Size</th><th data-sort="col">Column</th><th data-sort="deps">Deps</th></tr></thead><tbody></tbody></table></div>
+    <div class="scroll"><table class="tbl" id="ltable"><thead><tr><th data-sort="id">Card</th><th data-sort="t">Title</th><th data-sort="track">Track</th><th data-sort="tier">Tier</th><th data-sort="size">Size</th><th data-sort="col">Column</th><th data-sort="deps">Deps</th><th data-sort="lines" title="Code lines changed (+ added, − removed). Estimates are in italics with a ~">Code lines</th><th data-sort="tokens" title="Tokens processed, mostly cache reads">Tokens</th><th data-sort="cost">Cost</th><th data-sort="time" title="Active agent time: gaps under 15 minutes between calls">Agent time</th></tr></thead><tbody></tbody><tfoot id="l-foot"></tfoot></table></div>
+    <p class="sub">Measured values come from transcripts attributed by worktree path and from merged PRs (code files only). Values with ~ are estimates from finished work of the same kind and size; cost estimates use today's routing and include the 2.9× planning and tooling overhead.</p>
     <div class="toolbar"><button type="button" id="l-more" hidden>Show 100 more</button></div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="view" id="v-calendar" role="tabpanel" hidden>
+    <div class="toolbar">
+      <button type="button" id="cal-prev" aria-label="Previous month">‹</button>
+      <h2 id="cal-title" style="min-width:150px;text-align:center">Calendar</h2>
+      <button type="button" id="cal-next" aria-label="Next month">›</button>
+      <button type="button" id="cal-today">This month</button>
+      <span class="sep"></span>
+      <div class="cal-legend" id="cal-legend"></div>
+    </div>
+    <div class="metrics" id="cal-sum"></div>
+    <div class="cal-wrap"><div class="cal" id="cal"><p class="muted">Days load from the shared store.</p></div></div>
+    <p class="sub" id="cal-note">Each square: runs that day (top-level agent sessions) with subagents beside them, a sprite per model with its call count, calls per hour, and spend split by model. Click a day for its sessions, work and landings.</p>
+    <section class="card cal-detail" id="cal-detail" hidden></section>
   </div>
 
   <!-- Pipeline -->
@@ -399,6 +442,99 @@ label { display: grid; gap: 4px; font: 500 11px var(--mono); color: var(--muted)
     </section>
   </div>
 
+  <!-- Costs -->
+  <div class="view" id="v-costs" role="tabpanel" hidden>
+    <div class="metrics" id="k-metrics"><div class="metric"><span class="k">Costs</span><span class="h">Measured usage loads from the shared store.</span></div></div>
+    <p class="sub" id="k-source"></p>
+    <section class="card">
+      <h2>Cheapest and fastest path to completion</h2>
+      <p class="muted">Every open card estimated from finished work: code lines from cards of the same kind and size, tokens and agent time per code line from 139 finished work items, priced per model as agents actually use them. Decision cards are left out.</p>
+      <div id="k-path"></div>
+    </section>
+    <div class="charts2">
+      <section class="card">
+        <h2>Where the money goes</h2>
+        <p class="muted">Spend by token type. Agents re-read their context on every turn, so cache reads and writes dwarf the tokens they write.</p>
+        <div class="chart" id="k-comp"></div>
+      </section>
+      <section class="card">
+        <h2>Cost by context size</h2>
+        <p class="muted">Calls grouped by how much context they carried. Long sessions get expensive per call.</p>
+        <div class="chart" id="k-ctx"></div>
+      </section>
+    </div>
+    <section class="card">
+      <h2>Measured by model</h2>
+      <div class="scroll"><table class="tbl" id="k-models"><thead><tr><th>Model</th><th>Calls</th><th>Cost</th><th>Per call</th><th>Read / call</th><th>Output / call</th><th>Thinking share</th><th>Cache hit</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <div class="charts2">
+      <section class="card">
+        <h2>Spend per day</h2>
+        <div class="legend" id="k-day-legend"></div>
+        <div class="chart" id="k-days"></div>
+      </section>
+      <section class="card">
+        <h2>The same work on other models</h2>
+        <p class="muted">Every measured token priced at each model's rates, long-context rates included. Tokenizers, turn counts and caching rules differ, so treat this as same-tokens arithmetic, not a forecast.</p>
+        <div class="chart" id="k-reprice"></div>
+      </section>
+    </div>
+    <section class="card">
+      <h2>Estimate a job</h2>
+      <p class="muted">Defaults are the measured averages per call. Change them to size a card, a wave or a long session, and compare models.</p>
+      <div class="f2" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <label>Calls<input id="e-calls" type="number" min="1" step="1"></label>
+        <label>Context per call (k tokens)<input id="e-ctx" type="number" min="1" step="10"></label>
+        <label>Output per call (tokens)<input id="e-out" type="number" min="0" step="50"></label>
+        <label>Cache hit %<input id="e-hit" type="number" min="0" max="100" step="0.5"></label>
+        <label>Writes on 1-hour cache %<input id="e-1h" type="number" min="0" max="100" step="5"></label>
+        <label>Jobs<input id="e-jobs" type="number" min="1" step="1"></label>
+      </div>
+      <div class="toolbar"><button type="button" id="e-batch" aria-pressed="false">Batch API (50% off)</button><button type="button" id="e-reset">Measured defaults</button><span class="sep"></span><span class="sub" id="e-tokens"></span></div>
+      <div class="scroll"><table class="tbl" id="e-table"><thead><tr><th>Model</th><th>Per call</th><th>Per job</th><th>All jobs</th><th>Tokens per job</th><th>Rates in use</th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <div class="cols">
+      <section class="card">
+        <h2>Cost per card</h2>
+        <p class="muted">Sessions that claimed cards through a lease, split evenly across their cards. The conductor session (this page's builder) is excluded from the percentiles.</p>
+        <div class="scroll"><table class="tbl" id="k-cards"><thead><tr><th>Session</th><th>Cards</th><th>Model</th><th>Cost</th><th>Per card</th><th>Time</th><th>Peak context</th></tr></thead><tbody></tbody></table></div>
+      </section>
+      <section class="card">
+        <h2>Forecast to finish</h2>
+        <div id="k-forecast"></div>
+      </section>
+    </div>
+    <section class="card">
+      <h2>Prices</h2>
+      <p class="muted">$ per million tokens. Claude rates come from the Anthropic pricing table; rows marked unverified come from third-party aggregators. Edit a row when a price changes, and every chart here recomputes.</p>
+      <div class="scroll"><table class="tbl" id="k-prices"><thead><tr><th>Model</th><th>Input</th><th>Output</th><th>Cache read</th><th>Write 5 min</th><th>Write 1 h</th><th>Long context</th><th>Source</th><th></th></tr></thead><tbody></tbody></table></div>
+    </section>
+    <div class="cols">
+      <section class="card">
+        <h2>What to record next</h2>
+        <ol class="study">
+          <li><b>Session and card on every call.</b> Most sessions ran on <code>main</code>, so branch names link only 16 of 739 sessions to a card. <code>lease start</code> already logs the session id; write it into the run record and attribute cost by the claim-to-land window, not the whole session.</li>
+          <li><b>Actual cost per run.</b> Roll each transcript's usage (input, 5-minute and 1-hour writes, reads, output, thinking, effort, peak context) into <code>runs/&lt;card&gt;</code> with the price version used, instead of the lib.mjs estimate.</li>
+          <li><b>Outcome with the cost.</b> First pass, bounces, verifier verdict, your review minutes and reverts within 7 days, so cost per <em>landed</em> card includes the failed attempts.</li>
+          <li><b>Active versus waiting time.</b> Split wall time into model time, tool time (cargo builds, tests) and idle gaps waiting on you, from transcript timestamps.</li>
+          <li><b>Size of the change.</b> Lines and files changed and tests added per card, for cost per 100 changed lines and per test.</li>
+          <li><b>Subagent tree.</b> Parent session, subagent type and model for each subagent file, so delegation pays for itself or not, per role.</li>
+          <li><b>Context resets and compaction.</b> When a session crossed 200k, 400k and 700k, and whether it restarted.</li>
+        </ol>
+      </section>
+      <section class="card">
+        <h2>Views to add next</h2>
+        <ol class="study">
+          <li><b>Context growth per session.</b> Cost per call against turn number, with the point where starting a new session would have been cheaper.</li>
+          <li><b>Cost burn-up.</b> Cumulative spend against cards landed, so cost per card shows its trend.</li>
+          <li><b>Model by card class.</b> A matrix of tier, kind or track against model, with first-pass rate and cost per landed card, to decide routing.</li>
+          <li><b>Forecast per milestone.</b> Open cards behind K0 to K7 times cost per card for their class, with a range.</li>
+          <li><b>Anomalies.</b> Sessions over $50, over 700k context or over 300 calls, listed for review.</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+
   <!-- Decisions -->
   <div class="view" id="v-decisions" role="tabpanel" hidden>
     <section class="card">
@@ -471,7 +607,7 @@ label { display: grid; gap: 4px; font: 500 11px var(--mono); color: var(--muted)
 <script>
 const ARTIFACT_URL = 'https://claude.ai/artifact/N1rHAzWCzM3nqWfvpYRP7S';
 const REPO = 'https://github.com/Modern-Telepathy/kosmos-engine';
-const VIEWS = [['schedule', 'Schedule'], ['board', 'Board'], ['list', 'List'], ['pipeline', 'Pipeline'], ['agents', 'Agents'], ['history', 'History'], ['decisions', 'Decisions']];
+const VIEWS = [['schedule', 'Schedule'], ['board', 'Board'], ['list', 'List'], ['calendar', 'Calendar'], ['pipeline', 'Pipeline'], ['agents', 'Agents'], ['costs', 'Costs'], ['history', 'History'], ['decisions', 'Decisions']];
 const GROUPS = ['Roadmap', 'Milestones', 'In flight', 'Waiting on you', 'Tracks'];
 const STATUSES = ['done', 'active', 'review', 'stale', 'blocked', 'planned', 'todo'];
 const STATUS_LABEL = { done: 'Done', active: 'Active', review: 'In review', stale: 'Stale', blocked: 'Blocked or waiting', planned: 'Planned', todo: 'Not started' };
@@ -488,7 +624,7 @@ const STATUS_OF_COL = { backlog: 'todo', ready: 'todo', building: 'claimed', ver
 const MODEL_OF_TIER = { 1: 'haiku', 2: 'sonnet', 3: 'opus', 4: 'fable' };
 const ROLE_COLOR = { conductor: 'fable', coordinator: 'opus', scout: 'sonnet', worker: 'active', explore: 'haiku', verifier: 'review', you: 'person', lander: 'planned' };
 const DAY = 864e5;
-const S = { rows: [], meta: {}, chunks: {}, overrides: {}, lanes: [], jobs: [], actions: [], sessions: [], decisions: {}, history: {}, runs: [],
+const S = { rows: [], meta: {}, chunks: {}, overrides: {}, lanes: [], jobs: [], actions: [], sessions: [], decisions: {}, history: {}, runs: [], prices: [], cardcost: [], stats: new Map(), calendar: {},
   zoom: 'quarter', collapsed: new Set(), db: null, user: null, canWrite: false, editing: null, view: 'schedule', listN: 100, prN: 100, sort: ['id', 1] };
 try { JSON.parse(localStorage.getItem('kg-collapsed') || '[]').forEach((g) => S.collapsed.add(g)); S.zoom = localStorage.getItem('kg-zoom') || 'quarter'; } catch (e) {}
 
@@ -560,7 +696,7 @@ function renderHeader() {
   $('tn-agents').textContent = S.jobs.length || '';
 }
 
-const renderers = { schedule: renderGantt, board: renderBoard, list: renderList, pipeline: renderPipeline, agents: renderAgents, history: renderHistory, decisions: renderDecisions };
+const renderers = { schedule: renderGantt, board: renderBoard, list: renderList, calendar: renderCalendar, pipeline: renderPipeline, agents: renderAgents, costs: renderCosts, history: renderHistory, decisions: renderDecisions };
 function renderView() { renderHeader(); renderers[S.view]?.(); }
 const rerender = debounce(() => { cardsCache = null; renderView(); });
 
@@ -741,6 +877,12 @@ function openCard(id) {
     c.ask && `<div><b>Waiting on you</b><br><span class="muted">${esc(c.ask)}</span></div>`,
     c.plan && `<div><b>Plan</b> <span class="mono">${esc(c.plan)}</span></div>`,
     run && `<div><b>Run</b> <span class="mono">${esc(run.runtime || 'lease')} · claim→land ${fmtH(run.claimToLandH)} · ${run.tokens ? fmtTok(run.tokens) + ' tokens' : 'tokens not recorded'}</span></div>`,
+    (() => { const st = statOf(c.id); if (!st.raw) return ''; const r = st.raw; const parts = [];
+      if (r.m) parts.push(`<b>Measured</b> <span class="mono">${fmtTok(r.m.tokens)} tokens · ${money(r.m.cost)} · ${fmtH(r.m.activeMin / 60)} agent time · ${r.m.calls} calls · ${Object.entries(r.m.models).map(([k, v]) => `${k} ${money(v)}`).join(', ')}</span>`);
+      if (r.loc) parts.push(`<b>Code</b> <span class="mono">+${r.loc.add} −${r.loc.del} lines${r.loc.tests ? `, ${r.loc.tests} in tests` : ''} (${r.loc.all} in all files)</span>`);
+      if (r.s !== 'done' && r.e) parts.push(`<b>Estimate</b> <span class="mono">~${r.e.lines} code lines (${r.e.linesLo}–${r.e.linesHi}, from ${esc(r.e.linesBasis)}) · ~${fmtTok(r.e.tokens)} tokens · ~${fmtH(r.e.activeMin / 60)} · ${Object.entries(r.e.cost).map(([k, v]) => `${k} ~${money(v * (S.meta.estimates?.overhead ?? 1))}`).join(', ')}</span>`);
+      if (r.items?.length) parts.push(`<span class="muted">Work items: ${r.items.map(esc).join(', ')}</span>`);
+      return parts.length ? `<div style="display:grid;gap:4px">${parts.map((p) => `<div>${p}</div>`).join('')}</div>` : ''; })(),
     prs.length && `<div><b>PRs</b> ${prs.map((p) => `<a href="${REPO}/pull/${p.n}" target="_blank" rel="noopener">#${p.n}</a> <span class="muted">${fmtH(p.h)}</span>`).join(' · ')}</div>`,
     c.moved && `<div class="tag moved" style="justify-self:start">Moved on the board${c.oNote ? ': ' + esc(c.oNote) : ''}</div>`,
   ].filter(Boolean).join('');
@@ -756,16 +898,39 @@ $('c-clear').addEventListener('click', async () => { try { await S.db.collection
 /* ---------- List ---------- */
 const listFilter = { q: '', track: '', col: '' };
 const SIZE_N = { S: 1, M: 2, L: 3 };
+// Per-card measured or estimated numbers from cardstats; v is the number used for sorting and totals.
+function statOf(id) {
+  const s = S.stats.get(id); if (!s) return {};
+  const ov = S.meta.estimates?.overhead ?? 1;
+  const m = s.m, e = s.e, l = s.loc;
+  return {
+    lines: l ? { v: l.add + l.del, est: false, add: l.add, del: l.del, all: l.all } : s.s !== 'done' && e ? { v: e.lines, est: true, lo: e.linesLo, hi: e.linesHi } : null,
+    tokens: m ? { v: m.tokens, est: false } : s.s !== 'done' && e ? { v: e.tokens, est: true } : null,
+    cost: m ? { v: m.cost, est: false } : s.s !== 'done' && e ? { v: e.cost.routed * ov, est: true } : null,
+    time: m ? { v: m.activeMin, est: false } : s.s !== 'done' && e ? { v: e.activeMin, est: true } : null,
+    raw: s,
+  };
+}
+function statCells(id) {
+  const s = statOf(id), cellE = (x, f) => (x ? (x.est ? `<i class="muted">~${f(x.v)}</i>` : f(x.v)) : '<span class="muted">—</span>');
+  const lines = s.lines ? (s.lines.est ? `<i class="muted" title="${s.lines.lo}–${s.lines.hi} from similar finished cards">~${s.lines.v}</i>` : `<span title="${s.lines.all} lines in all files">+${s.lines.add} −${s.lines.del}</span>`) : '<span class="muted">—</span>';
+  return `<td class="m">${lines}</td><td class="m">${cellE(s.tokens, fmtTok)}</td><td class="m">${cellE(s.cost, money)}</td><td class="m">${cellE(s.time, (v) => fmtH(v / 60))}</td>`;
+}
 function renderList() {
   const cs = cards(); if (!cs.length) return;
   if ($('l-track').options.length < 2) fillTracks();
   const q = listFilter.q.toLowerCase();
   let list = cs.filter((c) => (!listFilter.track || c.track === listFilter.track) && (!listFilter.col || c.col === listFilter.col) && (!q || `${c.id} ${c.t} ${c.track} ${c.gate || ''}`.toLowerCase().includes(q)));
   const [k, dir] = S.sort;
-  const val = (c) => (k === 'deps' ? c.deps?.length || 0 : k === 'size' ? SIZE_N[c.size] || 0 : k === 'col' ? COLS.findIndex(([x]) => x === c.col) : c[k]);
+  const val = (c) => (k === 'deps' ? c.deps?.length || 0 : k === 'size' ? SIZE_N[c.size] || 0 : k === 'col' ? COLS.findIndex(([x]) => x === c.col)
+    : ['lines', 'tokens', 'cost', 'time'].includes(k) ? (statOf(c.id)[k]?.v ?? -1) : c[k]);
   list.sort((a, b) => { const x = val(a), y = val(b); return (x > y ? 1 : x < y ? -1 : 0) * dir; });
   $('l-count').textContent = `${list.length} cards`;
-  $('ltable').tBodies[0].innerHTML = list.slice(0, S.listN).map((c) => `<tr class="click" data-card="${esc(c.id)}"><td class="m">${esc(c.id)}${c.f?.includes('crit') ? ' <span class="tag crit">crit</span>' : ''}</td><td>${esc(c.t)}</td><td class="m">${esc(c.track)}</td><td class="m">T${c.tier}</td><td class="m">${esc(c.size || '')}</td><td class="m"><span class="dot" style="background:var(--${COLS.find(([x]) => x === c.col)?.[4] || 'planned'})"></span> ${COLS.find(([x]) => x === c.col)?.[1]}${c.moved ? ' <span class="tag moved">moved</span>' : ''}</td><td class="m">${c.deps?.length || ''}</td></tr>`).join('');
+  $('ltable').tBodies[0].innerHTML = list.slice(0, S.listN).map((c) => `<tr class="click" data-card="${esc(c.id)}"><td class="m">${esc(c.id)}${c.f?.includes('crit') ? ' <span class="tag crit">crit</span>' : ''}</td><td>${esc(c.t)}</td><td class="m">${esc(c.track)}</td><td class="m">T${c.tier}</td><td class="m">${esc(c.size || '')}</td><td class="m"><span class="dot" style="background:var(--${COLS.find(([x]) => x === c.col)?.[4] || 'planned'})"></span> ${COLS.find(([x]) => x === c.col)?.[1]}${c.moved ? ' <span class="tag moved">moved</span>' : ''}</td><td class="m">${c.deps?.length || ''}</td>${statCells(c.id)}</tr>`).join('');
+  const tot = { lines: [0, 0], tokens: [0, 0], cost: [0, 0], time: [0, 0] };
+  for (const c of list) { const s = statOf(c.id); for (const k in tot) if (s[k]) tot[k][s[k].est ? 1 : 0] += s[k].v; }
+  const both = (k, f) => `${f(tot[k][0])}${tot[k][1] ? `<br><i class="muted">+ ~${f(tot[k][1])}</i>` : ''}`;
+  $('l-foot').innerHTML = S.stats.size ? `<tr><td class="m" colspan="7"><b>${list.length} cards</b> · measured, then estimated for the rest</td><td class="m">${both('lines', (v) => Math.round(v).toLocaleString())}</td><td class="m">${both('tokens', fmtTok)}</td><td class="m">${both('cost', money)}</td><td class="m">${both('time', (v) => fmtH(v / 60))}</td></tr>` : '';
   $('l-more').hidden = list.length <= S.listN;
   document.querySelectorAll('#ltable th[data-sort]').forEach((th) => th.setAttribute('aria-sort', th.dataset.sort === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'));
 }
@@ -777,6 +942,97 @@ $('ltable').addEventListener('click', (e) => {
   const th = e.target.closest('th[data-sort]'); if (th) { S.sort = [th.dataset.sort, S.sort[0] === th.dataset.sort ? -S.sort[1] : 1]; renderList(); return; }
   const tr = e.target.closest('[data-card]'); if (tr) openCard(tr.dataset.card);
 });
+
+/* ---------- Calendar ---------- */
+// 8x8 pixel sprites, one per model family: Haiku a leaf, Sonnet a note, Opus a gem, Fable a crown.
+const SPRITE_ROWS = {
+  haiku: ['....##..', '...####.', '..#####.', '.######.', '.#####..', '..###...', '..#.....', '.#......'],
+  sonnet: ['....###.', '....#.##', '....#..#', '....#...', '.####...', '#####...', '#####...', '.###....'],
+  opus: ['..####..', '.#....#.', '########', '.#.##.#.', '..#..#..', '...##...', '...##...', '........'],
+  fable: ['#..##..#', '##.##.##', '########', '########', '.######.', '.#.##.#.', '.######.', '........'],
+  other: ['..####..', '.#....#.', '#......#', '#..##..#', '#..##..#', '#......#', '.#....#.', '..####..'],
+};
+const spriteSvg = (fam) => `<svg viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">${(SPRITE_ROWS[fam] || SPRITE_ROWS.other).flatMap((row, y) => [...row].map((ch, x) => (ch === '#' ? `<rect x="${x}" y="${y}" width="1" height="1" fill="var(--${fam === 'other' ? 'planned' : fam})"/>` : ''))).join('')}</svg>`;
+const FAMS = ['haiku', 'sonnet', 'opus', 'fable'];
+const cal = { month: null, day: null };
+try { cal.month = localStorage.getItem('kg-cal-month'); } catch (e) {}
+const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+const dayKey = (d) => `${monthKey(d)}-${String(d.getDate()).padStart(2, '0')}`;
+function calDays() { const m = {}; for (const doc of Object.values(S.calendar)) for (const d of doc.days || []) m[d.d] = d; return m; }
+function sparkSvg(hours, max) {
+  const w = 96, h = 22, bw = w / 24;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Calls per hour">${hours.map((v, i) => { const bh = v ? Math.max(1.5, (v / max) * (h - 1)) : 0; return bh ? `<rect x="${i * bw + 0.3}" y="${h - bh}" width="${bw - 0.6}" height="${bh}" fill="var(--soft)" opacity="${0.35 + 0.65 * (v / max)}"><title>${String(i).padStart(2, '0')}:00 · ${v} calls</title></rect>` : ''; }).join('')}<line x1="0" x2="${w}" y1="${h - 0.5}" y2="${h - 0.5}" stroke="var(--rule)" stroke-width="1"/></svg>`;
+}
+function renderCalendar() {
+  const days = calDays(), keys = Object.keys(days).sort();
+  if (!keys.length) { $('cal').innerHTML = '<p class="muted">No calendar data yet. Refresh with <code>node tools/pm/refresh.mjs --only costs</code>.</p>'; return; }
+  const doc = Object.values(S.calendar)[0];
+  if (!cal.month || !Object.keys(S.calendar).includes(cal.month)) cal.month = keys.at(-1).slice(0, 7);
+  const [Y, M] = cal.month.split('-').map(Number);
+  const first = new Date(Y, M - 1, 1), start = new Date(Y, M - 1, 1 - ((first.getDay() + 6) % 7));
+  $('cal-title').textContent = first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const months = Object.keys(S.calendar).sort();
+  $('cal-prev').disabled = cal.month <= months[0]; $('cal-next').disabled = cal.month >= months.at(-1);
+  $('cal-legend').innerHTML = FAMS.map((f) => `<span class="sprite">${spriteSvg(f)} ${f}</span>`).join('') + `<span>· ${esc(doc.tz || 'local time')}</span>`;
+  const inMonth = keys.filter((k) => k.startsWith(cal.month)).map((k) => days[k]);
+  const sum = (f) => inMonth.reduce((s, d) => s + f(d), 0);
+  const maxHour = Math.max(1, ...inMonth.flatMap((d) => d.hours || [0]));
+  const maxCost = Math.max(1, ...inMonth.map((d) => d.cost));
+  const busiest = inMonth.slice().sort((a, b) => b.runs - a.runs)[0];
+  $('cal-sum').innerHTML = [
+    ['Runs', sum((d) => d.runs), `${sum((d) => d.subagents).toLocaleString()} subagents`],
+    ['Calls', sum((d) => d.calls).toLocaleString(), `${fmtTok(sum((d) => d.tokens))} tokens`],
+    ['Spend', money(sum((d) => d.cost)), `${money(sum((d) => d.cost) / Math.max(1, inMonth.filter((d) => d.calls).length))} per active day`],
+    ['Landed', sum((d) => d.landed.length), `${sum((d) => d.prsMerged)} PRs merged, ${sum((d) => d.commits)} commits`],
+    ['Busiest day', busiest ? fmt(busiest.d) : '—', busiest ? `${busiest.runs} runs, ${money(busiest.cost)}` : ''],
+  ].map(([k, v, h]) => `<div class="metric"><span class="k">${k}</span><span class="v">${v}</span><span class="h">${h}</span></div>`).join('');
+  const todayK = dayKey(new Date());
+  let html = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((w) => `<div class="wd">${w}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    if (i >= 35 && dt.getMonth() !== M - 1) break;
+    const k = dayKey(dt), d = days[k], inM = dt.getMonth() === M - 1;
+    if (!inM) { html += `<div class="day out" aria-hidden="true"><div class="top"><span class="dn">${dt.getDate()}</span></div></div>`; continue; }
+    const cls = `day${!d || !d.calls ? ' idle' : ''}${k === todayK ? ' today' : ''}`;
+    if (!d) { html += `<div class="${cls}" style="cursor:default" aria-label="${fmt(k)}: no runs"><div class="top"><span class="dn">${dt.getDate()}</span></div></div>`; continue; }
+    const sprites = FAMS.filter((f) => d.models[f]).map((f) => `<span class="sprite" title="${f}: ${d.models[f].calls} calls, ${money(d.models[f].cost)}">${spriteSvg(f)}${d.models[f].calls >= 1000 ? (d.models[f].calls / 1000).toFixed(1) + 'k' : d.models[f].calls}</span>`).join('');
+    const bar = FAMS.filter((f) => d.models[f]?.cost).map((f) => `<i style="width:${(d.models[f].cost / maxCost) * 100}%;background:var(--${f})" title="${f} ${money(d.models[f].cost)}"></i>`).join('');
+    html += `<button type="button" class="${cls}" data-day="${k}" aria-pressed="${cal.day === k}" aria-label="${fmt(k)}: ${d.runs} runs, ${d.calls} calls, ${money(d.cost)}">
+      <div class="top"><span class="dn">${dt.getDate()}</span>${d.runs ? `<span class="runs" title="${d.runs} runs, ${d.subagents} subagents">${d.runs}${d.subagents ? `<small>+${d.subagents}</small>` : ''}</span>` : ''}</div>
+      <div class="sprites">${sprites}</div>
+      ${d.calls ? sparkSvg(d.hours, maxHour) : '<span></span>'}
+      <div style="display:grid;gap:4px">${d.cost ? `<div class="costbar">${bar}</div>` : ''}<div class="meta">${d.cost ? `<span><b>${money(d.cost)}</b></span>` : ''}${d.landed.length ? `<span>${d.landed.length} landed</span>` : ''}${d.prsMerged ? `<span>${d.prsMerged} PRs</span>` : ''}${d.commits ? `<span>${d.commits} commits</span>` : ''}</div></div>
+    </button>`;
+  }
+  $('cal').innerHTML = html;
+  renderCalDetail(days);
+}
+function renderCalDetail(days) {
+  const box = $('cal-detail'), d = cal.day && days[cal.day];
+  if (!d) { box.hidden = true; return; }
+  box.hidden = false;
+  const peak = d.hours.indexOf(Math.max(...d.hours));
+  box.innerHTML = `<div class="toolbar"><h2>${new Date(d.d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</h2><span class="sep"></span><button type="button" id="cal-close">Close</button></div>
+    <div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+      <div class="metric"><span class="k">Runs</span><span class="v">${d.runs}<small> +${d.subagents} sub</small></span><span class="h">${d.calls.toLocaleString()} calls</span></div>
+      <div class="metric"><span class="k">Spend</span><span class="v">${money(d.cost)}</span><span class="h">${fmtTok(d.tokens)} tokens · ${fmtTok(d.out)} written</span></div>
+      <div class="metric"><span class="k">Busiest hour</span><span class="v">${d.calls ? String(peak).padStart(2, '0') + ':00' : '—'}</span><span class="h">${d.calls ? d.hours[peak] + ' calls' : ''}</span></div>
+      <div class="metric"><span class="k">Landed</span><span class="v">${d.landed.length}</span><span class="h">${d.prsMerged} PRs merged · ${d.commits} commits</span></div>
+    </div>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Model</th><th>Calls</th><th>Tokens</th><th>Cost</th></tr></thead><tbody>${FAMS.filter((f) => d.models[f]).map((f) => `<tr><td><span class="sprite">${spriteSvg(f)} ${f}</span></td><td class="m">${d.models[f].calls.toLocaleString()}</td><td class="m">${fmtTok(d.models[f].tokens)}</td><td class="m">${money(d.models[f].cost)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="cols">
+      <div><h3 style="margin-bottom:6px">Costliest sessions</h3><div class="scroll"><table class="tbl"><thead><tr><th>Session</th><th>Model</th><th>Work item</th><th>Calls</th><th>Cost</th></tr></thead><tbody>${d.sessions.map((s) => `<tr><td class="m">${esc(s.id)}</td><td><span class="sprite">${spriteSvg(s.model)} ${esc(s.model)}</span></td><td class="m">${esc(s.item || '—')}</td><td class="m">${s.calls}</td><td class="m">${money(s.cost)}</td></tr>`).join('')}</tbody></table></div></div>
+      <div><h3 style="margin-bottom:6px">Work items</h3><div class="list">${d.items.map((i) => `<div class="li"><span></span><div class="main"><span class="ttl mono">${esc(i.item)}</span><span class="det">${i.calls} calls</span></div><span class="side">${money(i.cost)}</span></div>`).join('') || '<div class="li"><span></span><span class="det">None</span><span></span></div>'}</div>
+        ${d.landed.length ? `<h3 style="margin:12px 0 6px">Cards landed</h3><div class="meta" style="display:flex;flex-wrap:wrap;gap:6px">${d.landed.map((c) => `<a href="#" class="tag" data-card="${esc(c)}">${esc(c)}</a>`).join('')}</div>` : ''}</div>
+    </div>`;
+  $('cal-close').addEventListener('click', () => { cal.day = null; renderCalendar(); });
+}
+$('cal').addEventListener('click', (e) => { const b = e.target.closest('[data-day]'); if (!b) return; cal.day = cal.day === b.dataset.day ? null : b.dataset.day; renderCalendar(); if (cal.day) $('cal-detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+$('cal-detail').addEventListener('click', (e) => { const a = e.target.closest('[data-card]'); if (a) { e.preventDefault(); openCard(a.dataset.card); } });
+const shiftMonth = (n) => { const [y, m] = cal.month.split('-').map(Number); cal.month = monthKey(new Date(y, m - 1 + n, 1)); cal.day = null; try { localStorage.setItem('kg-cal-month', cal.month); } catch (e) {} renderCalendar(); };
+$('cal-prev').addEventListener('click', () => shiftMonth(-1));
+$('cal-next').addEventListener('click', () => shiftMonth(1));
+$('cal-today').addEventListener('click', () => { cal.month = monthKey(new Date()); cal.day = null; renderCalendar(); });
 
 /* ---------- Pipeline ---------- */
 const STAGES = [
@@ -960,6 +1216,133 @@ $('h-state').addEventListener('change', (e) => { prFilter.st = e.target.value; S
 $('h-more').addEventListener('click', () => { S.prN += 100; renderHistory(); });
 for (const id of ['h-prs', 'h-runs']) $(id).addEventListener('click', (e) => { const a = e.target.closest('[data-card]'); if (a && !e.target.closest('a[href^="http"]')) { e.preventDefault(); openCard(a.dataset.card); } });
 
+/* ---------- Costs ---------- */
+const MID = { '<50k': 30e3, '50-100k': 75e3, '100-200k': 150e3, '200-400k': 290e3, '400-700k': 540e3, '700k-1M': 840e3 };
+const MODEL_TOKEN = (id) => (/fable/.test(id) ? 'fable' : /opus/.test(id) ? 'opus' : /sonnet/.test(id) ? 'sonnet' : /haiku/.test(id) ? 'haiku' : 'planned');
+const money = (n) => (n == null ? '—' : n >= 100 ? '$' + Math.round(n).toLocaleString() : n >= 1 ? '$' + n.toFixed(2) : '$' + n.toFixed(n >= 0.01 ? 3 : 4));
+const ratesAt = (p, ctx) => (p.longOver && ctx > p.longOver
+  ? { i: p.longInput, o: p.longOutput, r: p.longCacheRead, w5: p.longInput * (p.write5m / p.input), w1h: p.longInput * (p.write1h / p.input), long: true }
+  : { i: p.input, o: p.output, r: p.cacheRead, w5: p.write5m, w1h: p.write1h, long: false });
+function estimate(p, e) {
+  const ctx = e.ctx * 1000, r = ratesAt(p, ctx), tk = p.tokenizer ?? 1, hit = e.hit / 100, h1 = e.h1 / 100;
+  const read = ctx * hit * tk, write = ctx * (1 - hit) * tk, out = e.out * tk;
+  let perCall = (read * r.r + write * (1 - h1) * r.w5 + write * h1 * r.w1h + out * r.o) / 1e6;
+  if (e.batch) perCall *= p.batch ?? 1;
+  return { perCall, perJob: perCall * e.calls, tokensPerJob: (read + write + out) * e.calls, r };
+}
+const est = { calls: 60, ctx: 220, out: 520, hit: 97.3, h1: 31, jobs: 1, batch: false };
+let estInit = false;
+function setEstDefaults() {
+  const c = S.meta.costs; if (!c) return;
+  const pr = c.profile; est.calls = c.parent?.callsP50 || 60; est.ctx = Math.round((pr.readPerCall + pr.writePerCall) / 1000); est.out = pr.outPerCall;
+  est.hit = +(100 * pr.readPerCall / (pr.readPerCall + pr.writePerCall)).toFixed(1); est.h1 = Math.round(pr.share1h * 100); est.jobs = 1; est.batch = false;
+  for (const [k, id] of [['calls', 'e-calls'], ['ctx', 'e-ctx'], ['out', 'e-out'], ['hit', 'e-hit'], ['h1', 'e-1h'], ['jobs', 'e-jobs']]) $(id).value = est[k];
+  $('e-batch').setAttribute('aria-pressed', 'false');
+}
+function renderEstimate() {
+  const prices = S.prices.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  if (!prices.length) return;
+  const rows = prices.map((p) => ({ p, x: estimate(p, est) }));
+  const min = Math.min(...rows.map((r) => r.x.perJob));
+  $('e-tokens').textContent = `${fmtTok(rows[0].x.tokensPerJob)} tokens per job at the Claude tokenizer · ${est.jobs} job${est.jobs > 1 ? 's' : ''}`;
+  $('e-table').tBodies[0].innerHTML = rows.map(({ p, x }) => `<tr><td><span class="dot" style="background:var(--${MODEL_TOKEN(p.id)})"></span> ${esc(p.name)}${p.verified ? '' : ' <span class="tag" title="${esc(p.source)}">unverified</span>'}</td>
+    <td class="m">${money(x.perCall)}</td><td class="m">${money(x.perJob)}${x.perJob === min ? ' <span class="tag moved">lowest</span>' : ''}</td><td class="m">${money(x.perJob * est.jobs)}</td><td class="m">${fmtTok(x.tokensPerJob)}</td>
+    <td class="m">${x.r.long ? 'long-context rates' : 'standard'}${p.tokenizer && p.tokenizer !== 1 ? ` · tokenizer ×${p.tokenizer}` : ''}</td></tr>`).join('');
+}
+for (const [k, id] of [['calls', 'e-calls'], ['ctx', 'e-ctx'], ['out', 'e-out'], ['hit', 'e-hit'], ['h1', 'e-1h'], ['jobs', 'e-jobs']]) $(id).addEventListener('input', (e) => { const v = Number(e.target.value); if (Number.isFinite(v)) { est[k] = v; renderEstimate(); } });
+$('e-batch').addEventListener('click', () => { est.batch = !est.batch; $('e-batch').setAttribute('aria-pressed', String(est.batch)); renderEstimate(); });
+$('e-reset').addEventListener('click', () => { setEstDefaults(); renderEstimate(); });
+
+function hbars(rows, { label, value, fmtV, color, sub }) {
+  const max = Math.max(1e-9, ...rows.map(value));
+  return `<div style="display:grid;gap:8px">${rows.map((r) => `<div style="display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr) 84px;gap:10px;align-items:center;font-size:12.5px">
+    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(label(r))}">${esc(label(r))}</span>
+    <span style="height:14px;border-radius:3px;background:var(--grid);position:relative;overflow:hidden"><i style="position:absolute;inset:0 auto 0 0;width:${(value(r) / max) * 100}%;background:${color(r)};border-radius:3px"></i></span>
+    <span class="mono" style="text-align:right">${fmtV(r)}${sub ? `<br><span class="muted" style="font-size:10.5px">${sub(r)}</span>` : ''}</span></div>`).join('')}</div>`;
+}
+function renderPath() {
+  const E = S.meta.estimates; if (!E) return;
+  const o = E.open, sc = Object.entries(E.scenarios).sort((a, b) => a[1].allIn - b[1].allIn), cheapest = sc[0][0];
+  const lv = E.levers.map((l) => `<div class="li"><span class="dot" style="margin-top:6px;background:var(--${l.kind === 'measured' ? 'done' : l.kind === 'rule' ? 'active' : 'planned'})"></span><div class="main"><span class="ttl">${esc(l.title)}${l.save ? ` <span class="tag moved">~${money(l.save)} on past spend</span>` : ''}</span><span class="det">${esc(l.detail)}</span></div><span class="side">${esc(l.kind)}</span></div>`).join('');
+  $('k-path').innerHTML = `
+    <div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      <div class="metric"><span class="k">Open work</span><span class="v">${o.cards}<small> cards</small></span><span class="h">~${Math.round(o.lines / 1000)}k code lines (${Math.round(o.linesLo / 1000)}k–${Math.round(o.linesHi / 1000)}k) · ~${fmtTok(o.tokens)} tokens</span></div>
+      <div class="metric"><span class="k">Cheapest</span><span class="v">${money(E.scenarios[cheapest].allIn)}</span><span class="h">${esc(E.scenarios[cheapest].name)}, all-in. Agent work alone ${money(E.scenarios[cheapest].cost)}</span></div>
+      <div class="metric"><span class="k">Cross-check</span><span class="v">${money(E.topDown.cost)}</span><span class="h">History: ${money(E.topDown.perCard)} per finished card × ${o.cards}</span></div>
+      <div class="metric"><span class="k">Fastest</span><span class="v">${E.time.workers6Hours}<small> h at 6 workers</small></span><span class="h">${o.activeHours} agent hours; ${E.time.workers12Hours} h at 12. The longest dependency chain is only ${E.time.criticalPathHours} h</span></div>
+      <div class="metric warn"><span class="k">At today's pace</span><span class="v">${E.topDown.days}<small> days</small></span><span class="h">${E.topDown.cardsPerDay} cards landed per day so far. ${E.coverage.decisionCards} decision cards wait on you</span></div>
+    </div>
+    <div class="scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>Routing</th><th>What it means</th><th>Agent work</th><th>All-in</th></tr></thead><tbody>${sc.map(([k, s]) => `<tr><td><b>${esc(s.name)}</b>${k === cheapest ? ' <span class="tag moved">cheapest</span>' : ''}</td><td class="muted">${esc(s.desc)}</td><td class="m">${money(s.cost)}</td><td class="m">${money(s.allIn)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="sub" style="margin-top:6px">All-in multiplies agent work by ${E.overhead}×: measured total spend over spend on work items that landed code. Per million tokens processed: ${Object.entries(E.fit.perMTok).map(([k, v]) => `${k.replace('claude-', '')} $${v}`).join(', ')}.</p>
+    <p class="muted" style="margin:12px 0 6px">Longest dependency chain: <span class="mono">${E.time.criticalPath.map(esc).join(' → ')}</span></p>
+    <h3 style="margin:14px 0 6px">Levers, largest first</h3>
+    <div class="list">${lv}</div>
+    <p class="sub" style="margin-top:8px">Coverage: ${E.coverage.doneWithSpend} of ${E.coverage.done} finished cards have measured spend, ${E.coverage.doneWithLines} have code lines. ${money(E.coverage.unplannedCost)} of ${money(E.coverage.totalCost)} went to work not tied to a card id, which is why the overhead factor is large. Recording the card on every session (below) shrinks it.</p>`;
+}
+function renderCosts() {
+  renderPath();
+  const c = S.meta.costs;
+  if (!c) return;
+  if (!estInit) { setEstDefaults(); estInit = true; }
+  const over400 = c.ctx.filter((b) => ['400-700k', '700k-1M'].includes(b.bucket));
+  const shareOver = over400.reduce((s, b) => s + b.cost, 0) / c.total, callsOver = over400.reduce((s, b) => s + b.calls, 0) / c.calls;
+  const cj = c.cardJoin, comp = c.composition;
+  const K = [
+    ['Measured spend', money(c.total), `${c.calls.toLocaleString()} calls, ${fmt(c.firstDay)} to ${fmt(c.lastDay)}. List prices, not your bill.`],
+    ['Per call', money(c.total / c.calls), `About ${fmtTok(c.profile.readPerCall)} tokens re-read and ${c.profile.outPerCall} written per call`],
+    ['Context share', `${Math.round(100 * (comp.read + comp.w5 + comp.w1h) / c.total)}%`, 'Of spend is reading and caching context, not writing output'],
+    ['Long sessions', `${Math.round(shareOver * 100)}%`, `Of spend comes from calls over 400k context, ${Math.round(callsOver * 100)}% of calls`, 'warn'],
+    ['Per landed card', money(cj.p50) + '<small> p50</small>', `p75 ${money(cj.p75)}, p90 ${money(cj.p90)} over ${cj.cards} lease-claimed cards`],
+    ['All-in per card', money(c.forecast.allInPerCard), `All spend over ${c.forecast.done} done cards, including planning and tooling`],
+  ];
+  $('k-metrics').innerHTML = K.map(([k, v, h, cls]) => `<div class="metric ${cls || ''}"><span class="k">${k}</span><span class="v">${v}</span><span class="h">${h}</span></div>`).join('');
+  $('k-source').textContent = `Source: ${c.source}. Updated ${c.asOf}.`;
+  const CN = { read: ['Cache reads', 'review'], w5: ['Cache writes, 5 min', 'active'], w1h: ['Cache writes, 1 hour', 'stale'], out: ['Output and thinking', 'done'], input: ['Uncached input', 'planned'] };
+  $('k-comp').innerHTML = hbars(Object.entries(comp).filter(([k]) => CN[k]).sort((a, b) => b[1] - a[1]), { label: ([k]) => CN[k][0], value: ([, v]) => v, fmtV: ([, v]) => money(v), sub: ([, v]) => Math.round(100 * v / c.total) + '%', color: ([k]) => `var(--${CN[k][1]})` });
+  $('k-ctx').innerHTML = hbars(c.ctx, { label: (b) => b.bucket, value: (b) => b.cost, fmtV: (b) => money(b.cost), sub: (b) => `${Math.round(100 * b.calls / c.calls)}% calls · ${money(b.cost / Math.max(1, b.calls))}/call`, color: (b) => (['400-700k', '700k-1M'].includes(b.bucket) ? 'var(--stale)' : 'var(--active)') });
+  $('k-models').tBodies[0].innerHTML = c.models.slice().sort((a, b) => b.cost - a.cost).map((m) => `<tr><td><span class="dot" style="background:var(--${MODEL_TOKEN(m.model)})"></span> ${esc(m.model)}</td><td class="m">${m.calls.toLocaleString()}</td><td class="m">${money(m.cost)}</td><td class="m">${money(m.perCall)}</td><td class="m">${fmtTok(m.readPerCall)}</td><td class="m">${m.outPerCall}</td><td class="m">${Math.round(100 * m.think / Math.max(1, m.out))}%</td><td class="m">${(m.hit * 100).toFixed(1)}%</td></tr>`).join('');
+  // Spend per day, stacked by model.
+  const ms = [...new Set(c.days.flatMap((d) => Object.keys(d.byModel)))];
+  $('k-day-legend').innerHTML = ms.map((m) => `<span><i style="background:var(--${MODEL_TOKEN(m)})"></i>${esc(m.replace('claude-', ''))}</span>`).join('');
+  const W = Math.max(480, c.days.length * 56), H = 200, pad = 34, bw = (W - pad - 8) / c.days.length, max = Math.max(1, ...c.days.map((d) => Object.values(d.byModel).reduce((a, b) => a + b, 0)));
+  const y = (v) => H - 24 - (v / max) * (H - 24 - 12);
+  let g = '';
+  for (let t = 0; t <= max; t += Math.ceil(max / 4 / 100) * 100 || 100) g += `<line x1="${pad}" x2="${W - 4}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/><text x="${pad - 4}" y="${y(t) + 3}" text-anchor="end">$${t}</text>`;
+  c.days.forEach((d, i) => { let acc = 0; const x0 = pad + i * bw + 6; for (const m of ms) { const v = d.byModel[m] || 0; if (!v) continue; g += `<rect x="${x0}" y="${y(acc + v)}" width="${bw - 12}" height="${y(acc) - y(acc + v)}" fill="var(--${MODEL_TOKEN(m)})"><title>${d.d} ${m}: ${money(v)}</title></rect>`; acc += v; } g += `<text x="${x0 + (bw - 12) / 2}" y="${H - 8}" text-anchor="middle">${d.d.slice(5)}</text>`; });
+  $('k-days').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Spend per day by model">${g}</svg>`;
+  // Repricing, recomputed from the live price table.
+  const prices = S.prices.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const all = c.ctxTokens || null;
+  const rep = prices.map((p) => ({ p, cost: all ? Object.entries(all).reduce((s, [b, a]) => { const r = ratesAt(p, MID[b]); return s + (a.input * r.i + a.w5 * r.w5 + a.w1h * r.w1h + a.read * r.r + a.out * r.o) / 1e6 * (p.tokenizer ?? 1); }, 0) : (c.reprice.find((x) => x.id === p.id)?.cost ?? 0) }));
+  $('k-reprice').innerHTML = hbars(rep, { label: (r) => r.p.name + (r.p.verified ? '' : ' *'), value: (r) => r.cost, fmtV: (r) => money(r.cost), sub: (r) => `${(r.cost / c.total).toFixed(2)}× measured`, color: (r) => `var(--${MODEL_TOKEN(r.p.id)})` }) + '<p class="sub" style="margin-top:8px">* unverified price</p>';
+  renderEstimate();
+  // Card joins.
+  $('k-cards').tBodies[0].innerHTML = S.cardcost.slice().sort((a, b) => b.cost - a.cost).map((j) => `<tr><td class="m">${esc(j.id)}${j.conductor ? ' <span class="tag">conductor</span>' : ''}</td><td>${j.cards.map(esc).join(', ')}</td><td class="m">${esc(j.model.replace('claude-', ''))}${j.subagents ? ` +${j.subagents} sub` : ''}</td><td class="m">${money(j.cost)}</td><td class="m">${money(j.perCard)}</td><td class="m">${fmtH(j.mins / 60)}</td><td class="m">${fmtTok(j.maxCtx)}</td></tr>`).join('');
+  const f = c.forecast;
+  $('k-forecast').innerHTML = `<div class="metrics" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+    <div class="metric"><span class="k">Open cards</span><span class="v">${f.open}</span><span class="h">${f.byTier.map((t) => `T${t.tier} ${t.open}`).join(' · ')}</span></div>
+    <div class="metric"><span class="k">At p50 per card</span><span class="v">${money(f.open * cj.p50)}</span><span class="h">${money(cj.p50)} × ${f.open}</span></div>
+    <div class="metric"><span class="k">At mean per card</span><span class="v">${money(f.open * cj.mean)}</span><span class="h">${money(cj.mean)} × ${f.open}</span></div>
+    <div class="metric warn"><span class="k">All-in</span><span class="v">${money(f.open * f.allInPerCard)}</span><span class="h">Planning, tooling and failed work included</span></div></div>
+    <p class="muted" style="margin-top:10px">Only ${cj.cards} cards have a measured cost, too few to split by tier. The open work leans T2 and T3 (${f.byTier[1].open + f.byTier[2].open} of ${f.open}), so expect the upper half of the range until per-tier costs are recorded.</p>`;
+  // Prices table, editable for writers.
+  const cell = (p, k) => (S.canWrite ? `<input class="inline" style="width:72px" type="number" step="0.01" data-price="${esc(p.id)}" data-k="${k}" value="${p[k] ?? ''}">` : (p[k] ?? '—'));
+  $('k-prices').tBodies[0].innerHTML = prices.map((p) => `<tr><td><span class="dot" style="background:var(--${MODEL_TOKEN(p.id)})"></span> ${esc(p.name)}<br><span class="muted">${esc(p.provider)}</span></td>
+    <td class="m">${cell(p, 'input')}</td><td class="m">${cell(p, 'output')}</td><td class="m">${cell(p, 'cacheRead')}</td><td class="m">${cell(p, 'write5m')}</td><td class="m">${cell(p, 'write1h')}</td>
+    <td class="m">${p.longOver ? `over ${fmtTok(p.longOver)}: ${p.longInput} / ${p.longOutput}` : '—'}</td><td style="font-size:12px" class="muted">${p.verified ? '' : '<span class="tag">unverified</span> '}${esc(p.source || '')}</td>
+    <td>${S.canWrite ? `<button type="button" data-verify="${esc(p.id)}">${p.verified ? 'Verified' : 'Mark verified'}</button>` : ''}</td></tr>`).join('');
+}
+$('k-prices').addEventListener('change', async (e) => {
+  const t = e.target; if (!t.dataset.price || !S.db) return;
+  const v = Number(t.value); if (!Number.isFinite(v)) return;
+  try { await S.db.collection('prices').doc(t.dataset.price).update({ [t.dataset.k]: v, updatedAt: todayStr(), updatedBy: await who() }); } catch (err) { t.value = S.prices.find((p) => p.id === t.dataset.price)?.[t.dataset.k] ?? ''; }
+});
+$('k-prices').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-verify]'); if (!b || !S.db) return;
+  const p = S.prices.find((x) => x.id === b.dataset.verify);
+  try { await S.db.collection('prices').doc(p.id).update({ verified: !p.verified, updatedAt: todayStr(), updatedBy: await who() }); } catch (err) {}
+});
+
 /* ---------- Decisions ---------- */
 function renderDecisions() {
   const asks = S.rows.filter((r) => r.group === 'Waiting on you').sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -1004,6 +1387,8 @@ const QUICK = {
   list: ['Which tracks have the most open T3 cards, and which could be split?'],
   pipeline: ['Where is the pipeline bottleneck right now?', 'Which best practice are we weakest on?'],
   agents: ['How should the next wave be staffed to stay under the token budget?', 'Which sessions can I archive or release?'],
+  calendar: ['Which days were most productive per dollar, and why?', 'What pattern do the busiest hours show?'],
+  costs: ['What would cut our spend the most without slowing landings?', 'Which model should each card tier use, given these costs?'],
   history: ['What does our time-to-merge history say about tier and size?', 'Which days were most productive and why?'],
   decisions: ['Which decisions unblock the most work?'],
 };
@@ -1012,6 +1397,8 @@ $('quick').addEventListener('click', (e) => { const b = e.target.closest('[data-
 function contextFor(view) {
   const cs = cards(), countBy = (k) => cs.reduce((m, c) => ((m[c[k]] = (m[c[k]] || 0) + 1), m), {});
   const base = { today: todayStr(), view, board: S.meta.board, columns: countBy('col') };
+  if (view === 'costs') return { ...base, costs: S.meta.costs, prices: S.prices, cardcost: S.cardcost, estimate: est };
+  if (view === 'calendar') return { ...base, month: cal.month, days: Object.values(calDays()).map(({ sessions, ...d }) => d) };
   if (view === 'schedule' || view === 'decisions') return { ...base, rows: S.rows.map((r) => ({ g: r.group, t: r.title, s: r.start, e: r.end, st: r.status, p: r.progress, n: r.note?.slice(0, 160) })), answered: Object.values(S.decisions).map((d) => ({ card: d.card, answer: d.answer })) };
   if (view === 'board' || view === 'list') return { ...base, open: cs.filter((c) => c.col !== 'done' && c.col !== 'backlog').map((c) => ({ id: c.id, t: c.t, col: c.col, tier: c.tier, size: c.size, track: c.track, deps: c.deps, crit: c.f?.includes('crit') || undefined })), backlogDeps: cs.filter((c) => c.col === 'backlog').slice(0, 120).map((c) => [c.id, c.deps]) };
   if (view === 'pipeline') return { ...base, history: S.meta.history, capacity: S.meta.capacity, runs: S.runs.length, stages: STAGES.map((s) => ({ name: s.name, exit: s.exit, count: cs.length ? s.count(cs) : null })) };
@@ -1072,6 +1459,10 @@ show(initial);
   db.collection('sessions').onSnapshot((s) => { S.sessions = s.docs.map((d) => ({ id: d.id, ...d.data() })); rerender(); }, err);
   db.collection('decisions').onSnapshot((s) => { S.decisions = Object.fromEntries(s.docs.map((d) => [d.id, d.data()])); rerender(); }, err);
   db.collection('runs').onSnapshot((s) => { S.runs = s.docs.map((d) => d.data()); rerender(); }, err);
+  db.collection('prices').onSnapshot((s) => { S.prices = s.docs.map((d) => ({ id: d.id, ...d.data() })); rerender(); }, err);
+  db.collection('cardcost').onSnapshot((s) => { S.cardcost = s.docs.map((d) => d.data()); rerender(); }, err);
+  db.collection('calendar').onSnapshot((s) => { S.calendar = Object.fromEntries(s.docs.map((d) => [d.id, d.data()])); rerender(); }, err);
+  db.collection('cardstats').onSnapshot((s) => { S.stats = new Map(s.docs.flatMap((d) => d.data().cards || []).map((c) => [c.id, c])); rerender(); }, err);
   db.collection('history').onSnapshot((s) => {
     const docs = s.docs.map((d) => [d.id, d.data()]);
     S.history = { prs: docs.filter(([id]) => id.startsWith('prs-')).sort().flatMap(([, d]) => d.items || []), days: docs.find(([id]) => id === 'days')?.[1].items || [], issues: docs.find(([id]) => id === 'issues')?.[1].items || [] };
