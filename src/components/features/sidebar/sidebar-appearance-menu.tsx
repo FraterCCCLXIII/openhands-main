@@ -55,13 +55,18 @@ const LIGHT_THEME_KEYS: readonly ColorThemeKey[] = [
   "solarized-light",
 ];
 
+interface SidebarAppearanceMenuProps {
+  /** The connected backend whose theme the selector edits. */
+  backendId: string;
+  /** When true, renders as a full-width row instead of an icon button. */
+  asRow?: boolean;
+}
+
 /** Palette button that opens a popover with a light theme toggle and text size and padding sliders. */
 export function SidebarAppearanceMenu({
   backendId,
-}: {
-  /** The connected backend whose theme the selector edits. */
-  backendId: string;
-}) {
+  asRow = false,
+}: SidebarAppearanceMenuProps) {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = React.useState(false);
   const mappedTheme = useBackendColorThemeStore(
@@ -116,7 +121,7 @@ export function SidebarAppearanceMenu({
   };
 
   return (
-    <div className="relative shrink-0">
+    <div className={cn("relative", asRow ? "w-full" : "shrink-0")}>
       <button
         ref={anchorRef}
         type="button"
@@ -124,9 +129,16 @@ export function SidebarAppearanceMenu({
         aria-label={t(I18nKey.SIDEBAR$APPEARANCE)}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex size-9 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast"
+        className={cn(
+          asRow
+            ? "flex w-full items-center gap-3 px-3 py-2 text-muted hover:bg-surface-raised hover:text-contrast"
+            : "inline-flex size-9 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast",
+        )}
       >
-        <Palette aria-hidden className="size-4" />
+        <Palette aria-hidden className={asRow ? "size-5" : "size-4"} />
+        {asRow ? (
+          <span className="text-sm">{t(I18nKey.SIDEBAR$APPEARANCE)}</span>
+        ) : null}
       </button>
       {open
         ? createPortal(

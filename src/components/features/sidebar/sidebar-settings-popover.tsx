@@ -1,8 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Bug, Settings } from "lucide-react";
-import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
+import { Book, Bug, Settings } from "lucide-react";
 import { useSettingsNavItems } from "#/hooks/use-settings-nav-items";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
@@ -11,7 +10,9 @@ import { navInteractiveTransitionClassName } from "./sidebar-layout";
 import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
 
 const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
+const DOCS_URL = "https://docs.openhands.dev/";
 const POPOVER_WIDTH_PX = 280;
+const HOVER_CLOSE_DELAY_MS = 150;
 
 interface SidebarSettingsPopoverProps {
   backendId: string;
@@ -24,7 +25,10 @@ export function SidebarSettingsPopover({
 }: SidebarSettingsPopoverProps) {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = React.useState(false);
-  const anchorRef = React.useRef<HTMLButtonElement>(null);
+  const anchorRef = React.useRef<HTMLDivElement>(null);
+  const closeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const navItems = useSettingsNavItems();
 
   const anchorRect = open ? anchorRef.current?.getBoundingClientRect() : null;
@@ -38,25 +42,40 @@ export function SidebarSettingsPopover({
       }
     : undefined;
 
-  const menuRef = useClickOutsideElement<HTMLDivElement>(
-    () => setOpen(false),
-    anchorRef,
-  );
+  const handleMouseEnter = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+    }, HOVER_CLOSE_DELAY_MS);
+  };
 
   const handleItemClick = () => {
     setOpen(false);
   };
 
+  const linkRowClassName =
+    "group flex items-center gap-3 px-3 py-2 text-muted hover:bg-surface-raised hover:text-contrast";
+
   return (
-    <>
+    <div
+      ref={anchorRef}
+      className="relative min-w-0 flex-1"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
-        ref={anchorRef}
         type="button"
         data-testid="sidebar-settings-popover-trigger"
         aria-label={t(I18nKey.SIDEBAR$SETTINGS)}
         aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-sm text-muted hover:bg-surface-raised hover:text-contrast"
+        className="inline-flex h-9 w-full min-w-0 items-center gap-2 rounded-md px-2 text-sm text-muted hover:bg-surface-raised hover:text-contrast"
       >
         <Settings width={16} height={16} className="shrink-0" />
         <span className="truncate">
@@ -67,9 +86,10 @@ export function SidebarSettingsPopover({
       {open
         ? createPortal(
             <div
-              ref={menuRef}
               data-testid="sidebar-settings-popover"
               style={menuStyle}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
               className="fixed z-50 flex w-70 flex-col rounded-xl border border-border-subtle bg-tertiary shadow-lg overflow-hidden"
             >
               <nav className="flex flex-col py-1">
@@ -102,24 +122,35 @@ export function SidebarSettingsPopover({
                 })}
               </nav>
 
-              <div className="border-t border-border px-3 py-2 flex items-center gap-2">
-                <SidebarAppearanceMenu backendId={backendId} />
+              <div className="border-t border-border flex flex-col py-1">
+                <SidebarAppearanceMenu backendId={backendId} asRow />
+                <a
+                  href={DOCS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="sidebar-settings-popover-docs"
+                  className={linkRowClassName}
+                >
+                  <Book aria-hidden className="size-5" />
+                  <span className="text-sm">
+                    {t(I18nKey.HOME$DOCUMENTATION)}
+                  </span>
+                </a>
                 <a
                   href={REPORT_BUG_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="sidebar-settings-popover-report-bug"
-                  aria-label={t(I18nKey.SIDEBAR$REPORT_BUG)}
-                  title={t(I18nKey.SIDEBAR$REPORT_BUG)}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast"
+                  className={linkRowClassName}
                 >
-                  <Bug aria-hidden className="size-4" />
+                  <Bug aria-hidden className="size-5" />
+                  <span className="text-sm">{t(I18nKey.SIDEBAR$REPORT_BUG)}</span>
                 </a>
               </div>
             </div>,
             document.body,
           )
         : null}
-    </>
+    </div>
   );
 }
