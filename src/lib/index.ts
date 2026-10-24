@@ -49,6 +49,7 @@ export {
   type CanvasExtensionContributions,
   type CanvasExtensionDispose,
   type CanvasExtensionHost,
+  type CanvasExtensionIconAppearance,
   type CanvasExtensionManifest,
   type CanvasExtensionModule,
   type CanvasExtensionPageContribution,

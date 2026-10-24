@@ -7,6 +7,7 @@ import {
   Plus,
   Server,
   Settings,
+  Users,
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
@@ -47,7 +48,9 @@ import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/can
 import type { Backend } from "#/api/backend-registry/types";
 
 const FEED_PATH = "/feed";
+const TEAM_PATH = "/team";
 const ICON_SIZE = 18;
+const EXTENSION_ICON_SIZE = 22;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 
@@ -221,6 +224,14 @@ export function SidebarRailBody({
           icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
+          to={TEAM_PATH}
+          label={t(I18nKey.NAV$TEAM)}
+          testId="sidebar-team-link"
+          collapsed={collapsed}
+          icon={<Users width={ICON_SIZE} height={ICON_SIZE} />}
+          pinAction={buildPinAction(TEAM_PATH, "sidebar-pin-home-toggle-team")}
+        />
+        <SidebarNavLink
           to={CUSTOMIZE_PATH}
           label={t(I18nKey.NAV$CUSTOMIZE)}
           testId="sidebar-skills-link"
@@ -283,7 +294,7 @@ export function SidebarRailBody({
             icon={
               <CanvasExtensionIcon
                 extension={page.extension}
-                size={ICON_SIZE}
+                size={EXTENSION_ICON_SIZE}
               />
             }
           />

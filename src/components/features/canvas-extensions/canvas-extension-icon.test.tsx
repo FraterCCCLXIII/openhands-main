@@ -2,10 +2,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CanvasExtensionsService from "#/api/canvas-extensions-service";
-import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
+import type {
+  CanvasExtensionIconAppearance,
+  InstalledCanvasExtensionInfo,
+} from "#/types/canvas-extension";
 import { CanvasExtensionIcon } from "./canvas-extension-icon";
 
-function makeExtension(icon?: string): InstalledCanvasExtensionInfo {
+function makeExtension(
+  icon?: string,
+  iconAppearance?: CanvasExtensionIconAppearance,
+): InstalledCanvasExtensionInfo {
   return {
     name: "demo-extension",
     version: "0.1.0",
@@ -19,15 +25,22 @@ function makeExtension(icon?: string): InstalledCanvasExtensionInfo {
       version: "0.1.0",
       entrypoint: "dist/extension.js",
       icon,
+      icon_appearance: iconAppearance,
     },
   };
 }
 
-function renderIcon(icon?: string) {
+function renderIcon(
+  icon?: string,
+  iconAppearance?: CanvasExtensionIconAppearance,
+) {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <CanvasExtensionIcon extension={makeExtension(icon)} size={18} />
+      <CanvasExtensionIcon
+        extension={makeExtension(icon, iconAppearance)}
+        size={18}
+      />
     </QueryClientProvider>,
   );
 }
@@ -85,5 +98,28 @@ describe("CanvasExtensionIcon", () => {
       screen.getByTestId("canvas-extension-default-icon"),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("canvas-extension-icon")).toBeNull();
+  });
+
+  it("renders styled icon with emoji when icon_appearance has emoji", () => {
+    renderIcon(undefined, { background: "blue", emoji: "📊" });
+
+    expect(screen.getByTestId("styled-icon")).toBeInTheDocument();
+    expect(screen.getByText("📊")).toBeInTheDocument();
+  });
+
+  it("renders styled icon with lucide icon when icon_appearance has lucide_icon", () => {
+    renderIcon(undefined, { background: "green", lucide_icon: "Folder" });
+
+    expect(screen.getByTestId("styled-icon")).toBeInTheDocument();
+  });
+
+  it("renders styled icon with background and default fallback icon when no emoji or lucide icon is set", () => {
+    const fetchIcon = vi.spyOn(CanvasExtensionsService, "fetchIcon");
+
+    renderIcon(undefined, { background: "violet" });
+
+    // Shows styled background with default fallback icon inside
+    expect(screen.getByTestId("styled-icon")).toBeInTheDocument();
+    expect(fetchIcon).not.toHaveBeenCalled();
   });
 });
