@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FolderGit2,
@@ -6,10 +6,23 @@ import {
   ExternalLink,
   Mail,
   MessageSquare,
+  Users,
+  ArrowUpDown,
+  Loader2,
 } from "lucide-react";
 import { I18nKey } from "#/i18n/declaration";
 import { settingsLikeMainScrollClassName } from "#/utils/settings-like-page-layout-classes";
 import { cn } from "#/utils/utils";
+import { useActiveBackend } from "#/contexts/active-backend-context";
+import { useCloudOrgMembers } from "#/hooks/query/use-cloud-org-members";
+import type { CloudOrganizationMember } from "#/api/cloud/types";
+
+interface RepoConnection {
+  name: string;
+  url: string;
+  role: "owner" | "maintainer" | "contributor";
+  branch?: string;
+}
 
 interface TeamMember {
   id: string;
@@ -18,15 +31,12 @@ interface TeamMember {
   avatar: string;
   email?: string;
   slack?: string;
-  repos: {
-    name: string;
-    url: string;
-    role: "owner" | "maintainer" | "contributor";
-    branch?: string;
-  }[];
+  repos: RepoConnection[];
   status: "active" | "away" | "offline";
   expertise: string[];
 }
+
+type SortMode = "name" | "role" | "repository";
 
 const MOCK_TEAM: TeamMember[] = [
   {
@@ -141,6 +151,20 @@ const MOCK_TEAM: TeamMember[] = [
     expertise: ["React", "CSS", "Design Systems"],
   },
 ];
+
+function cloudMemberToTeamMember(member: CloudOrganizationMember): TeamMember {
+  const name = member.email?.split("@")[0] ?? member.user_id;
+  return {
+    id: member.user_id,
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    role: member.role ?? "Member",
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.user_id)}`,
+    email: member.email ?? undefined,
+    repos: [],
+    status: member.status === "active" ? "active" : "offline",
+    expertise: [],
+  };
+}
 
 function StatusBadge({ status }: { status: TeamMember["status"] }) {
   const colors = {
@@ -266,8 +290,98 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
   );
 }
 
+function SortButton({
+  mode,
+  currentMode,
+  onClick,
+  children,
+}: {
+  mode: SortMode;
+  currentMode: SortMode;
+  onClick: (mode: SortMode) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(mode)}
+      className={cn(
+        "px-3 py-1.5 text-xs font-medium rounded-md border transition-colors",
+        currentMode === mode
+          ? "bg-accent/20 text-accent border-accent/30"
+          : "bg-surface-raised text-muted border-border hover:border-border-subtle",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function sortMembers(members: TeamMember[], mode: SortMode): TeamMember[] {
+  const sorted = [...members];
+  switch (mode) {
+    case "name":
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    case "role":
+      return sorted.sort((a, b) => a.role.localeCompare(b.role));
+    case "repository":
+      return sorted.sort((a, b) => {
+        const aRepo = a.repos[0]?.name ?? "";
+        const bRepo = b.repos[0]?.name ?? "";
+        return aRepo.localeCompare(bRepo);
+      });
+    default:
+      return sorted;
+  }
+}
+
+function groupByRepository(members: TeamMember[]): Map<string, TeamMember[]> {
+  const groups = new Map<string, TeamMember[]>();
+  for (const member of members) {
+    for (const repo of member.repos) {
+      const existing = groups.get(repo.name) ?? [];
+      if (!existing.some((m) => m.id === member.id)) {
+        existing.push(member);
+      }
+      groups.set(repo.name, existing);
+    }
+    if (member.repos.length === 0) {
+      const noRepo = groups.get("No repositories") ?? [];
+      noRepo.push(member);
+      groups.set("No repositories", noRepo);
+    }
+  }
+  return groups;
+}
+
 function TeamPage() {
   const { t } = useTranslation("openhands");
+  const { backend } = useActiveBackend();
+  const isCloud = backend.kind === "cloud";
+  const { data: cloudMembers, isLoading } = useCloudOrgMembers();
+
+  const [sortMode, setSortMode] = useState<SortMode>("name");
+
+  const teamMembers = useMemo(() => {
+    if (isCloud && cloudMembers && cloudMembers.length > 0) {
+      return cloudMembers.map(cloudMemberToTeamMember);
+    }
+    return MOCK_TEAM;
+  }, [isCloud, cloudMembers]);
+
+  const displayedMembers = useMemo(() => {
+    return sortMembers(teamMembers, sortMode);
+  }, [teamMembers, sortMode]);
+
+  const groupedByRepo = useMemo(() => {
+    if (sortMode === "repository") {
+      return groupByRepository(teamMembers);
+    }
+    return null;
+  }, [teamMembers, sortMode]);
+
+  const isShowingMockData =
+    !isCloud || !cloudMembers || cloudMembers.length === 0;
 
   return (
     <div data-testid="team-page" className="flex h-full">
@@ -282,11 +396,75 @@ function TeamPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {MOCK_TEAM.map((member) => (
-              <TeamMemberCard key={member.id} member={member} />
-            ))}
+          {isShowingMockData && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-raised border border-border text-sm text-muted">
+              <Users className="h-4 w-4" />
+              {isCloud
+                ? t(I18nKey.TEAM$NO_MEMBERS_YET)
+                : t(I18nKey.TEAM$CONNECT_CLOUD_FOR_REAL_DATA)}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted" />
+            <span className="text-xs text-muted mr-2">
+              {t(I18nKey.TEAM$SORT_BY)}:
+            </span>
+            <SortButton
+              mode="name"
+              currentMode={sortMode}
+              onClick={setSortMode}
+            >
+              {t(I18nKey.TEAM$SORT_NAME)}
+            </SortButton>
+            <SortButton
+              mode="role"
+              currentMode={sortMode}
+              onClick={setSortMode}
+            >
+              {t(I18nKey.TEAM$SORT_ROLE)}
+            </SortButton>
+            <SortButton
+              mode="repository"
+              currentMode={sortMode}
+              onClick={setSortMode}
+            >
+              {t(I18nKey.TEAM$SORT_REPOSITORY)}
+            </SortButton>
           </div>
+
+          {isLoading && isCloud ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted" />
+            </div>
+          ) : groupedByRepo ? (
+            <div className="space-y-6">
+              {Array.from(groupedByRepo.entries())
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([repoName, members]) => (
+                  <div key={repoName}>
+                    <h3 className="text-sm font-medium text-muted mb-3 flex items-center gap-2">
+                      <FolderGit2 className="h-4 w-4" />
+                      {repoName}
+                      <span className="text-xs bg-surface-raised px-1.5 py-0.5 rounded">
+                        {members.length}
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {members.map((member) => (
+                        <TeamMemberCard key={member.id} member={member} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {displayedMembers.map((member) => (
+                <TeamMemberCard key={member.id} member={member} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

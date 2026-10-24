@@ -270,7 +270,6 @@ export function SidebarRailBody({
           testId="sidebar-team-link"
           collapsed={collapsed}
           icon={<Users width={ICON_SIZE} height={ICON_SIZE} />}
-          pinAction={buildPinAction(TEAM_PATH, "sidebar-pin-home-toggle-team")}
         />
         <SidebarNavLink
           to={PLANNING_PATH}
