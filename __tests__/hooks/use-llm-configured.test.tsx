@@ -70,6 +70,30 @@ describe("useLlmConfigured (local, agent-profile-driven)", () => {
     },
   });
 
+  it("is configured for a keyless local Ollama profile, which needs no API key", () => {
+    useLlmProfilesMock.mockReturnValue({
+      data: {
+        active_profile: "local-qwen",
+        profiles: [
+          {
+            name: "local-qwen",
+            model: "ollama/qwen3:32b",
+            api_key_set: false,
+          },
+        ],
+      },
+    });
+    useActiveAgentProfileMock.mockReturnValue({
+      activeProfile: {
+        agent_kind: "openhands",
+        llm_profile_ref: "local-qwen",
+        name: "default",
+      },
+    });
+
+    const { result } = renderHook(() => useLlmConfigured(), { wrapper });
+    expect(result.current.isConfigured).toBe(true);
+  });
   it("is NOT configured when the agent profile's own LLM, which a home launch runs, has no key", () => {
     // Discriminating case: the active LLM profile ("default") has a key, but
     // the launch runs the agent profile's own ref ("sonnet"), which has none.

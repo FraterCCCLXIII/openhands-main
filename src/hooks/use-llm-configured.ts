@@ -17,7 +17,8 @@ interface LlmConfiguredResult {
   /**
    * True when the active backend's agent has a usable LLM:
    * - ACP agents own their LLM via a subprocess, so they never need a key.
-   * - OpenHands agents are ready only once an LLM API key has been saved.
+   * - OpenHands agents are ready only once an LLM API key has been saved,
+   *   except for keyless local providers such as Ollama.
    * - When the LLM settings page is hidden by a feature flag there is no
    *   place to finish setup, so we treat the LLM as configured to avoid
    *   surfacing an actionless warning.
@@ -85,7 +86,13 @@ export function useLlmConfigured(): LlmConfiguredResult {
   const activeProfile = runsActiveLlmProfile
     ? (selectedProfile ?? referencedProfile)
     : (referencedProfile ?? selectedProfile);
-  const hasActiveProfileApiKey = activeProfile?.api_key_set === true;
+  // Ollama runs locally and authenticates nothing, so a keyless profile for it
+  // is still ready to run.
+  const isKeylessProvider = /^ollama(_chat)?\//.test(
+    activeProfile?.model ?? "",
+  );
+  const hasActiveProfileApiKey =
+    activeProfile?.api_key_set === true || isKeylessProvider;
   const shouldLoadActiveProfileDetail =
     isLocal && !!activeProfile && !hasActiveProfileApiKey;
   const {
