@@ -5,6 +5,7 @@ import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalCloseButton } from "#/components/shared/modals/modal-close-button";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { SettingsInput } from "#/components/features/settings/settings-input";
+import { CopyableCommandField } from "#/components/shared/inputs/copyable-command-field";
 import { SaveAsSecretToggle } from "#/components/features/mcp-page/save-as-secret-toggle";
 import { NativeIntegrationPanel } from "#/components/features/mcp-page/native-integration-panel";
 import { TabButton } from "#/components/features/conversation-panel/system-message-modal/tab-button";
@@ -637,14 +638,10 @@ export function InstallServerModal({
     const stdio = template;
     return (
       <>
-        <SettingsInput
+        <CopyableCommandField
           testId="mcp-install-field-command-readonly"
-          name="command-readonly"
-          type="text"
           label={t(I18nKey.MCP$COMMAND_LABEL)}
           value={`${stdio.command} ${stdio.args.join(" ")}`.trim()}
-          onChange={() => {}}
-          isDisabled
           className="w-full"
         />
         {(stdio.envFields ?? []).map((field) => (
