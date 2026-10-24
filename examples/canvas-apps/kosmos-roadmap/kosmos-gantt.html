@@ -67,6 +67,30 @@ pre { font: 12px/1.5 var(--mono); background: var(--bg); border: 1px solid var(-
 
 main { padding-block: 12px 48px; transition: margin-right .2s ease }
 body.drawer-open main { margin-right: var(--drawer-w) }
+main { padding-bottom: 168px !important }
+/* Composer: floats over every view */
+.composer { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(760px, calc(100vw - 32px)); z-index: 35; display: grid; gap: 8px; transition: left .2s ease }
+body.drawer-open .composer { left: calc((100vw - var(--drawer-w)) / 2) }
+@media (max-width: 900px) { body.drawer-open .composer { left: 50% } }
+.cp-box { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: end; background: color-mix(in srgb, var(--raised) 94%, transparent); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.16); border-radius: 18px; padding: 8px 8px 8px 12px; box-shadow: var(--shadow-panel), inset 0 1px 0 rgba(255,255,255,.08) }
+.cp-box textarea { background: transparent; box-shadow: none; border: 0; resize: none; min-height: 36px; max-height: 160px; padding: 9px 4px; font-size: 13.5px; line-height: 1.4 }
+.cp-box textarea:focus-visible { outline: none }
+.cp-ctx { display: flex; flex-direction: column; gap: 3px; align-self: center; font: 400 9.5px/1.1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; white-space: nowrap }
+.cp-ctx b { color: var(--soft); font-weight: 400; letter-spacing: 0; text-transform: none; font-size: 11px }
+.cp-actions { display: flex; gap: 6px; align-items: center }
+.cp-route { background: var(--panel); border: 1px solid var(--rule); border-radius: 14px; padding: 12px 14px; box-shadow: var(--shadow-panel); display: grid; gap: 9px; max-height: 52vh; overflow: auto }
+.cp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px }
+.cp-head .ttl { font-size: 13px; flex: 1 1 220px; min-width: 0 }
+.cp-why { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--soft); display: grid; gap: 2px }
+.cp-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: end }
+.cp-edit label { flex: 0 1 auto }
+.cp-edit select, .cp-edit input { min-width: 120px }
+.cp-conf { height: 4px; border-radius: 2px; background: var(--grid); overflow: hidden; width: 90px }
+.cp-conf i { display: block; height: 100%; background: var(--soft) }
+.cp-alt { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted) }
+.cp-alt button { min-height: 22px; padding: 0 8px; font: 400 11px var(--mono) }
+.cp-inbox { display: grid; gap: 0; max-height: 40vh; overflow: auto }
+.cp-msg { font: 400 12px var(--mono); color: var(--muted) }
 @media (max-width: 900px) { body.drawer-open main { margin-right: 0 } }
 .view { display: grid; gap: 18px }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
@@ -545,6 +569,19 @@ label { display: grid; gap: 4px; font: 500 11px var(--mono); color: var(--muted)
   </div>
 </main>
 
+<section class="composer" id="composer" aria-label="Composer">
+  <div class="cp-route" id="cp-route" hidden></div>
+  <div class="cp-route cp-inbox" id="cp-inbox" hidden></div>
+  <form class="cp-box" id="cp-form">
+    <div class="cp-ctx" id="cp-ctx" title="What the composer routes against"><span>Route</span><b id="cp-ctx-v">Schedule</b></div>
+    <textarea id="cp-q" rows="1" placeholder="Ask, add work, move a card, answer a decision, or start an agent…" aria-label="Prompt"></textarea>
+    <div class="cp-actions">
+      <button type="button" id="cp-inbox-btn" title="Routed prompts">Inbox <span class="n" id="cp-inbox-n"></span></button>
+      <button type="submit" class="primary" id="cp-send">Route</button>
+    </div>
+  </form>
+</section>
+
 <aside class="drawer" id="drawer" hidden aria-label="Ask Claude">
   <header><h2>Ask Claude</h2><button type="button" id="drawer-close" aria-label="Close">Close</button></header>
   <p class="hint">Claude reads the data behind the view you are on and answers. It does not change anything.</p>
@@ -624,7 +661,7 @@ const STATUS_OF_COL = { backlog: 'todo', ready: 'todo', building: 'claimed', ver
 const MODEL_OF_TIER = { 1: 'haiku', 2: 'sonnet', 3: 'opus', 4: 'fable' };
 const ROLE_COLOR = { conductor: 'fable', coordinator: 'opus', scout: 'sonnet', worker: 'active', explore: 'haiku', verifier: 'review', you: 'person', lander: 'planned' };
 const DAY = 864e5;
-const S = { rows: [], meta: {}, chunks: {}, overrides: {}, lanes: [], jobs: [], actions: [], sessions: [], decisions: {}, history: {}, runs: [], prices: [], cardcost: [], stats: new Map(), calendar: {},
+const S = { rows: [], meta: {}, chunks: {}, overrides: {}, lanes: [], jobs: [], actions: [], sessions: [], decisions: {}, history: {}, runs: [], prices: [], cardcost: [], stats: new Map(), calendar: {}, inbox: {}, proposals: {}, selectedCard: null,
   zoom: 'quarter', collapsed: new Set(), db: null, user: null, canWrite: false, editing: null, view: 'schedule', listN: 100, prN: 100, sort: ['id', 1] };
 try { JSON.parse(localStorage.getItem('kg-collapsed') || '[]').forEach((g) => S.collapsed.add(g)); S.zoom = localStorage.getItem('kg-zoom') || 'quarter'; } catch (e) {}
 
@@ -647,6 +684,7 @@ function show(view) {
   try { localStorage.setItem('kg-view', view); } catch (e) {}
   renderView();
   renderQuick();
+  renderComposerContext();
 }
 $('tabs').addEventListener('click', (e) => { const b = e.target.closest('[role=tab]'); if (b) show(b.id.slice(2)); });
 $('connect-btn').addEventListener('click', (e) => { e.stopPropagation(); const p = $('connect-pop'); p.hidden = !p.hidden; $('connect-btn').setAttribute('aria-expanded', String(!p.hidden)); });
@@ -668,7 +706,7 @@ function allCards() {
     if (c.ask && c.s !== 'done') col = 'blocked';
     if (o?.col) col = o.col;
     return { ...c, col, moved: !!o?.col, oNote: o?.note };
-  });
+  }).concat(Object.values(S.proposals).filter((p) => p.status === 'confirmed').map((p) => ({ id: p.id, t: p.title, s: 'todo', tier: p.tier, kind: p.kind, size: p.size, track: p.track, deps: p.deps || [], f: [], col: 'backlog', proposed: true, gate: p.gate })));
 }
 let cardsCache = null;
 const cards = () => (cardsCache ??= allCards());
@@ -697,7 +735,7 @@ function renderHeader() {
 }
 
 const renderers = { schedule: renderGantt, board: renderBoard, list: renderList, calendar: renderCalendar, pipeline: renderPipeline, agents: renderAgents, costs: renderCosts, history: renderHistory, decisions: renderDecisions };
-function renderView() { renderHeader(); renderers[S.view]?.(); }
+function renderView() { renderHeader(); renderers[S.view]?.(); renderInbox(); }
 const rerender = debounce(() => { cardsCache = null; renderView(); });
 
 /* ---------- Schedule ---------- */
@@ -820,7 +858,7 @@ function filtered(list, f) {
 function kcard(c) {
   const colc = c.col === 'blocked' ? 'var(--blocked)' : c.f?.includes('crit') ? 'var(--today)' : `var(--${MODEL_OF_TIER[c.tier] || 'planned'})`;
   return `<div class="kc" draggable="${S.canWrite}" data-card="${esc(c.id)}" tabindex="0" style="--c:${colc}">
-    <div class="id">${esc(c.id)}${c.f?.includes('crit') ? '<span class="tag crit">crit</span>' : ''}${c.moved ? '<span class="tag moved" title="Moved on this board">moved</span>' : ''}</div>
+    <div class="id">${c.proposed ? '<span class="tag moved">proposed</span>' : esc(c.id)}${c.f?.includes('crit') ? '<span class="tag crit">crit</span>' : ''}${c.moved ? '<span class="tag moved" title="Moved on this board">moved</span>' : ''}</div>
     <div class="ttl">${esc(c.t)}</div>
     <div class="meta"><span class="tag">T${c.tier} ${MODEL_OF_TIER[c.tier] || ''}</span><span class="tag">${esc(c.size || '?')}</span><span class="tag">${esc(c.track)}</span>${c.deps?.length ? `<span class="tag">${c.deps.length} dep${c.deps.length > 1 ? 's' : ''}</span>` : ''}</div>
   </div>`;
@@ -867,6 +905,7 @@ async function moveCard(id, col, note) {
 }
 function openCard(id) {
   const c = cards().find((x) => x.id === id); if (!c) return;
+  S.selectedCard = c.proposed ? null : c.id; renderComposerContext();
   $('c-title').textContent = `${c.id} · ${c.t}`;
   $('c-meta').textContent = `${c.track} · T${c.tier} ${MODEL_OF_TIER[c.tier] || ''} · size ${c.size} · ${c.kind} · registry status ${c.s}`;
   const run = S.runs.find((r) => r.card === c.id);
@@ -884,6 +923,7 @@ function openCard(id) {
       if (r.items?.length) parts.push(`<span class="muted">Work items: ${r.items.map(esc).join(', ')}</span>`);
       return parts.length ? `<div style="display:grid;gap:4px">${parts.map((p) => `<div>${p}</div>`).join('')}</div>` : ''; })(),
     prs.length && `<div><b>PRs</b> ${prs.map((p) => `<a href="${REPO}/pull/${p.n}" target="_blank" rel="noopener">#${p.n}</a> <span class="muted">${fmtH(p.h)}</span>`).join(' · ')}</div>`,
+    (() => { const notes = Object.values(S.inbox).filter((i) => i.route?.card === c.id).sort((a, b) => String(b.at).localeCompare(String(a.at))); return notes.length ? `<div><b>From the composer</b>${notes.slice(0, 6).map((i) => `<div class="muted">${fmt(i.at)} · ${esc(INTENT_LABEL[i.route.intent] || '')} · ${esc(i.prompt)}${i.status === 'applied' ? ' (applied)' : ''}</div>`).join('')}</div>` : ''; })(),
     c.moved && `<div class="tag moved" style="justify-self:start">Moved on the board${c.oNote ? ': ' + esc(c.oNote) : ''}</div>`,
   ].filter(Boolean).join('');
   $('c-col').innerHTML = COLS.map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
@@ -893,6 +933,7 @@ function openCard(id) {
 }
 $('cedit').addEventListener('submit', async (e) => { e.preventDefault(); await moveCard($('cdlg').dataset.card, $('c-col').value, $('c-note').value.trim()); $('cdlg').close(); });
 $('c-cancel').addEventListener('click', () => $('cdlg').close());
+$('cdlg').addEventListener('close', () => { S.selectedCard = null; renderComposerContext(); });
 $('c-clear').addEventListener('click', async () => { try { await S.db.collection('cardstate').doc($('cdlg').dataset.card.replace(/[^A-Za-z0-9_.~-]/g, '_')).delete(); } catch (e) {} $('cdlg').close(); });
 
 /* ---------- List ---------- */
@@ -942,6 +983,310 @@ $('ltable').addEventListener('click', (e) => {
   const th = e.target.closest('th[data-sort]'); if (th) { S.sort = [th.dataset.sort, S.sort[0] === th.dataset.sort ? -S.sort[1] : 1]; renderList(); return; }
   const tr = e.target.closest('[data-card]'); if (tr) openCard(tr.dataset.card);
 });
+
+/* ---------- Router (copied from kosmos-engine tools/pm/router.mjs by sync-router.mjs) ---------- */
+// router:begin
+const KosmosRouter = (() => {
+  const STOP = new Set('the a an and or but for to of in on at by with from into onto this that these those it its is are was were be been being do does did can could should would will shall may might must not no yes we our you your i me my us they them their there here please just also then than so as if when what which who whom why how all any each some more most other such only own same too very via per about over under again further once both few'.split(' '));
+  const TIER_WORDS = {
+    4: ['decide', 'decision', 'adr', 'contract', 'milestone', 'sign off', 'sign-off', 'go/no-go', 'policy', 'strategy', 'tradeoff'],
+    3: ['determinism', 'deterministic', 'hash', 'cross-crate', 'render graph', 'renderer', 'physics', 'security', 'performance', 'perf ', 'protocol', 'architecture', 'concurrency', 'race', 'migration', 'rollback', 'unsafe', 'gpu', 'shader pipeline', 'serialization'],
+    1: ['doc', 'docs', 'readme', 'typo', 'rename', 'regenerate', 'report', 'schema', 'lint', 'bookkeeping', 'reconcile', 'format', 'export', 'changelog', 'comment', 'section 12', 'json'],
+  };
+  const KIND_WORDS = [
+    ['scout', ['investigate', 'find out', 'audit', 'scout', 'survey', 'research', 'compare', 'measure']],
+    ['design', ['design', 'spec', 'adr', 'contract', 'plan ']],
+    ['doc', ['doc', 'readme', 'write up', 'document']],
+    ['data', ['data', 'schema', 'export', 'json', 'table']],
+    ['ci', ['ci ', 'workflow', 'github action', 'pipeline job', 'required check']],
+    ['port', ['port ', 'vendor', 'from yakopop', 'parity']],
+    ['tooling', ['script', 'tool', 'cli', 'command', 'hook']],
+  ];
+  const COLUMN_WORDS = [
+    ['done', ['mark done', 'is done', 'finished', 'landed', 'complete ', 'completed', 'close ', 'closed']],
+    ['blocked', ['block ', 'blocked', 'on hold', 'park ', 'parked', 'pause ']],
+    ['ready', ['unblock', 'ready', 'back to ready']],
+    ['building', ['start ', 'claim', 'pick up', 'in progress', 'working on']],
+    ['verify', ['in review', 'needs review', 'pr open']],
+    ['backlog', ['backlog', 'later', 'deprioritize', 'deprioritise']],
+  ];
+  const ROLE_OF = { question: 'scout', 'new-card': 'conductor', 'update-card': 'worker', move: 'dispatcher', decision: 'you', dispatch: 'worker', review: 'verifier', bookkeeping: 'janitor' };
+  const ID = /\b([A-Z][A-Z0-9]{0,7}\.[A-Za-z0-9][A-Za-z0-9.]*[A-Za-z0-9]|[A-Z][A-Z0-9]{0,7}\.[A-Za-z0-9])\b/g;
+  const has = (text, words) => words.some((w) => text.includes(w));
+  const tokenize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9.\s/_-]/g, ' ').split(/[\s/_-]+/).map((t) => t.replace(/^\.+|\.+$/g, '')).filter((t) => t.length > 2 && !STOP.has(t));
+
+  // Index the cards once per context: token -> document frequency, card -> tokens.
+  function index(cards) {
+    const df = new Map(), docs = new Map();
+    for (const c of cards) {
+      const toks = new Set(tokenize(`${c.t || c.title || ''} ${c.gate || ''} ${c.kind || ''} ${(c.track || '').replace(/^[a-z0-9]+-/, '')}`));
+      docs.set(c.id, toks);
+      for (const t of toks) df.set(t, (df.get(t) || 0) + 1);
+    }
+    return { df, docs, n: cards.length || 1 };
+  }
+  const idf = (ix, t) => Math.log(1 + ix.n / (1 + (ix.df.get(t) || 0)));
+  function matchCards(ix, cards, text, limit = 3) {
+    const q = [...new Set(tokenize(text))];
+    if (!q.length) return [];
+    const max = q.reduce((s, t) => s + idf(ix, t), 0);
+    return cards.map((c) => {
+      const d = ix.docs.get(c.id); let s = 0;
+      for (const t of q) if (d.has(t)) s += idf(ix, t);
+      return { card: c, score: s / max };
+    }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, limit);
+  }
+
+  function intentOf(text, explicit) {
+    const t = ` ${text.toLowerCase().trim()} `;
+    if (/^\s*(yes|no|approve|approved|reject|rejected|go|no-go|decided?|answer)\b/.test(t.trim()) || has(t, [' i approve', ' my answer', ' we decided', ' decision:', ' go ahead with'])) return 'decision';
+    if (explicit && has(t, [' run ', ' dispatch', ' start work', ' work on ', ' kick off', ' launch ', ' pick up '])) return 'dispatch';
+    if (has(t, [' review ', ' verify ', ' check the pr', ' re-run the gate', ' verifier'])) return 'review';
+    if (explicit && COLUMN_WORDS.some(([, w]) => has(t, w.map((x) => ` ${x}`)))) return 'move';
+    if (has(t, [' reconcile', ' regenerate reports', ' bookkeeping', ' janitor', ' clean up statuses', ' sync section 12'])) return 'bookkeeping';
+    if (/\?\s*$/.test(text.trim()) || /^\s*(what|why|how|which|who|when|where|is|are|does|do|can|should|could|will)\b/i.test(text.trim())) return 'question';
+    if (explicit) return 'update-card';
+    return 'new-card';
+  }
+  function tierOf(text, intent, card) {
+    const t = ` ${text.toLowerCase()} `;
+    if (intent === 'decision') return 4;
+    if (card && intent !== 'new-card') return card.tier || 2;
+    if (has(t, TIER_WORDS[4])) return 4;
+    const crates = new Set((text.match(/crates\/[a-z0-9_-]+/g) || []));
+    if (crates.size > 1 || has(t, TIER_WORDS[3])) return 3;
+    if (intent === 'question' || intent === 'bookkeeping') return intent === 'bookkeeping' ? 1 : 2;
+    if (has(t, TIER_WORDS[1])) return 1;
+    return 2;
+  }
+  const kindOf = (text) => (KIND_WORDS.find(([, w]) => has(` ${text.toLowerCase()} `, w)) || ['feature'])[0];
+  const sizeOf = (text) => { const ands = (text.match(/\b(and|then|also|plus)\b|,/gi) || []).length; return text.length > 400 || ands > 3 ? 'L' : text.length < 140 && ands <= 1 ? 'S' : 'M'; };
+  const columnOf = (text) => (COLUMN_WORDS.find(([, w]) => has(` ${text.toLowerCase()} `, w.map((x) => ` ${x}`))) || [null])[0];
+
+  // The track a new card belongs in: the one whose cards share the most weighted words with the prompt.
+  function trackOf(ix, cards, text) {
+    const top = matchCards(ix, cards, text, 25);
+    const by = {};
+    for (const { card, score } of top) by[card.track] = (by[card.track] || 0) + score;
+    const best = Object.entries(by).sort((a, b) => b[1] - a[1])[0];
+    if (!best) return { track: null, prefix: null };
+    const prefixes = {};
+    for (const c of cards.filter((x) => x.track === best[0])) { const p = c.id.split('.')[0]; prefixes[p] = (prefixes[p] || 0) + 1; }
+    return { track: best[0], prefix: Object.entries(prefixes).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null };
+  }
+  function laneOf(lanes, card) {
+    if (!card) return null;
+    for (const l of lanes || []) if (l.match && new RegExp(l.match).test(card.id)) return l;
+    return (lanes || []).find((l) => l.id === (card.tier === 1 ? 'bookkeeping' : 'other')) || null;
+  }
+
+  // ctx: { cards: [{id, t, s, tier, kind, size, track, deps, ask, gate}], lanes: [{id, kind, name, match, held}],
+  //        models: {1: {model, effort}, ...}, selected: cardId | null, view: string }
+  function route(prompt, ctx = {}) {
+    const text = String(prompt || '').trim();
+    const cards = ctx.cards || [];
+    const byId = new Map(cards.map((c) => [c.id, c]));
+    const reasons = [];
+    const ix = ctx._ix || (ctx._ix = index(cards));
+    const named = [...new Set([...text.matchAll(ID)].map((m) => m[1]))].filter((id) => byId.has(id));
+    let card = named.length ? byId.get(named[0]) : null;
+    if (card) reasons.push(`Names ${card.id}.`);
+    const matches = matchCards(ix, cards, text);
+    if (!card && ctx.selected && byId.has(ctx.selected) && /\b(this|it|the card|this card)\b/i.test(text)) { card = byId.get(ctx.selected); reasons.push(`"this" means the open card ${card.id}.`); }
+    const intent = intentOf(text, !!card);
+    if (!card && intent !== 'new-card' && intent !== 'question' && intent !== 'bookkeeping' && matches[0]?.score >= 0.55) { card = matches[0].card; reasons.push(`Closest card by words: ${card.id} (${Math.round(matches[0].score * 100)}%).`); }
+    const tier = tierOf(text, intent, card);
+    const model = (ctx.models && ctx.models[Math.min(4, tier)]) || { model: ['', 'haiku', 'sonnet', 'opus', 'fable'][Math.min(4, tier)], effort: tier >= 3 ? 'high' : tier === 2 ? 'medium' : 'low' };
+    let role = ROLE_OF[intent];
+    const actions = [];
+    const out = { prompt: text, intent, role, tier, model: model.model, effort: model.effort, card: card ? card.id : null, title: card ? card.t : null, track: card ? card.track : null, lane: null, confidence: 0.5, reasons, actions, alternatives: matches.filter((m) => !card || m.card.id !== card.id).slice(0, 3).map((m) => ({ card: m.card.id, title: m.card.t, score: +m.score.toFixed(2) })) };
+    const lane = laneOf(ctx.lanes, card);
+    if (lane) out.lane = lane.id;
+
+    if (intent === 'question') {
+      reasons.push('Asks a question: a read-only scout answers it.');
+      actions.push({ type: 'answer', card: out.card });
+      out.confidence = 0.8;
+    } else if (intent === 'decision') {
+      const pending = card && card.ask ? card : cards.find((c) => c.ask && c.s !== 'done' && ix.docs.get(c.id) && matchCards(ix, [c], text).length);
+      if (pending) { out.card = pending.id; out.title = pending.t; reasons.push(`${pending.id} waits on your decision.`); actions.push({ type: 'decision', card: pending.id, answer: text }); out.confidence = card ? 0.9 : 0.6; }
+      else { reasons.push('Reads like a decision, but no card in the inbox matches: the conductor records it.'); role = out.role = 'conductor'; actions.push({ type: 'note', card: out.card, text }); out.confidence = 0.4; }
+    } else if (intent === 'move') {
+      const col = columnOf(text);
+      reasons.push(`Moves ${card.id} to ${col}.`);
+      actions.push({ type: 'move', card: card.id, col });
+      out.confidence = 0.85;
+    } else if (intent === 'dispatch') {
+      const open = (card.deps || []).filter((d) => byId.get(d) && byId.get(d).s !== 'done');
+      if (card.ask && card.s !== 'done') { reasons.push(`${card.id} waits on your decision first.`); role = out.role = 'you'; actions.push({ type: 'note', card: card.id, text }); }
+      else if (open.length) { reasons.push(`Not ready: waits on ${open.join(', ')}.`); actions.push({ type: 'note', card: card.id, text }); out.confidence = 0.7; }
+      else {
+        if (lane && lane.kind === 'serial' && (lane.held || []).length && !(lane.held || []).includes(card.id)) reasons.push(`${lane.name} is a serial lane held by ${lane.held.join(', ')}: this queues behind it.`);
+        reasons.push(`A T${card.tier} worker on ${model.model} takes it, then a fresh verifier.`);
+        actions.push({ type: 'dispatch', card: card.id, role: 'worker', model: model.model, effort: model.effort, brief: `node tools/tasks/run.mjs --brief ${card.id}` });
+        out.confidence = 0.85;
+      }
+    } else if (intent === 'review') {
+      out.tier = Math.max(2, tier); const vm = (ctx.models && ctx.models[out.tier]) || model; out.model = vm.model; out.effort = vm.effort;
+      reasons.push(card ? `A fresh verifier re-runs ${card.id}'s gate.` : 'A fresh verifier checks the work.');
+      actions.push({ type: 'dispatch', card: out.card, role: 'verifier', model: out.model, effort: out.effort, brief: card ? `node tools/tasks/run.mjs --brief ${card.id}` : null });
+      out.confidence = card ? 0.8 : 0.5;
+    } else if (intent === 'bookkeeping') {
+      reasons.push('Bookkeeping goes to the janitor (T1).');
+      actions.push({ type: 'dispatch', card: out.card, role: 'janitor', model: out.model, effort: out.effort, brief: null });
+      out.confidence = 0.7;
+    } else if (intent === 'update-card') {
+      const claimed = card.s === 'claimed' || card.s === 'in-pr';
+      if (!claimed) { role = out.role = 'conductor'; reasons.push(`${card.id} is ${card.s}: the conductor folds this into the card.`); }
+      else reasons.push(`${card.id} is ${card.s}: its worker gets the note.`);
+      actions.push({ type: 'note', card: card.id, text });
+      out.confidence = named.length ? 0.8 : 0.6;
+    } else {
+      const { track, prefix } = trackOf(ix, cards, text);
+      out.track = track;
+      const kind = kindOf(text), size = sizeOf(text);
+      const title = text.replace(/\s+/g, ' ').replace(/^(please\s+)?(can you|could you|we need to|let'?s|i want to|i'd like to)\s+/i, '').replace(/[.?!]+$/, '');
+      const titled = title.charAt(0).toUpperCase() + title.slice(1);
+      reasons.push(track ? `New work. Closest track: ${track}.` : 'New work with no close track.');
+      reasons.push(`Tier ${tier} by orchestration §3, so ${model.model} at ${model.effort} effort.`);
+      if (matches[0]?.score >= 0.35) reasons.push(`Check it is not ${matches[0].card.id} (${Math.round(matches[0].score * 100)}% similar).`);
+      actions.push({ type: 'propose-card', card: { prefix, track, title: titled.length > 110 ? titled.slice(0, 107) + '...' : titled, tier, kind, size, deps: card ? [card.id] : [], gate: 'TODO: a command that fails before the change and passes after', note: `From the composer: ${text}` } });
+      out.title = titled; out.confidence = track ? 0.6 : 0.4;
+    }
+    out.role = role;
+    return out;
+  }
+  return { route, tokenize, index, matchCards, intentOf, tierOf, kindOf, sizeOf, columnOf, trackOf };
+})();
+// router:end
+
+/* ---------- Composer ---------- */
+const ROLE_SPRITE = { scout: 'sonnet', worker: 'active', verifier: 'review', janitor: 'haiku', conductor: 'fable', dispatcher: 'planned', you: 'person' };
+const INTENT_LABEL = { question: 'Question', 'new-card': 'New card', 'update-card': 'Note on a card', move: 'Board move', decision: 'Decision', dispatch: 'Start an agent', review: 'Review', bookkeeping: 'Bookkeeping' };
+const cp = { route: null, edits: {}, dispatch: undefined };
+function routerContext() {
+  const caps = S.meta.capacity?.models;
+  return {
+    cards: cards().map((c) => ({ id: c.id, t: c.t, s: c.moved ? (STATUS_OF_COL[c.col] || c.s) : c.s, tier: c.tier, kind: c.kind, size: c.size, track: c.track, deps: c.deps, ask: !!c.ask && !S.decisions[c.id.replace(/[^A-Za-z0-9_.~-]/g, '_')], gate: c.gate })),
+    lanes: S.lanes.map((l) => ({ id: l.id, kind: l.kind, name: l.name, match: l.match || null, held: l.held || [] })),
+    models: caps || null, selected: S.selectedCard || null, view: S.view,
+  };
+}
+let routerCtx = null, routerCtxKey = '';
+function currentRoute(text) {
+  const key = `${Object.keys(S.chunks).length}|${S.lanes.length}|${Object.keys(S.overrides).length}|${S.selectedCard}|${S.view}`;
+  if (!routerCtx || key !== routerCtxKey) { routerCtx = routerContext(); routerCtxKey = key; }
+  routerCtx.selected = S.selectedCard || null; routerCtx.view = S.view;
+  return KosmosRouter.route(text, routerCtx);
+}
+// Edits made in the preview override the router's choice.
+function effectiveRoute() {
+  const r = cp.route; if (!r) return null;
+  const e = cp.edits, out = { ...r, actions: r.actions.map((a) => ({ ...a, card: a.card && typeof a.card === 'object' ? { ...a.card } : a.card })) };
+  if (e.card !== undefined && e.card !== r.card) {
+    out.card = e.card || null; const c = cards().find((x) => x.id === e.card); out.title = c ? c.t : out.title;
+    for (const a of out.actions) if (typeof a.card === 'string' || a.card === null) a.card = out.card;
+  }
+  if (e.role) { out.role = e.role; for (const a of out.actions) if (a.type === 'dispatch') a.role = e.role; }
+  if (e.model) { out.model = e.model; for (const a of out.actions) if (a.type === 'dispatch') a.model = e.model; }
+  if (e.col) for (const a of out.actions) if (a.type === 'move') a.col = e.col;
+  const p = out.actions.find((a) => a.type === 'propose-card');
+  if (p) { if (e.track) { p.card.track = e.track; const pc = {}; for (const c of cards().filter((x) => x.track === e.track && !x.proposed)) { const k = c.id.split('.')[0]; pc[k] = (pc[k] || 0) + 1; } p.card.prefix = Object.entries(pc).sort((a, b) => b[1] - a[1])[0]?.[0] || p.card.prefix; out.track = e.track; } if (e.title) p.card.title = e.title; if (e.tier) p.card.tier = +e.tier; }
+  return out;
+}
+function renderRoute() {
+  const box = $('cp-route'), r = effectiveRoute();
+  if (!r || !r.prompt) { box.hidden = true; return; }
+  box.hidden = false;
+  const fam = (m) => (/fable/.test(m) ? 'fable' : /opus/.test(m) ? 'opus' : /sonnet/.test(m) ? 'sonnet' : /haiku/.test(m) ? 'haiku' : 'other');
+  const tracks = [...new Set(cards().map((c) => c.track))].sort();
+  const act = r.actions[0] || {};
+  const p = r.actions.find((a) => a.type === 'propose-card');
+  const cardOpts = ['', ...new Set([r.card, ...r.alternatives.map((a) => a.card)].filter(Boolean))];
+  const cardSel = ['update-card', 'move', 'dispatch', 'review', 'decision'].includes(r.intent)
+    ? `<label>Card<select id="cp-e-card">${cardOpts.map((id) => `<option value="${esc(id)}" ${id === r.card ? 'selected' : ''}>${id ? esc(id) : '(none)'}</option>`).join('')}</select></label>` : '';
+  const roleSel = ['dispatch', 'review', 'bookkeeping', 'question'].includes(r.intent)
+    ? `<label>Role<select id="cp-e-role">${['scout', 'worker', 'verifier', 'janitor', 'conductor'].map((x) => `<option ${x === r.role ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+       <label>Model<select id="cp-e-model">${['haiku', 'sonnet', 'opus', 'fable'].map((x) => `<option ${fam(r.model) === x ? 'selected' : ''}>${x}</option>`).join('')}</select></label>` : '';
+  const colSel = r.intent === 'move' ? `<label>Column<select id="cp-e-col">${COLS.map(([k, l]) => `<option value="${k}" ${k === act.col ? 'selected' : ''}>${l}</option>`).join('')}</select></label>` : '';
+  const newSel = p ? `<label style="flex:1 1 260px">Title<input id="cp-e-title" value="${esc(p.card.title)}"></label>
+      <label>Track<select id="cp-e-track">${tracks.map((t) => `<option ${t === p.card.track ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+      <label>Tier<select id="cp-e-tier">${[1, 2, 3, 4].map((t) => `<option value="${t}" ${t === p.card.tier ? 'selected' : ''}>T${t} ${MODEL_OF_TIER[t]}</option>`).join('')}</select></label>` : '';
+  const primary = r.intent === 'question' ? (sampleFn ? 'Ask' : 'Record')
+    : r.actions.some((a) => a.type === 'dispatch') ? (cp.dispatch ? 'Start agent' : 'Record') : r.intent === 'new-card' ? 'Propose card' : r.intent === 'move' ? 'Move card' : r.intent === 'decision' ? 'Record answer' : 'Record';
+  box.innerHTML = `<div class="cp-head">
+      <span class="tag moved">${esc(INTENT_LABEL[r.intent] || r.intent)}</span>
+      <span class="role" style="--c:var(--${ROLE_SPRITE[r.role] || 'planned'})">${esc(r.role)}</span>
+      <span class="sprite">${typeof spriteSvg === 'function' ? spriteSvg(fam(r.model)) : ''} ${esc(r.model)} · ${esc(r.effort)} · T${r.tier}</span>
+      <span class="ttl">${r.card ? `<span class="mono">${esc(r.card)}</span> ${esc(r.title || '')}` : p ? `New card in <span class="mono">${esc(p.card.track || '?')}</span>` : ''}</span>
+      ${r.lane ? `<span class="tag">${esc(r.lane)}</span>` : ''}
+      <span title="Router confidence" style="display:flex;gap:6px;align-items:center;font:400 10.5px var(--mono);color:var(--muted)"><span class="cp-conf"><i style="width:${Math.round(r.confidence * 100)}%"></i></span>${Math.round(r.confidence * 100)}%</span>
+    </div>
+    <ul class="cp-why">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    ${r.alternatives.length ? `<div class="cp-alt">Or: ${r.alternatives.map((a) => `<button type="button" data-alt="${esc(a.card)}" title="${esc(a.title)}">${esc(a.card)} ${Math.round(a.score * 100)}%</button>`).join('')}</div>` : ''}
+    <div class="cp-edit">${cardSel}${colSel}${roleSel}${newSel}</div>
+    <div class="actions"><span class="msgline cp-msg" id="cp-msg">${S.canWrite ? 'Nothing is saved or started until you confirm.' : 'Viewing only: confirming needs edit access.'}</span>
+      ${act.brief ? `<button type="button" id="cp-copy">Copy brief</button>` : ''}
+      <button type="button" id="cp-cancel">Cancel</button>
+      <button type="button" class="primary" id="cp-go" ${S.canWrite ? '' : 'disabled'}>${primary}</button></div>`;
+}
+function readEdits() {
+  const v = (id) => $(id)?.value;
+  cp.edits = { card: v('cp-e-card'), role: v('cp-e-role'), model: v('cp-e-model'), col: v('cp-e-col'), track: v('cp-e-track'), title: v('cp-e-title'), tier: v('cp-e-tier') };
+  for (const k of Object.keys(cp.edits)) if (cp.edits[k] === undefined) delete cp.edits[k];
+}
+const routeNow = debounce(() => {
+  const q = $('cp-q').value.trim();
+  cp.route = q ? currentRoute(q) : null; cp.edits = {};
+  renderRoute();
+}, 160);
+$('cp-q').addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(160, e.target.scrollHeight) + 'px'; routeNow(); });
+$('cp-q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('cp-form').requestSubmit(); } if (e.key === 'Escape') { $('cp-q').value = ''; cp.route = null; renderRoute(); } });
+$('cp-form').addEventListener('submit', (e) => { e.preventDefault(); const q = $('cp-q').value.trim(); if (!q) return; cp.route = currentRoute(q); cp.edits = {}; renderRoute(); $('cp-go')?.focus(); });
+$('cp-route').addEventListener('change', () => { readEdits(); const keep = { ...cp.edits }; renderRoute(); cp.edits = keep; });
+$('cp-route').addEventListener('click', async (e) => {
+  const alt = e.target.closest('[data-alt]');
+  if (alt) { cp.edits.card = alt.dataset.alt; renderRoute(); return; }
+  if (e.target.id === 'cp-cancel') { cp.route = null; renderRoute(); return; }
+  if (e.target.id === 'cp-copy') { const r = effectiveRoute(), b = r.actions.find((a) => a.brief)?.brief; navigator.clipboard.writeText(b).then(() => ($('cp-msg').textContent = 'Brief command copied.'), () => ($('cp-msg').textContent = b)); return; }
+  if (e.target.id === 'cp-go') await confirmRoute();
+});
+const docId = (s) => String(s).replace(/[^A-Za-z0-9_.~-]/g, '_');
+async function confirmRoute() {
+  const r = effectiveRoute(); if (!r || !S.db) return;
+  const msg = (t) => ($('cp-msg') ? ($('cp-msg').textContent = t) : null);
+  const id = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const at = new Date().toISOString(), by = await who();
+  const item = { id, prompt: r.prompt, route: r, view: S.view, selected: S.selectedCard || null, status: 'confirmed', at, by };
+  try {
+    for (const a of r.actions) {
+      if (a.type === 'move' && a.card) await moveCard(a.card, a.col, `composer: ${r.prompt}`);
+      if (a.type === 'decision' && a.card) await S.db.collection('decisions').doc(docId(a.card)).set({ card: a.card, answer: a.answer, at, by, applied: false, via: 'composer' });
+      if (a.type === 'propose-card') { await S.db.collection('proposals').doc(id).set({ ...a.card, id, status: 'confirmed', at, by, prompt: r.prompt }); item.proposal = id; }
+      if (a.type === 'dispatch' && cp.dispatch) {
+        msg('Starting the agent…');
+        const brief = [`Kosmos Roadmap composer: ${r.role} for ${a.card || 'the project'} (T${r.tier}, ${a.model} at ${a.effort} effort).`, '', r.prompt, '',
+          a.card ? `Work in kosmos-engine. Read the card brief first: \`${a.brief}\`. Follow its rules; land with \`tools/agents/lease done ${a.card}\` when the gate passes.` : 'Work in kosmos-engine and follow its CLAUDE.md.',
+          r.role === 'verifier' ? 'You are the verifier: re-run the gate, check scope, and return accept, reject or needs_human. Do not fix anything.' : ''].filter((x) => x !== '').join('\n');
+        const started = await cp.dispatch.start({ message: brief, model: a.model, card: a.card, role: r.role });
+        item.dispatched = started; item.status = 'started';
+      }
+    }
+    await S.db.collection('inbox').doc(id).set(item);
+    if (r.intent === 'question' && sampleFn) { toggleDrawer(true); ask(r.prompt); }
+    $('cp-q').value = ''; $('cp-q').style.height = 'auto'; cp.route = null; renderRoute();
+  } catch (err) { msg(`Not done: ${err?.message || err}`); }
+}
+function renderInbox() {
+  const items = Object.values(S.inbox).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  $('cp-inbox-n').textContent = items.filter((i) => i.status === 'confirmed' || i.status === 'started').length || '';
+  const box = $('cp-inbox'); if (box.hidden) return;
+  box.innerHTML = items.length ? items.slice(0, 40).map((i) => `<div class="li"><span class="role" style="--c:var(--${ROLE_SPRITE[i.route?.role] || 'planned'});font-size:9px">${esc(i.route?.role || '')}</span><div class="main"><span class="ttl">${esc(i.prompt)}</span><span class="det">${esc(INTENT_LABEL[i.route?.intent] || '')}${i.route?.card ? ` · <a href="#" data-card="${esc(i.route.card)}">${esc(i.route.card)}</a>` : ''}${i.proposal ? ' · proposed card' : ''}${i.dispatched?.id ? ` · agent started (${esc(i.dispatched.agent || '')}${i.dispatched.llm ? ', ' + esc(i.dispatched.llm) : ''})` : ''}</span></div><span class="side">${esc(i.status)}<br>${fmt(i.at)}</span></div>`).join('')
+    : '<div class="li"><span></span><span class="det">Nothing routed yet. Type below.</span><span></span></div>';
+}
+$('cp-inbox-btn').addEventListener('click', () => { $('cp-inbox').hidden = !$('cp-inbox').hidden; renderInbox(); });
+$('cp-inbox').addEventListener('click', (e) => { const a = e.target.closest('[data-card]'); if (a) { e.preventDefault(); openCard(a.dataset.card); } });
+function renderComposerContext() { $('cp-ctx-v').textContent = S.selectedCard ? S.selectedCard : (VIEWS.find(([k]) => k === S.view)?.[1] || ''); }
 
 /* ---------- Calendar ---------- */
 // 8x8 pixel sprites, one per model family: Haiku a leaf, Sonnet a note, Opus a gem, Fable a crown.
@@ -1443,6 +1788,7 @@ show(initial);
   const claude = window.claude;
   if (!claude?.use) { $('sub').textContent = 'Open this page in Claude to load the shared store.'; return; }
   claude.use('sample').then((s) => { sampleFn = s; });
+  claude.use('dispatch').then((d) => { cp.dispatch = d || null; });
   const db = await claude.use('db');
   if (!db) { $('sub').textContent = 'Sign in to Claude to load the shared store.'; return; }
   S.db = db;
@@ -1461,6 +1807,8 @@ show(initial);
   db.collection('runs').onSnapshot((s) => { S.runs = s.docs.map((d) => d.data()); rerender(); }, err);
   db.collection('prices').onSnapshot((s) => { S.prices = s.docs.map((d) => ({ id: d.id, ...d.data() })); rerender(); }, err);
   db.collection('cardcost').onSnapshot((s) => { S.cardcost = s.docs.map((d) => d.data()); rerender(); }, err);
+  db.collection('inbox').onSnapshot((s) => { S.inbox = Object.fromEntries(s.docs.map((d) => [d.id, d.data()])); rerender(); }, err);
+  db.collection('proposals').onSnapshot((s) => { S.proposals = Object.fromEntries(s.docs.map((d) => [d.id, d.data()])); rerender(); }, err);
   db.collection('calendar').onSnapshot((s) => { S.calendar = Object.fromEntries(s.docs.map((d) => [d.id, d.data()])); rerender(); }, err);
   db.collection('cardstats').onSnapshot((s) => { S.stats = new Map(s.docs.flatMap((d) => d.data().cards || []).map((c) => [c.id, c])); rerender(); }, err);
   db.collection('history').onSnapshot((s) => {

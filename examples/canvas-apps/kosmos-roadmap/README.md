@@ -8,8 +8,8 @@ documents, which kosmos-engine's `tools/pm/refresh.mjs` generates.
 ## Files
 
 - `kosmos-gantt.html`: the page, unchanged from the artifact. It has the
-  graphite theme and nine views: Schedule, Board, List, Calendar, Pipeline,
-  Agents, Costs, History and Decisions.
+  graphite theme, nine views (Schedule, Board, List, Calendar, Pipeline,
+  Agents, Costs, History and Decisions) and a floating composer on every view.
 - `roadmap-db.js`: stands in for the artifact runtime's `db` API
   (`collection(name).onSnapshot`, `collection(name).doc(id).set/update/delete`).
 - `entry.js`: the `activate(host)` entry. It registers the `/roadmap` page,
@@ -19,6 +19,19 @@ documents, which kosmos-engine's `tools/pm/refresh.mjs` generates.
   The package holds `canvas-extension.json`, a self-contained `extension.js`
   and `icon.svg`.
 - `sync.mjs`: packs a `refresh.mjs` run into `snapshot.json`.
+
+## Composer
+
+The composer routes each prompt with kosmos-engine's `tools/pm/router.mjs`, which the page embeds. A route picks the intent, the card (or a new card's track), the role (scout, conductor, worker, verifier, janitor, or you), and the tier's model and effort. You can edit any of them before confirming. Confirming writes `inbox`, plus `cardstate`, `decisions` or `proposals`, to `local.json`. kosmos-engine's `tools/pm/apply.mjs` applies them to the registry.
+
+A route that starts an agent shows **Start agent**. In this app that button calls `POST /api/conversations` on the local Agent Server, with:
+
+- the active agent profile;
+- the route's brief as the first message;
+- `kosmos_card` and `kosmos_role` tags;
+- an LLM profile override when a profile's name or model contains the routed model family.
+
+Canvas asks no consent for this call, so the composer never starts an agent without a click. In the claude.ai artifact there is no dispatch, so the button records the route and offers **Copy brief**.
 
 ## Data
 
@@ -60,6 +73,7 @@ directory. Both commands must use the same directory.
 
 - **Ask Claude** is hidden. The page uses the artifact runtime's `sample`
   call, and Canvas does not give extensions an LLM call to put behind it.
+- The composer's question routes are recorded, not answered, until Ask Claude is wired.
 - **Connect an agent** still shows the claude.ai artifact instructions. Agents
   that follow them update the artifact, not `local.json`.
 - Nothing applies `local.json` back to kosmos-engine. Agents that apply
