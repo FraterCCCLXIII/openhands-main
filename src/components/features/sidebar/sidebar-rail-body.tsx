@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
+  Newspaper,
   Plus,
   Server,
   Settings,
@@ -45,6 +46,7 @@ import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensi
 import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/canvas-extension-icon";
 import type { Backend } from "#/api/backend-registry/types";
 
+const FEED_PATH = "/feed";
 const ICON_SIZE = 18;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
@@ -210,6 +212,13 @@ export function SidebarRailBody({
           testId="sidebar-conversations-link"
           collapsed={collapsed}
           icon={<Plus width={ICON_SIZE} height={ICON_SIZE} />}
+        />
+        <SidebarNavLink
+          to={FEED_PATH}
+          label={t(I18nKey.FEED$TITLE)}
+          testId="sidebar-feed-link"
+          collapsed={collapsed}
+          icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}

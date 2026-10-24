@@ -14,6 +14,7 @@ export default [
       "routes/conversation-panel.tsx",
     ),
     route("conversations/:conversationId", "routes/conversation.tsx"),
+    route("feed", "routes/feed.tsx"),
     route("launch", "routes/launch.tsx"),
     route("customize", "routes/extensions-hub.tsx"),
     route("skills", "routes/skills-settings.tsx"),

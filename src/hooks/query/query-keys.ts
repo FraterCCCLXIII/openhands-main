@@ -146,3 +146,62 @@ export const CONFIG_CACHE_OPTIONS = {
   staleTime: 1000 * 60 * 5, // 5 minutes
   gcTime: 1000 * 60 * 15, // 15 minutes
 } as const;
+
+export const FEED_QUERY_KEYS = {
+  all: ["feed"] as const,
+  subagents: (
+    conversationId: string,
+    updatedAt: string,
+    childIds: readonly string[],
+  ) => ["feed", "subagents", conversationId, updatedAt, childIds] as const,
+  diff: (
+    conversationId: string,
+    updatedAt: string,
+    conversationUrl: string | null,
+    sessionApiKey: string | null,
+    gitPath: string,
+    filePath: string,
+  ) =>
+    [
+      "feed",
+      "diff",
+      conversationId,
+      updatedAt,
+      conversationUrl,
+      sessionApiKey,
+      gitPath,
+      filePath,
+    ] as const,
+  changes: (
+    conversationId: string,
+    updatedAt: string,
+    conversationUrl: string | null,
+    sessionApiKey: string | null,
+    gitPath: string,
+  ) =>
+    [
+      "feed",
+      "changes",
+      conversationId,
+      updatedAt,
+      conversationUrl,
+      sessionApiKey,
+      gitPath,
+    ] as const,
+  // Keyed on `updatedAt` so activity reported by the conversation list poll
+  // refetches that card's recent updates.
+  updates: (
+    conversationId: string,
+    updatedAt: string,
+    conversationUrl: string | null,
+    sessionApiKey: string | null,
+  ) =>
+    [
+      "feed",
+      "updates",
+      conversationId,
+      updatedAt,
+      conversationUrl,
+      sessionApiKey,
+    ] as const,
+} as const;
