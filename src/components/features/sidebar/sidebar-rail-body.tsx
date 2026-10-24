@@ -9,6 +9,7 @@ import {
   Plus,
   Server,
   Settings,
+  Users,
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
@@ -60,6 +61,7 @@ import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 const ICON_SIZE = 18;
 const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
 const PLANNING_PATH = "/planning";
+const TEAM_PATH = "/team";
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 
@@ -262,6 +264,14 @@ export function SidebarRailBody({
             icon={<AutomationsIcon width={ICON_SIZE} height={ICON_SIZE} />}
           />
         )}
+        <SidebarNavLink
+          to={TEAM_PATH}
+          label={t(I18nKey.NAV$TEAM)}
+          testId="sidebar-team-link"
+          collapsed={collapsed}
+          icon={<Users width={ICON_SIZE} height={ICON_SIZE} />}
+          pinAction={buildPinAction(TEAM_PATH, "sidebar-pin-home-toggle-team")}
+        />
         <SidebarNavLink
           to={PLANNING_PATH}
           label={t(I18nKey.PLANNING$TITLE)}
