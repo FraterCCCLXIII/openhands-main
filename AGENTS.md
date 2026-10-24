@@ -20,7 +20,7 @@
 - Primary verification commands are `npm run lint`, `npm test`, `npm run build`, and `npm run build:lib`.
 - Direct dependencies and dev dependencies are exact-pinned. Use the committed `package-lock.json` with `npm ci`, and update `package.json` and `package-lock.json` together through npm.
 - Public skills come from `@openhands/extensions`; project-specific contributor guidance lives under `.agents/skills/`.
-- Default working-directory behavior must reuse `DEFAULT_WORKING_DIR` from `src/api/agent-server-config.ts` rather than hardcoding `/workspace/project`.
+- Default working-directory behavior must reuse `DEFAULT_WORKING_DIR` from `src/api/agent-server-config.ts` rather than hardcoding `workspace/project`.
 - All pull requests must comply with [`.agents/skills/custom-codereview-guide.md`](.agents/skills/custom-codereview-guide.md), in addition to the general contribution requirements and CI checks.
 
 ## Repository Ownership
@@ -54,6 +54,8 @@ Detailed contributor knowledge is split into skills so it loads only for relevan
 
 | Skill | Use for |
 |---|---|
+| [`agent-choice-templates`](.agents/skills/agent-choice-templates/SKILL.md) | Using the `choice` markdown fence to present multiple-choice questions to users. |
+| [`design-triage`](.agents/skills/design-triage/SKILL.md) | Listing open design-related PRs and issues using `scripts/list-design-items.mjs`. |
 | [`telemetry-analytics`](.agents/skills/telemetry-analytics/SKILL.md) | PostHog, telemetry consent/identity, typed tracking events, Cloud funnel observability, and onboarding instrumentation. |
 | [`e2e-testing`](.agents/skills/e2e-testing/SKILL.md) | Live or mock-LLM Playwright suites, Docker E2E, E2E CI/reporting, artifacts, and failure diagnosis. |
 | [`frontend-api-contracts`](.agents/skills/frontend-api-contracts/SKILL.md) | `src/api`, typed Agent Server calls, Cloud/runtime transport, compatibility, backends, settings, secrets, auth, and conversation contracts. |
