@@ -6245,6 +6245,24 @@
     "ca": "Analitzador de seguretat",
     "id": "Penganalisis Keamanan"
   },
+  "SETTINGS$NAV_BACKENDS": {
+    "en": "Backends",
+    "ja": "バックエンド",
+    "zh-CN": "后端",
+    "zh-TW": "後端",
+    "ko-KR": "백엔드",
+    "no": "Backender",
+    "it": "Backend",
+    "pt": "Backends",
+    "es": "Backends",
+    "ar": "الخوادم الخلفية",
+    "fr": "Backends",
+    "tr": "Backend'ler",
+    "de": "Backends",
+    "uk": "Бекенди",
+    "ca": "Backends",
+    "id": "Backend"
+  },
   "SETTINGS$NAV_APPLICATION": {
     "en": "Application",
     "ja": "アプリケーション",
@@ -8008,6 +8026,24 @@
     "uk": "Кожен профіль агента вмикає чи вимикає критика в Налаштування → Агент.",
     "ca": "Cada perfil d'agent activa o desactiva el crític a Configuració → Agent.",
     "id": "Setiap profil agen menyalakan atau mematikan critic di Pengaturan → Agen."
+  },
+  "SETTINGS$PAGE_BACKENDS_SUBLINE": {
+    "en": "Manage local and cloud backends for running agents.",
+    "ja": "エージェントを実行するためのローカルおよびクラウドバックエンドを管理します。",
+    "zh-CN": "管理用于运行代理的本地和云后端。",
+    "zh-TW": "管理用於運行代理的本地和雲端後端。",
+    "ko-KR": "에이전트 실행을 위한 로컬 및 클라우드 백엔드를 관리합니다.",
+    "no": "Administrer lokale og skybaserte backender for å kjøre agenter.",
+    "it": "Gestisci backend locali e cloud per l'esecuzione di agenti.",
+    "pt": "Gerencie backends locais e na nuvem para executar agentes.",
+    "es": "Gestiona backends locales y en la nube para ejecutar agentes.",
+    "ar": "إدارة الخوادم الخلفية المحلية والسحابية لتشغيل الوكلاء.",
+    "fr": "Gérez les backends locaux et cloud pour exécuter des agents.",
+    "tr": "Aracıları çalıştırmak için yerel ve bulut backend'lerini yönetin.",
+    "de": "Verwalten Sie lokale und Cloud-Backends zum Ausführen von Agenten.",
+    "uk": "Керуйте локальними та хмарними бекендами для запуску агентів.",
+    "ca": "Gestiona els backends locals i al núvol per executar agents.",
+    "id": "Kelola backend lokal dan cloud untuk menjalankan agen."
   },
   "SETTINGS$PAGE_APPLICATION_SUBLINE": {
     "en": "Language, theme, notifications, and Git identity.",

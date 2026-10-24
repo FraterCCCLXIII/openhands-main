@@ -26,6 +26,7 @@ export default [
     route("mcp", "routes/mcp.tsx"),
     route("settings", "routes/settings.tsx", [
       index("routes/settings-index.tsx"),
+      route("backends", "routes/backends-settings.tsx"),
       route("llm", "routes/llm-settings.tsx"),
       route("meta-llm", "routes/meta-llm-settings.tsx"),
       route("agent", "routes/agent-settings.tsx"),
