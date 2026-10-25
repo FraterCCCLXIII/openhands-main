@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { useFeedConversations } from "#/hooks/use-feed-conversations";
 import { I18nKey } from "#/i18n/declaration";
 import {
@@ -23,6 +24,13 @@ import { FeedNotificationCard } from "./feed-notification-card";
 import { FeedComposer } from "./feed-composer";
 import { FeedFilterSidebar } from "./feed-filter-sidebar";
 
+const PILL_TRANSITION = {
+  type: "spring",
+  stiffness: 420,
+  damping: 34,
+  mass: 0.55,
+} as const;
+
 type FeedView = "feed" | "notifications";
 
 const FEED_VIEWS: Array<{ view: FeedView; label: I18nKey }> = [
@@ -35,6 +43,8 @@ export function Feed() {
   const [filter, setFilter] = useState<FeedFilter>(ALL_FEED_FILTER);
   const [view, setView] = useState<FeedView>("feed");
   const [stackByAgent, setStackByAgent] = useState(true);
+  const reduceMotion = useReducedMotion();
+  const disableAnimation = reduceMotion || import.meta.env.MODE === "test";
   const {
     conversations,
     isLoading,
@@ -123,36 +133,51 @@ export function Feed() {
         />
       </aside>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div
-          role="tablist"
-          data-testid="feed-tabs"
-          className="mx-auto flex w-full max-w-2xl shrink-0 gap-1 px-4 pt-4"
-        >
-          {FEED_VIEWS.map(({ view: tabView, label }) => (
-            <button
-              key={tabView}
-              type="button"
-              role="tab"
-              data-testid={`feed-tab-${tabView}`}
-              aria-selected={view === tabView}
-              onClick={() => setView(tabView)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-sm",
-                view === tabView
-                  ? "bg-surface-raised font-medium text-contrast"
-                  : "text-muted hover:text-contrast",
-              )}
+        <div className="relative mx-auto flex w-full max-w-2xl shrink-0 items-center justify-center px-4 pt-4">
+          <LayoutGroup id="feed-view">
+            <div
+              role="tablist"
+              data-testid="feed-tabs"
+              className="inline-flex items-center rounded-full bg-surface-raised p-1 text-sm font-medium"
             >
-              {t(label)}
-            </button>
-          ))}
+              {FEED_VIEWS.map(({ view: tabView, label }) => {
+                const isActive = view === tabView;
+                return (
+                  <button
+                    key={tabView}
+                    type="button"
+                    role="tab"
+                    data-testid={`feed-tab-${tabView}`}
+                    aria-selected={isActive}
+                    onClick={() => setView(tabView)}
+                    className={cn(
+                      "relative inline-flex cursor-pointer items-center rounded-full px-5 py-2 transition-colors",
+                      isActive
+                        ? "text-contrast"
+                        : "text-muted hover:text-contrast",
+                      disableAnimation && isActive && "bg-interactive-hover",
+                    )}
+                  >
+                    {!disableAnimation && isActive ? (
+                      <motion.span
+                        layoutId="feed-view-pill"
+                        className="absolute inset-0 rounded-full bg-interactive-hover"
+                        transition={PILL_TRANSITION}
+                      />
+                    ) : null}
+                    <span className="relative z-10">{t(label)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </LayoutGroup>
           <button
             type="button"
             data-testid="feed-stack-by-agent"
             aria-pressed={stackByAgent}
             onClick={() => setStackByAgent((value) => !value)}
             className={cn(
-              "ml-auto rounded-full px-3 py-1.5 text-xs",
+              "absolute right-4 top-1/2 mt-2 -translate-y-1/2 rounded-full px-3 py-1.5 text-xs",
               stackByAgent
                 ? "bg-surface-raised text-contrast"
                 : "text-muted hover:text-contrast",

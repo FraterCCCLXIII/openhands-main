@@ -131,6 +131,7 @@ export function FeedCard({ conversation }: FeedCardProps) {
           data-testid="feed-card-agent-avatar"
           agent={agent}
           size={40}
+          status={conversation.execution_status}
         />
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-contrast">

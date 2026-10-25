@@ -73,7 +73,11 @@ export function FeedNotificationCard({
         KIND_ACCENT[kind],
       )}
     >
-      <FeedAgentAvatar agent={agent} size={36} />
+      <FeedAgentAvatar
+        agent={agent}
+        size={36}
+        status={conversation.execution_status}
+      />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">
           <span

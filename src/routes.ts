@@ -15,6 +15,7 @@ export default [
     ),
     route("conversations/:conversationId", "routes/conversation.tsx"),
     route("feed", "routes/feed.tsx"),
+    route("mock/feed-styles", "routes/mock-feed-styles.tsx"),
     route("launch", "routes/launch.tsx"),
     route("kanban", "routes/kanban.tsx"),
     route("mock/style-guide", "routes/mock-style-guide.tsx"),
