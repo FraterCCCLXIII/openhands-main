@@ -2,6 +2,7 @@ import React from "react";
 import { PanelsTopLeft } from "lucide-react";
 import { useCanvasExtensionIcon } from "#/hooks/query/use-canvas-extension-icon";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
+import { cn } from "#/utils/utils";
 
 interface CanvasExtensionIconProps {
   extension: InstalledCanvasExtensionInfo;
@@ -10,6 +11,9 @@ interface CanvasExtensionIconProps {
 }
 
 // Rendered via <img> (never inlined) so the SVG cannot run scripts.
+// SVGs using stroke="currentColor" render as black in an <img> because the
+// SVG is isolated from the DOM. The invert filter converts black to white,
+// then opacity approximates the muted text color.
 export function CanvasExtensionIcon({
   extension,
   size,
@@ -50,7 +54,7 @@ export function CanvasExtensionIcon({
       height={size}
       alt=""
       aria-hidden
-      className={className}
+      className={cn("invert opacity-65", className)}
       data-testid="canvas-extension-icon"
       onError={() => setSrc(null)}
     />
