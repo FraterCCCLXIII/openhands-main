@@ -7,6 +7,8 @@ interface KamijiFallbackProps {
   size: number;
   expression: KamijiExpression;
   shape?: KamijiShape;
+  mouth?: boolean;
+  outline?: boolean;
   className?: string;
 }
 
@@ -20,6 +22,8 @@ export function KamijiFallback({
   size,
   expression,
   shape = "hand",
+  mouth = KAMIJI_SHOW_MOUTH,
+  outline = false,
   className,
 }: KamijiFallbackProps) {
   return (
@@ -30,7 +34,12 @@ export function KamijiFallback({
       className={className}
       aria-hidden="true"
     >
-      <g fill={color}>
+      <g
+        fill={color}
+        stroke={outline ? "currentColor" : undefined}
+        strokeWidth={outline ? 2 : undefined}
+        className={outline ? "text-black/80" : undefined}
+      >
         {shape === "hand" && (
           <>
             <rect
@@ -66,7 +75,7 @@ export function KamijiFallback({
         <ellipse cx="24" cy="32" rx="2.4" ry="3.2" />
         <ellipse cx="40" cy="32" rx="2.4" ry="3.2" />
       </g>
-      {KAMIJI_SHOW_MOUTH && (
+      {mouth && (
         <path
           d={FROWNING.includes(expression) ? GLUM_MOUTH : FRIENDLY_MOUTH}
           fill="none"

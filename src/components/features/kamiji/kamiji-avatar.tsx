@@ -30,6 +30,13 @@ export interface KamijiAvatarProps {
   /** Morphs the hand into a sphere or rounded cube (fingers stop moving). */
   shape?: KamijiShape;
   shapeDurationMs?: number;
+  /** Shows the hand's mouth (hidden by default). */
+  mouth?: boolean;
+  /** Toon outline around the silhouette. */
+  outline?: boolean;
+  /** Extra turn in radians on top of the animation (drag, pointer follow). */
+  viewYaw?: number;
+  viewPitch?: number;
   /** Edge length in CSS pixels. */
   size?: number;
   className?: string;
@@ -45,6 +52,10 @@ export function KamijiAvatar({
   lockFace = false,
   shape = "hand",
   shapeDurationMs,
+  mouth,
+  outline,
+  viewYaw,
+  viewPitch,
   size = DEFAULT_SIZE,
   className,
 }: KamijiAvatarProps) {
@@ -64,6 +75,8 @@ export function KamijiAvatar({
         size={size}
         expression={expression}
         shape={shape}
+        mouth={mouth}
+        outline={outline}
         className={cn("block", !unavailable && "invisible")}
       />
       {!unavailable && (
@@ -78,6 +91,10 @@ export function KamijiAvatar({
             shapeDurationMs={shapeDurationMs}
             pose={pose}
             poseDurationMs={poseDurationMs}
+            mouth={mouth}
+            outline={outline}
+            viewYaw={viewYaw}
+            viewPitch={viewPitch}
             onReady={() => setReady(true)}
             onUnavailable={() => setUnavailable(true)}
           />

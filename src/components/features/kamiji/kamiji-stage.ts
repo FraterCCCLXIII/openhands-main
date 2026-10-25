@@ -64,6 +64,7 @@ import {
   stepPoseTween,
 } from "./kamiji-pose-tween";
 import { isolateHandSkinWeights } from "./kamiji-skin-weights";
+import { drawWithOutline } from "./kamiji-outline";
 
 const RENDER_SIZE = 256;
 const CAMERA_DISTANCE = 5.2;
@@ -90,6 +91,8 @@ const MORPH_RESPONSE = 12;
 const SWAY_RADIANS = 0.2;
 const SWAY_SPEED = 0.6;
 const MOTION_RESPONSE = 14;
+const VIEW_RESPONSE = 10;
+const VIEW_EPSILON = 0.002;
 const BLINK_SECONDS = 0.12;
 const BLINK_MIN_GAP = 2;
 const BLINK_GAP_JITTER = 3;
@@ -186,6 +189,13 @@ export interface KamijiOptions {
   lockFace?: boolean;
   shape?: KamijiShape;
   shapeDurationMs?: number;
+  /** Shows the mouth and tongue; defaults to `KAMIJI_SHOW_MOUTH`. */
+  mouth?: boolean;
+  /** Toon outline around the silhouette. */
+  outline?: boolean;
+  /** Extra turn in radians on top of the animation (drag, pointer follow). */
+  viewYaw?: number;
+  viewPitch?: number;
 }
 
 export class KamijiInstance {
@@ -206,6 +216,10 @@ export class KamijiInstance {
   private readonly shadowLight = new HemisphereLight(SKY_LIGHT, 0xffffff, 2);
 
   private readonly morphMeshes: Mesh[] = [];
+
+  private mouthMeshes: Mesh[] = [];
+
+  private view = { yaw: 0, pitch: 0 };
 
   private readonly current = new Map<KamijiMorph, number>();
 
@@ -313,7 +327,8 @@ export class KamijiInstance {
       if (mesh.morphTargetDictionary) this.morphMeshes.push(mesh);
     }
     this.skin = skin ?? new MeshPhysicalMaterial();
-    if (!KAMIJI_SHOW_MOUTH) this.hideMouth();
+    this.mouthMeshes = this.findMouthMeshes();
+    this.setMouth(options.mouth ?? KAMIJI_SHOW_MOUTH);
     if (!KAMIJI_SHOW_GLINTS) this.hideGlints();
     if (!KAMIJI_SHOW_BROWS) this.hideBrows();
 
@@ -332,6 +347,7 @@ export class KamijiInstance {
     this.setAnimation(options.animation);
     if (options.pose) this.setPose(options.pose, 0);
     if (options.shape) this.setShape(options.shape, 0);
+    this.view = { yaw: options.viewYaw ?? 0, pitch: options.viewPitch ?? 0 };
   }
 
   static async create(options: KamijiOptions): Promise<KamijiInstance> {
@@ -370,8 +386,8 @@ export class KamijiInstance {
     });
   }
 
-  /** Hides the tongue and the dark primitive below the eyes (the mouth). */
-  private hideMouth() {
+  /** The tongue and the dark primitive below the eyes (the mouth). */
+  private findMouthMeshes(): Mesh[] {
     const centerY = (mesh: Mesh) => {
       mesh.geometry.computeBoundingBox();
       const box = mesh.geometry.boundingBox;
@@ -384,13 +400,55 @@ export class KamijiInstance {
       (mesh) => (mesh.material as Material).name === EYE_MATERIAL_NAME,
     );
     const eyeY = eye ? centerY(eye) : 0;
-    faceMeshes.forEach((mesh) => {
+    return faceMeshes.filter((mesh) => {
       const name = (mesh.material as Material).name;
-      const isMouth =
+      return (
         name === TONGUE_MATERIAL_NAME ||
-        (name === INK_MATERIAL_NAME && centerY(mesh) < eyeY);
-      if (isMouth) Object.assign(mesh, { visible: false });
+        (name === INK_MATERIAL_NAME && centerY(mesh) < eyeY)
+      );
     });
+  }
+
+  setMouth(show: boolean) {
+    this.options.mouth = show;
+    this.mouthMeshes.forEach((mesh) => Object.assign(mesh, { visible: show }));
+    this.dirty = true;
+  }
+
+  setOutline(outline: boolean) {
+    this.options.outline = outline;
+    this.dirty = true;
+  }
+
+  /** Turns the hand by extra yaw / pitch (radians); eased unless reduced motion. */
+  setView(yaw = 0, pitch = 0) {
+    this.options.viewYaw = yaw;
+    this.options.viewPitch = pitch;
+    this.dirty = true;
+  }
+
+  /** Eases the view toward its target; returns true while it is still moving. */
+  private applyView(dt: number): boolean {
+    const targetYaw = this.options.viewYaw ?? 0;
+    const targetPitch = this.options.viewPitch ?? 0;
+    const blend = this.reducedMotion ? 1 : 1 - Math.exp(-VIEW_RESPONSE * dt);
+    const view = this.view;
+    view.yaw += (targetYaw - view.yaw) * blend;
+    view.pitch += (targetPitch - view.pitch) * blend;
+    const settled =
+      Math.abs(targetYaw - view.yaw) < VIEW_EPSILON &&
+      Math.abs(targetPitch - view.pitch) < VIEW_EPSILON;
+    if (settled) {
+      view.yaw = targetYaw;
+      view.pitch = targetPitch;
+    }
+    if (this.reducedMotion) {
+      this.root.rotation.set(view.pitch, view.yaw, 0);
+    } else {
+      this.root.rotation.x += view.pitch;
+      this.root.rotation.y += view.yaw;
+    }
+    return !settled;
   }
 
   setColor(color: string) {
@@ -615,9 +673,10 @@ export class KamijiInstance {
       if (!this.poseMode) this.mixer.update(dt);
       this.applyMotion(dt);
     }
+    const viewSettling = this.applyView(dt);
     this.applyFaceLock();
     this.applyFace(dt);
-    this.dirty = false;
+    this.dirty = viewSettling;
     return true;
   }
 
@@ -668,7 +727,11 @@ export class KamijiInstance {
     this.renderer.render(this.scene, this.camera);
     const { width, height } = context.canvas;
     context.clearRect(0, 0, width, height);
-    context.drawImage(this.renderer.domElement, 0, 0, width, height);
+    if (this.options.outline) {
+      drawWithOutline(context, this.renderer.domElement, width, height);
+    } else {
+      context.drawImage(this.renderer.domElement, 0, 0, width, height);
+    }
   }
 
   dispose() {

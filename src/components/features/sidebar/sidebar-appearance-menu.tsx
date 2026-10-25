@@ -35,7 +35,13 @@ import {
   usePrimaryColorStore,
   type PresetColorKey,
 } from "#/stores/primary-color-store";
+import { KamijiHandEditButton } from "#/components/features/kamiji/kamiji-hand-edit-button";
 import { cn } from "#/utils/utils";
+
+// three.js only loads once the editor (or a Kamiji avatar) is shown.
+const KamijiHandEditorDialog = React.lazy(
+  () => import("#/components/features/kamiji/kamiji-hand-editor-dialog"),
+);
 
 const PRIMARY_COLOR_NAME_KEYS: Record<PresetColorKey, I18nKey> = {
   blue: I18nKey.COLOR$BLUE,
@@ -64,6 +70,7 @@ export function SidebarAppearanceMenu({
 }) {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = React.useState(false);
+  const [handEditorOpen, setHandEditorOpen] = React.useState(false);
   const mappedTheme = useBackendColorThemeStore(
     (state) => state.themeByBackendId[backendId],
   );
@@ -276,10 +283,21 @@ export function SidebarAppearanceMenu({
                   </label>
                 </div>
               </div>
+              <KamijiHandEditButton
+                onClick={() => {
+                  setOpen(false);
+                  setHandEditorOpen(true);
+                }}
+              />
             </div>,
             document.body,
           )
         : null}
+      {handEditorOpen ? (
+        <React.Suspense fallback={null}>
+          <KamijiHandEditorDialog onClose={() => setHandEditorOpen(false)} />
+        </React.Suspense>
+      ) : null}
     </div>
   );
 }

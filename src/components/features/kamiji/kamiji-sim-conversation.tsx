@@ -2,6 +2,7 @@
 import React from "react";
 import { cn } from "#/utils/utils";
 import { KamijiWithEmote, type KamijiEmoteType } from "./kamiji-emote";
+import { KamijiHandAvatar } from "./kamiji-hand-avatar";
 import type {
   KamijiAnimation,
   KamijiExpression,
@@ -16,6 +17,8 @@ interface SimTurn {
   expression: KamijiExpression;
   animation: KamijiAnimation;
   pose: KamijiPose;
+  /** Draws the user's own customised Hand (from the Hand editor) instead of an agent Kamiji. */
+  isUser?: boolean;
   emote?: KamijiEmoteType;
   emoteText?: string;
   text: string;
@@ -29,6 +32,16 @@ interface SimMessage extends SimTurn {
 }
 
 const SCRIPT: SimMessage[] = [
+  {
+    name: "You",
+    color: "#9aa4b2",
+    role: "you",
+    isUser: true,
+    expression: "happy",
+    animation: "Idle",
+    pose: "open",
+    text: "Login fails after the token refresh. Can you take a look?",
+  },
   {
     name: "Planner",
     color: "#ffd23f",
@@ -136,15 +149,19 @@ function Turn({ turn, size }: { turn: SimTurn; size: number }) {
       className="flex items-start gap-3 kamiji-sim-in"
       data-testid={`kamiji-sim-turn-${turn.name}`}
     >
-      <KamijiWithEmote
-        size={size}
-        color={turn.color}
-        expression={turn.expression}
-        animation={turn.animation}
-        pose={turn.pose}
-        emote={turn.emote ?? null}
-        emoteText={turn.emoteText}
-      />
+      {turn.isUser ? (
+        <KamijiHandAvatar size={size} />
+      ) : (
+        <KamijiWithEmote
+          size={size}
+          color={turn.color}
+          expression={turn.expression}
+          animation={turn.animation}
+          pose={turn.pose}
+          emote={turn.emote ?? null}
+          emoteText={turn.emoteText}
+        />
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-2">
           <span
