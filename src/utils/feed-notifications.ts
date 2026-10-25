@@ -51,3 +51,23 @@ export function sortForNotifications(
       b.updated_at.localeCompare(a.updated_at),
   );
 }
+
+/** The kind that most needs a person among these conversations; idle when none. */
+export function getMostUrgentNotificationKind(
+  conversations: readonly AppConversation[],
+): FeedNotificationKind {
+  return conversations.reduce<FeedNotificationKind>((urgent, conversation) => {
+    const kind = getFeedNotificationKind(conversation.execution_status);
+    return ATTENTION_ORDER[kind] < ATTENTION_ORDER[urgent] ? kind : urgent;
+  }, "idle");
+}
+
+/** How many conversations are waiting on a person or have failed. */
+export function countNeedingAttention(
+  conversations: readonly AppConversation[],
+): number {
+  return conversations.filter((conversation) => {
+    const kind = getFeedNotificationKind(conversation.execution_status);
+    return kind === "needs_input" || kind === "error";
+  }).length;
+}

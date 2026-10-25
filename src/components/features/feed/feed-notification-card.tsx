@@ -17,6 +17,7 @@ import { cn } from "#/utils/utils";
 import { getFeedAgentRole } from "#/utils/feed-agent-role";
 import { FeedRoleBadge } from "./feed-role-badge";
 import { FeedAgentAvatar } from "./feed-agent-avatar";
+import { notificationLookKey } from "#/components/features/kamiji/kamiji-look";
 
 const KIND_LABEL: Record<FeedNotificationKind, I18nKey> = {
   needs_input: I18nKey.FEED$NOTIFY_NEEDS_INPUT,
@@ -76,7 +77,7 @@ export function FeedNotificationCard({
       <FeedAgentAvatar
         agent={agent}
         size={36}
-        status={conversation.execution_status}
+        look={notificationLookKey(kind)}
       />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">

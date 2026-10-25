@@ -13,7 +13,16 @@ import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useArchivedConversationsStore } from "#/stores/archived-conversations-store";
 import { usePinnedConversationsStore } from "#/stores/pinned-conversations-store";
 import { isEffectivelyArchivedConversation } from "#/utils/conversation-archive-status";
-import { sortForNotifications } from "#/utils/feed-notifications";
+import {
+  countNeedingAttention,
+  getMostUrgentNotificationKind,
+  sortForNotifications,
+} from "#/utils/feed-notifications";
+import { KamijiLookAvatar } from "#/components/features/kamiji/kamiji-look-avatar";
+import {
+  notificationLookKey,
+  type KamijiLookKey,
+} from "#/components/features/kamiji/kamiji-look";
 import { cn } from "#/utils/utils";
 import { getFeedAgent } from "#/utils/feed-agent";
 import { isFeedDemoAgentsEnabled } from "#/utils/feed-demo-agents";
@@ -79,6 +88,12 @@ export function Feed() {
       ...shown.filter((c) => !pinned.has(c.id)),
     ];
   }, [conversations, filter, pinnedIds, archivedIds]);
+
+  const attentionCount = countNeedingAttention(visible);
+  const tabLook: Record<FeedView, KamijiLookKey> = {
+    feed: "tab:feed",
+    notifications: notificationLookKey(getMostUrgentNotificationKind(visible)),
+  };
 
   let body;
   if (isLoading) {
@@ -165,7 +180,22 @@ export function Feed() {
                         transition={PILL_TRANSITION}
                       />
                     ) : null}
-                    <span className="relative z-10">{t(label)}</span>
+                    <span className="relative z-10 flex items-center gap-2">
+                      <KamijiLookAvatar
+                        look={tabLook[tabView]}
+                        size={20}
+                        showProp={false}
+                      />
+                      {t(label)}
+                      {tabView === "notifications" && attentionCount > 0 ? (
+                        <span
+                          data-testid="feed-tab-notifications-count"
+                          className="rounded-full bg-contrast px-1.5 text-xs font-semibold tabular-nums text-contrast-foreground"
+                        >
+                          {attentionCount}
+                        </span>
+                      ) : null}
+                    </span>
                   </button>
                 );
               })}

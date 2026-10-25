@@ -77,6 +77,20 @@ export const KAMIJI_PROPS = [
   { name: "branch", category: "dev", tint: "#7ee787" },
   { name: "pull_request", category: "dev", tint: "#a371f7" },
   { name: "merge", category: "dev", tint: "#ba8cff" },
+  { name: "git_commit", category: "git", tint: "#7aa7ff" },
+  { name: "git_branch", category: "git", tint: "#7ee787" },
+  { name: "git_fork", category: "git", tint: "#7ee787" },
+  { name: "git_pull_request", category: "git", tint: "#3fb261" },
+  { name: "git_pull_request_merged", category: "git", tint: "#a371f7" },
+  { name: "git_merge", category: "git", tint: "#ba8cff" },
+  { name: "git_issue_open", category: "git", tint: "#3fb261" },
+  { name: "git_issue_closed", category: "git", tint: "#a371f7" },
+  { name: "git_check_pass", category: "git", tint: "#4cd964" },
+  { name: "git_ci_fail", category: "git", tint: "#ff6b6b" },
+  { name: "git_ci_running", category: "git", tint: "#ffc24a" },
+  { name: "git_conflict", category: "git", tint: "#ff8a5c" },
+  { name: "git_review", category: "git", tint: "#5ac8fa" },
+  { name: "git_release", category: "git", tint: "#ff6a4a" },
 ] as const;
 
 export type KamijiPropName = (typeof KAMIJI_PROPS)[number]["name"];

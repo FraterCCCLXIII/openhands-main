@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronRight, Network } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { KamijiLookBadge } from "#/components/features/kamiji/kamiji-look-avatar";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { ConversationStatusDot } from "#/components/features/conversation-panel/conversation-status-dot";
 import { NavigationLink } from "#/components/shared/navigation-link";
@@ -42,7 +43,7 @@ export function FeedSubagents({ conversation, inView }: FeedSubagentsProps) {
         onClick={() => setExpanded((value) => !value)}
         className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-left hover:text-contrast"
       >
-        <Network size={14} />
+        <KamijiLookBadge look="ref:subagents" size={18} />
         <span className="font-medium text-contrast">
           {t(I18nKey.FEED$SUBAGENTS_MANAGING, { count: directCount })}
         </span>

@@ -21,7 +21,7 @@ export default [
     route("mock/style-guide", "routes/mock-style-guide.tsx"),
     route("mock/app-window", "routes/mock-app-window.tsx"),
     route("mock/kamiji", "routes/mock-kamiji.tsx"),
-    route("mock/feed-styles", "routes/mock-feed-styles.tsx"),
+    route("mock/kamiji-looks", "routes/mock-kamiji-looks.tsx"),
     route("customize", "routes/extensions-hub.tsx"),
     route("skills", "routes/skills-settings.tsx"),
     route("plugins", "routes/skills-plugins.tsx"),

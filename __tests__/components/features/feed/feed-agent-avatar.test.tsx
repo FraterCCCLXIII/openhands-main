@@ -7,11 +7,11 @@ import { renderWithProviders } from "../../../../test-utils";
 
 describe("getFeedAgentLook", () => {
   it.each([
-    [ExecutionStatus.RUNNING, "thinking", "Think"],
-    [ExecutionStatus.FINISHED, "happy", "Idle"],
-    [ExecutionStatus.ERROR, "sad", "Idle"],
+    [ExecutionStatus.RUNNING, "neutral", "Typing"],
+    [ExecutionStatus.FINISHED, "excited", "Celebrate"],
+    [ExecutionStatus.ERROR, "surprised", "Bounce"],
     [ExecutionStatus.STUCK, "sad", "Idle"],
-    [ExecutionStatus.WAITING_FOR_CONFIRMATION, "surprised", "Idle"],
+    [ExecutionStatus.WAITING_FOR_CONFIRMATION, "thinking", "Think"],
     [ExecutionStatus.PAUSED, "sleepy", "Idle"],
     [ExecutionStatus.IDLE, "neutral", "Idle"],
     [undefined, "neutral", "Idle"],

@@ -9,9 +9,9 @@ import {
 } from "#/components/features/kamiji/kamiji-catalog";
 
 describe("catalogue", () => {
-  it("lists all 14 mochi and 24 props", () => {
+  it("lists all 14 mochi and 38 props (24 general, 14 git)", () => {
     expect(KAMIJI_MOCHI_IDS).toHaveLength(14);
-    expect(KAMIJI_PROP_NAMES).toHaveLength(24);
+    expect(KAMIJI_PROP_NAMES).toHaveLength(38);
   });
 });
 

@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { motion, useReducedMotion } from "framer-motion";
-import { CircleX, TriangleAlert, X } from "lucide-react";
+import { X } from "lucide-react";
+import { KamijiLookAvatar } from "#/components/features/kamiji/kamiji-look-avatar";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import {
@@ -78,19 +79,11 @@ function NotificationCard({
         isFront ? "cursor-grab active:cursor-grabbing" : "pointer-events-none",
       )}
     >
-      {isError ? (
-        <CircleX
-          aria-hidden
-          className="mt-0.5 size-4 shrink-0 text-status-error"
-          strokeWidth={2}
-        />
-      ) : (
-        <TriangleAlert
-          aria-hidden
-          className="mt-0.5 size-4 shrink-0 text-[color:var(--oh-color-warning,#e0a526)]"
-          strokeWidth={2}
-        />
-      )}
+      <KamijiLookAvatar
+        look={isError ? "toast:error" : "toast:warning"}
+        size={32}
+        className="-my-0.5"
+      />
       <p className="min-w-0 flex-1 [overflow-wrap:anywhere] whitespace-pre-wrap">
         {notification.message}
       </p>

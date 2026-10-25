@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, ExternalLink, Pin, Wrench } from "lucide-react";
+import { ExternalLink, Pin } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { FeedCardMenu } from "./feed-card-menu";
@@ -22,6 +22,8 @@ import { FeedUserAvatar } from "./feed-user-avatar";
 import { FeedRoleBadge } from "./feed-role-badge";
 import { getFeedAgentRole } from "#/utils/feed-agent-role";
 import { FeedAgentAvatar } from "./feed-agent-avatar";
+import { KamijiLookBadge } from "#/components/features/kamiji/kamiji-look-avatar";
+import { updateLookKey } from "#/components/features/kamiji/kamiji-look";
 import type { FeedUpdate, FeedUpdateKind } from "#/utils/feed-updates";
 
 const KIND_LABEL: Record<FeedUpdateKind, I18nKey> = {
@@ -41,17 +43,16 @@ function UpdateAvatar({
   update: FeedUpdate;
   agent: FeedAgent;
 }) {
-  let glyph;
+  const look = updateLookKey(update.kind);
+  if (update.kind === "user" || !look) return <FeedUserAvatar />;
   if (update.kind === "agent") {
-    return <FeedAgentAvatar agent={agent} size={32} />;
-  } else if (update.kind === "action") {
-    glyph = <Wrench size={14} />;
-  } else if (update.kind === "error") {
-    glyph = <AlertCircle size={14} className="text-danger" />;
-  } else {
-    return <FeedUserAvatar />;
+    return <FeedAgentAvatar agent={agent} size={32} look={look} />;
   }
-  return <span className={`${AVATAR_CLASS} size-8`}>{glyph}</span>;
+  return (
+    <span className={`${AVATAR_CLASS} size-8`}>
+      <KamijiLookBadge look={look} size={20} />
+    </span>
+  );
 }
 
 function FeedUpdateRow({

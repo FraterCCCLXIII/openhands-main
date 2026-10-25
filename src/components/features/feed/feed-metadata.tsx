@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ExternalLink,
-  FileDiff,
-  GitBranch,
-  GitFork,
-  GitPullRequest,
-  Ticket,
-} from "lucide-react";
+import { ExternalLink, FileDiff, GitFork, Ticket } from "lucide-react";
+import { KamijiLookBadge } from "#/components/features/kamiji/kamiji-look-avatar";
 import { FaBitbucket, FaGithub, FaGitlab } from "react-icons/fa6";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { useFeedChanges } from "#/hooks/query/use-feed-changes";
@@ -58,8 +52,8 @@ function Chip({
 }
 
 const TICKET_TRACKER_ICON: Record<FeedTicket["tracker"], ReactNode> = {
-  github: <FaGithub size={12} />,
-  gitlab: <FaGitlab size={12} />,
+  github: <KamijiLookBadge look="ref:ticket" size={16} />,
+  gitlab: <KamijiLookBadge look="ref:ticket" size={16} />,
   linear: <Ticket size={12} />,
   jira: <Ticket size={12} />,
   other: <Ticket size={12} />,
@@ -98,7 +92,7 @@ export function FeedRefBubbles({
     ...pullRequests.map((pr) => ({
       key: `pr:${pr.label}`,
       link: pr,
-      icon: <GitPullRequest size={12} />,
+      icon: <KamijiLookBadge look="ref:pull_request" size={16} />,
       testId: "feed-card-pr",
     })),
   ];
@@ -160,7 +154,7 @@ export function FeedMetadata({ conversation, inView }: FeedMetadataProps) {
         <Chip
           testId="feed-card-branch"
           link={branch}
-          icon={<GitBranch size={12} />}
+          icon={<KamijiLookBadge look="ref:branch" size={16} />}
         />
       ) : null}
       {worktree ? (

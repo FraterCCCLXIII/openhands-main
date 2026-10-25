@@ -16,6 +16,8 @@ export interface KamijiPropProps {
   spin?: boolean;
   className?: string;
   alt?: string;
+  /** 2D stand-in shown while loading or when WebGL is unavailable; defaults to a tinted chip. */
+  fallback?: React.ReactNode;
 }
 
 export function KamijiProp({
@@ -25,6 +27,7 @@ export function KamijiProp({
   spin = false,
   className,
   alt,
+  fallback,
 }: KamijiPropProps) {
   const [, setReady] = React.useState(false);
   const [unavailable, setUnavailable] = React.useState(false);
@@ -37,15 +40,32 @@ export function KamijiProp({
       data-testid="kamiji-prop"
       className={cn("relative inline-block shrink-0", className)}
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 64 64"
-        className={cn("block", !unavailable && "invisible")}
-        aria-hidden="true"
-      >
-        <rect x="14" y="14" width="36" height="36" rx="12" fill={fill} />
-      </svg>
+      {fallback ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex items-center justify-center leading-none",
+            !unavailable && "invisible",
+          )}
+          ref={(el) => {
+            el?.style.setProperty("width", `${size}px`);
+            el?.style.setProperty("height", `${size}px`);
+            el?.style.setProperty("font-size", `${Math.round(size * 0.8)}px`);
+          }}
+        >
+          {fallback}
+        </span>
+      ) : (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 64 64"
+          className={cn("block", !unavailable && "invisible")}
+          aria-hidden="true"
+        >
+          <rect x="14" y="14" width="36" height="36" rx="12" fill={fill} />
+        </svg>
+      )}
       {!unavailable && (
         <React.Suspense fallback={null}>
           <KamijiPropScene
