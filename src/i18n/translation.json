@@ -9359,6 +9359,24 @@
     "ca": "avatar d'usuari",
     "id": "avatar pengguna"
   },
+  "KAMIJI$ALT_TEXT": {
+    "en": "agent avatar",
+    "ja": "エージェントアバター",
+    "zh-CN": "智能体头像",
+    "zh-TW": "代理頭像",
+    "ko-KR": "에이전트 아바타",
+    "de": "Agenten-Avatar",
+    "no": "Agentavatar",
+    "it": "Avatar dell'agente",
+    "pt": "Avatar do agente",
+    "es": "Avatar del agente",
+    "ar": "صورة الوكيل",
+    "fr": "Avatar de l'agent",
+    "tr": "Ajan avatarı",
+    "uk": "аватар агента",
+    "ca": "avatar de l'agent",
+    "id": "avatar agen"
+  },
   "BRANDING$OPENHANDS": {
     "en": "OpenHands",
     "ja": "OpenHands",
