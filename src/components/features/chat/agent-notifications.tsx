@@ -16,6 +16,7 @@ interface AgentNotificationsProps {
   onCreateAll: (selectedIds: string[]) => void;
   onDismiss: () => void;
   onRemove: (id: string) => void;
+  onSaveForLater: (id: string) => void;
   disabled?: boolean;
   isCreating?: boolean;
 }
@@ -25,6 +26,7 @@ export function AgentNotifications({
   onCreateAll,
   onDismiss,
   onRemove,
+  onSaveForLater,
   disabled = false,
   isCreating = false,
 }: AgentNotificationsProps) {
@@ -67,6 +69,7 @@ export function AgentNotifications({
         agentNotifications={agentNotifications}
         onSubmit={onCreateAll}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
         onDismiss={onDismiss}
         disabled={disabled}
         isSubmitting={isCreating}

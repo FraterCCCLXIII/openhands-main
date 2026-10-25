@@ -34,12 +34,13 @@ function Code({
   ExtraProps) {
   const colorTheme = useColorTheme();
   const match = /language-(\w+)/.exec(className || ""); // get the language
+  const language = match?.[1];
   const codeString = String(children).replace(/\n$/, "");
 
   // A well-formed `decision` block renders as an interactive card; anything
   // malformed falls through to a plain code block so the raw text stays visible.
   const decision =
-    match?.[1] === DECISION_LANGUAGE ? parseDecisionCard(codeString) : null;
+    language === DECISION_LANGUAGE ? parseDecisionCard(codeString) : null;
   if (decision) {
     return <DecisionCard spec={decision} />;
   }
@@ -69,7 +70,7 @@ function Code({
     );
   }
 
-  if (match[1] === CHOICE_TEMPLATE_LANGUAGE) {
+  if (language === CHOICE_TEMPLATE_LANGUAGE) {
     const template = parseChoiceTemplate(codeString);
     if (template) {
       return <MultipleChoiceCard template={template} />;
@@ -77,11 +78,11 @@ function Code({
   }
 
   return (
-    <CopyableContentWrapper text={codeString}>
+    <CopyableContentWrapper text={codeString} language={language}>
       <SyntaxHighlighter
         className="rounded-lg"
         style={getSyntaxHighlighterTheme(colorTheme)}
-        language={match?.[1]}
+        language={language}
         PreTag="div"
       >
         {codeString}
