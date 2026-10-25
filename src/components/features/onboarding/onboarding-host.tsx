@@ -1,5 +1,6 @@
 import { useLocation } from "react-router";
 import { getLockedCloudHost } from "#/api/agent-server-config";
+import { isNoBackend, NO_BACKEND_ID } from "#/api/backend-registry/active-store";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { SEEDED_DEFAULT_BACKEND_ID } from "#/api/backend-registry/default-backend";
 import { useSettings } from "#/hooks/query/use-settings";
@@ -53,11 +54,21 @@ export function OnboardingHost() {
   // so its reported LLM is trustworthy evidence that setup is already done.
   const trustsBackendLlm =
     backend.kind === "cloud" || backend.id !== SEEDED_DEFAULT_BACKEND_ID;
+  // For the seeded default backend, we need to wait for settings to load before
+  // deciding whether to show onboarding. This prevents the modal from appearing
+  // prematurely when the agent is starting up on a new port/version and the
+  // backend connection hasn't been established yet.
+  const hasBackend = !isNoBackend(backend) && backend.id !== NO_BACKEND_ID;
+  const settingsNotYetLoaded = hasBackend && settings.isLoading;
 
   if (!isPreview) {
     if (isCompleted) return null;
     if (getLockedCloudHost() !== null) return null;
-    if (trustsBackendLlm && settings.isLoading) return null;
+    // Wait for settings to load before showing onboarding, regardless of
+    // whether we trust the backend's LLM. This prevents the modal from
+    // flashing when the agent starts on a new port before the backend
+    // connection is established.
+    if (settingsNotYetLoaded) return null;
     if (trustsBackendLlm && hasUsableLlm(settings.data)) {
       return null;
     }

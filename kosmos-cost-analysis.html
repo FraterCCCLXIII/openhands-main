@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kosmos Roadmap - Model Cost Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 2rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        .chart-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .chart-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(255,255,255,0.05);
+            color: #00d4ff;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .price-low { color: #00ff88; }
+        .price-mid { color: #ffcc00; }
+        .price-high { color: #ff6b6b; }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-verified { background: #00884422; color: #00ff88; border: 1px solid #00ff88; }
+        .badge-unverified { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b; }
+        .badge-cheapest { background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff; }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+        .highlight-row {
+            background: rgba(0, 212, 255, 0.1) !important;
+        }
+        .savings-banner {
+            background: linear-gradient(90deg, #00884433, #00d4ff33);
+            border: 1px solid #00ff88;
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .savings-text {
+            font-size: 1.2rem;
+        }
+        .savings-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Kosmos Roadmap Cost Analysis</h1>
+        <p class="subtitle">432 open cards · ~4.71B tokens · Completion estimates by model</p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">432</div>
+                <div class="stat-label">Open Cards</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">4.71B</div>
+                <div class="stat-label">Est. Tokens Needed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">~335K</div>
+                <div class="stat-label">Lines of Code</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">181h</div>
+                <div class="stat-label">Agent Hours</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">17 days</div>
+                <div class="stat-label">At Current Pace</div>
+            </div>
+        </div>
+
+        <div class="savings-banner">
+            <div>
+                <div class="savings-text">Maximum Potential Savings (Gemini 2.5 Flash vs GPT-5.5)</div>
+                <div style="color: #888; font-size: 0.9rem;">From $9,914 down to $382</div>
+            </div>
+            <div class="savings-amount">96% savings · $9,532</div>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="chart-title">📊 Total Completion Cost by Model</h2>
+            <div class="chart-wrapper">
+                <canvas id="totalCostChart"></canvas>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div class="chart-container">
+                <h2 class="chart-title">💵 Cost per Million Tokens</h2>
+                <div class="chart-wrapper">
+                    <canvas id="perMillionChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h2 class="chart-title">📈 Cost Multiplier vs Measured Baseline</h2>
+                <div class="chart-wrapper">
+                    <canvas id="multiplierChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="chart-title">📋 Complete Model Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Total Est. Cost</th>
+                        <th>Per Call</th>
+                        <th>Per M Tokens</th>
+                        <th>vs Baseline</th>
+                        <th>Tokens/Job</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="highlight-row">
+                        <td><strong>Gemini 2.5 Flash</strong> <span class="badge badge-cheapest">CHEAPEST</span></td>
+                        <td class="price-low"><strong>$382</strong></td>
+                        <td>$0.0096</td>
+                        <td>$0.032</td>
+                        <td class="price-low">0.15×</td>
+                        <td>12M</td>
+                        <td><span class="badge badge-unverified">Unverified</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude Haiku 5.5</strong></td>
+                        <td class="price-low"><strong>$776</strong></td>
+                        <td>$0.011</td>
+                        <td>$0.065</td>
+                        <td class="price-low">0.30×</td>
+                        <td>15M</td>
+                        <td><span class="badge badge-unverified">Unverified</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude Sonnet 5.5</strong> (baseline)</td>
+                        <td class="price-mid"><strong>$2,622</strong></td>
+                        <td>$0.066</td>
+                        <td>$0.296</td>
+                        <td>1.01×</td>
+                        <td>12M</td>
+                        <td><span class="badge badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude Opus 5.5</strong></td>
+                        <td class="price-mid"><strong>$3,514</strong></td>
+                        <td>$0.085</td>
+                        <td>$0.286</td>
+                        <td>1.36×</td>
+                        <td>12M</td>
+                        <td><span class="badge badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gemini 3.1 Pro</strong></td>
+                        <td class="price-mid"><strong>$3,966</strong></td>
+                        <td>$0.120</td>
+                        <td>$0.333</td>
+                        <td>1.53×</td>
+                        <td>12M</td>
+                        <td><span class="badge badge-unverified">Unverified</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude Fable 5.1</strong></td>
+                        <td class="price-high"><strong>$6,620</strong></td>
+                        <td>$0.254</td>
+                        <td>$0.416</td>
+                        <td class="price-high">2.56×</td>
+                        <td>12M</td>
+                        <td><span class="badge badge-verified">Verified</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>GPT-5.5</strong></td>
+                        <td class="price-high"><strong>$9,914</strong></td>
+                        <td>$0.154</td>
+                        <td>$0.825</td>
+                        <td class="price-high">3.83×</td>
+                        <td>12M</td>
+                        <td><span class="badge badge-unverified">Unverified</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="chart-title">🎯 Token Breakdown by Card Tier</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Cards</th>
+                        <th>% of Work</th>
+                        <th>Est. Tokens</th>
+                        <th>Recommended Model</th>
+                        <th>Est. Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>T1 (Simple)</strong></td>
+                        <td>24</td>
+                        <td>5.6%</td>
+                        <td>~264M</td>
+                        <td>Gemini 2.5 Flash</td>
+                        <td class="price-low">~$8</td>
+                    </tr>
+                    <tr>
+                        <td><strong>T2 (Standard)</strong></td>
+                        <td>261</td>
+                        <td>60.4%</td>
+                        <td>~2,845M</td>
+                        <td>Gemini 2.5 Flash + Haiku gate</td>
+                        <td class="price-low">~$120</td>
+                    </tr>
+                    <tr>
+                        <td><strong>T3 (Complex)</strong></td>
+                        <td>140</td>
+                        <td>32.4%</td>
+                        <td>~1,526M</td>
+                        <td>Haiku + Opus verifier (35%)</td>
+                        <td class="price-mid">~$380</td>
+                    </tr>
+                    <tr>
+                        <td><strong>T4 (Critical)</strong></td>
+                        <td>23</td>
+                        <td>5.3%</td>
+                        <td>~251M</td>
+                        <td>Opus (human-in-loop)</td>
+                        <td class="price-mid">~$164</td>
+                    </tr>
+                    <tr style="background: rgba(0,212,255,0.1);">
+                        <td><strong>TOTAL</strong></td>
+                        <td><strong>432</strong></td>
+                        <td><strong>100%</strong></td>
+                        <td><strong>~4,710M</strong></td>
+                        <td>Optimized Mix</td>
+                        <td class="price-low"><strong>~$672</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="chart-title">📊 Cost Ranges by Strategy</h2>
+            <div class="chart-wrapper">
+                <canvas id="strategyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="chart-title">💰 Final Recommendations Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Agent Work</th>
+                        <th>All-In (with overhead)</th>
+                        <th>Savings vs Current</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Current Routing (T1 Haiku, T2 Sonnet, T3 Opus, T4 Fable)</td>
+                        <td>$1,400</td>
+                        <td class="price-high">$4,069</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Cheapest Viable (more Haiku)</td>
+                        <td>$1,352</td>
+                        <td class="price-mid">$3,930</td>
+                        <td class="price-low">3%</td>
+                    </tr>
+                    <tr>
+                        <td>All Haiku (risky)</td>
+                        <td>~$220</td>
+                        <td class="price-mid">~$640</td>
+                        <td class="price-low">84%</td>
+                    </tr>
+                    <tr>
+                        <td>All Gemini 2.5 Flash (untested)</td>
+                        <td>~$150</td>
+                        <td class="price-low">~$436</td>
+                        <td class="price-low">89%</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>🎯 Fully Optimized (Recommended)</strong></td>
+                        <td><strong>~$672</strong></td>
+                        <td class="price-low"><strong>$1,210 - $1,478</strong></td>
+                        <td class="price-low"><strong>62-70%</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Color scheme
+        const colors = {
+            geminiFlash: '#00ff88',
+            haiku: '#00d4ff',
+            sonnet: '#7b2cbf',
+            opus: '#ff9500',
+            geminiPro: '#4285f4',
+            fable: '#ff6b6b',
+            gpt: '#10a37f'
+        };
+
+        // Total Cost Chart
+        const totalCostCtx = document.getElementById('totalCostChart').getContext('2d');
+        new Chart(totalCostCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Gemini 2.5 Flash', 'Claude Haiku 5.5', 'Claude Sonnet 5.5', 'Claude Opus 5.5', 'Gemini 3.1 Pro', 'Claude Fable 5.1', 'GPT-5.5'],
+                datasets: [{
+                    label: 'Total Completion Cost ($)',
+                    data: [382, 776, 2622, 3514, 3966, 6620, 9914],
+                    backgroundColor: [
+                        colors.geminiFlash,
+                        colors.haiku,
+                        colors.sonnet,
+                        colors.opus,
+                        colors.geminiPro,
+                        colors.fable,
+                        colors.gpt
+                    ],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `$${ctx.raw.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { 
+                            color: '#888',
+                            callback: (val) => '$' + val.toLocaleString()
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#888' }
+                    }
+                }
+            }
+        });
+
+        // Per Million Chart
+        const perMillionCtx = document.getElementById('perMillionChart').getContext('2d');
+        new Chart(perMillionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Gemini Flash', 'Haiku', 'Opus', 'Sonnet', 'Gemini Pro', 'Fable', 'GPT-5.5'],
+                datasets: [{
+                    label: 'Cost per Million Tokens ($)',
+                    data: [0.032, 0.065, 0.286, 0.296, 0.333, 0.416, 0.825],
+                    backgroundColor: [
+                        colors.geminiFlash,
+                        colors.haiku,
+                        colors.opus,
+                        colors.sonnet,
+                        colors.geminiPro,
+                        colors.fable,
+                        colors.gpt
+                    ],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { 
+                            color: '#888',
+                            callback: (val) => '$' + val.toFixed(2)
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#888' }
+                    }
+                }
+            }
+        });
+
+        // Multiplier Chart
+        const multiplierCtx = document.getElementById('multiplierChart').getContext('2d');
+        new Chart(multiplierCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Gemini Flash (0.15×)', 'Haiku (0.30×)', 'Sonnet (1.01×)', 'Opus (1.36×)', 'Gemini Pro (1.53×)', 'Fable (2.56×)', 'GPT-5.5 (3.83×)'],
+                datasets: [{
+                    data: [0.15, 0.30, 1.01, 1.36, 1.53, 2.56, 3.83],
+                    backgroundColor: [
+                        colors.geminiFlash,
+                        colors.haiku,
+                        colors.sonnet,
+                        colors.opus,
+                        colors.geminiPro,
+                        colors.fable,
+                        colors.gpt
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#888' }
+                    }
+                }
+            }
+        });
+
+        // Strategy Comparison Chart
+        const strategyCtx = document.getElementById('strategyChart').getContext('2d');
+        new Chart(strategyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Current\nRouting', 'Cheapest\nViable', 'All\nHaiku', 'All Gemini\nFlash', 'Fully\nOptimized'],
+                datasets: [
+                    {
+                        label: 'Agent Work',
+                        data: [1400, 1352, 220, 150, 672],
+                        backgroundColor: colors.haiku,
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'Overhead',
+                        data: [2669, 2578, 420, 286, 806],
+                        backgroundColor: colors.sonnet,
+                        borderRadius: 8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#888' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: (ctx) => {
+                                const total = ctx.reduce((a, b) => a + b.raw, 0);
+                                return `Total: $${total.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { display: false },
+                        ticks: { color: '#888' }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { 
+                            color: '#888',
+                            callback: (val) => '$' + val.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

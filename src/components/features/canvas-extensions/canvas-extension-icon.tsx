@@ -3,6 +3,7 @@ import { PanelsTopLeft } from "lucide-react";
 import { useCanvasExtensionIcon } from "#/hooks/query/use-canvas-extension-icon";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 import { StyledIcon } from "#/ui/styled-icon";
+import { cn } from "#/utils/utils";
 
 interface CanvasExtensionIconProps {
   extension: InstalledCanvasExtensionInfo;
@@ -92,7 +93,7 @@ export function CanvasExtensionIcon({
       height={size}
       alt=""
       aria-hidden
-      className={className}
+      className={cn("dark:invert dark:opacity-70", className)}
       data-testid="canvas-extension-icon"
       onError={() => setSrc(null)}
     />

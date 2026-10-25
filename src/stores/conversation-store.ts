@@ -9,6 +9,7 @@ export type ConversationTab =
   | "files"
   | "commits"
   | "browser"
+  | "webview"
   | "terminal"
   | "planner"
   | "tasklist"

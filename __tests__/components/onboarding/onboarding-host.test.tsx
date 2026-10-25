@@ -15,6 +15,7 @@ import {
 } from "#/api/backend-registry/active-store";
 import { ActiveBackendProvider } from "#/contexts/active-backend-context";
 import { NavigationProvider } from "#/context/navigation-context";
+import type { Settings } from "#/types/settings";
 
 // We don't need to exercise the modal's internals here; just verify
 // whether OnboardingHost mounts it at all.
@@ -346,5 +347,41 @@ describe("OnboardingHost", () => {
     expect(
       window.localStorage.getItem(ONBOARDING_COMPLETED_STORAGE_KEY),
     ).toBeNull();
+  });
+
+  it("does not show the modal while settings is still loading for the seeded default backend", async () => {
+    // Regression test for the race condition where the modal would appear
+    // prematurely when the agent starts on a new port before the backend
+    // connection is established. The fix ensures we wait for settings to
+    // load before deciding whether to show onboarding.
+    const settingsPromise = {
+      resolve: (_settings: Settings) => {},
+    };
+    vi.spyOn(SettingsService, "getSettings").mockImplementation(
+      () =>
+        new Promise<Settings>((resolve) => {
+          settingsPromise.resolve = resolve;
+        }),
+    );
+
+    renderHost();
+
+    // While settings is loading, the modal should not be visible
+    expect(screen.queryByTestId("onboarding-modal-stub")).not.toBeInTheDocument();
+
+    // Resolve settings with no LLM configured
+    settingsPromise.resolve({
+      ...DEFAULT_SETTINGS,
+      llm_api_key_set: false,
+      agent_settings: {
+        ...DEFAULT_SETTINGS.agent_settings,
+        llm: { model: "" },
+      },
+    });
+
+    // Now the modal should appear
+    expect(
+      await screen.findByTestId("onboarding-modal-stub"),
+    ).toBeInTheDocument();
   });
 });

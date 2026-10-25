@@ -24,6 +24,7 @@ function Code({
   ExtraProps) {
   const colorTheme = useColorTheme();
   const match = /language-(\w+)/.exec(className || ""); // get the language
+  const language = match?.[1];
   const codeString = String(children).replace(/\n$/, "");
 
   if (!match) {
@@ -52,11 +53,11 @@ function Code({
   }
 
   return (
-    <CopyableContentWrapper text={codeString}>
+    <CopyableContentWrapper text={codeString} language={language}>
       <SyntaxHighlighter
         className="rounded-lg"
         style={getSyntaxHighlighterTheme(colorTheme)}
-        language={match?.[1]}
+        language={language}
         PreTag="div"
       >
         {codeString}

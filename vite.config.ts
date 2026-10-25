@@ -476,6 +476,11 @@ export default defineConfig(({ mode }) => {
       watch: {
         ignored: ["**/node_modules/**", "**/.git/**"],
       },
+      hmr: {
+        // Disable Vite's default error overlay; we show a branded
+        // "OpenHands is Updating" overlay instead (see src/dev/hmr-updating-overlay.ts).
+        overlay: false,
+      },
     },
     ssr: {
       noExternal: ["react-syntax-highlighter"],

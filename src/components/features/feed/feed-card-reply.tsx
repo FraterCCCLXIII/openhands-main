@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Paperclip, SendHorizontal, X } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
-import { FeedUserAvatar } from "./feed-user-avatar";
 import { FEED_QUERY_KEYS } from "#/hooks/query/query-keys";
 import { I18nKey } from "#/i18n/declaration";
 import { isMissingSandboxStatus } from "#/utils/conversation-archive-status";
@@ -93,94 +92,90 @@ export function FeedCardReply({
   return (
     <form
       data-testid="feed-card-reply"
-      className="flex items-end gap-2"
+      className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
         void send();
       }}
     >
-      <FeedUserAvatar className="mb-1" />
-      <div className="flex min-w-0 flex-1 flex-col rounded-2xl bg-surface">
-        {attachments.length > 0 ? (
-          <ul
-            data-testid="feed-card-reply-attachments"
-            className="flex flex-wrap gap-1 px-3 pt-2"
-          >
-            {attachments.map((file, index) => (
-              <li
-                key={`${file.name}:${index}`}
-                className="flex max-w-40 items-center gap-1 rounded-md bg-surface-raised px-2 py-0.5 text-xs text-muted"
+      {attachments.length > 0 ? (
+        <ul
+          data-testid="feed-card-reply-attachments"
+          className="flex flex-wrap gap-1"
+        >
+          {attachments.map((file, index) => (
+            <li
+              key={`${file.name}:${index}`}
+              className="flex max-w-40 items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs text-muted"
+            >
+              <span className="truncate">{file.name}</span>
+              <button
+                type="button"
+                aria-label={t(I18nKey.FEED$REMOVE_ATTACHMENT)}
+                onClick={() =>
+                  setAttachments((current) =>
+                    current.filter((_, i) => i !== index),
+                  )
+                }
               >
-                <span className="truncate">{file.name}</span>
-                <button
-                  type="button"
-                  aria-label={t(I18nKey.FEED$REMOVE_ATTACHMENT)}
-                  onClick={() =>
-                    setAttachments((current) =>
-                      current.filter((_, i) => i !== index),
-                    )
-                  }
-                >
-                  <X size={12} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="flex items-end">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            hidden
-            data-testid="feed-card-reply-file-input"
-            onChange={(event) => {
-              const input = event.target;
-              addFiles(Array.from(input.files ?? []));
-              // Allow picking the same file again after removing it.
-              input.value = "";
-            }}
-          />
-          <button
-            type="button"
-            disabled={unavailable}
-            aria-label={t(I18nKey.FEED$ATTACH)}
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-muted hover:text-contrast disabled:opacity-50"
-          >
-            <Paperclip size={16} />
-          </button>
-          <textarea
-            ref={inputRef}
-            data-testid="feed-card-reply-input"
-            rows={1}
-            value={text}
-            disabled={unavailable}
-            placeholder={t(I18nKey.FEED$REPLY_PLACEHOLDER)}
-            aria-label={t(I18nKey.FEED$REPLY_PLACEHOLDER)}
-            onChange={(event) => {
-              setText(event.target.value);
-              resize();
-            }}
-            onPaste={handlePaste}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                void send();
-              }
-            }}
-            className="min-w-0 flex-1 resize-none bg-transparent py-2 text-sm text-contrast outline-none placeholder:text-muted disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            data-testid="feed-card-reply-send"
-            disabled={!canSend}
-            aria-label={t(I18nKey.FEED$SEND)}
-            className="p-2 text-contrast disabled:text-muted disabled:opacity-50"
-          >
-            <SendHorizontal size={16} />
-          </button>
-        </div>
+                <X size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          hidden
+          data-testid="feed-card-reply-file-input"
+          onChange={(event) => {
+            const input = event.target;
+            addFiles(Array.from(input.files ?? []));
+            input.value = "";
+          }}
+        />
+        <button
+          type="button"
+          disabled={unavailable}
+          aria-label={t(I18nKey.FEED$ATTACH)}
+          onClick={() => fileInputRef.current?.click()}
+          className="shrink-0 text-muted transition-colors hover:text-contrast disabled:opacity-50"
+        >
+          <Paperclip size={18} />
+        </button>
+        <textarea
+          ref={inputRef}
+          data-testid="feed-card-reply-input"
+          rows={1}
+          value={text}
+          disabled={unavailable}
+          placeholder={t(I18nKey.FEED$REPLY_PLACEHOLDER)}
+          aria-label={t(I18nKey.FEED$REPLY_PLACEHOLDER)}
+          onChange={(event) => {
+            setText(event.target.value);
+            resize();
+          }}
+          onPaste={handlePaste}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void send();
+            }
+          }}
+          className="min-w-0 flex-1 resize-none bg-transparent text-sm text-contrast outline-none placeholder:text-muted disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          data-testid="feed-card-reply-send"
+          disabled={!canSend}
+          aria-label={t(I18nKey.FEED$SEND)}
+          className="shrink-0 text-muted transition-colors hover:text-contrast disabled:opacity-50"
+        >
+          <SendHorizontal size={18} />
+        </button>
       </div>
     </form>
   );

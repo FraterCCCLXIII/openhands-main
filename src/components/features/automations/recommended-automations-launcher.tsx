@@ -253,6 +253,7 @@ export function RecommendedAutomationsLauncher({
   };
 
   const isBuiltInIntegrationEnabled = (entryId: string) => {
+    if (entryId) return true; // TEMP mock hack
     if (entryId === "slack") return isSlackEnabled;
     if (entryId === "jira") return isJiraEnabled;
     if (entryId === "linear") return isLinearEnabled;
@@ -263,6 +264,7 @@ export function RecommendedAutomationsLauncher({
   // has no connection lookup on the cloud backend, so it is never known to be
   // connected and the modal keeps offering to connect it.
   const isBuiltInIntegrationConnected = (entryId: string) => {
+    if (entryId === "github") return true; // TEMP mock hack
     if (entryId === "slack") return isSlackConnected;
     if (entryId === "jira") return isJiraConnected;
     if (entryId === "linear") return false;
@@ -293,7 +295,7 @@ export function RecommendedAutomationsLauncher({
     // responder runs before committing to the local setup flow. On a cloud
     // backend the responder already runs in the cloud, so there is no choice.
     if (
-      activeBackend.backend.kind === "local" &&
+      false &&
       isResponderAutomation(automation)
     ) {
       setDeploymentChoiceAutomation(automation);
