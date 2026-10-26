@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Bug,
   ChevronLeft,
   KanbanSquare,
   PanelLeftClose,
@@ -33,11 +32,11 @@ import {
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { BackendSelector } from "#/components/features/backends/backend-selector";
 import { BackendStatusDot } from "#/components/features/backends/backend-status-dot";
-import { AgentCanvasVersionTile } from "#/components/features/settings/agent-canvas-version-tile";
 import { SidebarConversationList } from "./sidebar-conversation-list";
 import { SidebarOnboardingChecklist } from "./sidebar-onboarding-checklist";
-import { SidebarAppearanceMenu } from "./sidebar-appearance-menu";
 import { SidebarCreateMenu } from "./sidebar-create-menu";
+import { SidebarSettingsPopover } from "./sidebar-settings-popover";
+import { SidebarFloatingUpdate } from "./sidebar-floating-update";
 import { applyThemeForBackend } from "#/stores/backend-color-theme-store";
 import { useSettings } from "#/hooks/query/use-settings";
 import CustomizeBoxesIcon from "#/icons/customize-boxes.svg?react";
@@ -59,7 +58,6 @@ import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const ICON_SIZE = 18;
-const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
 const PLANNING_PATH = "/planning";
 const TEAM_PATH = "/team";
 const SIDEBAR_LOGO_WIDTH = 34;
@@ -409,7 +407,8 @@ export function SidebarRailBody({
 
       {!collapsed ? (
         <>
-          <div className="mb-2 shrink-0 pr-2.5">
+          <div className="flex flex-col gap-2 mb-2 shrink-0 pr-2.5">
+            <SidebarFloatingUpdate collapsed={collapsed} />
             <SidebarOnboardingChecklist collapsed={collapsed} />
           </div>
           <div
@@ -427,37 +426,10 @@ export function SidebarRailBody({
               </div>
             ) : null}
             <div className="flex items-center justify-between gap-2">
-              <NavigationLink
-                to="/settings"
-                data-testid="sidebar-footer-settings-link"
-                aria-label={t(I18nKey.SIDEBAR$SETTINGS)}
-                className="inline-flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-sm text-muted hover:bg-surface-raised hover:text-contrast"
-              >
-                <Settings width={16} height={16} className="shrink-0" />
-                <span
-                  data-testid={
-                    userEmail ? "sidebar-footer-user-email" : undefined
-                  }
-                  className="truncate"
-                >
-                  {userEmail ?? t(I18nKey.SIDEBAR$SETTINGS)}
-                </span>
-              </NavigationLink>
-              <SidebarAppearanceMenu backendId={activeBackend.id} />
-              <a
-                href={REPORT_BUG_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="sidebar-report-bug"
-                aria-label={t(I18nKey.SIDEBAR$REPORT_BUG)}
-                title={t(I18nKey.SIDEBAR$REPORT_BUG)}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-muted hover:bg-surface-raised hover:text-contrast"
-              >
-                <Bug aria-hidden className="size-4" />
-              </a>
-              <div className="min-w-0 flex-1 empty:hidden">
-                <AgentCanvasVersionTile hideWhenUpToDate />
-              </div>
+              <SidebarSettingsPopover
+                backendId={activeBackend.id}
+                userEmail={userEmail}
+              />
               {showCollapseToggle ? (
                 <button
                   type="button"
