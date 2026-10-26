@@ -145,3 +145,21 @@ export async function getCloudOrganizationMember(
     path: `/api/organizations/${encodeURIComponent(orgId)}/members/${encodeURIComponent(userId)}`,
   });
 }
+
+/**
+ * Fetch `GET /api/organizations/{orgId}/members`: list all members of the
+ * organization. Used by the Team page to display teammates and their roles.
+ * Returns an empty array if the endpoint is unavailable or returns an error.
+ */
+export async function getCloudOrganizationMembers(
+  orgId: string,
+  backend?: Backend,
+): Promise<CloudOrganizationMember[]> {
+  const target = resolveBackend(backend);
+  const data = await callCloudProxy<{ items: CloudOrganizationMember[] }>({
+    backend: target,
+    method: "GET",
+    path: `/api/organizations/${encodeURIComponent(orgId)}/members`,
+  });
+  return data?.items ?? [];
+}
