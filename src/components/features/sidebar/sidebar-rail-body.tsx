@@ -5,6 +5,7 @@ import {
   KanbanSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Newspaper,
   Plus,
   Server,
   Settings,
@@ -57,6 +58,7 @@ import type { Backend } from "#/api/backend-registry/types";
 import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
+const FEED_PATH = "/feed";
 const ICON_SIZE = 18;
 const PLANNING_PATH = "/planning";
 const TEAM_PATH = "/team";
@@ -242,6 +244,13 @@ export function SidebarRailBody({
             </span>
           }
           trailing={<SidebarCreateMenu />}
+        />
+        <SidebarNavLink
+          to={FEED_PATH}
+          label={t(I18nKey.FEED$TITLE)}
+          testId="sidebar-feed-link"
+          collapsed={collapsed}
+          icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}
