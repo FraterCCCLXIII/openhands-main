@@ -3,6 +3,7 @@ import KeyIcon from "#/icons/key.svg?react";
 import MemoryIcon from "#/icons/memory_icon.svg?react";
 import CircuitIcon from "#/icons/u-circuit.svg?react";
 import RobotIcon from "#/icons/u-robot.svg?react";
+import ServerIcon from "#/icons/server.svg?react";
 
 export interface SettingsNavItem {
   icon: React.ReactElement;
@@ -13,6 +14,12 @@ export interface SettingsNavItem {
 }
 
 export const OSS_NAV_ITEMS: SettingsNavItem[] = [
+  {
+    icon: <ServerIcon width={16} height={16} />,
+    to: "/settings/backends",
+    text: "SETTINGS$NAV_BACKENDS",
+    subtitle: "SETTINGS$PAGE_BACKENDS_SUBLINE",
+  },
   {
     // "Agent" is the Agent Profile library: it lists the user's agent profiles
     // and its create/edit view is the reused Agent settings form plus a name.

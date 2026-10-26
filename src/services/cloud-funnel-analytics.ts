@@ -6,6 +6,7 @@ export type CloudConnectionSource =
   | "onboarding"
   | "add_backend_modal"
   | "manage_backends_modal"
+  | "backends_settings"
   | "cloud_auto_connect";
 
 const CLOUD_CONVERSATION_READY_INSERT_ID_PREFIX = `${AGENT_CANVAS_CLIENT_SOURCE}:cloud_conversation_ready`;
