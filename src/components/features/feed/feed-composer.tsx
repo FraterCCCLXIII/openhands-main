@@ -9,7 +9,7 @@ import { useIsCreatingConversation } from "#/hooks/use-is-creating-conversation"
 import { useLlmConfigured } from "#/hooks/use-llm-configured";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { setPendingTaskAttachments } from "#/stores/pending-task-attachments-store";
-import { useConversationStore } from "#/stores/conversation-store";
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import { enqueueHomeTaskPendingMessage } from "#/utils/enqueue-home-task-pending-message";
 import { sendMessageWithAttachments } from "#/utils/send-message-with-attachments";
 import { getApiErrorMessage } from "#/utils/api-error-message";
@@ -46,7 +46,7 @@ export function FeedComposer() {
     imagesMarkedUploadAsFile,
     clearAllFiles,
     restoreMessageToInputIfEmpty,
-  } = useConversationStore();
+  } = useConversationComposer();
   const { handleUpload } = useChatAttachmentUpload();
 
   const handleSubmit = (message: string) => {

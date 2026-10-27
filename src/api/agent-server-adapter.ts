@@ -547,6 +547,13 @@ export const AUTOMATION_RUN_ID_TAG_KEY = "automationrunid";
  * `RemoteWorkspace.default_conversation_tags`). The presence of any of these
  * marks a conversation as automation-born.
  */
+/**
+ * Conversation tag that records the workspace a conversation was started in.
+ * The agent-server validates tag keys against `^[a-z0-9]+$`, so this must stay
+ * lowercase alphanumeric with no separators.
+ */
+export const WORKSPACE_TAG_KEY = "workspace";
+
 export const AUTOMATION_TAG_KEYS: readonly string[] = [
   AUTOMATION_TRIGGER_TAG_KEY,
   AUTOMATION_ID_TAG_KEY,
