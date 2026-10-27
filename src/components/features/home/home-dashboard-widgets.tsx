@@ -35,11 +35,6 @@ const KanbanBoard = React.lazy(() =>
     default: m.KanbanBoard,
   })),
 );
-const PlanningBoard = React.lazy(() =>
-  import("#/components/features/planning/planning-board").then((m) => ({
-    default: m.PlanningBoard,
-  })),
-);
 
 function RecommendedAutomationsWidget() {
   const isDismissed = useHomeRecommendedAutomationsDismissed();
@@ -152,17 +147,6 @@ export const HOME_DASHBOARD_WIDGETS = [
     render: () => (
       <BoundedWidget>
         <KanbanBoard />
-      </BoundedWidget>
-    ),
-  },
-  {
-    id: "planningBoard",
-    labelKey: I18nKey.HOME$DASHBOARD_PLANNING_BOARD,
-    placement: "body",
-    defaultVisible: false,
-    render: () => (
-      <BoundedWidget>
-        <PlanningBoard />
       </BoundedWidget>
     ),
   },
