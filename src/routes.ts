@@ -28,7 +28,6 @@ export default [
     route("apps", "routes/canvas-extensions.tsx"),
     route("extensions/:extensionName/*", "routes/canvas-extension-page.tsx"),
     route("mcp", "routes/mcp.tsx"),
-    route("team", "routes/team.tsx"),
     route("settings", "routes/settings.tsx", [
       index("routes/settings-index.tsx"),
       route("backends", "routes/backends-settings.tsx"),
