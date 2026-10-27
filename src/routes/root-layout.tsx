@@ -153,9 +153,11 @@ function MainAppContent() {
 
   if (config.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-canvas-base">
+      <div className="fixed inset-0 flex items-center justify-center bg-canvas-base">
         <TitleBarDragRegion />
-        <LoadingSpinner size="large" />
+        <div className="rounded-3xl border border-contrast/10 bg-canvas-base/80 px-8 py-10 shadow-2xl">
+          <LoadingSpinner size="large" />
+        </div>
       </div>
     );
   }
