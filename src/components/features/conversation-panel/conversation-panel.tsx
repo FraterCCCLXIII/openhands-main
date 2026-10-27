@@ -1,4 +1,4 @@
-import { Bot, Search } from "lucide-react";
+import { Bot } from "lucide-react";
 import React from "react";
 import { Tooltip } from "@heroui/react";
 import { useTranslation } from "react-i18next";
@@ -40,7 +40,6 @@ import { cn } from "#/utils/utils";
 import { ConversationLayoutsMenu } from "./conversation-layouts-menu";
 import { ConversationActiveTagFilters } from "./conversation-active-tag-filters";
 import { ConversationPanelNewThreadPicker } from "./conversation-panel-new-thread-picker";
-import { useCommandMenuStore } from "#/stores/command-menu-store";
 import { ConversationGroupFolderList } from "./conversation-group-folder-list";
 import { ConversationPanelPinnedSection } from "./conversation-panel-pinned-section";
 import { ConversationPanelSearchButton } from "./conversation-panel-search-toggle";
@@ -519,7 +518,6 @@ export function ConversationPanel({
     };
   }, [sortedVisibleConversations]);
 
-  const openCommandMenu = useCommandMenuStore((state) => state.open);
   const conversationOrderByList = useConversationPanelPreferencesStore(
     (state) => state.conversationOrderByList,
   );
@@ -1299,19 +1297,6 @@ export function ConversationPanel({
               <ConversationPanelNewThreadPicker
                 backendKind={activeBackend.kind}
               />
-              <button
-                type="button"
-                aria-label={t(I18nKey.COMMAND_MENU$OPEN_LABEL)}
-                data-testid="conversation-panel-search-trigger"
-                onClick={openCommandMenu}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-raised hover:text-contrast"
-              >
-                <Search
-                  className="h-4 w-4 shrink-0"
-                  aria-hidden
-                  strokeWidth={2}
-                />
-              </button>
               <ConversationLayoutsMenu
                 menuOpen={filterMenuOpen}
                 setMenuOpen={setFilterMenuOpen}
