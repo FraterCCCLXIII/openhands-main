@@ -333,42 +333,45 @@ export function HomeChatLauncher() {
             )}
           </p>
         )}
-        <div
-          data-testid="home-composer-actions"
-          aria-disabled={isAutomateMode}
-          className={cn(
-            "flex items-center justify-start gap-2",
-            isAutomateMode && "pointer-events-none opacity-40",
-          )}
-        >
-          {hasSelection ? (
-            <HomeGitControlBarPreview
-              workspace={pendingWorkspace}
-              repository={pendingRepository}
-              branch={pendingBranch}
-              provider={pendingProvider}
-              workspaceMode={workspaceMode}
-              backendKind={backend.kind}
-              onRepoClick={() => setIsDialogOpen(true)}
-              onWorkspaceModeChange={setWorkspaceMode}
+        <div className="flex items-center gap-2">
+          <div
+            data-testid="home-composer-actions"
+            aria-disabled={isAutomateMode}
+            className={cn(
+              "flex items-center justify-start gap-2",
+              isAutomateMode && "pointer-events-none opacity-40",
+            )}
+          >
+            {hasSelection ? (
+              <HomeGitControlBarPreview
+                workspace={pendingWorkspace}
+                repository={pendingRepository}
+                branch={pendingBranch}
+                provider={pendingProvider}
+                workspaceMode={workspaceMode}
+                backendKind={backend.kind}
+                onRepoClick={() => setIsDialogOpen(true)}
+                onWorkspaceModeChange={setWorkspaceMode}
+              />
+            ) : (
+              <OpenLauncherButton
+                kind={isLocal ? "local" : "cloud"}
+                onClick={() => setIsDialogOpen(true)}
+                disabled={
+                  isCreating ||
+                  isAutomateMode ||
+                  Boolean(workspacesUnsupportedMessage)
+                }
+                disabledTooltip={workspacesUnsupportedMessage}
+              />
+            )}
+            <PluginPickerTrigger
+              count={selectedPlugins.length}
+              onClick={() => setIsPluginPickerOpen(true)}
+              disabled={isCreating || isAutomateMode}
             />
-          ) : (
-            <OpenLauncherButton
-              kind={isLocal ? "local" : "cloud"}
-              onClick={() => setIsDialogOpen(true)}
-              disabled={
-                isCreating ||
-                isAutomateMode ||
-                Boolean(workspacesUnsupportedMessage)
-              }
-              disabledTooltip={workspacesUnsupportedMessage}
-            />
-          )}
-          <PluginPickerTrigger
-            count={selectedPlugins.length}
-            onClick={() => setIsPluginPickerOpen(true)}
-            disabled={isCreating || isAutomateMode}
-          />
+          </div>
+          {/* A Home-level control, not a composer action: stays usable in Automate. */}
           <div className="ml-auto">
             <HomeDashboardComponentsMenu />
           </div>
