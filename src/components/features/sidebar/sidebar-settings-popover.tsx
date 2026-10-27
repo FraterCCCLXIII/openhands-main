@@ -132,9 +132,7 @@ export function SidebarSettingsPopover({
                   className={linkRowClassName}
                 >
                   <Book aria-hidden className="size-5" />
-                  <span className="text-sm">
-                    {t(I18nKey.HOME$DOCUMENTATION)}
-                  </span>
+                  <span className="text-sm">{t(I18nKey.SIDEBAR$DOCS)}</span>
                 </a>
                 <a
                   href={REPORT_BUG_URL}
