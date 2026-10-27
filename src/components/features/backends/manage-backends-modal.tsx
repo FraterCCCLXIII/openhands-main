@@ -227,6 +227,14 @@ export function ManageBackendsModal({
               </div>
 
               <div className="flex justify-end gap-2 p-5">
+                <BrandButton
+                  type="button"
+                  variant="secondary"
+                  onClick={onClose}
+                  testId="manage-backends-done"
+                >
+                  {t(I18nKey.BUTTON$CLOSE)}
+                </BrandButton>
                 {isLockedToCloud ? (
                   lockedCloudBackend ? (
                     <DeviceFlowAuth
@@ -250,14 +258,6 @@ export function ManageBackendsModal({
                     {t(I18nKey.BACKEND$ADD)}
                   </BrandButton>
                 )}
-                <BrandButton
-                  type="button"
-                  variant="primary"
-                  onClick={onClose}
-                  testId="manage-backends-done"
-                >
-                  {t(I18nKey.HOME$DONE)}
-                </BrandButton>
               </div>
             </>
           )}
