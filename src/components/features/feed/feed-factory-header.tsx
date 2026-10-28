@@ -13,7 +13,9 @@ import {
   type FeedFactory,
 } from "#/utils/feed-team-demo";
 import { formatRelativeTime } from "#/utils/format-relative-time";
+import { factoryIconKey } from "#/utils/feed-icon-keys";
 import { cn } from "#/utils/utils";
+import { FeedCustomIcon } from "./feed-custom-icon";
 import { FeedTeammateAvatar } from "./feed-teammate-avatar";
 
 interface FeedFactoryHeaderProps {
@@ -65,15 +67,24 @@ export function FeedFactoryHeader({
             : "mx-auto flex w-full max-w-[680px] items-start gap-4 rounded-lg border border-border bg-surface-raised p-4",
         )}
       >
-        <span
-          data-testid="feed-factory-icon"
-          className={cn(
-            "flex shrink-0 items-center justify-center",
-            isColumn ? "size-14 rounded-2xl" : "size-16 rounded-2xl",
-            factory.className,
-          )}
-        >
-          <Icon size={isColumn ? 28 : 32} aria-hidden />
+        <span data-testid="feed-factory-icon" className="shrink-0">
+          <FeedCustomIcon
+            iconKey={factoryIconKey(factory.id)}
+            size={isColumn ? 56 : 64}
+            radius={16}
+            glyph={<Icon size={isColumn ? 28 : 32} aria-hidden />}
+            fallback={
+              <span
+                className={cn(
+                  "flex items-center justify-center rounded-2xl",
+                  isColumn ? "size-14" : "size-16",
+                  factory.className,
+                )}
+              >
+                <Icon size={isColumn ? 28 : 32} aria-hidden />
+              </span>
+            }
+          />
         </span>
         <div className="min-w-0 flex-1">
           <h2

@@ -14,6 +14,8 @@ import {
 } from "#/utils/feed-team-demo";
 import { formatRelativeTime } from "#/utils/format-relative-time";
 import { FeedColumns } from "./feed-columns";
+import { FeedIconMenu } from "./feed-icon-menu";
+import { personIconKey } from "#/utils/feed-icon-keys";
 import { FeedMentionText } from "./feed-mention-text";
 import { FeedTeammateAvatar } from "./feed-teammate-avatar";
 import { FeedUserAvatar } from "./feed-user-avatar";
@@ -94,7 +96,7 @@ export function FeedProfile() {
                 ) : (
                   <FeedUserAvatar size={80} />
                 )}
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h1
                     data-testid="feed-profile-name"
                     className="truncate text-2xl font-bold text-contrast"
@@ -113,6 +115,10 @@ export function FeedProfile() {
                     })}
                   </p>
                 </div>
+                <FeedIconMenu
+                  iconKey={personIconKey(person.id)}
+                  subject={name ?? ""}
+                />
               </header>
 
               {messages.length === 0 ? (

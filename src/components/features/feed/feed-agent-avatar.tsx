@@ -1,6 +1,8 @@
 import { AgentBrandIcon } from "#/components/shared/agent-brand-icon";
 import type { FeedAgent } from "#/utils/feed-agent";
+import { agentIconKey } from "#/utils/feed-icon-keys";
 import { cn } from "#/utils/utils";
+import { FeedCustomIcon } from "./feed-custom-icon";
 
 interface FeedAgentAvatarProps {
   agent: FeedAgent;
@@ -18,7 +20,7 @@ export function FeedAgentAvatar({
   "data-testid": testId,
 }: FeedAgentAvatarProps) {
   const glyphSize = Math.round(size * 0.5);
-  return (
+  const avatar = (
     <span
       data-testid={testId}
       className={cn(
@@ -37,5 +39,16 @@ export function FeedAgentAvatar({
         <AgentBrandIcon kind={agent.icon} size={glyphSize} />
       )}
     </span>
+  );
+  // Only the simulated personas can be customized; the real brand mark stays.
+  if (!agent.demo) return avatar;
+  return (
+    <FeedCustomIcon
+      iconKey={agentIconKey(`demo:${agent.demo.name}`)}
+      size={size}
+      radius={size / 2}
+      glyph={<agent.demo.Icon size={glyphSize} />}
+      fallback={avatar}
+    />
   );
 }

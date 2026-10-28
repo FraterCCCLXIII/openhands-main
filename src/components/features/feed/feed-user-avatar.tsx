@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
 import ProfileIcon from "#/icons/profile.svg?react";
+import { FEED_ME_ID } from "#/utils/feed-team-demo";
+import { personIconKey } from "#/utils/feed-icon-keys";
 import { cn } from "#/utils/utils";
+import { FeedCustomIcon } from "./feed-custom-icon";
 
 /** A person who can post in a conversation. Several can share one. */
 export interface FeedMember {
@@ -25,7 +28,7 @@ export function FeedUserAvatar({
   className,
 }: FeedUserAvatarProps) {
   const { t } = useTranslation("openhands");
-  return (
+  const avatar = (
     <span
       data-testid="feed-user-avatar"
       title={member?.name ?? undefined}
@@ -57,5 +60,22 @@ export function FeedUserAvatar({
         />
       )}
     </span>
+  );
+  // A picture wins; otherwise the person's custom icon replaces the gradient.
+  if (member?.avatarUrl) return avatar;
+  return (
+    <FeedCustomIcon
+      iconKey={personIconKey(member?.id ?? FEED_ME_ID)}
+      size={size}
+      radius={size / 2}
+      glyph={
+        <ProfileIcon
+          aria-label={t(I18nKey.USER$AVATAR_PLACEHOLDER)}
+          width={size}
+          height={size}
+        />
+      }
+      fallback={avatar}
+    />
   );
 }

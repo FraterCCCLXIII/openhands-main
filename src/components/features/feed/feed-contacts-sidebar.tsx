@@ -11,6 +11,8 @@ import {
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
 import { FeedFilterRow } from "./feed-filter-row";
+import { FeedIconMenu } from "./feed-icon-menu";
+import { personIconKey } from "#/utils/feed-icon-keys";
 import { FeedTeammateAvatar } from "./feed-teammate-avatar";
 
 interface FeedContactsSidebarProps {
@@ -61,6 +63,12 @@ export function FeedContactsSidebar({
             }
             selected={filter.teammateId === member.id}
             onSelect={() => onChange({ ...filter, teammateId: member.id })}
+            action={
+              <FeedIconMenu
+                iconKey={personIconKey(member.id)}
+                subject={member.name}
+              />
+            }
             profile={{
               to: backendScopedPath(feedProfilePath(member.id)),
               label: t(I18nKey.FEED$PROFILE_VIEW),

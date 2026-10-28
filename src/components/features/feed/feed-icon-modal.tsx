@@ -4,34 +4,36 @@ import { BaseModalTitle } from "#/components/shared/modals/confirmation-modals/b
 import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalBody } from "#/components/shared/modals/modal-body";
 import { I18nKey } from "#/i18n/declaration";
-import { useFeedProjectIconsStore } from "#/stores/feed-project-icons-store";
+import { useFeedIconsStore } from "#/stores/feed-icons-store";
 import { IconAppearancePanel } from "#/ui/icon-appearance-picker";
 
-interface FeedProjectIconModalProps {
-  project: string;
+interface FeedIconModalProps {
+  /** Key into the feed icons store. */
+  iconKey: string;
+  /** What is being customized, shown under the title. */
+  subject: string;
   onClose: () => void;
 }
 
-/** Edits a project's icon and color. Changes apply as they are made. */
-export function FeedProjectIconModal({
-  project,
+/** Edits an icon and its color. Changes apply as they are made. */
+export function FeedIconModal({
+  iconKey,
+  subject,
   onClose,
-}: FeedProjectIconModalProps) {
+}: FeedIconModalProps) {
   const { t } = useTranslation("openhands");
-  const value = useFeedProjectIconsStore(
-    (state) => state.iconsByProject[project],
-  );
-  const setIcon = useFeedProjectIconsStore((state) => state.setIcon);
+  const value = useFeedIconsStore((state) => state.icons[iconKey]);
+  const setIcon = useFeedIconsStore((state) => state.setIcon);
 
   return (
     <ModalBackdrop onClose={onClose}>
       <ModalBody
-        testID="feed-project-icon-modal"
+        testID="feed-icon-modal"
         className="items-start border border-border"
       >
         <div className="flex flex-col gap-1">
           <BaseModalTitle title={t(I18nKey.FEED$ICON_CUSTOMIZE)} />
-          <p className="text-sm text-muted">{project}</p>
+          <p className="text-sm text-muted">{subject}</p>
         </div>
         <div
           className="flex w-full flex-col gap-3"
@@ -39,14 +41,14 @@ export function FeedProjectIconModal({
         >
           <IconAppearancePanel
             value={value ?? {}}
-            onChange={(next) => setIcon(project, next)}
+            onChange={(next) => setIcon(iconKey, next)}
           />
         </div>
         <div className="flex w-full justify-end">
           <BrandButton
             type="button"
             variant="secondary"
-            testId="feed-project-icon-modal-close"
+            testId="feed-icon-modal-close"
             onClick={onClose}
           >
             {t(I18nKey.BUTTON$CLOSE)}

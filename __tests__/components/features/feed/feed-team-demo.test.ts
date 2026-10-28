@@ -14,7 +14,7 @@ import {
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
 import { useFeedRepliesStore } from "#/stores/feed-replies-store";
-import { useFeedProjectIconsStore } from "#/stores/feed-project-icons-store";
+import { useFeedIconsStore } from "#/stores/feed-icons-store";
 import {
   FEED_DEMO_AGENT_FILTER_PREFIX,
   pickFeedDemoAgent,
@@ -136,17 +136,21 @@ describe("feed persona filter", () => {
   });
 });
 
-describe("feed project icons store", () => {
-  beforeEach(() => useFeedProjectIconsStore.setState({ iconsByProject: {} }));
+describe("feed icons store", () => {
+  beforeEach(() => useFeedIconsStore.setState({ icons: {} }));
 
-  it("keeps a project's custom icon and drops it when emptied", () => {
-    const { setIcon } = useFeedProjectIconsStore.getState();
+  it("keeps a custom icon per key and drops it when emptied", () => {
+    const { setIcon } = useFeedIconsStore.getState();
     setIcon("acme/app", { background: "violet", emoji: "🚀" });
-    expect(useFeedProjectIconsStore.getState().iconsByProject).toEqual({
+    expect(useFeedIconsStore.getState().icons).toEqual({
       "acme/app": { background: "violet", emoji: "🚀" },
     });
 
+    setIcon("factory:web", { lucide_icon: "Globe" });
     setIcon("acme/app", { background: null, emoji: null, lucide_icon: null });
-    expect(useFeedProjectIconsStore.getState().iconsByProject).toEqual({});
+    // Emptying one key leaves the others, whatever kind they are.
+    expect(useFeedIconsStore.getState().icons).toEqual({
+      "factory:web": { lucide_icon: "Globe" },
+    });
   });
 });

@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { FeedProjectRow } from "#/components/features/feed/feed-project-row";
-import { useFeedProjectIconsStore } from "#/stores/feed-project-icons-store";
+import { useFeedIconsStore } from "#/stores/feed-icons-store";
 import { renderWithProviders } from "../../../../test-utils";
 
 const renderRow = () =>
@@ -22,27 +22,27 @@ describe("FeedProjectRow", () => {
     const user = userEvent.setup();
     renderRow();
 
-    expect(screen.queryByTestId("feed-project-icon-modal")).toBeNull();
-    await user.click(screen.getByTestId("feed-project-menu-trigger"));
-    await user.click(screen.getByTestId("feed-project-menu-customize"));
+    expect(screen.queryByTestId("feed-icon-modal")).toBeNull();
+    await user.click(screen.getByTestId("feed-icon-menu-trigger"));
+    await user.click(screen.getByTestId("feed-icon-menu-customize"));
 
-    expect(screen.getByTestId("feed-project-icon-modal")).toBeInTheDocument();
-    expect(screen.queryByTestId("feed-project-menu")).toBeNull();
+    expect(screen.getByTestId("feed-icon-modal")).toBeInTheDocument();
+    expect(screen.queryByTestId("feed-icon-menu")).toBeNull();
   });
 
   it("saves a picked color for the project and closes", async () => {
     const user = userEvent.setup();
     renderRow();
 
-    await user.click(screen.getByTestId("feed-project-menu-trigger"));
-    await user.click(screen.getByTestId("feed-project-menu-customize"));
+    await user.click(screen.getByTestId("feed-icon-menu-trigger"));
+    await user.click(screen.getByTestId("feed-icon-menu-customize"));
     await user.click(screen.getByTestId("color-swatch-violet"));
 
-    expect(
-      useFeedProjectIconsStore.getState().iconsByProject["acme/app"],
-    ).toMatchObject({ background: "violet" });
+    expect(useFeedIconsStore.getState().icons["acme/app"]).toMatchObject({
+      background: "violet",
+    });
 
-    await user.click(screen.getByTestId("feed-project-icon-modal-close"));
-    expect(screen.queryByTestId("feed-project-icon-modal")).toBeNull();
+    await user.click(screen.getByTestId("feed-icon-modal-close"));
+    expect(screen.queryByTestId("feed-icon-modal")).toBeNull();
   });
 });

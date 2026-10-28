@@ -19,7 +19,14 @@ import {
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
 import { FeedFilterRow } from "./feed-filter-row";
+import { FeedCustomIcon } from "./feed-custom-icon";
+import { FeedIconMenu } from "./feed-icon-menu";
 import { FeedIconTile } from "./feed-icon-tile";
+import {
+  agentIconKey,
+  factoryIconKey,
+  personIconKey,
+} from "#/utils/feed-icon-keys";
 import { FeedProjectRow } from "./feed-project-row";
 import { FeedRowStats } from "./feed-row-stats";
 import {
@@ -65,19 +72,27 @@ export function FeedFilterSidebar({
       aria-label={t(I18nKey.FEED$FILTERS)}
       className="flex flex-col gap-5"
     >
-      <NavigationLink
-        to={backendScopedPath(feedProfilePath(FEED_ME_ID))}
-        data-testid="feed-profile-link"
-        className="flex items-center gap-3 rounded-lg px-2 py-2 text-[15px] font-medium text-contrast hover:bg-surface-raised"
-      >
-        <FeedUserAvatar size={36} />
-        <span className="min-w-0 flex-1 truncate">
-          {t(I18nKey.FEED$ROLE_YOU)}
+      <div className="group flex items-center gap-1 rounded-lg hover:bg-surface-raised">
+        <NavigationLink
+          to={backendScopedPath(feedProfilePath(FEED_ME_ID))}
+          data-testid="feed-profile-link"
+          className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-[15px] font-medium text-contrast"
+        >
+          <FeedUserAvatar size={36} />
+          <span className="min-w-0 flex-1 truncate">
+            {t(I18nKey.FEED$ROLE_YOU)}
+          </span>
+          <span className="text-xs font-normal text-muted">
+            {t(I18nKey.FEED$PROFILE_VIEW)}
+          </span>
+        </NavigationLink>
+        <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 has-[[aria-expanded=true]]:opacity-100">
+          <FeedIconMenu
+            iconKey={personIconKey(FEED_ME_ID)}
+            subject={t(I18nKey.FEED$ROLE_YOU)}
+          />
         </span>
-        <span className="text-xs font-normal text-muted">
-          {t(I18nKey.FEED$PROFILE_VIEW)}
-        </span>
-      </NavigationLink>
+      </div>
       {teamDemo ? (
         <section data-testid="feed-factories">
           <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
@@ -103,9 +118,20 @@ export function FeedFilterSidebar({
                   conversations.filter((c) => getFeedFactory(c.id).id === id),
                 )}
                 icon={
-                  <FeedIconTile className={className}>
-                    <Icon size={20} />
-                  </FeedIconTile>
+                  <FeedCustomIcon
+                    iconKey={factoryIconKey(id)}
+                    size={36}
+                    radius={12}
+                    glyph={<Icon size={20} />}
+                    fallback={
+                      <FeedIconTile className={className}>
+                        <Icon size={20} />
+                      </FeedIconTile>
+                    }
+                  />
+                }
+                action={
+                  <FeedIconMenu iconKey={factoryIconKey(id)} subject={name} />
                 }
                 selected={filter.factoryId === id}
                 onSelect={() => onChange({ ...filter, factoryId: id })}
@@ -170,16 +196,39 @@ export function FeedFilterSidebar({
                 ),
               )}
               icon={
-                <FeedIconTile className={pickFeedTint(profile.id)}>
-                  <AgentBrandIcon
-                    kind={
-                      profile.agent_kind === "acp"
-                        ? ACP_PROVIDER_FALLBACK_ICON
-                        : "openhands"
-                    }
-                    size={20}
-                  />
-                </FeedIconTile>
+                <FeedCustomIcon
+                  iconKey={agentIconKey(profile.id)}
+                  size={36}
+                  radius={12}
+                  glyph={
+                    <AgentBrandIcon
+                      kind={
+                        profile.agent_kind === "acp"
+                          ? ACP_PROVIDER_FALLBACK_ICON
+                          : "openhands"
+                      }
+                      size={20}
+                    />
+                  }
+                  fallback={
+                    <FeedIconTile className={pickFeedTint(profile.id)}>
+                      <AgentBrandIcon
+                        kind={
+                          profile.agent_kind === "acp"
+                            ? ACP_PROVIDER_FALLBACK_ICON
+                            : "openhands"
+                        }
+                        size={20}
+                      />
+                    </FeedIconTile>
+                  }
+                />
+              }
+              action={
+                <FeedIconMenu
+                  iconKey={agentIconKey(profile.id)}
+                  subject={profile.name}
+                />
               }
               selected={filter.agentProfileId === profile.id}
               onSelect={() =>
@@ -201,9 +250,23 @@ export function FeedFilterSidebar({
                     count={own.length}
                     meta={stats(own)}
                     icon={
-                      <FeedIconTile className={className}>
-                        <Icon size={20} />
-                      </FeedIconTile>
+                      <FeedCustomIcon
+                        iconKey={agentIconKey(`demo:${name}`)}
+                        size={36}
+                        radius={12}
+                        glyph={<Icon size={20} />}
+                        fallback={
+                          <FeedIconTile className={className}>
+                            <Icon size={20} />
+                          </FeedIconTile>
+                        }
+                      />
+                    }
+                    action={
+                      <FeedIconMenu
+                        iconKey={agentIconKey(`demo:${name}`)}
+                        subject={name}
+                      />
                     }
                     selected={filter.agentProfileId === id}
                     onSelect={() => onChange({ ...filter, agentProfileId: id })}
