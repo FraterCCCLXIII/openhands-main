@@ -11,7 +11,7 @@ export function FeedWordmark() {
     <NavigationLink
       to={backendScopedPath("/feed")}
       data-testid="feed-wordmark"
-      className="mb-3 block px-2 font-tower text-5xl uppercase leading-none tracking-wider text-contrast"
+      className="mb-3 block px-2 font-tower text-3xl uppercase leading-none tracking-normal text-contrast"
     >
       {FEED_BRAND_NAME}
     </NavigationLink>
