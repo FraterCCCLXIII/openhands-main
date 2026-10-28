@@ -45,7 +45,12 @@ export function FeedFilterRow({
         ) : null}
         <span className="min-w-0 flex-1 truncate">{label}</span>
         {count !== undefined ? (
-          <span className="text-xs text-muted">{count}</span>
+          <span
+            data-testid="feed-filter-count"
+            className="min-w-6 rounded-full bg-surface px-2 py-0.5 text-center text-xs text-muted"
+          >
+            {count}
+          </span>
         ) : null}
       </button>
       {profile ? (

@@ -4,11 +4,7 @@ import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { Bell, Newspaper, type LucideIcon } from "lucide-react";
 import { useFeedConversations } from "#/hooks/use-feed-conversations";
 import { I18nKey } from "#/i18n/declaration";
-import {
-  ALL_FEED_FILTER,
-  matchesFeedFilter,
-  type FeedFilter,
-} from "#/utils/feed-filters";
+import { matchesFeedFilter } from "#/utils/feed-filters";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useArchivedConversationsStore } from "#/stores/archived-conversations-store";
@@ -23,8 +19,8 @@ import { FeedStack } from "./feed-stack";
 import { FeedCard } from "./feed-card";
 import { FeedNotificationCard } from "./feed-notification-card";
 import { FeedComposer } from "./feed-composer";
-import { FeedFilterSidebar } from "./feed-filter-sidebar";
-import { FeedContactsSidebar } from "./feed-contacts-sidebar";
+import { FeedColumns } from "./feed-columns";
+import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { FeedSortMenu } from "./feed-sort-menu";
 import {
   DEFAULT_FEED_SORT,
@@ -56,7 +52,7 @@ export function Feed() {
   const { t } = useTranslation("openhands");
   const reduceMotion = useReducedMotion();
   const disableAnimation = reduceMotion || import.meta.env.MODE === "test";
-  const [filter, setFilter] = useState<FeedFilter>(ALL_FEED_FILTER);
+  const filter = useFeedFilterStore((state) => state.filter);
   const [view, setView] = useState<FeedView>("feed");
   const [sort, setSort] = useState<FeedSort>(DEFAULT_FEED_SORT);
   const stackByAgent = sort === "agent";
@@ -139,124 +135,102 @@ export function Feed() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col md:flex-row">
-      <aside className="custom-scrollbar-always w-full shrink-0 overflow-y-auto border-border px-2 py-4 max-md:max-h-40 md:w-60 lg:w-[360px]">
-        <FeedFilterSidebar
-          conversations={conversations}
-          filter={filter}
-          onChange={setFilter}
-        />
-      </aside>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="mx-auto grid w-full max-w-[680px] shrink-0 grid-cols-[1fr_auto_1fr] items-center px-4 pt-4">
-          <span aria-hidden />
-          <LayoutGroup id="feed-view">
-            <div
-              role="tablist"
-              data-testid="feed-tabs"
-              className="inline-flex items-center rounded-full bg-[var(--oh-surface-raised)] p-1 text-sm font-medium"
-            >
-              {FEED_VIEWS.map(({ view: tabView, label, Icon }) => {
-                const isActive = view === tabView;
-                return (
-                  <button
-                    key={tabView}
-                    type="button"
-                    role="tab"
-                    data-testid={`feed-tab-${tabView}`}
-                    aria-selected={isActive}
-                    onClick={() => setView(tabView)}
-                    className={cn(
-                      "relative inline-flex items-center gap-2 rounded-full px-5 py-2",
-                      "cursor-pointer transition-colors",
-                      isActive
-                        ? "text-contrast"
-                        : "text-[var(--oh-muted)] hover:text-contrast",
-                      disableAnimation &&
-                        isActive &&
-                        "bg-[var(--oh-interactive-hover)]",
-                    )}
-                  >
-                    {!disableAnimation && isActive ? (
-                      <motion.span
-                        layoutId="feed-view-pill"
-                        className="absolute inset-0 rounded-full bg-[var(--oh-interactive-hover)]"
-                        transition={PILL_TRANSITION}
-                      />
-                    ) : null}
-                    <Icon
-                      size={16}
-                      aria-hidden
-                      className="relative z-10 shrink-0"
-                    />
-                    <span className="relative z-10">{t(label)}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </LayoutGroup>
-          <FeedSortMenu
-            sort={sort}
-            onChange={setSort}
-            className="justify-self-end"
-          />
-        </div>
-        <div className="relative min-h-0 flex-1">
+    <FeedColumns>
+      <div className="mx-auto grid w-full max-w-[680px] shrink-0 grid-cols-[1fr_auto_1fr] items-center px-4 pt-4">
+        <span aria-hidden />
+        <LayoutGroup id="feed-view">
           <div
-            aria-hidden
-            data-testid="feed-fade-top"
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-canvas-base to-transparent"
-          />
-          <div className="custom-scrollbar-always h-full overflow-y-auto px-4">
-            <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 py-6">
-              <h1 className="sr-only">{t(I18nKey.FEED$TITLE)}</h1>
-              <section
-                data-testid="feed"
-                className={cn(
-                  "flex flex-col",
-                  view === "feed" ? "gap-4" : "gap-2",
-                )}
-              >
-                {body}
-              </section>
-              {hasNextPage ? (
+            role="tablist"
+            data-testid="feed-tabs"
+            className="inline-flex items-center rounded-full bg-[var(--oh-surface-raised)] p-1 text-sm font-medium"
+          >
+            {FEED_VIEWS.map(({ view: tabView, label, Icon }) => {
+              const isActive = view === tabView;
+              return (
                 <button
+                  key={tabView}
                   type="button"
-                  data-testid="feed-load-more"
-                  disabled={isFetchingNextPage}
-                  onClick={() => fetchNextPage()}
-                  className="self-center text-sm text-muted hover:text-contrast disabled:opacity-50"
+                  role="tab"
+                  data-testid={`feed-tab-${tabView}`}
+                  aria-selected={isActive}
+                  onClick={() => setView(tabView)}
+                  className={cn(
+                    "relative inline-flex items-center gap-2 rounded-full px-5 py-2",
+                    "cursor-pointer transition-colors",
+                    isActive
+                      ? "text-contrast"
+                      : "text-[var(--oh-muted)] hover:text-contrast",
+                    disableAnimation &&
+                      isActive &&
+                      "bg-[var(--oh-interactive-hover)]",
+                  )}
                 >
-                  {t(I18nKey.FEED$LOAD_MORE)}
+                  {!disableAnimation && isActive ? (
+                    <motion.span
+                      layoutId="feed-view-pill"
+                      className="absolute inset-0 rounded-full bg-[var(--oh-interactive-hover)]"
+                      transition={PILL_TRANSITION}
+                    />
+                  ) : null}
+                  <Icon
+                    size={16}
+                    aria-hidden
+                    className="relative z-10 shrink-0"
+                  />
+                  <span className="relative z-10">{t(label)}</span>
                 </button>
-              ) : null}
-            </div>
+              );
+            })}
           </div>
-          <div
-            aria-hidden
-            data-testid="feed-fade-bottom"
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-linear-to-t from-canvas-base to-transparent"
-          />
+        </LayoutGroup>
+        <FeedSortMenu
+          sort={sort}
+          onChange={setSort}
+          className="justify-self-end"
+        />
+      </div>
+      <div className="relative min-h-0 flex-1">
+        <div
+          aria-hidden
+          data-testid="feed-fade-top"
+          className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-canvas-base to-transparent"
+        />
+        <div className="custom-scrollbar-always h-full overflow-y-auto px-4">
+          <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 py-6">
+            <h1 className="sr-only">{t(I18nKey.FEED$TITLE)}</h1>
+            <section
+              data-testid="feed"
+              className={cn(
+                "flex flex-col",
+                view === "feed" ? "gap-4" : "gap-2",
+              )}
+            >
+              {body}
+            </section>
+            {hasNextPage ? (
+              <button
+                type="button"
+                data-testid="feed-load-more"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+                className="self-center text-sm text-muted hover:text-contrast disabled:opacity-50"
+              >
+                {t(I18nKey.FEED$LOAD_MORE)}
+              </button>
+            ) : null}
+          </div>
         </div>
         <div
-          data-testid="feed-composer-dock"
-          className="shrink-0 px-4 pb-4 pt-2"
-        >
-          <div className="mx-auto w-full max-w-[680px]">
-            <FeedComposer />
-          </div>
+          aria-hidden
+          data-testid="feed-fade-bottom"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-linear-to-t from-canvas-base to-transparent"
+        />
+      </div>
+      <div data-testid="feed-composer-dock" className="shrink-0 px-4 pb-4 pt-2">
+        <div className="mx-auto w-full max-w-[680px]">
+          <FeedComposer />
         </div>
       </div>
-      <aside
-        data-testid="feed-contacts"
-        className="custom-scrollbar-always hidden w-[360px] shrink-0 overflow-y-auto px-2 py-4 xl:block"
-      >
-        <FeedContactsSidebar
-          conversations={conversations}
-          filter={filter}
-          onChange={setFilter}
-        />
-      </aside>
-    </div>
+    </FeedColumns>
   );
 }

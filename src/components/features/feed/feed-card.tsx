@@ -179,7 +179,7 @@ export function FeedCard({ conversation }: FeedCardProps) {
             {isLive ? (
               <span
                 data-testid="feed-card-live"
-                className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-normal text-success"
+                className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-normal text-success-soft-foreground"
               >
                 {t(I18nKey.FEED$LIVE)}
               </span>
