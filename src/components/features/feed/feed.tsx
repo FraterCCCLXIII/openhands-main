@@ -205,7 +205,7 @@ export function Feed() {
           <div
             aria-hidden
             data-testid="feed-fade-top"
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-base to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-canvas-base to-transparent"
           />
           <div className="custom-scrollbar-always h-full overflow-y-auto px-4">
             <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 py-6">
@@ -235,7 +235,7 @@ export function Feed() {
           <div
             aria-hidden
             data-testid="feed-fade-bottom"
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-gradient-to-t from-base to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-linear-to-t from-canvas-base to-transparent"
           />
         </div>
         <div
