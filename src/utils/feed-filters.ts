@@ -1,5 +1,9 @@
 import { WORKSPACE_TAG_KEY } from "#/api/agent-server-adapter";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
+import {
+  FEED_DEMO_AGENT_FILTER_PREFIX,
+  pickFeedDemoAgent,
+} from "./feed-demo-agents";
 import { getFeedFactory, getFeedTeammateIds } from "./feed-team-demo";
 
 export interface FeedFilter {
@@ -49,7 +53,12 @@ export function matchesFeedFilter(
   if (filter.project && getFeedProject(conversation) !== filter.project) {
     return false;
   }
-  if (
+  if (filter.agentProfileId?.startsWith(FEED_DEMO_AGENT_FILTER_PREFIX)) {
+    const persona = filter.agentProfileId.slice(
+      FEED_DEMO_AGENT_FILTER_PREFIX.length,
+    );
+    if (pickFeedDemoAgent(conversation.id).name !== persona) return false;
+  } else if (
     filter.agentProfileId &&
     conversation.launched_agent_profile?.agent_profile_id !==
       filter.agentProfileId

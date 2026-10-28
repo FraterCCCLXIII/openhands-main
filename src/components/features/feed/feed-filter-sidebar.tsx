@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Bot, FolderGit2, Folders, LayoutGrid } from "lucide-react";
+import { Bot, Folders, LayoutGrid } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { AgentBrandIcon } from "#/components/shared/agent-brand-icon";
 import { ACP_PROVIDER_FALLBACK_ICON } from "#/constants/acp-providers";
@@ -18,9 +18,16 @@ import {
   getFeedFactory,
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
-import { cn } from "#/utils/utils";
 import { FeedFilterRow } from "./feed-filter-row";
+import { FeedIconTile } from "./feed-icon-tile";
+import { FeedProjectRow } from "./feed-project-row";
 import { FeedRowStats } from "./feed-row-stats";
+import {
+  FEED_DEMO_AGENTS,
+  FEED_DEMO_AGENT_FILTER_PREFIX,
+  pickFeedDemoAgent,
+  pickFeedTint,
+} from "#/utils/feed-demo-agents";
 import { FeedUserAvatar } from "./feed-user-avatar";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
@@ -96,14 +103,9 @@ export function FeedFilterSidebar({
                   conversations.filter((c) => getFeedFactory(c.id).id === id),
                 )}
                 icon={
-                  <span
-                    className={cn(
-                      "flex size-full items-center justify-center rounded-xl",
-                      className,
-                    )}
-                  >
+                  <FeedIconTile className={className}>
                     <Icon size={20} />
-                  </span>
+                  </FeedIconTile>
                 }
                 selected={filter.factoryId === id}
                 onSelect={() => onChange({ ...filter, factoryId: id })}
@@ -128,15 +130,13 @@ export function FeedFilterSidebar({
             onSelect={() => onChange({ ...filter, project: null })}
           />
           {projects.map(({ project, count }) => (
-            <FeedFilterRow
+            <FeedProjectRow
               key={project}
-              testId="feed-filter-project"
-              label={project}
+              project={project}
               count={count}
               meta={stats(
                 conversations.filter((c) => getFeedProject(c) === project),
               )}
-              icon={<FolderGit2 size={20} />}
               selected={filter.project === project}
               onSelect={() => onChange({ ...filter, project })}
             />
@@ -170,14 +170,16 @@ export function FeedFilterSidebar({
                 ),
               )}
               icon={
-                <AgentBrandIcon
-                  kind={
-                    profile.agent_kind === "acp"
-                      ? ACP_PROVIDER_FALLBACK_ICON
-                      : "openhands"
-                  }
-                  size={20}
-                />
+                <FeedIconTile className={pickFeedTint(profile.id)}>
+                  <AgentBrandIcon
+                    kind={
+                      profile.agent_kind === "acp"
+                        ? ACP_PROVIDER_FALLBACK_ICON
+                        : "openhands"
+                    }
+                    size={20}
+                  />
+                </FeedIconTile>
               }
               selected={filter.agentProfileId === profile.id}
               onSelect={() =>
@@ -185,6 +187,30 @@ export function FeedFilterSidebar({
               }
             />
           ))}
+          {teamDemo
+            ? FEED_DEMO_AGENTS.map(({ name, Icon, className }) => {
+                const id = `${FEED_DEMO_AGENT_FILTER_PREFIX}${name}`;
+                const own = conversations.filter(
+                  (c) => pickFeedDemoAgent(c.id).name === name,
+                );
+                return (
+                  <FeedFilterRow
+                    key={id}
+                    testId="feed-filter-agent-persona"
+                    label={name}
+                    count={own.length}
+                    meta={stats(own)}
+                    icon={
+                      <FeedIconTile className={className}>
+                        <Icon size={20} />
+                      </FeedIconTile>
+                    }
+                    selected={filter.agentProfileId === id}
+                    onSelect={() => onChange({ ...filter, agentProfileId: id })}
+                  />
+                );
+              })
+            : null}
         </ul>
       </section>
     </nav>

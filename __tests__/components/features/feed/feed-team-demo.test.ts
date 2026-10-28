@@ -14,6 +14,11 @@ import {
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
 import { useFeedRepliesStore } from "#/stores/feed-replies-store";
+import { useFeedProjectIconsStore } from "#/stores/feed-project-icons-store";
+import {
+  FEED_DEMO_AGENT_FILTER_PREFIX,
+  pickFeedDemoAgent,
+} from "#/utils/feed-demo-agents";
 
 const conv = (id: string, overrides: Partial<AppConversation> = {}) =>
   ({
@@ -114,5 +119,34 @@ describe("feed replies store", () => {
       timestamp: "2026-08-01T12:00:00.000Z",
     });
     expect(useFeedRepliesStore.getState().replies).toHaveLength(1);
+  });
+});
+
+describe("feed persona filter", () => {
+  it("matches the simulated persona a conversation is assigned", () => {
+    const c = conv("abc-123");
+    const persona = pickFeedDemoAgent(c.id).name;
+    const filterFor = (name: string) => ({
+      ...ALL_FEED_FILTER,
+      agentProfileId: `${FEED_DEMO_AGENT_FILTER_PREFIX}${name}`,
+    });
+
+    expect(matchesFeedFilter(c, filterFor(persona))).toBe(true);
+    expect(matchesFeedFilter(c, filterFor("Nobody"))).toBe(false);
+  });
+});
+
+describe("feed project icons store", () => {
+  beforeEach(() => useFeedProjectIconsStore.setState({ iconsByProject: {} }));
+
+  it("keeps a project's custom icon and drops it when emptied", () => {
+    const { setIcon } = useFeedProjectIconsStore.getState();
+    setIcon("acme/app", { background: "violet", emoji: "🚀" });
+    expect(useFeedProjectIconsStore.getState().iconsByProject).toEqual({
+      "acme/app": { background: "violet", emoji: "🚀" },
+    });
+
+    setIcon("acme/app", { background: null, emoji: null, lucide_icon: null });
+    expect(useFeedProjectIconsStore.getState().iconsByProject).toEqual({});
   });
 });

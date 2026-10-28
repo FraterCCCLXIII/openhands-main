@@ -58210,5 +58210,23 @@
     "tr": "{{count}} aktif ajan",
     "uk": "Активних агентів: {{count}}",
     "id": "{{count}} agen aktif"
+  },
+  "FEED$ICON_CUSTOMIZE": {
+    "en": "Customize icon",
+    "ja": "アイコンをカスタマイズ",
+    "zh-CN": "自定义图标",
+    "zh-TW": "自訂圖示",
+    "ko-KR": "아이콘 사용자 지정",
+    "no": "Tilpass ikon",
+    "ar": "تخصيص الأيقونة",
+    "de": "Symbol anpassen",
+    "fr": "Personnaliser l'icône",
+    "it": "Personalizza icona",
+    "pt": "Personalizar ícone",
+    "es": "Personalizar icono",
+    "ca": "Personalitza la icona",
+    "tr": "Simgeyi özelleştir",
+    "uk": "Налаштувати значок",
+    "id": "Sesuaikan ikon"
   }
 }

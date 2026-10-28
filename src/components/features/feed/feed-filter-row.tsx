@@ -12,6 +12,10 @@ interface FeedFilterRowProps {
   testId: string;
   /** A second line under the label, such as diff numbers. */
   meta?: ReactNode;
+  /** Extra control beside the row, such as an edit button. */
+  action?: ReactNode;
+  /** Content under the row, such as an inline editor. */
+  footer?: ReactNode;
   /** Adds a link to this row's profile page beside the filter. */
   profile?: { to: string; label: string };
 }
@@ -25,10 +29,12 @@ export function FeedFilterRow({
   onSelect,
   testId,
   meta,
+  action,
+  footer,
   profile,
 }: FeedFilterRowProps) {
   return (
-    <li className="flex items-center gap-1">
+    <li className="flex flex-wrap items-center gap-1">
       <button
         type="button"
         data-testid={testId}
@@ -59,6 +65,7 @@ export function FeedFilterRow({
           </span>
         ) : null}
       </button>
+      {action}
       {profile ? (
         <NavigationLink
           to={profile.to}
@@ -70,6 +77,7 @@ export function FeedFilterRow({
           <UserRound size={16} />
         </NavigationLink>
       ) : null}
+      {footer ? <div className="w-full">{footer}</div> : null}
     </li>
   );
 }
