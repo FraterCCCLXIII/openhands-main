@@ -18,14 +18,51 @@ export function isFeedTeamDemoEnabled(search: string): boolean {
 export interface FeedFactory {
   id: string;
   name: string;
+  description: string;
   Icon: LucideIcon;
+  /** Tailwind classes for the factory icon tile's tint and glyph color. */
+  className: string;
+  /** The simulated teammate who owns the factory. */
+  ownerId: string;
 }
 
 export const FEED_FACTORIES: readonly FeedFactory[] = [
-  { id: "web", name: "Web Platform", Icon: Globe },
-  { id: "mobile", name: "Mobile Apps", Icon: Smartphone },
-  { id: "data", name: "Data Pipeline", Icon: Database },
-  { id: "infra", name: "Infrastructure", Icon: Server },
+  {
+    id: "web",
+    name: "Web Platform",
+    description:
+      "Ships the customer-facing web apps: the design system, frontend releases and the agents that keep them green.",
+    Icon: Globe,
+    className: "bg-sky-500/20 text-sky-300",
+    ownerId: "maya",
+  },
+  {
+    id: "mobile",
+    name: "Mobile Apps",
+    description:
+      "iOS and Android builds, store releases and the device-test agents that gate every version.",
+    Icon: Smartphone,
+    className: "bg-violet-500/20 text-violet-300",
+    ownerId: "dev",
+  },
+  {
+    id: "data",
+    name: "Data Pipeline",
+    description:
+      "Ingestion, transformation and quality checks that feed the analytics warehouse.",
+    Icon: Database,
+    className: "bg-emerald-500/20 text-emerald-300",
+    ownerId: "sofia",
+  },
+  {
+    id: "infra",
+    name: "Infrastructure",
+    description:
+      "Cloud, CI runners and deploy automation that every other factory builds on.",
+    Icon: Server,
+    className: "bg-amber-500/20 text-amber-300",
+    ownerId: "omar",
+  },
 ];
 
 export interface FeedTeammate {

@@ -6,6 +6,7 @@ import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import type { FeedFilter } from "#/utils/feed-filters";
 import { FeedContactsSidebar } from "./feed-contacts-sidebar";
 import { FeedFilterSidebar } from "./feed-filter-sidebar";
+import { FeedWordmark } from "./feed-wordmark";
 
 interface FeedColumnsProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ export function FeedColumns({ children, openFeedOnFilter }: FeedColumnsProps) {
   return (
     <div className="flex h-full min-h-0 flex-col md:flex-row">
       <aside className="custom-scrollbar-always w-full shrink-0 overflow-y-auto border-border px-2 py-4 max-md:max-h-40 md:w-60 lg:w-[360px]">
+        <FeedWordmark />
         <FeedFilterSidebar
           conversations={conversations}
           filter={filter}

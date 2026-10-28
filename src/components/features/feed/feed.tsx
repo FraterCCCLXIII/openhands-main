@@ -20,6 +20,8 @@ import { FeedCard } from "./feed-card";
 import { FeedNotificationCard } from "./feed-notification-card";
 import { FeedComposer } from "./feed-composer";
 import { FeedColumns } from "./feed-columns";
+import { FeedFactoryHeader } from "./feed-factory-header";
+import { FEED_FACTORIES } from "#/utils/feed-team-demo";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { FeedSortMenu } from "./feed-sort-menu";
 import {
@@ -134,8 +136,13 @@ export function Feed() {
       : ordered.map(renderCard);
   }
 
+  const factory = FEED_FACTORIES.find((f) => f.id === filter.factoryId);
+
   return (
     <FeedColumns>
+      {factory ? (
+        <FeedFactoryHeader factory={factory} conversations={conversations} />
+      ) : null}
       <div className="mx-auto grid w-full max-w-[680px] shrink-0 grid-cols-[1fr_auto_1fr] items-center px-4 pt-4">
         <span aria-hidden />
         <LayoutGroup id="feed-view">
