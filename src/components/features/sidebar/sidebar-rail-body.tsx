@@ -257,13 +257,6 @@ export function SidebarRailBody({
           icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
-          to={TEAM_PATH}
-          label={t(I18nKey.NAV$TEAM)}
-          testId="sidebar-team-link"
-          collapsed={collapsed}
-          icon={<Users width={ICON_SIZE} height={ICON_SIZE} />}
-        />
-        <SidebarNavLink
           to={CUSTOMIZE_PATH}
           label={t(I18nKey.NAV$CUSTOMIZE)}
           testId="sidebar-skills-link"
