@@ -498,9 +498,9 @@ export default defineConfig(({ mode }) => {
             exclude: [
               ...configDefaults.exclude,
               "tests",
-              // Self-contained Apps carry their own package.json and test
-              // runner; they are verified from inside their directory.
-              "examples/canvas-apps/**",
+              // usage-insights is a self-contained upstream App with its own
+              // package.json and test runner, verified from its directory.
+              "examples/canvas-apps/usage-insights/**",
               ...NODE_ENV_PILOT_TESTS,
             ],
           },
