@@ -46,7 +46,7 @@ export function ChangeAgentContextMenu({
       testId="change-agent-context-menu"
       position="top"
       alignment="left"
-      className="min-h-fit mb-2 min-w-48.75 max-w-48.75"
+      className="min-h-fit mb-2 min-w-56 max-w-56 p-3"
     >
       <ContextMenuListItem
         testId="code-option"

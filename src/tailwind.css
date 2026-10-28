@@ -200,21 +200,41 @@
     --cool-grey-800
   ); /* within-panel separators, list dividers */
   --oh-separator: rgba(113, 120, 136, 0.5);
-  --oh-divider: var(--oh-border-subtle);     /* rules between rows inside a card or panel */
+  --oh-divider: var(
+    --oh-border-subtle
+  ); /* rules between rows inside a card or panel */
   --oh-focus: #ffffff;
   --oh-status-success: #1fbd53;
   --oh-status-error: #ff684e;
   --oh-link: var(--cool-grey-100);
-  --oh-info: oklch(62.3% 0.214 259.815); /* informational blue: content links, update notices */
+  --oh-info: oklch(
+    62.3% 0.214 259.815
+  ); /* informational blue: content links, update notices */
   /* Status badge fills + inks. Dark palettes keep a translucent tint, so the ink
      is lightened until it clears 4.5:1 on the tint over every panel surface.
      Light palettes override the fill with an opaque tint (see light-plus.ts). */
-  --oh-success-soft: color-mix(in srgb, var(--oh-color-success) 10%, transparent);
-  --oh-success-soft-foreground: color-mix(in srgb, var(--oh-color-success) 55%, #ffffff);
+  --oh-success-soft: color-mix(
+    in srgb,
+    var(--oh-color-success) 10%,
+    transparent
+  );
+  --oh-success-soft-foreground: color-mix(
+    in srgb,
+    var(--oh-color-success) 55%,
+    #ffffff
+  );
   --oh-warning-soft: color-mix(in srgb, var(--oh-warning) 10%, transparent);
-  --oh-warning-soft-foreground: color-mix(in srgb, var(--oh-warning) 55%, #ffffff);
+  --oh-warning-soft-foreground: color-mix(
+    in srgb,
+    var(--oh-warning) 55%,
+    #ffffff
+  );
   --oh-danger-soft: color-mix(in srgb, var(--oh-color-danger) 10%, transparent);
-  --oh-danger-soft-foreground: color-mix(in srgb, var(--oh-color-danger) 55%, #ffffff);
+  --oh-danger-soft-foreground: color-mix(
+    in srgb,
+    var(--oh-color-danger) 55%,
+    #ffffff
+  );
   --oh-info-soft: color-mix(in srgb, var(--oh-info) 10%, transparent);
   --oh-info-soft-foreground: color-mix(in srgb, var(--oh-info) 55%, #ffffff);
   --oh-radius: 8px;
@@ -857,12 +877,12 @@ code .token {
     0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* Raised 3D look for enabled primary buttons: top highlight, bottom shade, press-down. */
+/* Soft raised look for enabled primary buttons: faint top highlight, gentle
+   bottom shade (no hard edge), light shadow, press-down. */
 @utility btn-primary-3d {
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.45),
-    inset 0 -2px 0 rgb(0 0 0 / 0.25),
-    0 3px 6px rgb(0 0 0 / 0.35);
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 1px 3px rgb(0 0 0 / 0.25);
   transition:
     transform 120ms ease,
     box-shadow 120ms ease;
@@ -870,9 +890,8 @@ code .token {
   &:active {
     transform: translateY(1px);
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.3),
-      inset 0 -1px 0 rgb(0 0 0 / 0.25),
-      0 1px 2px rgb(0 0 0 / 0.35);
+      inset 0 1px 0 rgb(255 255 255 / 0.2),
+      0 1px 1px rgb(0 0 0 / 0.25);
   }
 }
 
@@ -952,8 +971,8 @@ code .token {
 @utility bg-primary-sheen {
   background-image: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--oh-color-primary) 92%, white),
-    var(--oh-color-primary)
+    color-mix(in srgb, var(--oh-color-primary) 94%, white),
+    color-mix(in srgb, var(--oh-color-primary) 92%, black)
   );
 }
 

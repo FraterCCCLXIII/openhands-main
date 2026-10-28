@@ -143,7 +143,10 @@ function RailViewMenu({
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
-        className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-interactive-hover hover:text-content"
+        className={cn(
+          "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-interactive-hover hover:text-content",
+          hoverRevealActionClassName(isOpen),
+        )}
       >
         <MoreHorizontal className="size-4" aria-hidden />
       </button>
@@ -341,6 +344,14 @@ export function RecommendedAutomationsRail({
           {t(I18nKey.RECOMMENDED_AUTOMATIONS$SECTION_LABEL)}
         </h2>
         <div className="flex items-center gap-1">
+          <RailViewMenu
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onRemove={() => {
+              setIsRemoved(true);
+              onDismiss?.();
+            }}
+          />
           {/* @spec HL-002 — Named X, revealed on hover or focus, always visible on touch */}
           {dismissible && onDismiss && (
             <button
@@ -357,14 +368,6 @@ export function RecommendedAutomationsRail({
               <X className="size-4" />
             </button>
           )}
-          <RailViewMenu
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onRemove={() => {
-              setIsRemoved(true);
-              onDismiss?.();
-            }}
-          />
         </div>
       </div>
 

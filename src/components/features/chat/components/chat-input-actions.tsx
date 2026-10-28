@@ -15,9 +15,7 @@ import { ChatSendButton } from "../chat-send-button";
 import { ChatDictationButton } from "../chat-dictation-button";
 import { ContextWindowMeter } from "./context-window-meter";
 import CarretRightFillIcon from "#/icons/carret-right-fill.svg?react";
-import LessonPlanIcon from "#/icons/lesson-plan.svg?react";
 import ThreeDotsVerticalIcon from "#/icons/three-dots-vertical.svg?react";
-import { CodePillIcon } from "#/icons/code-pill";
 import { useUnifiedPauseConversation } from "#/hooks/mutation/use-unified-stop-conversation";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { usePauseConversation } from "#/hooks/mutation/use-pause-conversation";
@@ -27,11 +25,6 @@ import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
 import { useChatInputModelState } from "#/hooks/use-chat-input-model-state";
 import { useChatInputLlmProfileState } from "#/hooks/use-chat-input-llm-profile-state";
 import { getLockedCloudHost } from "#/api/agent-server-config";
-import { useConversationStore } from "#/stores/conversation-store";
-import { useAgentState } from "#/hooks/use-agent-state";
-import { AgentState } from "#/types/agent-state";
-import { useUnifiedWebSocketStatus } from "#/hooks/use-unified-websocket-status";
-import { useHandlePlanClick } from "#/hooks/use-handle-plan-click";
 import { I18nKey } from "#/i18n/declaration";
 import { ToolsContextMenuIconText } from "../../controls/tools-context-menu-icon-text";
 import { ContextMenuListItem } from "../../context-menu/context-menu-list-item";
@@ -98,15 +91,10 @@ export function ChatInputActions({
   // Code/Plan mode switching is a cloud OpenHands feature — it doesn't apply
   // to ACP conversations (which have no "plan" mode), so hide it when ACP.
   const showChangeAgentButton = isCloud && !modelState.isAcpContext;
-  const webSocketStatus = useUnifiedWebSocketStatus();
-  const { curAgentState } = useAgentState();
-  const { conversationMode, setConversationMode } = useConversationStore();
-  const { handlePlanClick, isCreatingConversation } = useHandlePlanClick();
 
   const actionsRowRef = React.useRef<HTMLDivElement>(null);
   const rightSectionRef = React.useRef<HTMLDivElement>(null);
   const addFileRef = React.useRef<HTMLDivElement>(null);
-  const codeRef = React.useRef<HTMLDivElement>(null);
   const modelRef = React.useRef<HTMLDivElement>(null);
   const agentProfileRef = React.useRef<HTMLDivElement>(null);
   const overflowTriggerRef = React.useRef<HTMLButtonElement>(null);
@@ -115,13 +103,12 @@ export function ChatInputActions({
   );
   const [rightSectionWidth, setRightSectionWidth] = React.useState(0);
   const [addFileWidth, setAddFileWidth] = React.useState(32);
-  const [codeWidth, setCodeWidth] = React.useState(96);
   const [modelWidth, setModelWidth] = React.useState(120);
   const [agentProfileWidth, setAgentProfileWidth] = React.useState(110);
   const [isOverflowOpen, setIsOverflowOpen] = React.useState(false);
-  const [activeSubmenu, setActiveSubmenu] = React.useState<
-    "agent" | "model" | null
-  >(null);
+  const [activeSubmenu, setActiveSubmenu] = React.useState<"model" | null>(
+    null,
+  );
   const [overflowPortalStyle, setOverflowPortalStyle] =
     React.useState<React.CSSProperties>();
 
@@ -129,7 +116,6 @@ export function ChatInputActions({
     const rowEl = actionsRowRef.current;
     const rightEl = rightSectionRef.current;
     const addEl = addFileRef.current;
-    const codeEl = codeRef.current;
     const modelEl = modelRef.current;
     const agentProfileEl = agentProfileRef.current;
 
@@ -138,7 +124,6 @@ export function ChatInputActions({
       !rightEl ||
       !addEl ||
       !modelEl ||
-      (showChangeAgentButton && !codeEl) ||
       typeof ResizeObserver === "undefined"
     ) {
       return;
@@ -154,11 +139,6 @@ export function ChatInputActions({
       if (nextRightWidth > 0) setRightSectionWidth(nextRightWidth);
       if (nextAddWidth > 0) setAddFileWidth(nextAddWidth);
       if (nextModelWidth > 0) setModelWidth(nextModelWidth);
-
-      if (codeEl) {
-        const nextCodeWidth = codeEl.getBoundingClientRect().width;
-        if (nextCodeWidth > 0) setCodeWidth(nextCodeWidth);
-      }
       if (agentProfileEl) {
         const nextAgentWidth = agentProfileEl.getBoundingClientRect().width;
         if (nextAgentWidth > 0) setAgentProfileWidth(nextAgentWidth);
@@ -173,9 +153,6 @@ export function ChatInputActions({
     observer.observe(rightEl);
     observer.observe(addEl);
     observer.observe(modelEl);
-    if (codeEl) {
-      observer.observe(codeEl);
-    }
     if (agentProfileEl) {
       observer.observe(agentProfileEl);
     }
@@ -183,7 +160,7 @@ export function ChatInputActions({
     syncWidths();
 
     return () => observer.disconnect();
-  }, [showChangeAgentButton, showAgentProfilePill]);
+  }, [showAgentProfilePill]);
 
   const handlePauseAgent = () => {
     if (!conversationId) return;
@@ -204,16 +181,10 @@ export function ChatInputActions({
 
   const fitOptionalItems = React.useCallback(
     (availableWidth: number) => {
-      let remaining = availableWidth;
+      const remaining = availableWidth;
       const next = {
-        showCodeInline: false,
         showModelInline: false,
       };
-
-      if (showChangeAgentButton && remaining >= codeWidth) {
-        next.showCodeInline = true;
-        remaining -= codeWidth + INLINE_GAP;
-      }
 
       if (remaining >= modelWidth) {
         next.showModelInline = true;
@@ -221,7 +192,7 @@ export function ChatInputActions({
 
       return next;
     },
-    [showChangeAgentButton, codeWidth, modelWidth],
+    [modelWidth],
   );
 
   // The agent pill never moves to the overflow menu; it truncates instead, so
@@ -238,17 +209,12 @@ export function ChatInputActions({
     agentProfileReserve;
 
   const fitWithoutOverflow = fitOptionalItems(leftBaseWidth);
-  const allOptionalFit =
-    (!showChangeAgentButton || fitWithoutOverflow.showCodeInline) &&
-    fitWithoutOverflow.showModelInline;
+  const allOptionalFit = fitWithoutOverflow.showModelInline;
 
   const fitWithOverflow = allOptionalFit
     ? fitWithoutOverflow
     : fitOptionalItems(leftBaseWidth - OVERFLOW_BUTTON_WIDTH - INLINE_GAP);
 
-  const showCodeInline = !showChangeAgentButton
-    ? false
-    : fitWithOverflow.showCodeInline;
   const showModelInline = fitWithOverflow.showModelInline;
   const showAddFileInline = true;
   const showAgentStatusInline = actionsRowWidth >= 360;
@@ -270,10 +236,7 @@ export function ChatInputActions({
   const showOverflowModel =
     !showModelInline && (getLockedCloudHost() === null || hasModelMenuRows);
 
-  const hasOverflowItems =
-    !showAddFileInline ||
-    (showChangeAgentButton && !showCodeInline) ||
-    showOverflowModel;
+  const hasOverflowItems = !showAddFileInline || showOverflowModel;
 
   React.useEffect(() => {
     if (!hasOverflowItems) {
@@ -297,11 +260,6 @@ export function ChatInputActions({
     },
     overflowTriggerRef,
   );
-
-  const isAgentSwitcherDisabled =
-    curAgentState === AgentState.RUNNING ||
-    isCreatingConversation ||
-    webSocketStatus !== "OPEN";
 
   const closeOverflowMenus = () => {
     setActiveSubmenu(null);
@@ -355,78 +313,6 @@ export function ChatInputActions({
       alignment="left"
       className="!static !top-auto !bottom-auto !left-auto !right-auto !mt-0 overflow-visible min-w-50"
     >
-      {showChangeAgentButton && !showCodeInline && (
-        <div className="relative group/overflow-agent">
-          <ContextMenuListItem
-            testId="overflow-agent-button"
-            onClick={() =>
-              setActiveSubmenu((current) =>
-                current === "agent" ? null : "agent",
-              )
-            }
-            isDisabled={isAgentSwitcherDisabled}
-          >
-            <ToolsContextMenuIconText
-              icon={<CodePillIcon className="h-2.75 w-2.75" />}
-              text={
-                conversationMode === "code"
-                  ? t(I18nKey.COMMON$CODE)
-                  : t(I18nKey.COMMON$PLAN)
-              }
-              rightIcon={<CarretRightFillIcon width={10} height={10} />}
-            />
-          </ContextMenuListItem>
-          {!isAgentSwitcherDisabled && (
-            <div
-              className={cn(
-                "absolute left-full top-[-4px] z-60 opacity-0 invisible pointer-events-none transition-all duration-200 ml-px",
-                "group-hover/overflow-agent:opacity-100 group-hover/overflow-agent:visible group-hover/overflow-agent:pointer-events-auto",
-                "hover:opacity-100 hover:visible hover:pointer-events-auto",
-                activeSubmenu === "agent" &&
-                  "opacity-100 visible pointer-events-auto",
-              )}
-            >
-              <ContextMenu
-                testId="overflow-agent-submenu"
-                className="overflow-visible min-w-48.75"
-              >
-                <ContextMenuListItem
-                  testId="overflow-agent-code"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setConversationMode("code");
-                    closeOverflowMenus();
-                  }}
-                >
-                  <ToolsContextMenuIconText
-                    icon={<CodePillIcon className="h-2.75 w-2.75" />}
-                    text={t(I18nKey.COMMON$CODE)}
-                  />
-                </ContextMenuListItem>
-                <ContextMenuListItem
-                  testId="overflow-agent-plan"
-                  onClick={(event) => {
-                    handlePlanClick(event);
-                    closeOverflowMenus();
-                  }}
-                >
-                  <ToolsContextMenuIconText
-                    icon={
-                      <LessonPlanIcon
-                        width={16}
-                        height={16}
-                        color="currentColor"
-                      />
-                    }
-                    text={t(I18nKey.COMMON$PLAN)}
-                  />
-                </ContextMenuListItem>
-              </ContextMenu>
-            </div>
-          )}
-        </div>
-      )}
       {showOverflowModel && (
         <div className="relative group/overflow-model">
           <ContextMenuListItem
@@ -520,11 +406,6 @@ export function ChatInputActions({
               showAgentProfileSwitch={showAgentProfileSwitch}
             />
           </div>
-          {showChangeAgentButton && (
-            <div ref={codeRef} className={cn(!showCodeInline && "hidden")}>
-              <ChangeAgentButton />
-            </div>
-          )}
           {/* The model pill and the agent-profile pill are separate pills side
               by side. The "+" menu keeps its own agent-profile entry (pre-start
               only) for widths where the model pill collapses into overflow. */}
@@ -592,6 +473,7 @@ export function ChatInputActions({
             isPausing={isPausing}
           />
         )}
+        {showChangeAgentButton && <ChangeAgentButton />}
         <ContextWindowMeter />
         {onDictationTranscript && (
           <ChatDictationButton

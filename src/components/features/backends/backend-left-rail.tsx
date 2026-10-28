@@ -1,6 +1,13 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Plus } from "lucide-react";
+import {
+  Boxes,
+  FolderKanban,
+  KanbanSquare,
+  Plus,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { getLockedCloudHost } from "#/api/agent-server-config";
 import { isNoBackend } from "#/api/backend-registry/active-store";
 import { useActiveBackendContext } from "#/contexts/active-backend-context";
@@ -8,7 +15,10 @@ import { I18nKey } from "#/i18n/declaration";
 import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 import { cn } from "#/utils/utils";
 import { AddBackendModal } from "./add-backend-modal";
-import { AccountIdentityTile } from "./backend-identity-tile";
+import {
+  AccountIdentityTile,
+  BackendIdentityTile,
+} from "./backend-identity-tile";
 import { BackendStatusDot } from "./backend-status-dot";
 import {
   accountFallbackIcon,
@@ -17,6 +27,30 @@ import {
   useBackendOptions,
   useSelectBackendOption,
 } from "./backend-selector";
+
+interface RailExampleApp {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  /** Tile fill; omit for the default neutral tile. */
+  background?: string;
+}
+
+/**
+ * Example app tiles shown under the accounts. They are placeholders for the
+ * apps and admin surfaces an account can expose; they do not navigate yet.
+ */
+const RAIL_EXAMPLE_APPS: readonly RailExampleApp[] = [
+  {
+    id: "superadmin",
+    label: "Superadmin",
+    icon: ShieldCheck,
+    background: "#7f1d1d",
+  },
+  { id: "planning", label: "Planning", icon: KanbanSquare },
+  { id: "projects-hub", label: "Projects hub", icon: FolderKanban },
+  { id: "work-inventory", label: "Work inventory", icon: Boxes },
+];
 
 /**
  * A narrow rail down the left edge with one tile per account, so switching
@@ -89,6 +123,28 @@ export function BackendLeftRail() {
             <Plus aria-hidden className="size-5" />
           </button>
         ) : null}
+        <div
+          role="separator"
+          aria-orientation="horizontal"
+          className="my-1 h-px w-6 shrink-0 bg-border"
+        />
+        {RAIL_EXAMPLE_APPS.map(({ id, label, icon: Icon, background }) => (
+          <button
+            key={id}
+            type="button"
+            data-testid={`backend-rail-app-${id}`}
+            aria-label={label}
+            title={label}
+            className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-transparent transition-colors hover:bg-surface-raised"
+          >
+            <BackendIdentityTile
+              fallback={<Icon aria-hidden className="size-4.5" />}
+              background={background}
+              size="md"
+              className="text-white"
+            />
+          </button>
+        ))}
       </nav>
       {addModalOpen ? (
         <AddBackendModal onClose={() => setAddModalOpen(false)} />
