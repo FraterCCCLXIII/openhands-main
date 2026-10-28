@@ -64,7 +64,7 @@ export function MarsBackendRemovalModal({
     >
       <div
         data-testid="mars-backend-removal-modal"
-        className="bg-base-secondary p-4 rounded-xl flex flex-col gap-4 border border-border max-w-md"
+        className="bg-base-secondary p-4 rounded-3xl flex flex-col gap-4 border border-border max-w-md"
       >
         <p>{t(I18nKey.BACKEND$REMOVE_MARS_CONFIRMATION, { name })}</p>
         {error ? (

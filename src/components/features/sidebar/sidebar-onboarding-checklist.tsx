@@ -1,5 +1,6 @@
 import { Tooltip } from "@heroui/react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, ClipboardList, X } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { useTracking } from "#/hooks/use-tracking";
@@ -14,8 +15,15 @@ import {
   SIDEBAR_ONBOARDING_CHECKLIST_LINK_IDS,
   type SidebarOnboardingChecklistItemId,
 } from "./sidebar-onboarding-checklist.constants";
+import { AnimatedCollapse } from "#/components/shared/animated-collapse";
 import { SidebarOnboardingChecklistItemPreview } from "./sidebar-onboarding-checklist-item-preview";
 import { useSidebarOnboardingChecklist } from "./use-sidebar-onboarding-checklist";
+import { useSidebarOnboardingTour } from "./sidebar-onboarding-tour";
+
+type StartTour = (
+  id: SidebarOnboardingChecklistItemId,
+  event: MouseEvent<HTMLAnchorElement>,
+) => void;
 
 const CHECKLIST_ITEM_TOOLTIP_CLASS =
   "rounded-xl border border-border bg-base-secondary p-0 text-contrast shadow-xl";
@@ -49,10 +57,12 @@ function ChecklistItem({
   id,
   isComplete,
   onActivate,
+  onStartTour,
 }: {
   id: SidebarOnboardingChecklistItemId;
   isComplete: boolean;
   onActivate?: () => void;
+  onStartTour: StartTour;
 }) {
   const { t } = useTranslation("openhands");
   const { trackOnboardingLinkClicked } = useTracking();
@@ -61,7 +71,7 @@ function ChecklistItem({
   const href = getSidebarOnboardingChecklistHref(id);
   const linkId = SIDEBAR_ONBOARDING_CHECKLIST_LINK_IDS[id];
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (event: MouseEvent<HTMLAnchorElement>) => {
     trackOnboardingLinkClicked({
       linkId,
       destinationType: SIDEBAR_ONBOARDING_CHECKLIST_DESTINATION_TYPES[id],
@@ -70,6 +80,7 @@ function ChecklistItem({
       isExternal: href.kind === "external",
     });
     onActivate?.();
+    onStartTour(id, event);
   };
 
   const handleDocsClick = () => {
@@ -139,6 +150,48 @@ function ChecklistItem({
   );
 }
 
+function NextStepButton({
+  id,
+  onActivate,
+  onStartTour,
+}: {
+  id: SidebarOnboardingChecklistItemId;
+  onActivate?: () => void;
+  onStartTour: StartTour;
+}) {
+  const { t } = useTranslation("openhands");
+  const href = getSidebarOnboardingChecklistHref(id);
+  const className =
+    "flex w-full items-center justify-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-on-primary transition-opacity hover:opacity-90";
+  const label = t(I18nKey.SIDEBAR$START_NEXT_STEP);
+
+  if (href.kind === "external") {
+    return (
+      <a
+        href={href.href}
+        target="_blank"
+        rel="noreferrer"
+        data-testid="sidebar-onboarding-checklist-next-step"
+        className={className}
+        onClick={onActivate}
+      >
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <NavigationLink
+      to={href.href}
+      data-testid="sidebar-onboarding-checklist-next-step"
+      className={className}
+      onClick={(event) => onStartTour(id, event)}
+    >
+      {label}
+    </NavigationLink>
+  );
+}
+
 export function SidebarOnboardingChecklist({
   collapsed,
 }: SidebarOnboardingChecklistProps) {
@@ -146,16 +199,22 @@ export function SidebarOnboardingChecklist({
   const {
     items,
     completedCount,
+    totalCount,
     isVisible,
     isMinimized,
     dismiss,
     toggleMinimized,
     markJoinSlackComplete,
   } = useSidebarOnboardingChecklist();
+  const startTour = useSidebarOnboardingTour();
 
   if (collapsed || !isVisible) {
     return null;
   }
+
+  const progressPercent =
+    totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+  const nextItem = items.find((item) => !item.isComplete);
 
   return (
     <div
@@ -163,7 +222,7 @@ export function SidebarOnboardingChecklist({
       data-minimized={isMinimized ? "true" : "false"}
       className={cn(
         "group w-full shrink-0 overflow-hidden rounded-xl border border-border",
-        "bg-surface-raised shadow-sm",
+        "bg-surface-raised shadow-[0_4px_12px_rgb(0_0_0/0.18)]",
       )}
     >
       <div className={cn("px-1", isMinimized ? "py-1" : "pt-2 pb-1")}>
@@ -189,6 +248,10 @@ export function SidebarOnboardingChecklist({
 
           <div className="relative z-10 min-w-0 flex-1 px-0.5 pointer-events-none">
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <ClipboardList
+                aria-hidden
+                className="size-3.5 shrink-0 self-center text-muted"
+              />
               <span className="text-sm font-semibold text-content">
                 {t(I18nKey.SIDEBAR$ONBOARDING_CHECKLIST_TITLE)}
               </span>
@@ -200,6 +263,18 @@ export function SidebarOnboardingChecklist({
             </div>
           </div>
 
+          <button
+            type="button"
+            aria-label={t(I18nKey.SIDEBAR$ONBOARDING_CHECKLIST_DISMISS)}
+            onClick={dismiss}
+            className={cn(
+              "relative z-10 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted",
+              "transition-opacity motion-reduce:transition-none hover:text-content",
+              hoverRevealActionClassName(),
+            )}
+          >
+            <X className="size-4" />
+          </button>
           <span
             data-testid="sidebar-onboarding-checklist-chevron"
             aria-hidden
@@ -215,22 +290,26 @@ export function SidebarOnboardingChecklist({
               )}
             />
           </span>
-          <button
-            type="button"
-            aria-label={t(I18nKey.SIDEBAR$ONBOARDING_CHECKLIST_DISMISS)}
-            onClick={dismiss}
-            className={cn(
-              "relative z-10 inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted",
-              "transition-opacity motion-reduce:transition-none hover:text-content",
-              hoverRevealActionClassName(),
-            )}
-          >
-            <X className="size-4" />
-          </button>
         </div>
       </div>
 
-      {!isMinimized ? (
+      <div
+        role="progressbar"
+        aria-label={t(I18nKey.SIDEBAR$ONBOARDING_CHECKLIST_TITLE)}
+        aria-valuemin={0}
+        aria-valuemax={totalCount}
+        aria-valuenow={completedCount}
+        className="mx-2.5 mb-2 rounded-lg bg-surface p-1.5"
+      >
+        <div className="h-1 overflow-hidden rounded-full bg-base-secondary">
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-300 motion-reduce:transition-none"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
+
+      <AnimatedCollapse open={!isMinimized}>
         <ul className="flex flex-col gap-0.5 px-2.5 pb-2">
           {items.map((item) => (
             <ChecklistItem
@@ -242,10 +321,33 @@ export function SidebarOnboardingChecklist({
                   ? markJoinSlackComplete
                   : undefined
               }
+              onStartTour={startTour}
             />
           ))}
         </ul>
-      ) : null}
+        {nextItem ? (
+          <div className="px-2.5 pb-2">
+            <NextStepButton
+              id={nextItem.id}
+              onActivate={
+                isExternalSidebarOnboardingChecklistItem(nextItem.id)
+                  ? markJoinSlackComplete
+                  : undefined
+              }
+              onStartTour={startTour}
+            />
+            <a
+              href="https://docs.openhands.dev/"
+              target="_blank"
+              rel="noreferrer"
+              data-testid="sidebar-onboarding-checklist-learning-center"
+              className="mt-2 flex w-full items-center justify-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted hover:text-contrast transition-opacity hover:opacity-90"
+            >
+              {t(I18nKey.SIDEBAR$LEARNING_CENTER)}
+            </a>
+          </div>
+        ) : null}
+      </AnimatedCollapse>
     </div>
   );
 }

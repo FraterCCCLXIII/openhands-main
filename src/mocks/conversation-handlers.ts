@@ -2,6 +2,7 @@ import { http, delay, HttpResponse, passthrough } from "msw";
 import { SKILLS_CATALOG } from "@openhands/extensions/skills";
 import type { DirectConversationInfo } from "#/api/agent-server-adapter";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
+import { useConversationDiffStatsStore } from "#/stores/conversation-diff-stats-store";
 import {
   ExecutionStatus,
   type OpenHandsEvent,
@@ -16,14 +17,55 @@ import {
   CANVAS_DEMO_FILE_PATH,
   CANVAS_DEMO_MARKDOWN,
 } from "#/fixtures/canvas-demo-conversation";
+import {
+  MINIMAP_DEMO_CONVERSATION_ID,
+  MINIMAP_DEMO_EVENTS,
+} from "#/fixtures/minimap-demo-conversation";
 
 /** Map from conversation id → events returned by GET /events/search */
 const CONVERSATION_EVENTS: Record<string, unknown[]> = {
   [TABLE_DEMO_CONVERSATION_ID]: TABLE_DEMO_EVENTS,
   [CANVAS_DEMO_CONVERSATION_ID]: CANVAS_DEMO_EVENTS,
+  [MINIMAP_DEMO_CONVERSATION_ID]: MINIMAP_DEMO_EVENTS,
 };
 
 const now = Date.now();
+
+// Sample line totals so nested subagent rows show diff numbers in mock mode.
+if (import.meta.env.VITE_MOCK_API === "true") {
+  const { setConversationDiffTotals } =
+    useConversationDiffStatsStore.getState();
+  setConversationDiffTotals("3", {
+    additions: 0,
+    deletions: 0,
+    gitState: "untracked",
+  });
+  setConversationDiffTotals("4", {
+    additions: 0,
+    deletions: 0,
+    gitState: "clean",
+  });
+  setConversationDiffTotals("5", {
+    additions: 9,
+    deletions: 2,
+    gitState: "staged",
+  });
+  setConversationDiffTotals("2-subagent-explore", {
+    additions: 128,
+    deletions: 14,
+  });
+  setConversationDiffTotals("2-subagent-tests", {
+    additions: 36,
+    deletions: 3,
+    gitState: "conflict",
+  });
+  setConversationDiffTotals("1", { additions: 412, deletions: 58 });
+  setConversationDiffTotals("2", {
+    additions: 64,
+    deletions: 9,
+    gitState: "ahead",
+  });
+}
 const PAGINATION_LOCAL_CONVERSATION_ID = "pagination-local";
 const PAGINATION_CLOUD_CONVERSATION_ID = "pagination-cloud";
 const PAGINATION_EVENT_COUNT = 100;
@@ -31,6 +73,7 @@ const PAGINATION_PAGE_DELAY_MS = 500;
 const PAGINATION_BASE_TIME = Date.UTC(2026, 4, 13, 0, 0, 0);
 
 type MockConversation = DirectConversationInfo & {
+  sub_conversation_ids?: string[];
   selected_repository?: string | null;
   selected_branch?: string | null;
   git_provider?: string | null;
@@ -58,6 +101,26 @@ const conversations: MockConversation[] = [
     created_at: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
     execution_status: "idle",
+    selected_repository: "octocat/hello-world",
+    git_provider: "github",
+    sub_conversation_ids: ["2-subagent-explore", "2-subagent-tests"],
+  },
+  // Subagents spawned by "Repo Testing"; the list nests them under it.
+  {
+    id: "2-subagent-explore",
+    title: "Subagent: explore test layout",
+    created_at: new Date(now - 2 * 24 * 60 * 60 * 1000 + 60_000).toISOString(),
+    updated_at: new Date(now - 2 * 24 * 60 * 60 * 1000 + 60_000).toISOString(),
+    execution_status: "finished",
+    selected_repository: "octocat/hello-world",
+    git_provider: "github",
+  },
+  {
+    id: "2-subagent-tests",
+    title: "Subagent: write parser tests",
+    created_at: new Date(now - 2 * 24 * 60 * 60 * 1000 + 120_000).toISOString(),
+    updated_at: new Date(now - 2 * 24 * 60 * 60 * 1000 + 120_000).toISOString(),
+    execution_status: "running",
     selected_repository: "octocat/hello-world",
     git_provider: "github",
   },
@@ -112,6 +175,14 @@ const conversations: MockConversation[] = [
     title: "Generated canvas demo",
     created_at: new Date(now - 12 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(now - 12 * 60 * 60 * 1000).toISOString(),
+    execution_status: "idle",
+    workspace: { working_dir: "/workspace/project" },
+  },
+  {
+    id: MINIMAP_DEMO_CONVERSATION_ID,
+    title: "Minimap demo (55 turns)",
+    created_at: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(now - 3 * 60 * 60 * 1000).toISOString(),
     execution_status: "idle",
     workspace: { working_dir: "/workspace/project" },
   },
@@ -232,6 +303,7 @@ function createConversationResponse(
     agent: conversation.agent ?? null,
     workspace: conversation.workspace ?? null,
     tags: conversation.tags ?? null,
+    sub_conversation_ids: conversation.sub_conversation_ids ?? [],
   };
 }
 
@@ -250,12 +322,32 @@ export const CONVERSATION_HANDLERS = [
   http.get("*/api/conversations/search", async ({ request }) => {
     const url = new URL(request.url);
     const limit = Number(url.searchParams.get("limit") ?? "20");
-    const items = Array.from(CONVERSATIONS.values())
+    const pageId = url.searchParams.get("page_id");
+    const titleContains = url.searchParams.get("title__contains")?.trim();
+    const titleFilter = titleContains?.toLowerCase();
+    const sorted = Array.from(CONVERSATIONS.values())
       .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-      .slice(0, limit)
-      .map(createConversationResponse);
+      .map(createConversationResponse)
+      .filter((conversation) => {
+        if (!titleFilter) {
+          return true;
+        }
+        return (conversation.title ?? "").toLowerCase().includes(titleFilter);
+      });
 
-    return HttpResponse.json({ items, next_page_id: null });
+    let startIndex = 0;
+    if (pageId) {
+      const pageStartIndex = sorted.findIndex(
+        (conversation) => conversation.id === pageId,
+      );
+      startIndex = pageStartIndex >= 0 ? pageStartIndex + 1 : 0;
+    }
+
+    const items = sorted.slice(startIndex, startIndex + limit);
+    const hasMore = startIndex + limit < sorted.length;
+    const next_page_id = hasMore ? (items[items.length - 1]?.id ?? null) : null;
+
+    return HttpResponse.json({ items, next_page_id });
   }),
 
   http.get("*/api/conversations", async ({ request }) => {
@@ -415,8 +507,19 @@ export const CONVERSATION_HANDLERS = [
     }
 
     if (upstreamUrl.pathname === "/api/v1/app-conversations/search") {
+      const titleContains = upstreamUrl.searchParams
+        .get("title__contains")
+        ?.trim()
+        .toLowerCase();
+      const items =
+        !titleContains ||
+        (CLOUD_PAGINATION_CONVERSATION.title ?? "")
+          .toLowerCase()
+          .includes(titleContains)
+          ? [CLOUD_PAGINATION_CONVERSATION]
+          : [];
       return HttpResponse.json({
-        items: [CLOUD_PAGINATION_CONVERSATION],
+        items,
         next_page_id: null,
       });
     }

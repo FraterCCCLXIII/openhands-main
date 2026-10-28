@@ -3,7 +3,6 @@ import { Pin } from "lucide-react";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useNavigation } from "#/context/navigation-context";
-import { hoverRevealActionClassName } from "#/utils/hover-reveal-classes";
 import { cn } from "#/utils/utils";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
 import {
@@ -52,6 +51,8 @@ interface SidebarNavLinkProps {
   forceActive?: boolean;
   /** Pin-as-home toggle; rendered only when the sidebar is expanded. */
   pinAction?: SidebarNavLinkPinAction;
+  /** Control nested at the row's right edge; rendered only when expanded. */
+  trailing?: React.ReactNode;
 }
 
 export function SidebarNavLink({
@@ -66,10 +67,12 @@ export function SidebarNavLink({
   hoverContent,
   forceActive = false,
   pinAction,
+  trailing,
 }: SidebarNavLinkProps) {
   const { currentPath } = useNavigation();
   const active = forceActive || isPathActive(currentPath, to, end);
   const showPinAction = !collapsed && pinAction != null;
+  const showTrailing = !collapsed && trailing != null;
 
   const link = (
     <NavigationLink
@@ -98,7 +101,7 @@ export function SidebarNavLink({
         disabled && "opacity-50",
         disabled && "pointer-events-none",
         // Constant right reserve so label truncation doesn't reflow on hover.
-        showPinAction && "pr-9",
+        (showPinAction || showTrailing) && "pr-9",
       )}
     >
       {icon ? (
@@ -115,6 +118,16 @@ export function SidebarNavLink({
   );
 
   if (!collapsed) {
+    if (showTrailing) {
+      return (
+        <div className="relative">
+          {link}
+          <div className="absolute inset-y-0 right-1 z-20 flex items-center">
+            {trailing}
+          </div>
+        </div>
+      );
+    }
     if (!pinAction) return link;
 
     // NavigationLink renders an <a>, so the pin toggle is an absolutely
@@ -137,7 +150,10 @@ export function SidebarNavLink({
             "absolute right-1.5 top-1/2 -translate-y-1/2",
             "flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1",
             "text-muted hover:bg-contrast/10 hover:text-contrast",
-            hoverRevealActionClassName(pinAction.pinned),
+            // Pinned stays visible; unpinned appears on row hover, focus, or on touch.
+            pinAction.pinned
+              ? "opacity-100"
+              : "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100",
           )}
         >
           <Pin

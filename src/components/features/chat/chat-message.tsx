@@ -147,120 +147,141 @@ export function ChatMessage({
   const renderedMessageContent = messageContent;
 
   const messageBubble = (
-    <article
-      data-testid={`${type}-message`}
-      data-pending-status={pendingStatus}
+    <div
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       className={cn(
-        "rounded-xl relative w-fit max-w-full flex flex-col",
-        hasBubbleChildren && "gap-2",
-        type === "user" && "mt-6 bg-tertiary self-end px-4 py-2.5",
-        type === "agent" && "mt-6 w-full max-w-full bg-transparent",
-        isFromPlanningAgent &&
-          type === "agent" &&
-          "border border-[#597ff4] bg-tertiary p-4 mt-2",
-        pendingStatus === "error" && "border border-status-error/40",
+        "flex w-full max-w-full flex-col",
+        type === "user" ? "items-end" : "items-start",
         !isPendingUserMessage && "last:mb-4",
       )}
     >
-      <div
+      <article
+        data-testid={`${type}-message`}
+        data-pending-status={pendingStatus}
         className={cn(
-          "absolute -top-2.5 -right-2.5 z-10",
-          !isHovering || pendingStatus === "sending" ? "hidden" : "flex",
-          "items-center gap-1",
+          "rounded-xl relative w-fit max-w-full flex flex-col",
+          hasBubbleChildren && "gap-2",
+          type === "user" &&
+            "mt-6 bg-tertiary bg-linear-to-b from-white/[0.04] via-transparent to-black/[0.12] self-end px-4 py-2.5 transition-[filter] duration-150 hover:brightness-110 motion-reduce:transition-none",
+          // A message bubbles in as it is sent. The echoed event replaces the
+          // pending bubble without animating again.
+          pendingStatus === "sending" &&
+            "animate-[composer-bubble-in_360ms_cubic-bezier(0.2,0.9,0.3,1)_both] motion-reduce:animate-none",
+          type === "agent" && "mt-6 w-full max-w-full bg-transparent",
+          isFromPlanningAgent &&
+            type === "agent" &&
+            "border border-[#597ff4] bg-tertiary p-4 mt-2",
+          pendingStatus === "error" && "border border-status-error/40",
         )}
-        onClick={(event) => event.stopPropagation()}
       >
-        {actions?.map((action, index) =>
-          action.tooltip ? (
-            <StyledTooltip key={index} content={action.tooltip} placement="top">
+        {renderedMessageContent}
+
+        {canStopPendingMessage ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onStop?.();
+            }}
+            data-testid="chat-message-stop"
+            aria-label={t(I18nKey.BUTTON$STOP)}
+            aria-hidden={!showStopButton}
+            tabIndex={showStopButton ? 0 : -1}
+            className={cn(
+              "group absolute z-10 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-tertiary text-foreground transition-opacity duration-150",
+              isSingleLinePendingMessage
+                ? "right-3 top-1/2 -translate-y-1/2"
+                : "right-3 bottom-2.5",
+              showStopButton ? "opacity-100" : "pointer-events-none opacity-0",
+            )}
+          >
+            <PendingStopIcon className="block h-7 w-7 max-w-none" />
+          </button>
+        ) : null}
+
+        {isCollapsed ? (
+          <button
+            type="button"
+            data-testid="chat-message-expand"
+            aria-expanded={false}
+            aria-label={t(I18nKey.COMMON$VIEW_MORE)}
+            className="absolute inset-0 z-[1] cursor-pointer rounded-xl border-0 bg-transparent p-0"
+            onClick={() => setIsExpanded(true)}
+          />
+        ) : null}
+
+        {children}
+      </article>
+
+      {pendingStatus === "sending" ? null : (
+        <div
+          data-testid="chat-message-meta"
+          onClick={(event) => event.stopPropagation()}
+          className={cn(
+            "mt-1 flex items-center gap-1 px-1 text-xs text-muted transition-opacity duration-150",
+            isHovering || isCopy
+              ? "opacity-100"
+              : "pointer-events-none opacity-0",
+          )}
+        >
+          {type === "user" && timestampLabel ? (
+            <time dateTime={timestamp} className="mr-1 whitespace-nowrap">
+              {timestampLabel}
+            </time>
+          ) : null}
+
+          {actions?.map((action, index) =>
+            action.tooltip ? (
+              <StyledTooltip
+                key={index}
+                content={action.tooltip}
+                placement="top"
+              >
+                <button
+                  type="button"
+                  onClick={action.onClick}
+                  className="cursor-pointer rounded-xs p-1 text-muted transition-colors hover:text-foreground"
+                  aria-label={action.tooltip}
+                >
+                  {action.icon}
+                </button>
+              </StyledTooltip>
+            ) : (
               <button
+                key={index}
                 type="button"
                 onClick={action.onClick}
-                className="button-base p-1 cursor-pointer"
-                aria-label={action.tooltip}
+                className="cursor-pointer rounded-xs p-1 text-muted transition-colors hover:text-foreground"
+                aria-label={`Action ${index + 1}`}
               >
                 {action.icon}
               </button>
-            </StyledTooltip>
-          ) : (
-            <button
-              key={index}
-              type="button"
-              onClick={action.onClick}
-              className="button-base p-1 cursor-pointer"
-              aria-label={`Action ${index + 1}`}
-            >
-              {action.icon}
-            </button>
-          ),
-        )}
-
-        <CopyToClipboardButton
-          isHidden={!isHovering}
-          isDisabled={isCopy}
-          onClick={handleCopyToClipboard}
-          mode={isCopy ? "copied" : "copy"}
-        />
-      </div>
-
-      {renderedMessageContent}
-
-      {canStopPendingMessage ? (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onStop?.();
-          }}
-          data-testid="chat-message-stop"
-          aria-label={t(I18nKey.BUTTON$STOP)}
-          aria-hidden={!showStopButton}
-          tabIndex={showStopButton ? 0 : -1}
-          className={cn(
-            "group absolute z-10 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-tertiary text-foreground transition-opacity duration-150",
-            isSingleLinePendingMessage
-              ? "right-3 top-1/2 -translate-y-1/2"
-              : "right-3 bottom-2.5",
-            showStopButton ? "opacity-100" : "pointer-events-none opacity-0",
+            ),
           )}
-        >
-          <PendingStopIcon className="block h-7 w-7 max-w-none" />
-        </button>
-      ) : null}
 
-      {isCollapsed ? (
-        <button
-          type="button"
-          data-testid="chat-message-expand"
-          aria-expanded={false}
-          aria-label={t(I18nKey.COMMON$VIEW_MORE)}
-          className="absolute inset-0 z-[1] cursor-pointer rounded-xl border-0 bg-transparent p-0"
-          onClick={() => setIsExpanded(true)}
-        />
-      ) : null}
+          <CopyToClipboardButton
+            isHidden={false}
+            isDisabled={isCopy}
+            onClick={handleCopyToClipboard}
+            mode={isCopy ? "copied" : "copy"}
+            variant="ghost"
+          />
 
-      {children}
-    </article>
-  );
-
-  const messageBubbleWithTimestamp = timestampLabel ? (
-    <StyledTooltip
-      content={<time dateTime={timestamp}>{timestampLabel}</time>}
-      placement="top"
-      isOpen={isHovering}
-    >
-      {messageBubble}
-    </StyledTooltip>
-  ) : (
-    messageBubble
+          {type === "agent" && timestampLabel ? (
+            <time dateTime={timestamp} className="ml-1.5 whitespace-nowrap">
+              {timestampLabel}
+            </time>
+          ) : null}
+        </div>
+      )}
+    </div>
   );
 
   if (type === "user" && pendingStatus === "error") {
     return (
       <div className="flex w-fit max-w-full flex-col items-end gap-1.5 self-end last:mb-4">
-        {messageBubbleWithTimestamp}
+        {messageBubble}
         <div
           role="alert"
           data-testid="chat-message-error"
@@ -295,7 +316,7 @@ export function ChatMessage({
   if (type === "user" && pendingStatus === "sending") {
     return (
       <div className="flex w-full max-w-full flex-col last:mb-4">
-        {messageBubbleWithTimestamp}
+        {messageBubble}
         <div className="my-1 w-full py-1 text-sm">
           <TextShimmer
             as="p"
@@ -313,5 +334,5 @@ export function ChatMessage({
     );
   }
 
-  return messageBubbleWithTimestamp;
+  return messageBubble;
 }

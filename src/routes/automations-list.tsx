@@ -47,6 +47,8 @@ import { useStartAutomationSetup } from "#/hooks/use-start-automation-setup";
 import { AddAutomationMenu } from "#/components/features/automations/add-automation-menu";
 import { ImportAutomationModal } from "#/components/features/automations/import-automation-modal";
 import { RecommendedAutomationsLauncher } from "#/components/features/automations/recommended-automations-launcher";
+import { AutomationConversationLaunchModal } from "#/components/features/automations/automation-conversation-launch-modal";
+import type { AutomationConversationLaunchRequest } from "#/components/features/automations/use-launch-automation-conversation";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useTracking } from "#/hooks/use-tracking";
@@ -329,6 +331,8 @@ export default function AutomationsList() {
   const { startSetup } = useStartAutomationSetup();
   const [importSpec, setImportSpec] = useState<AutomationSpec | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [launchRequest, setLaunchRequest] =
+    useState<AutomationConversationLaunchRequest | null>(null);
 
   const active = useActiveBackend();
   const { navigate } = useNavigation();
@@ -518,6 +522,14 @@ export default function AutomationsList() {
     if (automation) openEditor(automation);
   };
 
+  const handleFindOpportunities = () => {
+    setLaunchRequest({
+      intent: "find_opportunities",
+      source: "dashboard_header",
+      prompt: t(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT),
+    });
+  };
+
   const handleExport = (automation: Automation) => {
     const contents = `${JSON.stringify(serializeAutomation(automation), null, 2)}\n`;
     downloadBlob(
@@ -678,7 +690,7 @@ export default function AutomationsList() {
   if (isHealthLoading) {
     return renderShell(
       <div>
-        <h1 className="text-xl font-medium text-content">
+        <h1 className="font-inter text-[22px] font-normal text-content">
           {interfaceCopy.listTitle}
         </h1>
         <p className="mt-1 text-sm text-muted">{interfaceCopy.listSubtitle}</p>
@@ -695,7 +707,7 @@ export default function AutomationsList() {
   if (!isBackendHealthy) {
     return renderShell(
       <div>
-        <h1 className="text-xl font-medium text-content">
+        <h1 className="font-inter text-[22px] font-normal text-content">
           {interfaceCopy.listTitle}
         </h1>
         <p className="mt-1 text-sm text-muted">{interfaceCopy.listSubtitle}</p>
@@ -709,7 +721,7 @@ export default function AutomationsList() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 basis-64">
-          <h1 className="text-xl font-semibold text-content">
+          <h1 className="font-inter text-[22px] font-normal text-content">
             {interfaceCopy.listTitle}
           </h1>
           <p className="mt-1 text-sm text-muted">
@@ -733,6 +745,7 @@ export default function AutomationsList() {
             </BrandButton>
           )}
           <AddAutomationMenu
+            onSuggest={handleFindOpportunities}
             onAdd={startSetup}
             onImport={() => setIsImportOpen(true)}
           />
@@ -912,6 +925,13 @@ export default function AutomationsList() {
         confirmTestId="automation-setup-draft-delete-confirm"
         isConfirming={deleteDraftMutation.isPending}
       />
+
+      {launchRequest ? (
+        <AutomationConversationLaunchModal
+          request={launchRequest}
+          onClose={() => setLaunchRequest(null)}
+        />
+      ) : null}
 
       <ImportAutomationModal
         isOpen={isImportOpen}

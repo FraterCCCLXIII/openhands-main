@@ -437,11 +437,27 @@ export function SetupDialog({ entry, onClose }: SetupDialogProps) {
     return entry.name;
   })();
 
+  // The review panel owns the scroll area, so it replaces the form wrapper
+  // rather than sitting inside it. Loading and unsupported still belong in the
+  // wrapper: on review they are the only thing left to show.
+  const showReview = currentStep === "review" && !isLoading && !isUnsupported;
+
+  const formErrorMessages = serviceErrors.formErrors.map((message) => (
+    <p
+      key={message}
+      role="alert"
+      data-testid="setup-form-error"
+      className="pt-4 text-sm text-red-400"
+    >
+      {message}
+    </p>
+  ));
+
   return (
     <ModalBackdrop onClose={onClose} aria-label={entry.name}>
       <div
         data-testid="setup-dialog"
-        className="relative flex max-h-[85vh] w-[92vw] max-w-lg flex-col rounded-xl border border-border bg-base-secondary"
+        className="relative flex max-h-[85vh] w-[min(36rem,calc(100vw-2rem))] flex-col rounded-3xl border border-[var(--oh-border)] bg-base-secondary"
       >
         <ModalCloseButton
           onClose={onClose}
@@ -450,165 +466,177 @@ export function SetupDialog({ entry, onClose }: SetupDialogProps) {
         />
         <header className="flex-shrink-0 px-6 pb-4 pt-6">
           <h2 className={cn("pr-6", modalTitleLgClassName)}>{title}</h2>
+          {currentStep === "review" && (
+            <p className="mt-2 text-sm text-tertiary-light">
+              {t(I18nKey.SETUP$REVIEW_DESCRIPTION)}
+            </p>
+          )}
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6">
-          {isLoading && (
-            <div className="flex justify-center py-6">
-              <LoadingSpinner size="small" />
-            </div>
-          )}
+        {showReview ? (
+          <SetupReviewStep
+            setup={entry.setup}
+            values={values}
+            selectedTrigger={selectedTrigger}
+            selectedAction={selectedAction}
+            automationName={entry.name}
+          />
+        ) : (
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6">
+            {isLoading && (
+              <div className="flex justify-center py-6">
+                <LoadingSpinner size="small" />
+              </div>
+            )}
 
-          {!isLoading && isUnsupported && (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-muted">
-                {t(I18nKey.SETUP$UNSUPPORTED_MESSAGE)}
-              </p>
-              {/* The unmet requirements are the names both sides of the
-                  contract already use, so they are printed rather than
-                  translated. Without them the block is undiagnosable: the
-                  deployment answered, and the host would be discarding the
-                  one thing it learned. */}
-              {unmet.length > 0 && (
-                <p
-                  data-testid="setup-unmet-requirements"
-                  className="text-sm text-muted"
-                >
-                  {unmet.join(", ")}
+            {!isLoading && isUnsupported && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-[var(--oh-muted)]">
+                  {t(I18nKey.SETUP$UNSUPPORTED_MESSAGE)}
                 </p>
-              )}
-            </div>
-          )}
-
-          {!isLoading && !isUnsupported && currentStep === "prerequisites" && (
-            <SetupPrerequisitesStep prerequisites={prerequisites} />
-          )}
-
-          {!isLoading && !isUnsupported && currentStep === "form" && (
-            <div className="flex flex-col gap-5">
-              <p className="text-sm text-muted">{entry.description}</p>
-              {entry.setup.form.note && (
-                <p className="text-sm text-muted">{entry.setup.form.note}</p>
-              )}
-              {allActionOptions.length > 1 && actionOptions.length > 1 && (
-                <div className="flex w-full flex-col gap-2.5">
-                  <SettingsDropdownInput
-                    testId="setup-action-kind"
-                    name="actionKind"
-                    label={t(I18nKey.SETUP$ACTION_LABEL)}
-                    items={actionOptions.map((kind) => {
-                      const action = entry.setup.actions?.[kind];
-                      return {
-                        key: kind,
-                        label: action?.label ?? kind,
-                      };
-                    })}
-                    selectedKey={selectedAction ?? undefined}
-                    isDisabled={isSubmitting}
-                    required
-                    onSelectionChange={(key) => {
-                      if (key !== null) setActionValue(String(key));
-                    }}
-                  />
-                  {selectedAction &&
-                    entry.setup.actions?.[
-                      selectedAction as keyof typeof entry.setup.actions
-                    ] && (
-                      <p className="text-xs text-muted">
-                        {
-                          entry.setup.actions[
-                            selectedAction as keyof typeof entry.setup.actions
-                          ]?.help
-                        }
-                      </p>
-                    )}
-                </div>
-              )}
-              {triggerOptions.length > 1 && (
-                <div className="flex w-full flex-col gap-2.5">
-                  <SettingsDropdownInput
-                    testId="setup-trigger-kind"
-                    name="triggerKind"
-                    label={t(I18nKey.SETUP$TRIGGER_LABEL)}
-                    items={triggerOptions.map((kind) => ({
-                      key: kind,
-                      label: kind === "cron" ? "Scheduled" : "Event",
-                    }))}
-                    selectedKey={selectedTrigger ?? undefined}
-                    isDisabled={isSubmitting}
-                    required
-                    onSelectionChange={(key) => {
-                      if (key !== null) setTriggerValue(String(key));
-                    }}
-                  />
-                  <p className="text-xs text-muted">
-                    {t(I18nKey.SETUP$TRIGGER_HELP)}
+                {/* The unmet requirements are the names both sides of the
+                    contract already use, so they are printed rather than
+                    translated. Without them the block is undiagnosable: the
+                    deployment answered, and the host would be discarding the
+                    one thing it learned. */}
+                {unmet.length > 0 && (
+                  <p
+                    data-testid="setup-unmet-requirements"
+                    className="text-sm text-[var(--oh-muted)]"
+                  >
+                    {unmet.join(", ")}
                   </p>
-                </div>
+                )}
+              </div>
+            )}
+
+            {!isLoading &&
+              !isUnsupported &&
+              currentStep === "prerequisites" && (
+                <SetupPrerequisitesStep prerequisites={prerequisites} />
               )}
-              {canSelectAgentProfile && (
-                <AutomationAgentProfileSelector
-                  // The form stores "no profile" as "", but the selector only
-                  // reads null/undefined as Default; "" would render it blank.
-                  value={
-                    typeof values.agent_profile_id === "string" &&
-                    values.agent_profile_id !== ""
-                      ? values.agent_profile_id
-                      : null
-                  }
-                  onChange={(value) =>
-                    setFieldValue("agent_profile_id", value ?? "")
-                  }
-                />
-              )}
-              {Object.entries(visibleFields).map(([name, field]) => (
-                <SetupFormField
-                  key={name}
-                  name={name}
-                  field={field}
-                  value={values[name] ?? ""}
-                  error={resolveFieldError(name)}
-                  options={getFieldOptions(name, field, overrides)}
-                  repository={repositories[name] ?? null}
-                  disabled={isSubmitting}
-                  isOptionsLoading={
-                    field.type === "llm-profile" && isLoadingLlmProfileOptions
-                  }
-                  onChange={(value) => setFieldValue(name, value)}
-                  onRepositoryChange={(repository) =>
-                    setRepositories((current) => ({
-                      ...current,
-                      [name]: repository,
-                    }))
-                  }
-                  onBlur={handleFieldBlur}
-                />
-              ))}
-            </div>
+
+            {!isLoading && !isUnsupported && currentStep === "form" && (
+              <div className="flex flex-col gap-5">
+                <p className="text-sm text-[var(--oh-muted)]">
+                  {entry.description}
+                </p>
+                {entry.setup.form.note && (
+                  <p className="text-sm text-[var(--oh-muted)]">
+                    {entry.setup.form.note}
+                  </p>
+                )}
+                {allActionOptions.length > 1 && actionOptions.length > 1 && (
+                  <div className="flex w-full flex-col gap-2.5">
+                    <SettingsDropdownInput
+                      testId="setup-action-kind"
+                      name="actionKind"
+                      label={t(I18nKey.SETUP$ACTION_LABEL)}
+                      items={actionOptions.map((kind) => {
+                        const action = entry.setup.actions?.[kind];
+                        return {
+                          key: kind,
+                          label: action?.label ?? kind,
+                        };
+                      })}
+                      selectedKey={selectedAction ?? undefined}
+                      isDisabled={isSubmitting}
+                      required
+                      onSelectionChange={(key) => {
+                        if (key !== null) setActionValue(String(key));
+                      }}
+                    />
+                    {selectedAction &&
+                      entry.setup.actions?.[
+                        selectedAction as keyof typeof entry.setup.actions
+                      ] && (
+                        <p className="text-xs text-muted">
+                          {
+                            entry.setup.actions[
+                              selectedAction as keyof typeof entry.setup.actions
+                            ]?.help
+                          }
+                        </p>
+                      )}
+                  </div>
+                )}
+                {triggerOptions.length > 1 && (
+                  <div className="flex w-full flex-col gap-2.5">
+                    <SettingsDropdownInput
+                      testId="setup-trigger-kind"
+                      name="triggerKind"
+                      label={t(I18nKey.SETUP$TRIGGER_LABEL)}
+                      items={triggerOptions.map((kind) => ({
+                        key: kind,
+                        label: kind === "cron" ? "Scheduled" : "Event",
+                      }))}
+                      selectedKey={selectedTrigger ?? undefined}
+                      isDisabled={isSubmitting}
+                      required
+                      onSelectionChange={(key) => {
+                        if (key !== null) setTriggerValue(String(key));
+                      }}
+                    />
+                    <p className="text-xs text-muted">
+                      {t(I18nKey.SETUP$TRIGGER_HELP)}
+                    </p>
+                  </div>
+                )}
+                {canSelectAgentProfile && (
+                  <AutomationAgentProfileSelector
+                    // The form stores "no profile" as "", but the selector only
+                    // reads null/undefined as Default; "" would render it blank.
+                    value={
+                      typeof values.agent_profile_id === "string" &&
+                      values.agent_profile_id !== ""
+                        ? values.agent_profile_id
+                        : null
+                    }
+                    onChange={(value) =>
+                      setFieldValue("agent_profile_id", value ?? "")
+                    }
+                  />
+                )}
+                {Object.entries(visibleFields).map(([name, field]) => (
+                  <SetupFormField
+                    key={name}
+                    name={name}
+                    field={field}
+                    value={values[name] ?? ""}
+                    error={resolveFieldError(name)}
+                    options={getFieldOptions(name, field, overrides)}
+                    repository={repositories[name] ?? null}
+                    disabled={isSubmitting}
+                    isOptionsLoading={
+                      field.type === "llm-profile" && isLoadingLlmProfileOptions
+                    }
+                    onChange={(value) => setFieldValue(name, value)}
+                    onRepositoryChange={(repository) =>
+                      setRepositories((current) => ({
+                        ...current,
+                        [name]: repository,
+                      }))
+                    }
+                    onBlur={handleFieldBlur}
+                  />
+                ))}
+              </div>
+            )}
+
+            {formErrorMessages}
+          </div>
+        )}
+
+        {showReview && formErrorMessages.length > 0 && (
+          <div className="px-6">{formErrorMessages}</div>
+        )}
+
+        <footer
+          className={cn(
+            "flex flex-shrink-0 justify-end px-6",
+            currentStep === "review" ? "gap-3 py-5" : "gap-2 pb-6 pt-4",
           )}
-
-          {!isLoading && !isUnsupported && currentStep === "review" && (
-            <SetupReviewStep
-              setup={entry.setup}
-              values={values}
-              selectedTrigger={selectedTrigger}
-              selectedAction={selectedAction}
-            />
-          )}
-
-          {serviceErrors.formErrors.map((message) => (
-            <p
-              key={message}
-              role="alert"
-              data-testid="setup-form-error"
-              className="pt-4 text-sm text-feedback-error"
-            >
-              {message}
-            </p>
-          ))}
-        </div>
-
-        <footer className="flex flex-shrink-0 justify-end gap-2 px-6 pb-6 pt-4">
+        >
           {currentStep === "review" && (
             <BrandButton
               testId="setup-back-button"

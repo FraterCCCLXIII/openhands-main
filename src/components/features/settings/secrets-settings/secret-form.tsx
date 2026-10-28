@@ -26,6 +26,8 @@ interface SecretFormProps {
   keepOpenOnError?: boolean;
   /** Visible height of the value field, in lines. */
   valueRows?: number;
+  /** Put the submit button before Cancel. */
+  submitFirst?: boolean;
 }
 
 export function SecretForm({
@@ -36,6 +38,7 @@ export function SecretForm({
   defaultName = "",
   keepOpenOnError = false,
   valueRows = 8,
+  submitFirst = false,
 }: SecretFormProps) {
   const queryClient = useQueryClient();
   const { t } = useTranslation("openhands");
@@ -187,7 +190,9 @@ export function SecretForm({
         pattern="^[a-zA-Z][a-zA-Z0-9_]{0,63}$"
         title={t(I18nKey.SETTINGS$SECRET_NAME_PATTERN_TITLE)}
       />
-      {error && <p className="text-danger text-sm">{error}</p>}
+      {error && (
+        <p className="text-danger text-sm dark:text-red-500">{error}</p>
+      )}
 
       <label className="flex flex-col gap-2.5 w-full min-w-0">
         <span className="text-sm">
@@ -228,7 +233,12 @@ export function SecretForm({
         />
       </label>
 
-      <div className="flex items-center gap-4">
+      <div
+        className={cn(
+          "flex items-center gap-4",
+          submitFirst && "flex-row-reverse",
+        )}
+      >
         <BrandButton
           testId="cancel-button"
           type="button"

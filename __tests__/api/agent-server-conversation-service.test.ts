@@ -1099,7 +1099,7 @@ describe("AgentServerConversationService", () => {
       });
 
       const result =
-        await AgentServerConversationService.searchConversations(10);
+        await AgentServerConversationService.searchConversations({ limit: 10 });
 
       expect(result.items[0]?.sandbox_status).toBe("PAUSED");
     });
@@ -2084,10 +2084,10 @@ describe("AgentServerConversationService", () => {
         next_page_id: "next-page",
       });
 
-      const result = await AgentServerConversationService.searchConversations(
-        5,
-        "current-page",
-      );
+      const result = await AgentServerConversationService.searchConversations({
+        limit: 5,
+        pageId: "current-page",
+      });
 
       expect(result.next_page_id).toBe("next-page");
       expect(mockSearchConversations).toHaveBeenCalledWith({
@@ -2121,10 +2121,10 @@ describe("AgentServerConversationService", () => {
         next_page_id: "cloud-next",
       });
 
-      const result = await AgentServerConversationService.searchConversations(
-        7,
-        "cloud-page",
-      );
+      const result = await AgentServerConversationService.searchConversations({
+        limit: 7,
+        pageId: "cloud-page",
+      });
 
       expect(result).toEqual({ items: [], next_page_id: "cloud-next" });
       expect(requests).toHaveLength(1);

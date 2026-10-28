@@ -96,6 +96,7 @@
     "dev_wsl": "VITE_WATCH_USE_POLLING=true vite",
     "preview": "vite preview",
     "make-i18n": "node scripts/make-i18n-translations.cjs",
+    "make-padding-scale": "node scripts/make-padding-scale.cjs",
     "prelint": "npm run make-i18n",
     "lint": "npm run typecheck && eslint src && prettier --check src/**/*.{ts,tsx}",
     "lint:fix": "eslint src --fix && prettier --write src/**/*.{ts,tsx}",
@@ -114,7 +115,8 @@
     "build:desktop:universal": "npm run build:app && cross-env ELECTRON_ARCH=universal node scripts/download-uv.mjs && cross-env ELECTRON_ARCH=universal node scripts/download-node.mjs && cross-env ELECTRON_ARCH=universal electron-builder --config electron-builder.config.mjs --publish never",
     "download-uv": "node scripts/download-uv.mjs",
     "download-node": "node scripts/download-node.mjs",
-    "generate-icons": "node scripts/generate-icons.mjs"
+    "generate-icons": "node scripts/generate-icons.mjs",
+    "seed:minimap-demo": "node scripts/seed-minimap-demo.mjs"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js}": [

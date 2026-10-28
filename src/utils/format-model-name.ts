@@ -91,3 +91,77 @@ export function formatModelPillLabel(
       : model;
   return appendFreeSuffix(display, isFreeOpenHandsModel(model, freeModels));
 }
+
+/** Words whose canonical spelling is not plain Title Case. Keys are lowercase. */
+const MODEL_WORD_SPELLINGS: Readonly<Record<string, string>> = {
+  gpt: "GPT",
+  llm: "LLM",
+  glm: "GLM",
+  deepseek: "DeepSeek",
+  claude: "Claude",
+  openai: "OpenAI",
+  openhands: "OpenHands",
+};
+
+function titleCaseWord(word: string): string {
+  const known = MODEL_WORD_SPELLINGS[word.toLowerCase()];
+  if (known) return known;
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+/**
+ * Pretty-print a model id: drop the provider route prefix, split on hyphens
+ * and title-case each word, keeping known acronyms and brand spellings
+ * (``"gpt-5.6-sol"`` → ``"GPT 5.6 Sol"``, ``"deepseek-v4-flash"`` →
+ * ``"DeepSeek V4 Flash"``). A user-given ``override`` always wins. Returns
+ * ``null`` for an empty model with no override.
+ */
+export function prettifyModelName(
+  model: string | null | undefined,
+  override?: string | null,
+): string | null {
+  const trimmedOverride = override?.trim();
+  if (trimmedOverride) return trimmedOverride;
+  if (!model) return null;
+  const lastSegment = model.split("/").pop() || model;
+  const words = lastSegment.split("-").filter(Boolean);
+  if (words.length === 0) return model;
+  return words.map(titleCaseWord).join(" ");
+}
+
+/** Provider key for a model id: its route prefix, or ``null`` when it has none. */
+export function getModelProvider(
+  model: string | null | undefined,
+): string | null {
+  if (!model?.includes("/")) return null;
+  const prefix = model.split("/")[0].trim().toLowerCase();
+  return prefix || null;
+}
+
+/** Display name for a provider key (``"openai"`` → ``"OpenAI"``). */
+export function formatProviderName(provider: string): string {
+  return provider.split(/[-_]/).filter(Boolean).map(titleCaseWord).join(" ");
+}
+
+/**
+ * Chip/list label for an LLM profile's model: a user override, else the static
+ * OpenHands label, else the prettified model id; a backend-flagged free model
+ * keeps the free suffix.
+ */
+export function formatModelPrettyLabel(
+  model: string | null | undefined,
+  freeModels: FreeModelSet = EMPTY_FREE_MODELS,
+  override?: string | null,
+): string | null {
+  const trimmedOverride = override?.trim();
+  if (!model) return trimmedOverride || null;
+  const display =
+    trimmedOverride ||
+    (model in FREE_OPENHANDS_MODELS
+      ? FREE_OPENHANDS_MODELS[model as keyof typeof FREE_OPENHANDS_MODELS]
+      : prettifyModelName(model));
+  return appendFreeSuffix(
+    display ?? model,
+    isFreeOpenHandsModel(model, freeModels),
+  );
+}

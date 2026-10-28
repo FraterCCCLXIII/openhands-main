@@ -75,7 +75,8 @@ export function ComboboxCaretInline({
       className={cn(
         "shrink-0",
         formControlTransformTransitionClassName,
-        isOpen && "rotate-180",
+        // Points right while closed and down while open, like ExpandChevron.
+        isOpen ? "rotate-0" : "-rotate-90",
         className,
       )}
     />

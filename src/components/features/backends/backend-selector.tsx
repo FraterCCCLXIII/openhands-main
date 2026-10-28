@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useMatch, useNavigate } from "react-router";
-import { Plus, Settings } from "lucide-react";
+import { Cloud, LayoutGrid, Plus, Settings } from "lucide-react";
+import OpenHandsLogo from "#/assets/branding/openhands-logo.svg?react";
 import { Dropdown } from "#/ui/dropdown/dropdown";
 import { DropdownOption } from "#/ui/dropdown/types";
 import { getLockedCloudHost } from "#/api/agent-server-config";
@@ -27,7 +28,11 @@ import { NavigationLink } from "#/components/shared/navigation-link";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useConversationStore } from "#/stores/conversation-store";
 import { AddBackendModal } from "./add-backend-modal";
+import { BackendDropdownRowMenu } from "./backend-dropdown-row-menu";
 import { BackendStatusDot } from "./backend-status-dot";
+import { EditableAccountIdentityTile } from "./backend-identity-editable-tile";
+import { getBackendIdentityKey } from "#/stores/backend-identity-store";
+import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 import { ManageBackendsModal } from "./manage-backends-modal";
 import { cn } from "#/utils/utils";
 import { formControlTransitionClassName } from "#/utils/form-control-classes";
@@ -39,16 +44,36 @@ import {
 
 const VALUE_SEPARATOR = "::";
 
-function makeOptionValue(backendId: string, orgId: string | null): string {
-  return orgId ? `${backendId}${VALUE_SEPARATOR}${orgId}` : backendId;
+export function makeOptionValue(
+  backendId: string,
+  orgId: string | null,
+): string {
+  return getBackendIdentityKey(backendId, orgId);
 }
 
-function parseOptionValue(value: string): {
+export function parseOptionValue(value: string): {
   backendId: string;
   orgId: string | null;
 } {
   const [backendId, orgId] = value.split(VALUE_SEPARATOR);
   return { backendId, orgId: orgId ?? null };
+}
+
+/** Icon for an account with no picked identity: a server or a cloud. */
+export function accountFallbackIcon(kind: Backend["kind"] | undefined) {
+  if (kind === "cloud") {
+    return (
+      <Cloud aria-hidden width={16} height={16} className="!text-contrast" />
+    );
+  }
+  return (
+    <OpenHandsLogo
+      aria-hidden
+      width={16}
+      height={16}
+      className="!text-contrast [&_path[fill=white]]:fill-current"
+    />
+  );
 }
 
 function buildStatusPrefix(health: BackendHealth | undefined) {
@@ -115,6 +140,81 @@ function buildOptions(
   return options;
 }
 
+/** The selectable accounts (one per backend, or per org on a Cloud backend). */
+export function useBackendOptions() {
+  const { t } = useTranslation("openhands");
+  const { backends } = useActiveBackendContext();
+  const cloudOrgs = useAllCloudOrganizations();
+  const currentUserIds = useCloudCurrentUserId();
+  // Probe each registered backend every 10s.
+  const healthByBackendId = useBackendsHealth(backends);
+  const personalWorkspaceLabel = t(I18nKey.BACKEND$PERSONAL_WORKSPACE);
+  const options = React.useMemo(
+    () =>
+      buildOptions(
+        backends,
+        personalWorkspaceLabel,
+        cloudOrgs,
+        currentUserIds,
+        healthByBackendId,
+      ),
+    [
+      backends,
+      personalWorkspaceLabel,
+      cloudOrgs,
+      currentUserIds,
+      healthByBackendId,
+    ],
+  );
+  return { backends, options, cloudOrgs, healthByBackendId };
+}
+
+/** Switches the active account, keeping the user on the same page. */
+export function useSelectBackendOption(
+  options: DropdownOption[],
+  onSelectOption?: () => void,
+) {
+  const { backends, active, setActive } = useActiveBackendContext();
+  const navigate = useNavigate();
+  const conversationMatch = useMatch("/conversations/:conversationId");
+  const automationDetailMatch = useMatch("/automations/:automationId");
+  const activeValue = makeOptionValue(active.backend.id, active.orgId);
+
+  return React.useCallback(
+    async (value: string) => {
+      if (value === activeValue) return;
+
+      const { backendId, orgId } = parseOptionValue(value);
+      const target = backends.find((b) => b.id === backendId);
+      if (!target) return;
+
+      triggerEnvironmentSwitch(
+        options.find((option) => option.value === value)?.label ?? target.name,
+      );
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, ENVIRONMENT_SWITCH_SETACTIVE_DELAY_MS);
+      });
+
+      // @spec BM-002 — Switching backends keeps the user on the same page
+      if (conversationMatch) navigate("/conversations");
+      else if (automationDetailMatch) navigate("/automations");
+
+      setActive(target.id, orgId);
+      onSelectOption?.();
+    },
+    [
+      activeValue,
+      backends,
+      conversationMatch,
+      automationDetailMatch,
+      navigate,
+      options,
+      setActive,
+      onSelectOption,
+    ],
+  );
+}
+
 interface BackendSelectorProps {
   /** Render the menu above the trigger (e.g. when pinned to bottom of sidebar). */
   openUpward?: boolean;
@@ -135,6 +235,11 @@ interface BackendSelectorProps {
   /** Same as onOpenAddBackend but for the Manage Backends modal. */
   onOpenManageBackends?: () => void;
   /**
+   * Render the active account as an identity tile plus name in place of the
+   * logo, with the account menu opening from it.
+   */
+  identityHeader?: boolean;
+  /**
    * Whether the surrounding sidebar rail is in its collapsed variant. Passed
    * down from `SidebarRailBody` so the mobile drawer (which always renders
    * the expanded rail) can override the persisted desktop value.
@@ -150,39 +255,68 @@ export function BackendSelector({
   onOpenAddBackend,
   onOpenManageBackends,
   sidebarCollapsed = false,
+  identityHeader = false,
 }: BackendSelectorProps = {}) {
   const { t } = useTranslation("openhands");
-  const { backends, active, setActive } = useActiveBackendContext();
-  const cloudOrgs = useAllCloudOrganizations();
-  const currentUserIds = useCloudCurrentUserId();
-  // Probe each registered backend every 10s.
-  const healthByBackendId = useBackendsHealth(backends);
-  const navigate = useNavigate();
+  const { active } = useActiveBackendContext();
+  const { backends, options, cloudOrgs, healthByBackendId } =
+    useBackendOptions();
   const settingsMatch = useMatch("/settings");
   const settingsSubrouteMatch = useMatch("/settings/*");
   const conversationMatch = useMatch("/conversations/:conversationId");
-  const automationDetailMatch = useMatch("/automations/:automationId");
   const [addBackendModalOpen, setAddBackendModalOpen] = React.useState(false);
   const [manageBackendsModalOpen, setManageBackendsModalOpen] =
     React.useState(false);
 
-  const personalWorkspaceLabel = t(I18nKey.BACKEND$PERSONAL_WORKSPACE);
+  const tileViewEnabled = useBackendTileViewStore((state) => state.enabled);
+  const toggleTileView = useBackendTileViewStore((state) => state.toggle);
 
-  const options = React.useMemo(
+  const openManageBackendsModal = React.useCallback(() => {
+    if (onOpenManageBackends) {
+      onOpenManageBackends();
+      onSelectOption?.();
+      return;
+    }
+    setManageBackendsModalOpen(true);
+  }, [onOpenManageBackends, onSelectOption]);
+
+  // In the header the account's tile replaces the status dot on every row, so
+  // the menu and the trigger show the same icon the user picked for it.
+  const headerOptions = React.useMemo(
     () =>
-      buildOptions(
-        backends,
-        personalWorkspaceLabel,
-        cloudOrgs,
-        currentUserIds,
-        healthByBackendId,
-      ),
+      identityHeader
+        ? options.map((option) => {
+            const backendId = option.value.split(VALUE_SEPARATOR)[0];
+            const kind = backends.find((b) => b.id === backendId)?.kind;
+            return {
+              ...option,
+              prefix: (
+                <span className="relative inline-flex shrink-0">
+                  <EditableAccountIdentityTile
+                    identityKey={option.value}
+                    fallback={accountFallbackIcon(kind)}
+                    size="sm"
+                  />
+                  <BackendStatusDot
+                    isConnected={
+                      healthByBackendId[backendId]?.isConnected ?? null
+                    }
+                    className="absolute -right-0.5 -top-0.5 z-[1]"
+                  />
+                </span>
+              ),
+              suffix: (
+                <BackendDropdownRowMenu onManage={openManageBackendsModal} />
+              ),
+            };
+          })
+        : options,
     [
+      identityHeader,
+      options,
       backends,
-      personalWorkspaceLabel,
-      cloudOrgs,
-      currentUserIds,
       healthByBackendId,
+      openManageBackendsModal,
     ],
   );
 
@@ -220,15 +354,6 @@ export function BackendSelector({
     }
     setAddBackendModalOpen(true);
   }, [onOpenAddBackend, onSelectOption]);
-
-  const openManageBackendsModal = React.useCallback(() => {
-    if (onOpenManageBackends) {
-      onOpenManageBackends();
-      onSelectOption?.();
-      return;
-    }
-    setManageBackendsModalOpen(true);
-  }, [onOpenManageBackends, onSelectOption]);
 
   const isLockedToCloud = getLockedCloudHost() !== null;
   // A cookie-auth (OHE-hosted) Canvas has nothing to add, manage, or
@@ -297,6 +422,28 @@ export function BackendSelector({
           {t(I18nKey.BACKEND$ADD)}
         </button>
       )}
+      {identityHeader ? (
+        <button
+          type="button"
+          data-testid="left-rail-menu-item"
+          aria-pressed={tileViewEnabled}
+          onMouseDown={preventDropdownMenuClose}
+          onTouchStart={preventDropdownMenuClose}
+          onClick={(event) => {
+            preventDropdownMenuClose(event);
+            toggleTileView();
+          }}
+          className={cn(
+            dropdownFooterActionClassName,
+            "cursor-pointer rounded-md",
+          )}
+        >
+          <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
+            <LayoutGrid width={16} height={16} />
+          </span>
+          {t(I18nKey.BACKEND$LEFT_RAIL)}
+        </button>
+      ) : null}
       <button
         type="button"
         data-testid="manage-backends-menu-item"
@@ -321,47 +468,15 @@ export function BackendSelector({
     </div>
   );
 
-  const handleSelectBackend = React.useCallback(
-    async (value: string) => {
-      if (value === activeValue) return;
-
-      const { backendId, orgId } = parseOptionValue(value);
-      const target = backends.find((b) => b.id === backendId);
-      if (!target) return;
-
-      triggerEnvironmentSwitch(
-        options.find((option) => option.value === value)?.label ?? target.name,
-      );
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, ENVIRONMENT_SWITCH_SETACTIVE_DELAY_MS);
-      });
-
-      // @spec BM-002 — Switching backends keeps the user on the same page
-      if (conversationMatch) navigate("/conversations");
-      else if (automationDetailMatch) navigate("/automations");
-
-      setActive(target.id, orgId);
-      onSelectOption?.();
-    },
-    [
-      activeValue,
-      backends,
-      conversationMatch,
-      automationDetailMatch,
-      navigate,
-      options,
-      setActive,
-      t,
-      onSelectOption,
-    ],
-  );
+  const handleSelectBackend = useSelectBackendOption(options, onSelectOption);
 
   return (
     <>
-      <div className="flex items-center gap-2 w-full">
+      <div className="group relative flex items-center gap-2 w-full">
         <div className="flex-1 min-w-0">
           <Dropdown
             testId="backend-selector"
+            italicPlaceholder={false}
             key={`${activeValue}-${activeOption?.label ?? ""}`}
             defaultValue={
               activeOption ?? {
@@ -387,11 +502,21 @@ export function BackendSelector({
                 : (activeOption?.label ?? active.backend.name)
             }
             loading={someCloudLoading}
-            options={options}
-            className="h-10 px-2 py-0 bg-transparent border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
+            options={headerOptions}
+            className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 [&_input]:text-[15px] [&_input]:font-normal [&_input::placeholder]:text-contrast text-contrast [&_[data-testid=dropdown-trigger]]:text-muted pl-1.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
-        {!hideTrigger ? (
+        {identityHeader ? (
+          <NavigationLink
+            to="/settings"
+            data-testid="backend-selector-header-settings"
+            aria-label={settingsLabel}
+            className="absolute right-9 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md bg-surface-raised text-muted opacity-0 transition-opacity hover:text-contrast group-hover:opacity-100 focus-visible:opacity-100"
+          >
+            <Settings width={16} height={16} />
+          </NavigationLink>
+        ) : null}
+        {!hideTrigger && !identityHeader ? (
           <StyledTooltip
             content={settingsLabel}
             placement={settingsTooltipPlacement}

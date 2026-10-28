@@ -714,3 +714,20 @@ it("creates a bundle with an optional selected agent profile", async () => {
     agent_profile_id: "review-profile",
   });
 });
+
+it("shows the catalog name before schedule on review", async () => {
+  const { user } = renderDialog();
+  await fillForm(user);
+
+  await user.click(screen.getByTestId("setup-continue-button"));
+  await waitFor(() =>
+    expect(screen.getByTestId("setup-review")).toBeInTheDocument(),
+  );
+
+  const review = screen.getByTestId("setup-review").textContent ?? "";
+  expect(review.indexOf("Widget monitor")).toBeLessThan(
+    review.indexOf("Check frequency"),
+  );
+  expect(screen.getByTestId("setup-back-button")).toBeInTheDocument();
+  expect(screen.getByTestId("setup-continue-button")).toBeInTheDocument();
+});

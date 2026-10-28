@@ -86,7 +86,7 @@ export function BuiltInIntegrationChoiceModal({
     >
       <div
         data-testid="built-in-integration-choice-modal"
-        className="relative flex w-full max-w-3xl flex-col rounded-xl border border-border bg-base-secondary"
+        className="relative flex w-full max-w-3xl flex-col rounded-3xl border border-border bg-base-secondary"
       >
         <ModalCloseButton
           onClose={onClose}
@@ -167,7 +167,7 @@ export function BuiltInIntegrationChoiceModal({
 
           <div
             data-testid="built-in-integration-choice-option-polling"
-            className="flex flex-1 flex-col gap-3 rounded-xl border border-border bg-surface-raised p-4"
+            className="flex flex-1 flex-col gap-3 rounded-3xl border border-border bg-surface-raised p-4"
           >
             <McpLogoBadge
               entry={null}

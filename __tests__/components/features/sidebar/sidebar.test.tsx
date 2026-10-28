@@ -16,7 +16,6 @@ import {
   NavigationProvider,
   type NavigationContextValue,
 } from "#/context/navigation-context";
-import { getPinnedHomeRouteKey } from "#/hooks/use-pinned-home-route";
 import translations from "#/i18n/translation.json";
 
 // The global `useTranslation` mock in `vitest.setup.ts` returns the key
@@ -43,9 +42,13 @@ vi.mock("#/hooks/query/use-config", () => ({
   useConfig: () => ({ data: { feature_flags: {} } }),
 }));
 
+const sidebarSettings = vi.hoisted(() => ({
+  data: { email_verified: true } as Record<string, unknown>,
+}));
+
 vi.mock("#/hooks/query/use-settings", () => ({
   useSettings: () => ({
-    data: { email_verified: true },
+    data: sidebarSettings.data,
     error: null,
     isError: false,
     isFetching: false,
@@ -249,6 +252,40 @@ describe("Sidebar", () => {
   afterEach(() => {
     window.localStorage.clear();
     useSidebarStore.setState({ collapsed: false });
+    sidebarSettings.data = { email_verified: true };
+  });
+
+  it("shows the account name and email in the footer", () => {
+    sidebarSettings.data = {
+      email_verified: true,
+      git_user_name: "Paul Bloch",
+      email: "openartist@gmail.com",
+    };
+    renderSidebar("/conversations");
+
+    expect(screen.getByTestId("sidebar-footer-user-name")).toHaveTextContent(
+      "Paul Bloch",
+    );
+    expect(screen.getByTestId("sidebar-footer-user-email")).toHaveTextContent(
+      "openartist@gmail.com",
+    );
+  });
+
+  it("hides the placeholder git identity instead of showing it as the account", () => {
+    sidebarSettings.data = {
+      email_verified: true,
+      git_user_name: "openhands",
+      git_user_email: "openhands@all-hands.dev",
+    };
+    renderSidebar("/conversations");
+
+    expect(
+      screen.queryByTestId("sidebar-footer-user-name"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("sidebar-footer-user-email"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("openhands")).not.toBeInTheDocument();
   });
 
   it("opens and closes the mobile navigation drawer from the menu button", async () => {
@@ -334,14 +371,15 @@ describe("Sidebar", () => {
     expect(sidebar.dataset.collapsed).toBe("false");
   });
 
-  it("shows the version tile above the backend selector when expanded", () => {
+  it("shows the version tile in the footer beside the settings link when expanded", () => {
     renderSidebar("/conversations");
 
     const versionTile = screen.getByTestId("agent-canvas-version-tile");
-    const backendSelector = screen.getByTestId("backend-selector");
-    expect(versionTile.compareDocumentPosition(backendSelector)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    const footerSettings = screen.getByTestId("sidebar-footer-settings-link");
+    expect(
+      footerSettings.compareDocumentPosition(versionTile) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("hides the version tile when the sidebar is collapsed", () => {
@@ -485,19 +523,19 @@ describe("Sidebar", () => {
     }
   });
 
-  it("renders the Getting Started checklist above the bottom backend bar", () => {
+  it("renders the Getting Started checklist above the footer", () => {
     renderSidebar("/conversations");
 
     const automations = screen.getByTestId("sidebar-automations-link");
     const checklist = screen.getByTestId("sidebar-onboarding-checklist");
-    const backendBar = screen.getByTestId("backend-selector");
+    const footer = screen.getByTestId("sidebar-footer-settings-link");
 
     expect(
       automations.compareDocumentPosition(checklist) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      checklist.compareDocumentPosition(backendBar) &
+      checklist.compareDocumentPosition(footer) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
@@ -553,33 +591,4 @@ describe("Sidebar", () => {
       );
     },
   );
-
-  it("pins and unpins a sidebar page as the home route without navigating", () => {
-    // Arrange: the mocked active backend is `local` with no org.
-    const pinKey = getPinnedHomeRouteKey("local", null);
-    const { navigate } = renderSidebar("/conversations");
-    const pinToggle = screen.getByTestId("sidebar-pin-home-toggle-customize");
-    expect(pinToggle).toHaveAttribute("aria-pressed", "false");
-    expect(pinToggle).toHaveAttribute("aria-label", "Pin as home page");
-
-    // Act: pin Customize as the home page.
-    fireEvent.click(pinToggle);
-
-    // Assert: the toggle flips and the pin persists for the active backend.
-    expect(pinToggle).toHaveAttribute("aria-pressed", "true");
-    expect(pinToggle).toHaveAttribute("aria-label", "Unpin as home page");
-    expect(window.localStorage.getItem(pinKey)).toBe(
-      JSON.stringify("/customize"),
-    );
-    expect(navigate).not.toHaveBeenCalled();
-
-    // Act: unpin from the same control.
-    fireEvent.click(pinToggle);
-
-    // Assert: the pin is gone.
-    expect(pinToggle).toHaveAttribute("aria-pressed", "false");
-    expect(window.localStorage.getItem(pinKey)).not.toBe(
-      JSON.stringify("/customize"),
-    );
-  });
 });

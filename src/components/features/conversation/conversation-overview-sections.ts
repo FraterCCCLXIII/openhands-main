@@ -9,13 +9,20 @@
 export const CONVERSATION_OVERVIEW_SECTION = {
   workspace: "workspace",
   git: "git",
+  thread: "thread",
+  activity: "activity",
 } as const;
 
 export type ConversationOverviewSection =
   (typeof CONVERSATION_OVERVIEW_SECTION)[keyof typeof CONVERSATION_OVERVIEW_SECTION];
 
 export const CONVERSATION_OVERVIEW_SECTIONS: readonly ConversationOverviewSection[] =
-  [CONVERSATION_OVERVIEW_SECTION.workspace, CONVERSATION_OVERVIEW_SECTION.git];
+  [
+    CONVERSATION_OVERVIEW_SECTION.workspace,
+    CONVERSATION_OVERVIEW_SECTION.git,
+    CONVERSATION_OVERVIEW_SECTION.thread,
+    CONVERSATION_OVERVIEW_SECTION.activity,
+  ];
 
 export const VALID_CONVERSATION_OVERVIEW_SECTIONS: ReadonlySet<string> =
   new Set(CONVERSATION_OVERVIEW_SECTIONS);
@@ -58,13 +65,20 @@ export const DEFAULT_UNPINNED_OVERVIEW_GIT_PARTS: readonly ConversationOverviewG
 /**
  * Visual groups in the panel. Dividers render between non-empty groups.
  * Workspace stands alone below the untitled Git block (Changes + metadata)
- * that the panel prepends when pinned.
+ * that the panel prepends when pinned. Thread and Activity each get their
+ * own group so they read as separate blocks.
  */
 export const CONVERSATION_OVERVIEW_SECTION_GROUPS: readonly {
   sections: readonly ConversationOverviewSection[];
 }[] = [
   {
     sections: [CONVERSATION_OVERVIEW_SECTION.workspace],
+  },
+  {
+    sections: [CONVERSATION_OVERVIEW_SECTION.thread],
+  },
+  {
+    sections: [CONVERSATION_OVERVIEW_SECTION.activity],
   },
 ];
 

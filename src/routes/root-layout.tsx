@@ -10,6 +10,7 @@ import { I18nKey } from "#/i18n/declaration";
 import i18n from "#/i18n";
 import { useConfig } from "#/hooks/query/use-config";
 import { Sidebar } from "#/components/features/sidebar/sidebar";
+import { BackendLeftRail } from "#/components/features/backends/backend-left-rail";
 import { SidebarMobileNavProvider } from "#/components/features/sidebar/sidebar-mobile-nav-context";
 import { SidebarMobileMenuBar } from "#/components/features/sidebar/sidebar-mobile-menu-bar";
 import { useSettings } from "#/hooks/query/use-settings";
@@ -28,9 +29,11 @@ import { ReactRouterNavigationProvider } from "./react-router-navigation-provide
 import { OnboardingHost } from "#/components/features/onboarding";
 import { isOnboardingPreviewActive } from "#/components/features/onboarding/onboarding-preview";
 import { CanvasExtensionsRuntimeProvider } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
-import { isMacDesktopShell } from "#/utils/desktop-shell";
+import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 import { cn } from "#/utils/utils";
+import { NavigationLink } from "#/components/shared/navigation-link";
+import { Settings } from "lucide-react";
 
 const EnvironmentSwitchOverlay = React.lazy(
   () => import("#/components/features/backends/environment-switch-overlay"),
@@ -123,6 +126,7 @@ export default function MainApp() {
 }
 
 function MainAppContent() {
+  const { t } = useTranslation("openhands");
   const location = useLocation();
   const appTitle = useAppTitle();
   const { data: settings } = useSettings();
@@ -172,13 +176,17 @@ function MainAppContent() {
             className={cn(
               "h-screen lg:min-w-5xl flex flex-col md:flex-row bg-canvas-base overflow-hidden p-0",
               showTitleBarBand && "pt-7",
+              // Electron's window has no native bottom inset; keep the composer
+              // and its status line off the window edge.
+              isDesktopShell() && "pb-3",
             )}
           >
             <title>{appTitle}</title>
             <TitleBarDragRegion />
+            <BackendLeftRail />
             <Sidebar />
 
-            <div className="flex min-h-0 flex-col w-full min-w-0 h-full gap-3">
+            <div className="flex min-h-0 flex-col w-full min-w-0 h-full gap-[calc(0.75rem*var(--oh-padding-scale,1))]">
               {!hideMobileSidebarMenuBar ? <SidebarMobileMenuBar /> : null}
               {config.data &&
                 (config.data.maintenance_start_time ||
@@ -206,6 +214,14 @@ function MainAppContent() {
             <EnvironmentSwitchOverlay />
             <CommandMenu />
           </React.Suspense>
+          <NavigationLink
+            to="/settings"
+            aria-label={t(I18nKey.SETTINGS$TITLE)}
+            data-testid="root-settings-gear"
+            className="fixed right-4 bottom-4 z-40 flex size-9 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-md transition-colors hover:bg-surface-raised hover:text-foreground"
+          >
+            <Settings width={16} height={16} aria-hidden />
+          </NavigationLink>
           <React.Suspense fallback={null}>
             <SuperAdminSetupGuide />
           </React.Suspense>

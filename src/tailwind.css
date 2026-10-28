@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Padding slider overrides; regenerate with `npm run make-padding-scale`. */
+@import "./padding-scale.generated.css";
 
 @plugin '../hero.ts';
 @config "../tailwind.config.js";
@@ -7,6 +9,22 @@
 @plugin 'tailwind-scrollbar' {
   nocompatible: true;
   preferredstrategy: "pseudoelements";
+}
+
+/* Motion tokens: every modal, overlay, and popover animates with these. */
+@theme {
+  /* Slightly rounder than Tailwind's defaults across every rounded control. */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+  --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --duration-motion-fast: 150ms;
+  --duration-motion-base: 200ms;
+  --duration-motion-slow: 280ms;
+  --ease-motion-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-motion-exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
 @theme inline {
@@ -57,6 +75,7 @@
   --color-border: var(--oh-border);
   --color-border-input: var(--oh-border-input);
   --color-border-subtle: var(--oh-border-subtle);
+  --color-divider: var(--oh-divider);
 
   /* Focus / interactive state aliases */
   --color-focus: var(--oh-focus);
@@ -71,10 +90,21 @@
   --color-status-success: var(--oh-status-success);
   --color-status-error: var(--oh-status-error);
   --color-accent: var(--oh-accent);
+  --color-info: var(--oh-info);
   --color-warning: var(--oh-warning);
 
+  /* Status badge / banner pairs (see status-tone-classes.ts) */
+  --color-success-soft: var(--oh-success-soft);
+  --color-success-soft-foreground: var(--oh-success-soft-foreground);
+  --color-warning-soft: var(--oh-warning-soft);
+  --color-warning-soft-foreground: var(--oh-warning-soft-foreground);
+  --color-danger-soft: var(--oh-danger-soft);
+  --color-danger-soft-foreground: var(--oh-danger-soft-foreground);
+  --color-info-soft: var(--oh-info-soft);
+  --color-info-soft-foreground: var(--oh-info-soft-foreground);
+
   /* Cool Grey scale */
-  --color-cool-grey-50:  var(--cool-grey-50);
+  --color-cool-grey-50: var(--cool-grey-50);
   --color-cool-grey-100: var(--cool-grey-100);
   --color-cool-grey-200: var(--cool-grey-200);
   --color-cool-grey-300: var(--cool-grey-300);
@@ -100,11 +130,11 @@
   /* Small feedback text has its own contrast contract, separate from controls. */
   --oh-feedback-error: var(--oh-color-danger);
   --oh-feedback-success: var(--oh-color-success);
-  --oh-markdown-alert-note: #8EC5FF;
-  --oh-markdown-alert-tip: #5EE9B5;
-  --oh-markdown-alert-important: #D8B4FE;
-  --oh-markdown-alert-warning: #FFE02A;
-  --oh-markdown-alert-caution: #FFB3BF;
+  --oh-markdown-alert-note: #8ec5ff;
+  --oh-markdown-alert-tip: #5ee9b5;
+  --oh-markdown-alert-important: #d8b4fe;
+  --oh-markdown-alert-warning: #ffe02a;
+  --oh-markdown-alert-caution: #ffb3bf;
   --oh-color-basic: var(--cool-grey-400);
   --oh-color-tertiary: var(--cool-grey-800);
   --oh-color-tertiary-light: var(--cool-grey-300);
@@ -116,24 +146,36 @@
   --oh-contrast-foreground: #000000;
   --oh-surface: var(--cool-grey-925);
   --oh-surface-foreground: var(--cool-grey-100);
-  --oh-surface-raised: var(--cool-grey-900);  /* elevated within a panel */
-  --oh-surface-deep: var(--cool-grey-975);    /* deep inset, context menus */
+  --oh-surface-raised: var(--cool-grey-900); /* elevated within a panel */
+  --oh-surface-deep: var(--cool-grey-975); /* deep inset, context menus */
   --oh-overlay: var(--cool-grey-925);
   --oh-overlay-foreground: var(--cool-grey-100);
   --oh-modal-title-foreground: #ffffff;
   --oh-muted: var(--cool-grey-400);
-  --oh-text-secondary: var(--cool-grey-300);  /* readable secondary text */
-  --oh-text-tertiary: var(--cool-grey-200);   /* tertiary, slightly dimmer */
-  --oh-text-dim: var(--cool-grey-500);        /* placeholders, very muted */
-  --oh-text-subtle: var(--cool-grey-600);     /* subtle labels, breadcrumbs */
-  --oh-interactive-hover: var(--cool-grey-700);      /* hover on mid surfaces (800 bg) */
-  --oh-interactive-hover-low: var(--cool-grey-900);  /* hover on dark base (950 bg) */
-  --oh-interactive-active: var(--cool-grey-800);     /* selected/active on dark base */
-  --oh-interactive-selected: var(--cool-grey-600);   /* selected within a panel (on 800/925 bg) */
+  --oh-text-secondary: var(--cool-grey-300); /* readable secondary text */
+  --oh-text-tertiary: var(--cool-grey-200); /* tertiary, slightly dimmer */
+  --oh-text-dim: var(--cool-grey-500); /* placeholders, very muted */
+  --oh-text-subtle: var(--cool-grey-600); /* subtle labels, breadcrumbs */
+  --oh-interactive-hover: var(
+    --cool-grey-700
+  ); /* hover on mid surfaces (800 bg) */
+  --oh-interactive-hover-low: var(
+    --cool-grey-900
+  ); /* hover on dark base (950 bg) */
+  --oh-interactive-active: var(
+    --cool-grey-800
+  ); /* selected/active on dark base */
+  --oh-interactive-selected: var(
+    --cool-grey-600
+  ); /* selected within a panel (on 800/925 bg) */
   --oh-context-window-foreground: var(--oh-foreground);
   --oh-context-window-track-weight: 42%;
   --oh-scrollbar: color-mix(in srgb, var(--cool-grey-400) 30%, transparent);
-  --oh-scrollbar-hover: color-mix(in srgb, var(--cool-grey-400) 50%, transparent);
+  --oh-scrollbar-hover: color-mix(
+    in srgb,
+    var(--cool-grey-400) 50%,
+    transparent
+  );
   --oh-default: var(--cool-grey-800);
   --oh-default-foreground: var(--cool-grey-100);
   --oh-accent: #c9b974;
@@ -151,13 +193,30 @@
   --oh-border-width: 1px;
   --oh-field-border-width: 1px;
   --oh-border: var(--cool-grey-700);
-  --oh-border-input: var(--cool-grey-700);   /* unified with --oh-border; same stroke weight everywhere */
-  --oh-border-subtle: var(--cool-grey-800);  /* within-panel separators, list dividers */
+  --oh-border-input: var(
+    --cool-grey-700
+  ); /* unified with --oh-border; same stroke weight everywhere */
+  --oh-border-subtle: var(
+    --cool-grey-800
+  ); /* within-panel separators, list dividers */
   --oh-separator: rgba(113, 120, 136, 0.5);
+  --oh-divider: var(--oh-border-subtle);     /* rules between rows inside a card or panel */
   --oh-focus: #ffffff;
-  --oh-status-success: #1FBD53;
-  --oh-status-error: #FF684E;
+  --oh-status-success: #1fbd53;
+  --oh-status-error: #ff684e;
   --oh-link: var(--cool-grey-100);
+  --oh-info: oklch(62.3% 0.214 259.815); /* informational blue: content links, update notices */
+  /* Status badge fills + inks. Dark palettes keep a translucent tint, so the ink
+     is lightened until it clears 4.5:1 on the tint over every panel surface.
+     Light palettes override the fill with an opaque tint (see light-plus.ts). */
+  --oh-success-soft: color-mix(in srgb, var(--oh-color-success) 10%, transparent);
+  --oh-success-soft-foreground: color-mix(in srgb, var(--oh-color-success) 55%, #ffffff);
+  --oh-warning-soft: color-mix(in srgb, var(--oh-warning) 10%, transparent);
+  --oh-warning-soft-foreground: color-mix(in srgb, var(--oh-warning) 55%, #ffffff);
+  --oh-danger-soft: color-mix(in srgb, var(--oh-color-danger) 10%, transparent);
+  --oh-danger-soft-foreground: color-mix(in srgb, var(--oh-color-danger) 55%, #ffffff);
+  --oh-info-soft: color-mix(in srgb, var(--oh-info) 10%, transparent);
+  --oh-info-soft-foreground: color-mix(in srgb, var(--oh-info) 55%, #ffffff);
   --oh-radius: 8px;
   --oh-field-radius: 8px;
   --oh-surface-shadow: none;
@@ -199,6 +258,68 @@
 }
 
 @layer base {
+  /* Browser autofill paints saved fields with its own blue. Keep them on the
+     field surface and text color so they match the empty fields. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--oh-color-base-secondary) inset;
+    -webkit-text-fill-color: var(--oh-foreground);
+    caret-color: var(--oh-foreground);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  /* Every scrollbar in the app uses the custom style: thin, transparent until
+     hovered. Explicit .custom-scrollbar / .custom-scrollbar-always rules below
+     take precedence because they carry a class selector. */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  *:hover::-webkit-scrollbar-thumb {
+    background: var(--oh-scrollbar);
+  }
+
+  *:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--oh-scrollbar-hover);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  *:hover {
+    scrollbar-color: var(--oh-scrollbar) transparent;
+  }
+
+  /* Smooth hover fade for every button. Component transition-* utilities
+     override this, and reduced-motion users get no transition. */
+  button {
+    transition-property:
+      color, background-color, border-color, opacity, box-shadow;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button {
+      transition: none;
+    }
+  }
+
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
@@ -365,6 +486,38 @@ button.extension-module-card-interactive {
   font-size: 16px;
   font-weight: 400;
   line-height: 20px;
+  /* The placeholder types itself out and fades in. The width is stepped
+     through character cells, so the text is revealed a character at a time. */
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: top;
+  max-width: 0;
+  animation:
+    placeholder-type 1.1s steps(32, end) 0.15s forwards,
+    placeholder-fade 400ms ease-out 0.15s both;
+}
+
+@keyframes placeholder-type {
+  to {
+    max-width: 32ch;
+  }
+}
+
+@keyframes placeholder-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-input:empty:before {
+    max-width: none;
+    animation: none;
+  }
 }
 
 .chat-input:focus {
@@ -627,7 +780,11 @@ code .token {
 }
 
 .git-external-link-icon {
-  background: linear-gradient(90deg, rgba(69, 69, 69, 0) 0.35%, var(--cool-grey-800) 41.39%);
+  background: linear-gradient(
+    90deg,
+    rgba(69, 69, 69, 0) 0.35%,
+    var(--cool-grey-800) 41.39%
+  );
 }
 
 .api-configuration-modal {
@@ -700,7 +857,282 @@ code .token {
     0px 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
+/* Raised 3D look for enabled primary buttons: top highlight, bottom shade, press-down. */
+@utility btn-primary-3d {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    inset 0 -2px 0 rgb(0 0 0 / 0.25),
+    0 3px 6px rgb(0 0 0 / 0.35);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.3),
+      inset 0 -1px 0 rgb(0 0 0 / 0.25),
+      0 1px 2px rgb(0 0 0 / 0.35);
+  }
+}
+
+/* Exit animation for modals that close after a choice (e.g. consent). */
+@keyframes modal-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility modal-overlay-enter {
+  animation: modal-overlay-in var(--duration-motion-base)
+    var(--ease-motion-standard) both;
+}
+
+@utility modal-content-enter {
+  animation: modal-content-in var(--duration-motion-base)
+    var(--ease-motion-standard) both;
+}
+
+@utility modal-fade-out-anim {
+  animation: modal-fade-out var(--duration-motion-base) var(--ease-motion-exit)
+    forwards;
+}
+
+@utility modal-pop-out-anim {
+  animation: modal-pop-out var(--duration-motion-base) var(--ease-motion-exit)
+    forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay-enter,
+  .modal-content-enter,
+  .modal-fade-out-anim,
+  .modal-pop-out-anim {
+    animation: none;
+  }
+}
+
+/* Slight top-to-bottom gradient over the modal surface color. */
+@utility modal-surface-gradient {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--oh-color-base-secondary) 88%, white),
+    var(--oh-color-base-secondary)
+  );
+}
+
+/* Subtle top-to-bottom sheen for primary buttons; disabled buttons stay flat. */
+@utility bg-primary-sheen {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--oh-color-primary) 92%, white),
+    var(--oh-color-primary)
+  );
+}
+
+/* Rounded green checkbox with a bezel: raised dark well, green gradient when checked. */
+@utility oh-checkbox {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  border-radius: 0.375rem;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background-color: #262626;
+  background-image: linear-gradient(180deg, #2f2f2f, #1e1e1e);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    inset 0 -1px 0 rgb(0 0 0 / 0.35),
+    0 1px 2px rgb(0 0 0 / 0.4);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 75%;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+
+  &:checked {
+    border-color: #1d7f40;
+    background-color: #2fa755;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='white' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round' d='M2.5 6.5 5 9l4.5-5.5'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, #5fd67f, #2fa755);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      inset 0 -1px 0 rgb(0 0 0 / 0.25),
+      0 1px 2px rgb(0 0 0 / 0.4);
+  }
+
+  &:focus-visible {
+    outline: 1px solid rgb(255 255 255 / 0.28);
+    outline-offset: 1px;
+  }
+}
+
+/* Tab content cross-fade: fades in and settles over 220ms. */
+@keyframes tab-cross-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tab-cross-fade {
+  animation: tab-cross-fade-in 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-cross-fade {
+    animation: none;
+  }
+}
+
+/* Pop-in for status banners above the composer. */
+@keyframes banner-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility banner-pop-in {
+  animation: banner-pop-in 180ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* Window drag handle for the macOS desktop app's hidden title bar. */
 @utility app-region-drag {
   -webkit-app-region: drag;
+}
+
+/* Hover marquee label (src/ui/dropdown/hover-marquee-label.tsx).
+   Overflowing labels scroll on parent `.group` hover; hover-out crossfades back
+   to the truncated start. Edge fades exist only on the `-clip` layer, which is
+   rendered only when the text overflows. */
+@property --hover-marquee-mask-inset-left {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --hover-marquee-mask-inset-right {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@utility hover-marquee-clip {
+  --hover-marquee-mask-inset-left: 0px;
+  --hover-marquee-mask-inset-right: 2.5rem;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--hover-marquee-mask-inset-left),
+    black calc(100% - var(--hover-marquee-mask-inset-right)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--hover-marquee-mask-inset-left),
+    black calc(100% - var(--hover-marquee-mask-inset-right)),
+    transparent 100%
+  );
+  transition: none;
+
+  .group:hover &:not([data-phase="exiting"]) {
+    --hover-marquee-mask-inset-left: 2.5rem;
+    --hover-marquee-mask-inset-right: 0px;
+    transition:
+      --hover-marquee-mask-inset-left
+        var(--hover-marquee-mask-fade-in-duration, 150ms) ease-out,
+      --hover-marquee-mask-inset-right var(--hover-marquee-mask-duration, 1.2s)
+        linear;
+  }
+
+  .group:hover &:not([data-phase="exiting"]) .hover-marquee-rest {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    .group:hover &:not([data-phase="exiting"]) {
+      transition: none;
+    }
+  }
+}
+
+@utility hover-marquee-rest {
+  opacity: 1;
+  transition: opacity var(--hover-marquee-crossfade-duration, 150ms) ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+@utility hover-marquee-scroll {
+  opacity: 0;
+  transform: translateX(0);
+  transition:
+    transform var(--hover-marquee-mask-duration, 1.2s) linear,
+    opacity var(--hover-marquee-crossfade-duration, 150ms) ease-out;
+
+  .group:hover &:not([data-phase="exiting"]) {
+    opacity: 1;
+    transform: translateX(calc(-1 * var(--hover-marquee-offset, 0px)));
+  }
+
+  &[data-phase="exiting"] {
+    opacity: 0;
+    transition:
+      opacity var(--hover-marquee-crossfade-duration, 150ms) ease-out,
+      transform 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    .group:hover &:not([data-phase="exiting"]) {
+      transition: none;
+    }
+  }
 }

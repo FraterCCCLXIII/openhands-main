@@ -165,10 +165,10 @@ export function ChangeAgentButton() {
         onClick={handleButtonClick}
         disabled={isButtonDisabled}
         className={cn(
-          "flex items-center rounded-[100px]",
+          "flex h-7 items-center rounded-full px-2.5",
           formControlTransitionClassName,
           isExecutionAgent
-            ? "border border-transparent text-muted"
+            ? "border border-transparent bg-surface text-muted"
             : "border border-[#597FF4] bg-[#4A67BD] text-white",
           !isButtonDisabled &&
             isExecutionAgent &&
@@ -185,7 +185,7 @@ export function ChangeAgentButton() {
       >
         <div className="flex items-center gap-1 pl-1.5">
           {buttonIcon}
-          <Typography.Text className="text-[11px] text-inherit not-italic font-normal leading-5">
+          <Typography.Text className="text-sm text-inherit not-italic font-normal leading-5">
             {buttonLabel}
           </Typography.Text>
         </div>

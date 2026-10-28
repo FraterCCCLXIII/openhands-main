@@ -6,6 +6,7 @@ import {
 } from "#/styles/agent-server-ui-style-scope";
 import { useColorTheme } from "#/hooks/use-color-theme";
 import { COLOR_THEMES } from "#/themes/color-themes";
+import { BackgroundTintOverlay } from "./background-tint-overlay";
 
 export interface AgentServerUIRootProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -16,6 +17,18 @@ export interface AgentServerUIRootProps extends Omit<
   style?: React.CSSProperties;
   styleOverrides?: AgentServerUIStyleOverrides;
   contentClassName?: string;
+}
+
+const AgentServerUIAppearanceContext =
+  React.createContext<AgentServerUITheme | null>(null);
+
+/** The appearance of the nearest AgentServerUIRoot (or the active color theme). */
+export function useAgentServerUIAppearance(): AgentServerUITheme {
+  const colorTheme = useColorTheme();
+  return (
+    React.useContext(AgentServerUIAppearanceContext) ??
+    COLOR_THEMES[colorTheme].appearance
+  );
 }
 
 export function AgentServerUIRoot({
@@ -52,7 +65,10 @@ export function AgentServerUIRoot({
         className={cn(appearance, contentClassName, "text-foreground")}
         data-theme={appearance}
       >
-        {children}
+        <AgentServerUIAppearanceContext.Provider value={appearance}>
+          {children}
+          <BackgroundTintOverlay />
+        </AgentServerUIAppearanceContext.Provider>
       </div>
     </div>
   );

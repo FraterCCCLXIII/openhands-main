@@ -21,6 +21,7 @@ import {
   useActiveBackendContext,
 } from "#/contexts/active-backend-context";
 import { CloudOrganizationBoundary } from "#/components/features/backends/cloud-organization-boundary";
+import { BackendLeftRail } from "#/components/features/backends/backend-left-rail";
 import { BackendSelector } from "#/components/features/backends/backend-selector";
 import {
   __resetEnvironmentSwitchOverlayForTests,
@@ -870,6 +871,64 @@ describe("BackendSelector", () => {
     await waitFor(() => {
       expect(screen.queryByTestId("add-backend-modal")).not.toBeInTheDocument();
     });
+  });
+
+  it("shows a clickable tile per backend in the left rail once it is toggled on", async () => {
+    renderWithProviders(
+      <TestSeed
+        onMount={(ctx) => {
+          ctx.addBackend(SEED_LOCAL_1);
+        }}
+      >
+        <BackendLeftRail />
+        <BackendSelector identityHeader />
+      </TestSeed>,
+    );
+
+    expect(screen.queryByTestId("backend-left-rail")).not.toBeInTheDocument();
+    const user = await openDropdown();
+    await user.click(screen.getByTestId("left-rail-menu-item"));
+
+    const rail = await screen.findByTestId("backend-left-rail");
+    const tiles = within(rail)
+      .getAllByRole("button")
+      .filter((button) => button.hasAttribute("aria-pressed"));
+    expect(tiles.length).toBeGreaterThanOrEqual(2);
+    expect(
+      tiles.some((tile) => tile.getAttribute("aria-pressed") === "true"),
+    ).toBe(true);
+    const inactive = tiles.find(
+      (tile) => tile.getAttribute("aria-pressed") === "false",
+    ) as HTMLElement;
+
+    const before = activeBackendSnapshot();
+    await user.click(inactive);
+    await settleBackendSwitch(before);
+    await waitFor(() => {
+      expect(inactive).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
+  it("opens Manage Backends from a row's three-dot menu without switching", async () => {
+    renderWithProviders(
+      <TestSeed
+        onMount={(ctx) => {
+          ctx.addBackend(SEED_LOCAL_1);
+        }}
+      >
+        <BackendSelector identityHeader />
+      </TestSeed>,
+    );
+
+    const user = await openDropdown();
+    const before = activeBackendSnapshot();
+    await user.click(screen.getAllByTestId("backend-dropdown-row-menu-trigger")[0]);
+    await user.click(screen.getByTestId("backend-dropdown-row-manage"));
+
+    expect(
+      await screen.findByTestId("manage-backends-modal"),
+    ).toBeInTheDocument();
+    expect(activeBackendSnapshot()).toEqual(before);
   });
 
   it("hides add-backend footer action when locked to Cloud", async () => {

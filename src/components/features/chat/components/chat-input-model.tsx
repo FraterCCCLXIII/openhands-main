@@ -16,7 +16,10 @@ import { Typography } from "#/ui/typography";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { getLockedCloudHost } from "#/api/agent-server-config";
-import { chatInputPillButtonClassName } from "#/utils/form-control-classes";
+import {
+  chatInputModelPillClassName,
+  chatInputPillButtonClassName,
+} from "#/utils/form-control-classes";
 import React from "react";
 
 const MODEL_LABEL_MAX_CHARS = 10;
@@ -172,7 +175,10 @@ export function ChatInputModel() {
       <button
         ref={triggerRef}
         type="button"
-        className={chatInputPillButtonClassName}
+        className={cn(
+          chatInputPillButtonClassName,
+          chatInputModelPillClassName,
+        )}
         title={model.displayModel}
         data-testid="chat-input-llm-model"
         aria-expanded={isPopoverOpen}

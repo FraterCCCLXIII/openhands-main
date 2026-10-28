@@ -68,11 +68,13 @@ function wait(ms: number): Promise<void> {
   });
 }
 
-function setInteractive(stop: GuidedTourStop | undefined): void {
+/** Shows a stop's page-wide state: its interactivity and companion spotlight. */
+function applyStop(stop: GuidedTourStop | undefined): void {
   document.body.classList.toggle(
     INTERACTIVE_STOP_CLASS,
     Boolean(stop?.interactive),
   );
+  applyAlsoHighlight(stop);
 }
 
 // driver.js keeps Tab inside the stop it last showed, with a listener on
@@ -87,10 +89,87 @@ function keepTabOutOfHiddenTour(event: KeyboardEvent): void {
 function setWaiting(waiting: boolean): void {
   document.body.classList.toggle(WAITING_CLASS, waiting);
   if (waiting) {
+    clearAlsoHighlight();
     document.addEventListener("keydown", keepTabOutOfHiddenTour);
   } else {
     document.removeEventListener("keydown", keepTabOutOfHiddenTour);
   }
+}
+
+let alsoHighlightTarget: Element | null = null;
+let alsoHighlightStage: HTMLElement | null = null;
+
+function syncAlsoHighlightStage(): void {
+  if (!alsoHighlightStage || !alsoHighlightTarget) {
+    return;
+  }
+  const rect = alsoHighlightTarget.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    alsoHighlightStage.style.visibility = "hidden";
+    return;
+  }
+  const pad = 8;
+  alsoHighlightStage.style.visibility = "visible";
+  alsoHighlightStage.style.top = `${Math.round(rect.top - pad)}px`;
+  alsoHighlightStage.style.left = `${Math.round(rect.left - pad)}px`;
+  alsoHighlightStage.style.width = `${Math.round(rect.width + pad * 2)}px`;
+  alsoHighlightStage.style.height = `${Math.round(rect.height + pad * 2)}px`;
+}
+
+function clearAlsoHighlight(): void {
+  window.removeEventListener("resize", syncAlsoHighlightStage);
+  window.removeEventListener("scroll", syncAlsoHighlightStage, true);
+  alsoHighlightStage?.remove();
+  alsoHighlightStage = null;
+  alsoHighlightTarget = null;
+}
+
+function queryVisible(selector: string): Element | null {
+  for (const el of document.querySelectorAll(selector)) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return el;
+    }
+  }
+  return null;
+}
+
+/**
+ * Companion spotlight for a stop's `alsoHighlight` selector. Sidebar and nav
+ * tabs sit under a stacking context below the driver.js overlay, so a class on
+ * the tab itself never shows. Mirror it in a fixed stage on `<body>` above the
+ * overlay that clones the tab's appearance.
+ */
+function applyAlsoHighlight(stop: GuidedTourStop | undefined): void {
+  clearAlsoHighlight();
+  if (!stop?.alsoHighlight) {
+    return;
+  }
+  const el = queryVisible(stop.alsoHighlight);
+  if (!(el instanceof HTMLElement)) {
+    return;
+  }
+
+  alsoHighlightTarget = el;
+  el.scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  const stage = document.createElement("div");
+  stage.className = "oh-setup-tour-also-stage";
+  stage.setAttribute("aria-hidden", "true");
+
+  const clone = el.cloneNode(true) as HTMLElement;
+  clone.classList.add("oh-setup-tour-also-stage-inner");
+  clone.removeAttribute("data-testid");
+  clone.removeAttribute("href");
+  clone.setAttribute("tabindex", "-1");
+  stage.appendChild(clone);
+
+  document.body.appendChild(stage);
+  alsoHighlightStage = stage;
+  syncAlsoHighlightStage();
+
+  window.addEventListener("resize", syncAlsoHighlightStage);
+  window.addEventListener("scroll", syncAlsoHighlightStage, true);
 }
 
 function queryFirst(selector: string): Element | null {
@@ -168,7 +247,7 @@ function clearSetupStepListener(): void {
 export function stopGuidedTour(): void {
   tourGeneration += 1;
   clearSetupStepListener();
-  setInteractive(undefined);
+  applyStop(undefined);
   setWaiting(false);
   activeDriver?.destroy();
   activeDriver = null;
@@ -248,7 +327,7 @@ export async function startGuidedTour(
       }
       setTourActive(true);
       index = nextIndex;
-      setInteractive(nextStop);
+      applyStop(nextStop);
       instanceApi.moveTo(nextIndex);
       window.setTimeout(() => {
         if (!isCurrent()) {
@@ -373,7 +452,7 @@ export async function startGuidedTour(
         return;
       }
       index -= 1;
-      setInteractive(prevStop);
+      applyStop(prevStop);
       instanceApi.movePrevious();
       window.setTimeout(() => {
         if (!isCurrent()) {
@@ -392,7 +471,7 @@ export async function startGuidedTour(
         return;
       }
       clearSetupStepListener();
-      setInteractive(undefined);
+      applyStop(undefined);
       setWaiting(false);
       activeDriver = null;
       resolvedAnchors.clear();
@@ -402,7 +481,7 @@ export async function startGuidedTour(
 
   activeDriver = instance;
   setTourActive(true);
-  setInteractive(stops[0]);
+  applyStop(stops[0]);
   instance.drive();
   window.setTimeout(() => {
     if (!isCurrent()) {

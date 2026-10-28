@@ -34,6 +34,8 @@ interface ProviderConnectionModalProps {
   onClose: () => void;
   /** Called with the saved connection so a caller can select it (create flow). */
   onSaved?: (connection: ProviderConnection) => void;
+  /** Provider to pre-select on create, e.g. when opened from a provider's auth row. */
+  presetProvider?: string | null;
 }
 
 /**
@@ -48,6 +50,7 @@ export function ProviderConnectionModal({
   isCreate,
   onClose,
   onSaved,
+  presetProvider,
 }: ProviderConnectionModalProps) {
   const { t } = useTranslation("openhands");
   const createConnection = useCreateProviderConnection();
@@ -65,10 +68,13 @@ export function ProviderConnectionModal({
 
   useEffect(() => {
     setDisplayName(connection?.display_name ?? "");
-    setProvider(connection?.provider ?? (isCreate ? null : DEFAULT_PROVIDER));
+    setProvider(
+      connection?.provider ??
+        (isCreate ? (presetProvider ?? null) : DEFAULT_PROVIDER),
+    );
     setBaseUrl(connection?.base_url ?? "");
     setApiKey("");
-  }, [connection, isCreate]);
+  }, [connection, isCreate, presetProvider]);
 
   const isPending = createConnection.isPending || updateConnection.isPending;
   const trimmedName = displayName.trim();

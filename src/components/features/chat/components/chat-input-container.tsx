@@ -70,7 +70,7 @@ export function ChatInputContainer({
     <div
       ref={chatContainerRef}
       className={cn(
-        "bg-surface box-border content-stretch flex flex-col items-start justify-center p-4 relative rounded-[15px] w-full",
+        "bg-linear-to-b from-surface to-background shadow-[0_10px_28px_-12px_rgba(0,0,0,0.45)] box-border content-stretch flex flex-col items-start justify-center p-4 relative z-20 rounded-[20px] ring-[0.5px] ring-inset ring-white/15 w-full animate-[composer-bubble-in_480ms_cubic-bezier(0.2,0.9,0.3,1)_both] motion-reduce:animate-none",
         conversationMode === "plan" && "border border-[#597FF4]",
       )}
       onDragOver={(e) => onDragOver(e, disabled)}

@@ -1110,8 +1110,6 @@ describe("recommended automations", () => {
   });
 
   it.each([
-    ["github-issue-to-pr", "GitHub", { providersConfigured: ["github"] }],
-    ["gitlab-issue-to-mr", "GitLab", { providersConfigured: ["gitlab"] }],
     ["jira-issue-to-pr", "Jira", { jiraEnabled: true }],
     ["jira-issue-to-gitlab-mr", "Jira", { jiraEnabled: true }],
     ["jira-issue-to-bitbucket-pr", "Jira", { jiraEnabled: true }],
@@ -1143,6 +1141,29 @@ describe("recommended automations", () => {
     },
   );
 
+  it("sets up issue-to-PR on a native GitHub instance without offering polling", async () => {
+    // Arrange
+    await activateCloudBackend({ providersConfigured: ["github"] });
+    renderLauncher({ withBackendProvider: true });
+
+    // Act
+    fireEvent.click(
+      await screen.findByTestId(
+        "recommended-automation-card-github-issue-to-pr",
+      ),
+    );
+
+    // Assert
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith(
+        "/automations/new/github-issue-to-pr",
+      ),
+    );
+    expect(
+      screen.queryByTestId("built-in-integration-choice-modal"),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens the instance's integrations settings when the built-in integration is chosen", async () => {
     // Arrange
     const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
@@ -1172,12 +1193,10 @@ describe("recommended automations", () => {
 
   it("connects the integration through its MCP server when the polling automation is chosen", async () => {
     // Arrange
-    await activateCloudBackend({ providersConfigured: ["gitlab"] });
+    await activateCloudBackend({ jiraEnabled: true });
     renderLauncher({ withBackendProvider: true });
     fireEvent.click(
-      await screen.findByTestId(
-        "recommended-automation-card-gitlab-issue-to-mr",
-      ),
+      await screen.findByTestId("recommended-automation-card-jira-issue-to-pr"),
     );
 
     // Act
@@ -1187,7 +1206,7 @@ describe("recommended automations", () => {
 
     // Assert
     const modal = await screen.findByTestId("mcp-install-modal");
-    expect(modal).toHaveAttribute("data-marketplace-id", "gitlab");
+    expect(modal).toHaveAttribute("data-marketplace-id", "atlassian-rovo");
     expect(
       within(modal).queryByTestId("mcp-install-tab-native"),
     ).not.toBeInTheDocument();
@@ -1227,12 +1246,10 @@ describe("recommended automations", () => {
 
   it("launches nothing when the setup choice is dismissed", async () => {
     // Arrange
-    await activateCloudBackend({ providersConfigured: ["github"] });
+    await activateCloudBackend({ jiraEnabled: true });
     renderLauncher({ withBackendProvider: true });
     fireEvent.click(
-      await screen.findByTestId(
-        "recommended-automation-card-github-issue-to-pr",
-      ),
+      await screen.findByTestId("recommended-automation-card-jira-issue-to-pr"),
     );
 
     // Act

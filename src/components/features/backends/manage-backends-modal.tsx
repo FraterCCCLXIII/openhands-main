@@ -30,8 +30,8 @@ import { useBackendSwitchRedirect } from "./use-backend-switch-redirect";
 interface ManageBackendsModalProps {
   onClose: () => void;
   /**
-   * Recovery mode is used by the root unavailable-backend gate. There is no
-   * app shell behind the modal, so dismiss controls would be misleading.
+   * Recovery mode is used by the root unavailable-backend gate. The modal
+   * stays dismissible there so the app behind it can be reached.
    */
   recoveryMode?: boolean;
   /** Open straight onto the DigitalOcean Managed Agents screen. */
@@ -149,10 +149,7 @@ export function ManageBackendsModal({
   // and outside clicks; closing this modal under it would unmount it, losing a
   // form draft or swallowing a refused destroy mid-stop.
   const isClosable =
-    !recoveryMode &&
-    pendingRemoval === null &&
-    editingBackend === null &&
-    !showAddForm;
+    pendingRemoval === null && editingBackend === null && !showAddForm;
 
   return (
     <>
@@ -165,18 +162,16 @@ export function ManageBackendsModal({
         <div
           data-testid="manage-backends-modal"
           className={cn(
-            "relative flex flex-col bg-surface border border-border rounded-xl",
+            "relative flex flex-col bg-surface border border-border rounded-3xl",
             modalWidthClassName(view === "managed-agents" ? "xl" : "lg"),
             MODAL_MAX_WIDTH_VIEWPORT,
             view === "managed-agents" ? "h-[80vh]" : "max-h-[70vh]",
           )}
         >
-          {recoveryMode ? null : (
-            <ModalCloseButton
-              onClose={onClose}
-              testId="close-manage-backends-modal"
-            />
-          )}
+          <ModalCloseButton
+            onClose={onClose}
+            testId="close-manage-backends-modal"
+          />
           {view === "managed-agents" ? (
             <ManagedAgentsView
               onBack={() => setView("backends")}
@@ -184,7 +179,7 @@ export function ManageBackendsModal({
             />
           ) : (
             <>
-              <div className={cn("p-5", !recoveryMode && "pr-12")}>
+              <div className="p-5 pr-12">
                 <h2 className={modalTitleLgClassName}>{modalTitle}</h2>
               </div>
 
@@ -255,16 +250,14 @@ export function ManageBackendsModal({
                     {t(I18nKey.BACKEND$ADD)}
                   </BrandButton>
                 )}
-                {recoveryMode ? null : (
-                  <BrandButton
-                    type="button"
-                    variant="primary"
-                    onClick={onClose}
-                    testId="manage-backends-done"
-                  >
-                    {t(I18nKey.HOME$DONE)}
-                  </BrandButton>
-                )}
+                <BrandButton
+                  type="button"
+                  variant="primary"
+                  onClick={onClose}
+                  testId="manage-backends-done"
+                >
+                  {t(I18nKey.HOME$DONE)}
+                </BrandButton>
               </div>
             </>
           )}

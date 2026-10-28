@@ -1,4 +1,8 @@
 import {
+  statusToneBadgeClassName,
+  statusToneBannerClassName,
+} from "#/utils/status-tone-classes";
+import {
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -7,7 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { createPortal } from "react-dom";
+import { AppearancePortal } from "#/components/shared/appearance-portal";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -112,6 +116,8 @@ import {
   removeAutomationDraftTags,
 } from "#/utils/automation-draft-tags";
 import { setupDraftFromAutomation } from "#/utils/automation-edit-draft";
+import { isMacDesktopShell } from "#/utils/desktop-shell";
+import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const DEFAULT_TIMEZONE = "America/New_York";
 const DEFAULT_TIME = "09:00";
@@ -451,7 +457,10 @@ function DraftStatusBar({
     "max-w-full min-w-0 whitespace-normal rounded-full px-2.5 py-0.5 text-left text-xs leading-4",
     validationMessage
       ? "w-fit bg-feedback-error/5 text-feedback-error"
-      : "bg-[var(--oh-success)]/10 text-[var(--oh-success)]",
+      : cn(
+          statusToneBadgeClassName.success,
+          "dark:bg-[var(--oh-success)]/10 dark:text-[var(--oh-success)]",
+        ),
   );
 
   return (
@@ -645,6 +654,8 @@ export function AutomationSetupPanel({
   showInlineHeader = true,
   reserveComposerSpace = false,
 }: AutomationSetupPanelProps) {
+  const isFullScreen = useDesktopFullScreen();
+  const showTitleBand = isMacDesktopShell() && !isFullScreen;
   const { t } = useTranslation("openhands");
   const { navigate } = useNavigation();
   const deploymentCapabilities = useDeploymentCapabilities();
@@ -1861,15 +1872,23 @@ export function AutomationSetupPanel({
 
   return (
     <>
-      {toolbarPortal
-        ? createPortal(renderToolbarActions(), toolbarPortal)
-        : null}
+      {toolbarPortal ? (
+        <AppearancePortal container={toolbarPortal}>
+          {renderToolbarActions()}
+        </AppearancePortal>
+      ) : null}
       <div
         data-testid="automation-setup-panel"
         className="flex h-full min-h-0 flex-col bg-canvas-base"
       >
         {showInlineHeader ? (
-          <header className="flex h-10 min-h-10 shrink-0 items-center justify-between gap-2 border-b border-[var(--oh-border)] bg-canvas-base px-3">
+          <header
+            className={cn(
+              "flex h-10 min-h-10 shrink-0 items-center justify-between gap-2 border-b border-[var(--oh-border)] bg-canvas-base px-3",
+              // Desktop title band: the header takes the traffic-light row.
+              showTitleBand && "-mt-7 mb-7",
+            )}
+          >
             <div className="flex min-w-0 items-center gap-2">
               <h2 className="min-w-0 truncate text-sm font-medium text-content">
                 {name.trim() || t(I18nKey.AUTOMATION_SETUP$TITLE)}
@@ -1950,7 +1969,11 @@ export function AutomationSetupPanel({
               {isTaggedDraftMissing ? (
                 <p
                   data-testid="automation-setup-draft-missing"
-                  className="rounded-2xl border border-[var(--oh-warning)]/40 bg-[var(--oh-warning)]/10 px-5 py-4 text-sm text-[var(--oh-warning)]"
+                  className={cn(
+                    "rounded-2xl px-5 py-4 text-sm",
+                    statusToneBannerClassName.warning,
+                    "dark:border-[var(--oh-warning)]/40 dark:bg-[var(--oh-warning)]/10 dark:text-[var(--oh-warning)]",
+                  )}
                 >
                   {t(I18nKey.AUTOMATION_SETUP$DRAFT_MISSING)}
                 </p>
@@ -2019,6 +2042,10 @@ export function AutomationSetupPanel({
                       }
                       model={model}
                       onModelChange={(value) => updateField("model", value)}
+                      agentProfileId={agentProfileId}
+                      onAgentProfileChange={(value) =>
+                        updateField("agentProfileId", value)
+                      }
                     />
                   ) : hasExistingCustomBundle ? (
                     <ExistingCustomBundleSummary

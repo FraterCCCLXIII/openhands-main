@@ -100,6 +100,36 @@ describe("startGuidedTour", () => {
     expect(drivers[0].destroy).toHaveBeenCalledTimes(1);
   });
 
+  it("spotlights a companion element beside the stop, without its link", async () => {
+    // Arrange
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<nav><a id="nav-tab" href="/settings/llm" data-testid="nav-tab">LLM</a></nav>',
+    );
+    const navTab = document.querySelector("#nav-tab") as HTMLElement;
+    vi.spyOn(navTab, "getBoundingClientRect").mockReturnValue({
+      top: 40,
+      left: 12,
+      width: 120,
+      height: 32,
+      right: 132,
+      bottom: 72,
+    } as DOMRect);
+
+    // Act
+    await startGuidedTour(
+      tour(stop({ alsoHighlight: "#nav-tab" })),
+      NAV,
+      LABELS,
+    );
+
+    // Assert
+    const stage = document.querySelector(".oh-setup-tour-also-stage");
+    expect(stage?.querySelector("a")?.textContent).toBe("LLM");
+    expect(stage?.querySelector("a")?.hasAttribute("href")).toBe(false);
+    expect(stage?.querySelector("a")?.hasAttribute("data-testid")).toBe(false);
+  });
+
   it("does not let a replaced tour act on the tour that replaced it", async () => {
     // Arrange: the first tour's stop is done, so it is about to end itself.
     await startGuidedTour(

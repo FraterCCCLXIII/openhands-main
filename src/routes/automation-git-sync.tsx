@@ -198,7 +198,7 @@ export default function AutomationGitSync() {
         <div className="flex flex-col gap-4">
           <BackLink />
           <div>
-            <h1 className="text-xl font-semibold text-content">
+            <h1 className="font-inter text-[22px] font-normal text-content">
               {t(I18nKey.AUTOMATIONS$GIT_SYNC$TITLE)}
             </h1>
             <p className="mt-1 text-sm text-muted">

@@ -539,6 +539,38 @@ const saveMockProfile = (name: string, request: SaveProfileRequest) => {
   return profile;
 };
 
+/**
+ * Dev-mock seed: one LLM profile per provider so the composer's LLM dropdown
+ * lists providers. Only applied under `VITE_MOCK_API`, so unit tests keep the
+ * empty store they reset to.
+ */
+const MOCK_SEED_LLM_PROFILES: readonly { name: string; model: string }[] = [
+  { name: "OpenHands · GLM 5.2", model: "openhands/glm-5.2" },
+  {
+    name: "OpenHands · DeepSeek V4 Flash",
+    model: "openhands/deepseek-v4-flash",
+  },
+  {
+    name: "Anthropic · Claude Sonnet 4.5",
+    model: "anthropic/claude-sonnet-4-5-20250929",
+  },
+  { name: "OpenAI · GPT-5.5", model: "openai/gpt-5.5" },
+  {
+    name: "SambaNova · Llama 3.1 8B",
+    model: "sambanova/Meta-Llama-3.1-8B-Instruct",
+  },
+];
+
+if (import.meta.env.VITE_MOCK_API === "true") {
+  for (const seed of MOCK_SEED_LLM_PROFILES) {
+    MOCK_LLM_PROFILES.profiles.set(seed.name, {
+      name: seed.name,
+      config: { model: seed.model },
+      api_key_set: false,
+    });
+  }
+}
+
 export const resetTestHandlersMockSettings = () => {
   MOCK_USER_PREFERENCES.settings = structuredClone(MOCK_DEFAULT_USER_SETTINGS);
   MOCK_LLM_PROFILES.profiles.clear();

@@ -9,6 +9,7 @@ import { TabNavigation } from "./system-message-modal/tab-navigation";
 import { TabContent } from "./system-message-modal/tab-content";
 import { SystemMessageForModal } from "#/utils/system-message-adapter";
 import { cn } from "#/utils/utils";
+import { TabCrossFade } from "#/components/shared/tab-cross-fade";
 
 interface SystemMessageModalProps {
   isOpen: boolean;
@@ -64,12 +65,14 @@ export function SystemMessageModal({
             />
 
             <div className="h-[60vh] overflow-auto rounded-md border border-border bg-surface-raised custom-scrollbar-always">
-              <TabContent
-                activeTab={activeTab}
-                systemMessage={systemMessage}
-                expandedTools={expandedTools}
-                onToggleTool={toggleTool}
-              />
+              <TabCrossFade tabKey={activeTab}>
+                <TabContent
+                  activeTab={activeTab}
+                  systemMessage={systemMessage}
+                  expandedTools={expandedTools}
+                  onToggleTool={toggleTool}
+                />
+              </TabCrossFade>
             </div>
           </div>
         </ModalBody>

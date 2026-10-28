@@ -6,6 +6,7 @@ import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { getAcpErrorHeaderKey } from "#/utils/acp-error-codes";
 import { cn } from "#/utils/utils";
 import type { ErrorClassification } from "@openhands/typescript-client";
+import { BANNER_SURFACE_CLASSNAME } from "#/components/shared/banner-surface";
 
 interface ErrorMessageBannerProps {
   message: string;
@@ -94,7 +95,7 @@ export function ErrorMessageBanner({
   return (
     <div
       className={cn(
-        "flex w-full gap-2 rounded-lg border border-border bg-surface-raised p-2 text-foreground",
+        BANNER_SURFACE_CLASSNAME,
         isMultiLine ? "items-start" : "items-center",
       )}
       data-testid="error-message-banner"

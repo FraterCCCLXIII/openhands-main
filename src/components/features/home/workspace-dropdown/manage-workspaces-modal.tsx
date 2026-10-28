@@ -76,7 +76,7 @@ export function ManageWorkspacesModal({
         <div
           data-testid="manage-workspaces-modal"
           className={cn(
-            "flex flex-col bg-surface border border-border-input rounded-xl",
+            "flex flex-col bg-surface border border-border-input rounded-3xl",
             modalWidthClassName("lg"),
             MODAL_MAX_WIDTH_VIEWPORT,
             "max-h-[70vh]",
@@ -131,7 +131,11 @@ export function ManageWorkspacesModal({
                       data-testid={`manage-workspaces-remove-${workspace.name}`}
                       className="flex items-center gap-1 px-2 py-1 rounded text-xs text-text-tertiary hover:bg-interactive-hover hover:text-contrast cursor-pointer"
                     >
-                      <CloseIcon width={12} height={12} />
+                      <CloseIcon
+                        width={12}
+                        height={12}
+                        className="text-contrast dark:text-white"
+                      />
                       <span>{t(I18nKey.HOME$REMOVE_WORKSPACE)}</span>
                     </button>
                   </li>
@@ -190,7 +194,11 @@ export function ManageWorkspacesModal({
                               data-testid={`manage-workspaces-remove-parent-${parent.name}`}
                               className="flex items-center gap-1 px-2 py-1 rounded text-xs text-text-tertiary hover:bg-interactive-hover hover:text-contrast cursor-pointer"
                             >
-                              <CloseIcon width={12} height={12} />
+                              <CloseIcon
+                                width={12}
+                                height={12}
+                                className="text-contrast dark:text-white"
+                              />
                               <span>
                                 {t(I18nKey.HOME$REMOVE_WORKSPACE_PARENT)}
                               </span>

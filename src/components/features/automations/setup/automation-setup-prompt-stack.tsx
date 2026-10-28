@@ -19,13 +19,15 @@ import CheckIcon from "#/icons/checkmark.svg?react";
 import SearchIcon from "#/icons/search.svg?react";
 import { ComboboxCaretInline } from "#/ui/combobox-caret";
 import { Divider } from "#/ui/divider";
-import { ContextMenu } from "#/ui/context-menu";
 import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
 import { chatInputPillButtonClassName } from "#/utils/form-control-classes";
 import { modalTitleLgClassName } from "#/utils/modal-classes";
 import { cn } from "#/utils/utils";
 import { formatModelNameForDisplay } from "#/utils/format-model-name";
 import type { Provider } from "#/types/settings";
+import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
+import { AgentProfileGlyph } from "#/components/features/chat/components/chat-input-profile-picker";
+import { ContextMenu } from "#/ui/context-menu";
 
 const PROFILE_LABEL_MAX_CHARS = 18;
 
@@ -45,6 +47,84 @@ function parseRepositories(value: string): string[] {
       seen.add(entry);
       return true;
     });
+}
+
+/** Agent-profile picker for the automation composer; saves the profile id. */
+function SetupAgentPill({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (profileId: string) => void;
+}) {
+  const { t } = useTranslation("openhands");
+  const { data, isLoading } = useAgentProfiles();
+  const profiles = data?.profiles ?? [];
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useClickOutsideElement<HTMLUListElement>(
+    () => setIsOpen(false),
+    triggerRef,
+  );
+  const selected = profiles.find((profile) => profile.id === value) ?? null;
+  const displayName = selected?.name ?? profiles[0]?.name ?? null;
+  const canOpen = !isLoading && profiles.length > 0;
+
+  return (
+    <div className="relative min-w-0">
+      <button
+        ref={triggerRef}
+        type="button"
+        className={cn(chatInputPillButtonClassName, "max-w-[200px] rounded-lg")}
+        data-testid="automation-setup-agent"
+        aria-label={t(I18nKey.CHAT$SWITCH_AGENT_PROFILE)}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!canOpen) return;
+          setIsOpen((open) => !open);
+        }}
+      >
+        {selected ? (
+          <AgentProfileGlyph name={selected.name} size={14} framed />
+        ) : null}
+        <span className="truncate">{displayName ?? ""}</span>
+        <ComboboxCaretInline isOpen={isOpen} />
+      </button>
+      {isOpen && (
+        <ContextMenu
+          ref={popoverRef}
+          testId="automation-setup-agent-popover"
+          position="top"
+          alignment="left"
+          spacing="none"
+          className="z-[60] mb-2 min-w-56 max-w-80 p-1"
+        >
+          {profiles.map((profile) => (
+            <li key={profile.id ?? profile.name} role="presentation">
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={profile.id === value}
+                data-testid={`automation-setup-agent-option-${profile.name}`}
+                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm text-foreground hover:bg-interactive-hover"
+                onClick={() => {
+                  if (profile.id) onChange(profile.id);
+                  setIsOpen(false);
+                }}
+              >
+                <AgentProfileGlyph name={profile.name} size={14} framed />
+                <span className="truncate">{profile.name}</span>
+              </button>
+            </li>
+          ))}
+        </ContextMenu>
+      )}
+    </div>
+  );
 }
 
 function SetupModelPill({
@@ -192,7 +272,7 @@ function AddRepositoryModal({
           onClose();
         }}
         data-testid="automation-setup-add-repository-modal"
-        className="relative flex w-[520px] max-w-[90vw] max-h-[85vh] flex-col rounded-xl border border-[var(--oh-border)] bg-base-secondary"
+        className="relative flex w-[520px] max-w-[90vw] max-h-[85vh] flex-col rounded-3xl border border-[var(--oh-border)] bg-base-secondary"
       >
         <ModalCloseButton
           onClose={onClose}
@@ -248,6 +328,8 @@ export function AutomationSetupPromptStack({
   onPromptChange,
   onRepositoryChange,
   onModelChange,
+  agentProfileId,
+  onAgentProfileChange,
 }: {
   prompt: string;
   repository: string;
@@ -260,6 +342,8 @@ export function AutomationSetupPromptStack({
   /** The setup form owns the title when the kind toggle stays outside the crossfade. */
   showTitle?: boolean;
   model: string;
+  agentProfileId: string;
+  onAgentProfileChange: (profileId: string) => void;
   onPromptChange: (value: string) => void;
   onRepositoryChange: (value: string) => void;
   onModelChange: (profileName: string) => void;
@@ -356,6 +440,10 @@ export function AutomationSetupPromptStack({
               className="min-h-[120px] w-full resize-none border-0 bg-transparent p-0 text-sm text-content outline-none placeholder:text-tertiary-alt"
             />
             <div className="flex min-w-0 items-center gap-2 pt-2">
+              <SetupAgentPill
+                value={agentProfileId}
+                onChange={onAgentProfileChange}
+              />
               <SetupModelPill value={model} onChange={onModelChange} />
             </div>
             <div

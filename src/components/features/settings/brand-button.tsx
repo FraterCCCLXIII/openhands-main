@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { cn } from "#/utils/utils";
 import { formControlButtonClassName } from "#/utils/form-control-classes";
+import { HotkeyBadge } from "#/components/shared/buttons/hotkey-badge";
 
 interface BrandButtonProps {
   testId?: string;
@@ -9,6 +10,8 @@ interface BrandButtonProps {
   type: React.ButtonHTMLAttributes<HTMLButtonElement>["type"];
   isDisabled?: boolean;
   className?: string;
+  /** Keyboard shortcut shown on the right as a rounded hotkey square. */
+  hotkey?: string;
   onClick?: (event?: React.MouseEvent<HTMLButtonElement>) => void;
   startContent?: React.ReactNode;
   /** Accessible label for icon-only buttons */
@@ -31,6 +34,7 @@ export const BrandButton = forwardRef<
     type,
     isDisabled,
     className,
+    hotkey,
     onClick,
     startContent,
     ariaLabel,
@@ -57,9 +61,9 @@ export const BrandButton = forwardRef<
       className={cn(
         formControlButtonClassName,
         variant === "primary" &&
-          "bg-primary text-[var(--oh-accent-foreground)] hover:opacity-80 disabled:bg-interactive-hover disabled:text-muted disabled:opacity-100",
+          "bg-primary enabled:bg-primary-sheen enabled:btn-primary-3d text-[var(--oh-accent-foreground)] hover:opacity-80 disabled:bg-interactive-hover disabled:text-muted disabled:opacity-100",
         variant === "secondary" &&
-          "border border-border bg-base-secondary text-contrast hover:bg-surface-raised",
+          "border border-border-input bg-base-secondary text-contrast hover:bg-surface-raised dark:border-border",
         variant === "tertiary" &&
           "bg-interactive-hover text-contrast hover:opacity-80",
         variant === "danger" &&
@@ -72,6 +76,7 @@ export const BrandButton = forwardRef<
     >
       {startContent}
       {children}
+      {hotkey ? <HotkeyBadge hotkey={hotkey} /> : null}
     </button>
   );
 });

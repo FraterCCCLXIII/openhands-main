@@ -5,7 +5,11 @@ import {
   setupConversationPanelTest,
   createMockConversation,
   renderConversationPanel,
+  RouterStub,
 } from "./conversation-panel-test-utils";
+import { renderWithProviders } from "test-utils";
+import { CommandMenu } from "#/components/features/command-menu/command-menu";
+import { useCommandMenuStore } from "#/stores/command-menu-store";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
 import { ExecutionStatus } from "#/types/agent-server/core";
 import { useArchivedConversationsStore } from "#/stores/archived-conversations-store";
@@ -954,5 +958,27 @@ describe("ConversationPanel conversation actions", () => {
     expect(
       screen.queryByRole("button", { name: /confirm/i }),
     ).not.toBeInTheDocument();
+  });
+
+  describe("conversation search", () => {
+    it("opens the command menu from the sidebar search toggle", async () => {
+      const user = userEvent.setup();
+      useCommandMenuStore.setState({ isOpen: false });
+
+      renderWithProviders(
+        <>
+          <RouterStub />
+          <CommandMenu />
+        </>,
+      );
+
+      await screen.findAllByTestId("conversation-card");
+      expect(screen.queryByTestId("command-menu")).not.toBeInTheDocument();
+
+      await user.click(screen.getByTestId("conversation-panel-search-toggle"));
+
+      expect(await screen.findByTestId("command-menu")).toBeInTheDocument();
+      expect(useCommandMenuStore.getState().isOpen).toBe(true);
+    });
   });
 });

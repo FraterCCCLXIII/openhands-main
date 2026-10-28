@@ -15,6 +15,7 @@ import "./index.css";
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
+import { NotificationStack } from "#/components/features/notifications/notification-stack";
 import {
   clearCachedAgentServerInfo,
   isAgentServerUnavailableError,
@@ -108,6 +109,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <ColorThemeApplier />
           {children}
           <Toaster toastOptions={TOAST_OPTIONS} />
+          <NotificationStack />
           <div id="modal-portal-exit" />
         </AgentServerUIRoot>
         <ScrollRestoration />
@@ -121,28 +123,27 @@ function AgentServerBootstrapLoading() {
   return (
     <main className="min-h-screen bg-canvas-base px-6 py-10 text-contrast">
       <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center">
-        <div className="rounded-3xl border border-contrast/10 bg-canvas-base/80 px-8 py-10 shadow-2xl">
-          <LoadingSpinner size="large" />
-        </div>
+        <LoadingSpinner size="large" />
       </div>
     </main>
   );
 }
 
 /**
- * When the active backend is unreachable, the rest of the app cannot
- * render (most queries chain off of `/server_info`). Drop a minimal
- * placeholder behind the Manage Backends modal so the user can edit,
- * add, or pick another backend right away.
+ * When the active backend is unreachable, the Manage Backends modal opens over
+ * the app shell so the user can edit, add, or pick another backend. Closing it
+ * reveals the app behind it.
  */
 function MissingAgentServerScreen() {
   const queryClient = useQueryClient();
+  const [isModalOpen, setIsModalOpen] = React.useState(true);
 
-  // The modal is the no-backend gate. Selecting or adding a reachable
-  // backend must re-run the /server_info probe; otherwise the app stays
-  // behind the recovery screen because the failed bootstrap query will not
-  // re-fire on its own. Re-fetch only when a backend now exists.
+  // Selecting or adding a reachable backend must re-run the /server_info
+  // probe; otherwise the app stays behind the recovery screen because the
+  // failed bootstrap query will not re-fire on its own. Re-fetch only when a
+  // backend now exists.
   const handleClose = React.useCallback(() => {
+    setIsModalOpen(false);
     if (getEffectiveLocalBackend()) {
       clearCachedAgentServerInfo();
       void queryClient.invalidateQueries({
@@ -156,9 +157,12 @@ function MissingAgentServerScreen() {
       data-testid="agent-server-onboarding-screen"
       className="min-h-screen bg-canvas-base"
     >
-      <React.Suspense fallback={null}>
-        <ManageBackendsModal onClose={handleClose} recoveryMode />
-      </React.Suspense>
+      <Outlet />
+      {isModalOpen ? (
+        <React.Suspense fallback={null}>
+          <ManageBackendsModal onClose={handleClose} recoveryMode />
+        </React.Suspense>
+      ) : null}
     </main>
   );
 }

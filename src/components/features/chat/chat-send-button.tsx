@@ -22,10 +22,10 @@ export function ChatSendButton({
     <button
       type="button"
       className={cn(
-        "flex items-center justify-center rounded-full border border-contrast size-8",
+        "flex items-center justify-center rounded-full size-8 border transition-all duration-300 ease-out motion-reduce:transition-none",
         disabled
-          ? "cursor-not-allowed border-muted"
-          : "cursor-pointer hover:bg-contrast/10",
+          ? "cursor-not-allowed border-muted bg-transparent opacity-60 shadow-none"
+          : "cursor-pointer border-white bg-linear-to-b from-white to-neutral-200 shadow-[inset_0_1px_0_rgba(255,255,255,1),inset_0_-1px_0_rgba(0,0,0,0.18),0_2px_8px_rgba(0,0,0,0.4)] animate-[send-button-in_240ms_ease-out_both] motion-reduce:animate-none hover:from-neutral-100 hover:to-neutral-300",
         buttonClassName,
       )}
       data-name="arrow-up-circle-fill"
@@ -44,7 +44,7 @@ export function ChatSendButton({
       ) : (
         <ArrowUp
           className="w-4 h-4"
-          color={disabled ? "var(--oh-muted)" : "white"}
+          color={disabled ? "var(--oh-muted)" : "var(--oh-contrast)"}
         />
       )}
     </button>

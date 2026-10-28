@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import toast from "react-hot-toast";
+import { useNotificationStackStore } from "#/stores/notification-stack-store";
 import {
   displaySuccessToast,
   displayErrorToast,
@@ -75,52 +76,41 @@ describe("custom-toast-handlers", () => {
   });
 
   describe("displayErrorToast", () => {
-    it("should call toast with calculated duration for short message", () => {
-      const shortMessage = "Error occurred";
-      displayErrorToast(shortMessage);
-
-      expect(toastMock).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          duration: 4000, // Should use minimum duration of 4000ms for errors
-          position: "top-right",
-          icon: null,
-          style: expect.objectContaining({
-            borderRadius: "var(--oh-radius)",
-            maxWidth: "400px",
-            wordBreak: "break-word",
-          }),
-        }),
-      );
+    beforeEach(() => {
+      useNotificationStackStore.setState({ items: [] });
     });
 
-    it("should call toast with longer duration for long error message", () => {
+    it("pushes a short error onto the notification stack with the minimum duration", () => {
+      displayErrorToast("Error occurred");
+
+      expect(toastMock).not.toHaveBeenCalled();
+      expect(useNotificationStackStore.getState().items).toEqual([
+        expect.objectContaining({
+          kind: "error",
+          message: "Error occurred",
+          count: 1,
+          duration: 4000,
+        }),
+      ]);
+    });
+
+    it("gives a long error a longer duration, capped at 10 seconds", () => {
       const longMessage =
         "A very long error message that should take more time to read and understand what went wrong with the operation.";
       displayErrorToast(longMessage);
 
-      expect(toastMock).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          duration: expect.any(Number),
-          position: "top-right",
-          icon: null,
-          style: expect.objectContaining({
-            borderRadius: "var(--oh-radius)",
-            maxWidth: "400px",
-            wordBreak: "break-word",
-          }),
-        }),
-      );
+      const [item] = useNotificationStackStore.getState().items;
+      expect(item.duration).toBeGreaterThan(4000);
+      expect(item.duration).toBeLessThanOrEqual(10000);
+    });
 
-      // Get the actual duration that was passed
-      const callArgs = toastMock.mock.calls[0][1] as { duration: number };
-      const actualDuration = callArgs.duration;
+    it("folds a repeated error into one card with a count", () => {
+      displayErrorToast("Disconnected");
+      displayErrorToast("Disconnected");
 
-      // For a long message, duration should be more than the minimum 4000ms
-      expect(actualDuration).toBeGreaterThan(4000);
-      // But should not exceed the maximum 10000ms
-      expect(actualDuration).toBeLessThanOrEqual(10000);
+      const { items } = useNotificationStackStore.getState();
+      expect(items).toHaveLength(1);
+      expect(items[0].count).toBe(2);
     });
   });
 });

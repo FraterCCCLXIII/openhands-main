@@ -1,21 +1,23 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom";
-import { ChevronDown, FileUp, Plus } from "lucide-react";
+import { ChevronDown, FileUp, Plus, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ContextMenuListItem } from "#/components/features/context-menu/context-menu-list-item";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { I18nKey } from "#/i18n/declaration";
 import { ContextMenu } from "#/ui/context-menu";
 import { KebabMenuItemContent } from "./kebab-menu-item-content";
+import { AppearancePortal } from "#/components/shared/appearance-portal";
 
 interface AddAutomationMenuProps {
   onAdd: () => void;
+  onSuggest: () => void;
   onImport: () => void;
   isAddDisabled?: boolean;
 }
 
 export function AddAutomationMenu({
   onAdd,
+  onSuggest,
   onImport,
   isAddDisabled = false,
 }: AddAutomationMenuProps) {
@@ -111,6 +113,18 @@ export function AddAutomationMenu({
         </li>
         <li>
           <ContextMenuListItem
+            testId="automations-find-opportunities"
+            className="group"
+            onClick={() => closeAnd(onSuggest)}
+          >
+            <KebabMenuItemContent
+              icon={<Sparkles className="size-4" aria-hidden />}
+              label={t(I18nKey.AUTOMATIONS$FIND_OPPORTUNITIES_BUTTON)}
+            />
+          </ContextMenuListItem>
+        </li>
+        <li>
+          <ContextMenuListItem
             testId="automations-import-automation"
             className="group"
             onClick={() => closeAnd(onImport)}
@@ -135,17 +149,17 @@ export function AddAutomationMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
+        startContent={<Plus className="size-4" aria-hidden />}
       >
         {t(I18nKey.AUTOMATIONS$ADD_AUTOMATION)}
         <ChevronDown className="size-4 shrink-0" aria-hidden />
       </BrandButton>
 
-      {open && portalStyle && typeof document !== "undefined"
-        ? ReactDOM.createPortal(
-            <div style={portalStyle}>{menu}</div>,
-            document.body,
-          )
-        : null}
+      {open && portalStyle && typeof document !== "undefined" ? (
+        <AppearancePortal>
+          <div style={portalStyle}>{menu}</div>
+        </AppearancePortal>
+      ) : null}
     </>
   );
 }

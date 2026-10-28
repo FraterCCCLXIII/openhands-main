@@ -60,7 +60,7 @@ export function DeleteConfirmationModal({
     <ModalBackdrop onClose={onCancel} aria-label={title}>
       <div
         className={cn(
-          "relative rounded-xl border border-border bg-surface p-6",
+          "relative rounded-3xl border border-border bg-surface p-6",
           modalWidthClassName("sm"),
           MODAL_MAX_WIDTH_VIEWPORT,
         )}

@@ -5,6 +5,10 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 
+import {
+  NavigationProvider,
+  type NavigationContextValue,
+} from "#/context/navigation-context";
 import { I18nKey } from "#/i18n/declaration";
 import AutomationService from "#/api/automation-service/automation-service.api";
 import {
@@ -18,6 +22,8 @@ import AutomationTemplates, {
   clientLoader as templatesLoader,
 } from "#/routes/automation-templates";
 import type { Backend } from "#/api/backend-registry/types";
+import { useConversationStore } from "#/stores/conversation-store";
+import * as telemetry from "#/services/telemetry";
 import {
   getCloudOrganizationMe,
   getCloudOrganizations,
@@ -28,6 +34,23 @@ import {
   type Automation,
   type AutomationRun,
 } from "#/types/automation";
+
+const automationConversationMocks = vi.hoisted(() => ({
+  createConversationMutate: vi.fn(),
+  isCreatingConversation: vi.fn(() => false),
+}));
+
+vi.mock("#/hooks/mutation/use-create-conversation", () => ({
+  useCreateConversation: () => ({
+    mutate: automationConversationMocks.createConversationMutate,
+    isPending: false,
+  }),
+}));
+
+vi.mock("#/hooks/use-is-creating-conversation", () => ({
+  useIsCreatingConversation: () =>
+    automationConversationMocks.isCreatingConversation(),
+}));
 
 // Replace the published data source with the widget-themed manifest that
 // declares the full sub-page surface; admission itself stays real.
@@ -120,27 +143,50 @@ function renderAt(path: string, page: React.ReactElement) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return render(
+  const navigation: NavigationContextValue = {
+    currentPath: path,
+    conversationId: null,
+    isNavigating: false,
+    navigate: vi.fn(),
+  };
+  const result = render(
     <QueryClientProvider client={client}>
       <ActiveBackendProvider>
-        <MemoryRouter initialEntries={[path]}>{page}</MemoryRouter>
+        <NavigationProvider value={navigation}>
+          <MemoryRouter initialEntries={[path]}>{page}</MemoryRouter>
+        </NavigationProvider>
       </ActiveBackendProvider>
     </QueryClientProvider>,
   );
+  return { ...result, navigate: navigation.navigate };
 }
 
 async function renderDashboardWithSettledInsights() {
-  renderAt("/automations", <AutomationsList />);
+  const result = renderAt("/automations", <AutomationsList />);
   await screen.findByTestId("automation-card-a-ok");
   // Insights have settled once the failed run's status is on the card.
   await within(
     await screen.findByTestId("automation-card-a-broken"),
   ).findByTestId("run-status-icon-failed");
+  return result;
 }
+
+let captureMock: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   window.localStorage.clear();
   __resetActiveStoreForTests();
+  captureMock = vi.spyOn(telemetry, "trackEvent").mockResolvedValue(undefined);
+  automationConversationMocks.isCreatingConversation.mockReturnValue(false);
+  automationConversationMocks.createConversationMutate.mockImplementation(
+    (_variables, options) => {
+      options?.onSuccess?.({
+        conversation_id: "automation-conversation",
+        session_api_key: null,
+        url: null,
+      });
+    },
+  );
   vi.mocked(AutomationService.checkHealth).mockReset();
   vi.mocked(AutomationService.checkHealth).mockResolvedValue({ status: "ok" });
   vi.mocked(AutomationService.getAutomations).mockReset();
@@ -189,6 +235,10 @@ beforeEach(() => {
 afterEach(() => {
   window.localStorage.clear();
   __resetActiveStoreForTests();
+  captureMock.mockRestore();
+  automationConversationMocks.createConversationMutate.mockReset();
+  automationConversationMocks.isCreatingConversation.mockReset();
+  useConversationStore.getState().clearComposer("automation-conversation");
 });
 
 describe("AutomationsList — manifest-declared dashboard", () => {
@@ -256,6 +306,81 @@ describe("AutomationsList — manifest-declared dashboard", () => {
       launcher: null,
       rail: null,
     });
+  });
+
+  it("creates a seeded discovery conversation from the Add automation menu", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { navigate } = await renderDashboardWithSettledInsights();
+
+    // Act
+    const addTrigger = screen.getByTestId("automations-add-automation");
+    expect(addTrigger).toHaveClass("bg-base-secondary");
+    expect(
+      screen.queryByTestId("automations-find-opportunities"),
+    ).not.toBeInTheDocument();
+
+    await user.click(addTrigger);
+    const menu = screen.getByTestId("automations-add-automation-menu");
+    expect(menu).not.toHaveClass("mt-2");
+    const menuItems = within(menu).getAllByRole("button");
+    expect(menuItems[0]).toHaveAttribute(
+      "data-testid",
+      "automations-add-automation-create",
+    );
+    expect(menuItems[0]).toHaveTextContent(
+      I18nKey.AUTOMATIONS$CREATE_AUTOMATION_BUTTON,
+    );
+    await user.click(screen.getByTestId("automations-find-opportunities"));
+
+    // Assert
+    expect(
+      automationConversationMocks.createConversationMutate,
+    ).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+    expect(captureMock).toHaveBeenCalledWith(
+      "automation_created_button",
+      expect.objectContaining({
+        backend_kind: "local",
+        intent: "find_opportunities",
+        source: "dashboard_header",
+      }),
+    );
+    expect(navigate).toHaveBeenCalledWith(
+      "/conversations/automation-conversation",
+    );
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(
+          "conversation-state-automation-conversation",
+        ) ?? "{}",
+      ).draftMessage,
+    ).toBe(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT);
+    await waitFor(() => {
+      expect(
+        useConversationStore.getState().byConversation[
+          "automation-conversation"
+        ]?.messageToSend?.text,
+      ).toBe(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT);
+    });
+  });
+
+  it("opens the setup form from the Add automation menu without creating a conversation", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { navigate } = await renderDashboardWithSettledInsights();
+
+    // Act
+    await user.click(screen.getByTestId("automations-add-automation"));
+    await user.click(screen.getByTestId("automations-add-automation-create"));
+
+    // Assert
+    expect(navigate).toHaveBeenCalledWith("/automations/setup");
+    expect(
+      automationConversationMocks.createConversationMutate,
+    ).not.toHaveBeenCalled();
   });
 
   it("orders the list by the manifest's declared sort default", async () => {
@@ -907,11 +1032,18 @@ describe("AutomationTemplates — manifest-declared templates page", () => {
     renderAt("/automations/templates", <AutomationTemplates />);
 
     // Assert
+    const cta = await screen.findByTestId("automation-opportunities-cta");
     expect({
       title: await screen.findByText("Widget templates", {
         selector: "h1",
       }),
       description: screen.getByText("Pick a proven widget to start from."),
+      opportunityTitle: within(cta).getByText(
+        I18nKey.AUTOMATIONS$TEMPLATES_CTA_TITLE,
+        { selector: "h2" },
+      ),
+      findButton: within(cta).getByTestId("automation-opportunities-cta-find"),
+      addButton: within(cta).getByTestId("automation-opportunities-cta-add"),
       launcher: await screen.findByTestId("recommended-automations-section"),
     }).toBeTruthy();
   });
@@ -927,5 +1059,26 @@ describe("AutomationTemplates — manifest-declared templates page", () => {
     // Assert
     const nav = await screen.findByTestId("automations-navbar-desktop");
     expect(within(nav).getByText("Widget templates")).toBeInTheDocument();
+  });
+
+  it("opens the setup form from the templates banner create button", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    const { navigate } = renderAt(
+      "/automations/templates",
+      <AutomationTemplates />,
+    );
+    const cta = await screen.findByTestId("automation-opportunities-cta");
+
+    // Act
+    await user.click(
+      within(cta).getByTestId("automation-opportunities-cta-add"),
+    );
+
+    // Assert
+    expect(navigate).toHaveBeenCalledWith("/automations/setup");
+    expect(
+      automationConversationMocks.createConversationMutate,
+    ).not.toHaveBeenCalled();
   });
 });

@@ -72,12 +72,40 @@ const SEEDED_PROFILES: readonly AgentProfile[] = [
   makeOpenHandsProfile({
     id: MOCK_DEFAULT_AGENT_PROFILE_ID,
     name: "default",
+    llm_profile_ref: "OpenHands · GLM 5.2",
   }),
   makeOpenHandsProfile({
     id: "3f1c1b7e-0000-4000-8000-000000000002",
-    name: "research",
+    name: "Architect",
+    llm_profile_ref: "Anthropic · Claude Sonnet 4.5",
     tools: [{ name: "task_tool_set", params: {} }],
     tool_concurrency_limit: 4,
+  }),
+  makeOpenHandsProfile({
+    id: "3f1c1b7e-0000-4000-8000-000000000003",
+    name: "Debugger",
+    llm_profile_ref: "OpenAI · GPT-5.5",
+  }),
+  makeOpenHandsProfile({
+    id: "3f1c1b7e-0000-4000-8000-000000000004",
+    name: "Code Reviewer",
+    llm_profile_ref: "OpenHands · DeepSeek V4 Flash",
+    tools: [{ name: "task_tool_set", params: {} }],
+  }),
+  makeOpenHandsProfile({
+    id: "3f1c1b7e-0000-4000-8000-000000000005",
+    name: "Refactorer",
+    llm_profile_ref: "OpenHands · GLM 5.2",
+  }),
+  makeOpenHandsProfile({
+    id: "3f1c1b7e-0000-4000-8000-000000000006",
+    name: "Test Engineer",
+    llm_profile_ref: "SambaNova · Llama 3.1 8B",
+  }),
+  makeOpenHandsProfile({
+    id: "3f1c1b7e-0000-4000-8000-000000000007",
+    name: "Prototyper",
+    llm_profile_ref: "OpenAI · GPT-5.5",
   }),
 ];
 

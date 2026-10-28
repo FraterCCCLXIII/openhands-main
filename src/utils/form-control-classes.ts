@@ -5,7 +5,9 @@ export const formControlHeightClassName = "h-9 min-h-9";
 
 export const formControlRadiusClassName = "rounded-lg";
 
-export const formControlBorderClassName = "border border-border";
+/** Interactive boundary for fields, triggers, and outlined buttons (3:1 target). */
+export const formControlBorderClassName =
+  "border border-border-input dark:border-border";
 
 export const formControlSurfaceClassName = "bg-base-secondary";
 
@@ -47,11 +49,15 @@ export const formControlMutedHoverClassName =
 
 /** Text/icon pill triggers in the chat input actions row. */
 export const chatInputPillButtonClassName = cn(
-  "inline-flex items-center gap-1 rounded-[100px] border border-transparent px-1.5",
+  "inline-flex h-7 items-center gap-1 rounded-full bg-surface ring-[0.5px] ring-inset ring-white/15 px-2.5",
   "text-sm font-normal leading-5 text-muted whitespace-nowrap min-w-0 cursor-pointer",
   formControlTransitionClassName,
   formControlMutedHoverClassName,
 );
+
+/** Model pill extras: brighter hairline and fill on hover. */
+export const chatInputModelPillClassName =
+  "duration-150 hover:ring-white/25 hover:bg-white/5";
 
 /** Circular icon triggers in the chat input actions row. */
 export const chatInputIconButtonClassName = cn(
@@ -60,11 +66,15 @@ export const chatInputIconButtonClassName = cn(
   formControlMutedHoverClassName,
 );
 
+/** Raised 28px disc used by the composer "+" and the sidebar "New" control. */
+export const chatInputAddButtonSurfaceClassName =
+  "relative shrink-0 size-7 ring-[0.5px] ring-inset ring-white/15 bg-linear-to-b from-contrast/10 to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_2px_rgba(0,0,0,0.4)]";
+
 export const formControlFocusClassName =
-  "focus:border-contrast/40 focus:ring-1 focus:ring-contrast/20 focus:outline-none";
+  "focus:border-contrast/40 dark:focus:border-contrast/40 focus:ring-1 focus:ring-contrast/20 focus:outline-none";
 
 export const formControlFocusWithinClassName =
-  "focus-within:border-contrast/40 focus-within:ring-1 focus-within:ring-contrast/20";
+  "focus-within:border-contrast/40 dark:focus-within:border-contrast/40 focus-within:ring-1 focus-within:ring-contrast/20";
 
 export const formControlDisabledClassName =
   "disabled:cursor-not-allowed disabled:opacity-60";
@@ -124,6 +134,18 @@ export const formControlButtonClassName = cn(
   formControlRadiusClassName,
   formControlTransitionClassName,
   "text-sm font-normal disabled:cursor-not-allowed disabled:opacity-30",
+);
+
+/**
+ * Dense action button for notification lists and other tight panels.
+ * Shorter than {@link formControlButtonClassName}, with the same corner radius.
+ */
+export const formControlButtonCompactClassName = cn(
+  "h-7 min-h-7",
+  "inline-flex w-fit cursor-pointer items-center justify-center gap-1.5 px-2.5 py-1",
+  formControlRadiusClassName,
+  formControlTransitionClassName,
+  "text-xs font-normal disabled:cursor-not-allowed disabled:opacity-30",
 );
 
 /** Helper text under a left-aligned {@link SettingsSwitch} (40px track + gap-2). */

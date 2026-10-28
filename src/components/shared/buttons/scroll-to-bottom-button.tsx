@@ -10,7 +10,7 @@ export function ScrollToBottomButton({ onClick }: ScrollToBottomButtonProps) {
       type="button"
       onClick={onClick}
       data-testid="scroll-to-bottom"
-      className="flex items-center justify-center size-8 rounded-full bg-surface text-muted hover:bg-tertiary hover:text-contrast rotate-180 cursor-pointer transition-colors"
+      className="flex items-center justify-center size-10 rounded-full border border-white/15 bg-linear-to-b from-surface to-tertiary text-muted shadow-[0_2px_8px_rgba(0,0,0,0.35)] hover:scale-105 hover:border-white/30 hover:bg-tertiary hover:text-contrast rotate-180 cursor-pointer transition-[color,background-color,border-color,transform] duration-200 ease-out motion-reduce:transition-none"
     >
       <ArrowSendIcon width={15} height={15} />
     </button>

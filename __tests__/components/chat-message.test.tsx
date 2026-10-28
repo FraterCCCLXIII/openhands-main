@@ -20,12 +20,10 @@ describe("ChatMessage", () => {
       const message = screen.getByTestId(`${type}-message`);
       await user.hover(message);
 
-      const tooltip = await screen.findByRole("tooltip");
-      expect(tooltip).toHaveTextContent(expected);
-      expect(tooltip.querySelector("time")).toHaveAttribute(
-        "datetime",
-        timestamp,
-      );
+      const meta = screen.getByTestId("chat-message-meta");
+      const time = meta.querySelector("time");
+      expect(time).toHaveTextContent(expected);
+      expect(time).toHaveAttribute("datetime", timestamp);
     },
   );
 
@@ -150,10 +148,12 @@ describe("ChatMessage", () => {
     render(<ChatMessage type="user" message="Hello, World!" />);
     const message = screen.getByText("Hello, World!");
 
-    expect(screen.getByTestId("copy-to-clipboard")).not.toBeVisible();
+    const meta = screen.getByTestId("chat-message-meta");
+    expect(meta).toHaveClass("pointer-events-none");
 
     await user.hover(message);
 
+    expect(meta).not.toHaveClass("pointer-events-none");
     expect(screen.getByTestId("copy-to-clipboard")).toBeVisible();
   });
 

@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Outfit:wght@100..900&display=swap");
 
 :root {
@@ -11,7 +12,11 @@
   --oh-bg-editor-sidebar: var(--cool-grey-925);
   --oh-bg-editor-active: var(--cool-grey-900);
   --oh-border-editor-sidebar: var(--cool-grey-800);
-  --oh-bg-neutral-muted: color-mix(in srgb, var(--cool-grey-300) 20%, transparent);
+  --oh-bg-neutral-muted: color-mix(
+    in srgb,
+    var(--cool-grey-300) 20%,
+    transparent
+  );
   --bg-dark: var(--oh-bg-dark);
   --bg-light: var(--oh-bg-light);
   --bg-input: var(--oh-bg-input);
@@ -25,19 +30,19 @@
   background-color: var(--oh-color-base) !important;
 
   /* ── Cool Grey Scale (13 shades + 2 pure anchors: white / black) ──────── */
-  --cool-grey-50:  #F7F9FC;
-  --cool-grey-100: #EEF2F7;
-  --cool-grey-200: #DCE3EE;
-  --cool-grey-300: #C3CDDC;
-  --cool-grey-400: #A3B0C4;
-  --cool-grey-500: #7E8A9E;
-  --cool-grey-600: #626D82;
-  --cool-grey-700: #4B5468;
-  --cool-grey-800: #383F50;
-  --cool-grey-900: #2C313F;
-  --cool-grey-925: #21252F;
-  --cool-grey-950: #0B0E14; /* intentional override: preserves original app-shell depth */
-  --cool-grey-975: #05070A;
+  --cool-grey-50: #f7f9fc;
+  --cool-grey-100: #eef2f7;
+  --cool-grey-200: #dce3ee;
+  --cool-grey-300: #c3cddc;
+  --cool-grey-400: #a3b0c4;
+  --cool-grey-500: #7e8a9e;
+  --cool-grey-600: #626d82;
+  --cool-grey-700: #4b5468;
+  --cool-grey-800: #383f50;
+  --cool-grey-900: #2c313f;
+  --cool-grey-925: #21252f;
+  --cool-grey-950: #0b0e14; /* intentional override: preserves original app-shell depth */
+  --cool-grey-975: #05070a;
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -154,4 +159,209 @@ code {
 
 .environment-switch-overlay > div {
   animation: environment-switch-overlay-fade 980ms ease-in-out forwards;
+}
+
+/*
+ * Activity rail: each direct block of an expanded tool group hangs off a
+ * continuous spine with a curved branch into its first line. The spine runs
+ * through the block margins so the tree has no gaps. A block that follows a
+ * thinking block is nested one level deeper.
+ */
+@keyframes rail-pulse {
+  0% {
+    border-color: var(--oh-foreground);
+  }
+  100% {
+    border-color: var(--oh-border);
+  }
+}
+
+@keyframes rail-draw {
+  from {
+    clip-path: inset(0 100% 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Send button becomes active: a quick pop into its solid state. */
+@keyframes send-button-in {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Composer bubbles in once when the chat loads. */
+@keyframes composer-bubble-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* Dropdown open: a quick fade up into place. */
+@keyframes context-menu-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes status-roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rail-fade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The check on a finished group draws itself in from its start point. */
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+[data-check-draw] {
+  stroke-dasharray: 12;
+  stroke-dashoffset: 12;
+  animation: check-draw 420ms ease-out 80ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-check-draw] {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}
+
+[data-rail-thread] > * {
+  position: relative;
+  padding-left: 1.25rem;
+  animation: rail-fade 420ms ease-out both;
+}
+
+/*
+ * Shimmer sweep on the title of a step that is still running, so it reads as
+ * live without a spinner.
+ */
+@keyframes live-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0% 50%;
+  }
+}
+
+[data-live-title] {
+  background-image: linear-gradient(
+    90deg,
+    var(--oh-muted) 0%,
+    var(--oh-muted) 40%,
+    var(--oh-foreground) 50%,
+    var(--oh-muted) 60%,
+    var(--oh-muted) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: live-shimmer 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-live-title] {
+    animation: none;
+    color: var(--oh-foreground);
+    background-image: none;
+  }
+}
+
+[data-rail-thread] > *::before,
+[data-rail-thread] > *::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+[data-rail-thread] > *::before {
+  height: 18px;
+  width: 0.875rem;
+  border-left: 1px solid var(--oh-border);
+  border-bottom: 1px solid var(--oh-border);
+  border-bottom-left-radius: 0.5rem;
+  /* A new branch draws in, then flashes once so the eye finds it. */
+  animation:
+    rail-draw 420ms ease-out both,
+    rail-pulse 1100ms ease-out both;
+}
+
+[data-rail-thread] > *::after {
+  top: -0.25rem;
+  bottom: -0.25rem;
+  width: 1px;
+  background: var(--oh-border);
+  animation: rail-draw 420ms ease-out both;
+}
+
+[data-rail-thread] > *:first-child::after {
+  top: -10px;
+}
+
+[data-rail-thread] > *:last-child::after {
+  display: none;
+}
+
+[data-rail-thread] > [data-rail-kind="thinking"] + * {
+  padding-left: 2.5rem;
+}
+
+[data-rail-thread] > [data-rail-kind="thinking"] + *::before {
+  left: 1.25rem;
+  width: 1.25rem;
+}
+
+[data-rail-thread] > [data-rail-kind="thinking"] + *::after {
+  left: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rail-thread] > *,
+  [data-rail-thread] > *::before,
+  [data-rail-thread] > *::after {
+    animation: none;
+  }
 }

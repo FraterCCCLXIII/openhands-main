@@ -8,8 +8,12 @@ import {
 import { EventMessage } from "./event-message";
 import { usePlanPreviewEvents } from "./hooks/use-plan-preview-events";
 import { groupEvents } from "./group-events";
-import { EventGroup } from "./event-message-components/event-group";
+import {
+  EventGroup,
+  type EventGroupVariant,
+} from "./event-message-components/event-group";
 import { ThoughtEventMessage } from "./event-message-components/thought-event-message";
+import { ThoughtScratch } from "./event-message-components/thought-scratch";
 import { useModelStore } from "#/stores/model-store";
 import { ModelMessages } from "#/components/features/chat/model-messages";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
@@ -24,6 +28,11 @@ interface MessagesProps {
   messages: OpenHandsEvent[]; // UI events (actions replaced by observations)
   allEvents: OpenHandsEvent[]; // Full event history (for action lookup)
 }
+
+// Experiment switches for the live tool-activity view. Flip to "classic" or
+// false to compare against the previous rendering.
+const GROUP_VARIANT: EventGroupVariant = "rail";
+const LIVE_THOUGHT_AS_SCRATCH = true;
 
 const getLastEventId = (events: OpenHandsEvent[]) => events.at(-1)?.id;
 const getLastEvent = (events: OpenHandsEvent[]) => events.at(-1);
@@ -145,9 +154,17 @@ export const Messages: React.FC<MessagesProps> = React.memo(
           }
 
           if (item.kind === "thought") {
+            // The thought at the live tail is the agent working out its next
+            // step, so it renders as scratch. Once anything lands after it, it
+            // becomes a normal message.
+            const isLiveTail = itemIndex === renderedItems.length - 1;
             return (
               <React.Fragment key={`thought-${item.action.id}`}>
-                <ThoughtEventMessage event={item.action} />
+                {LIVE_THOUGHT_AS_SCRATCH && isLiveTail ? (
+                  <ThoughtScratch event={item.action} />
+                ) : (
+                  <ThoughtEventMessage event={item.action} />
+                )}
                 {maybeRenderModelMessages(item.action.id)}
               </React.Fragment>
             );
@@ -165,6 +182,7 @@ export const Messages: React.FC<MessagesProps> = React.memo(
                 events={item.events}
                 allEvents={allEvents}
                 isFinalized={isFinalized}
+                variant={GROUP_VARIANT}
               >
                 {item.events.map((event, offset) =>
                   renderEventMessage(event, item.startIndex + offset, true),

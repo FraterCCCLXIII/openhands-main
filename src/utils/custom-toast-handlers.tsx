@@ -10,6 +10,7 @@ import {
   isCorsOrNetworkErrorMessage,
 } from "./user-facing-error";
 import { buildAgentCanvasPath } from "#/utils/base-path";
+import { useNotificationStackStore } from "#/stores/notification-stack-store";
 import {
   getApiOrConnectionErrorMessage,
   hasApiErrorResponse,
@@ -91,12 +92,13 @@ export const ERROR_TOAST_OPTIONS: ToastOptions = {
   icon: null,
 };
 
+/**
+ * Errors and warnings go to the top-right notification stack, which merges
+ * repeats of the same message into one card with a count.
+ */
 function showErrorToast(message: string) {
   const duration = calculateToastDuration(message, 4000);
-  toast(<ErrorToastContent message={message} />, {
-    ...ERROR_TOAST_OPTIONS,
-    duration,
-  });
+  useNotificationStackStore.getState().push("error", message, duration);
 }
 
 export const displayErrorToast = (error: string | null | undefined) => {
@@ -161,10 +163,5 @@ export const displaySuccessToastWithLink = (
  */
 export const displayWarningToast = (message: string) => {
   const duration = calculateToastDuration(message, 6000);
-  toast(
-    <span className="[word-break:break-word] [overflow-wrap:anywhere]">
-      {message}
-    </span>,
-    { ...TOAST_OPTIONS, icon: "⚠️", duration },
-  );
+  useNotificationStackStore.getState().push("warning", message, duration);
 };

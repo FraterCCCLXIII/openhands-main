@@ -47,6 +47,17 @@ const mockUseSettings = vi.fn();
 const mockUseLlmConfigured = vi.fn();
 const mockUseLlmProfiles = vi.fn();
 
+const { mockStartGuidedTour } = vi.hoisted(() => ({
+  mockStartGuidedTour: vi.fn(),
+}));
+
+vi.mock("#/components/features/setup-guide/tour/tour-engine", async () => ({
+  ...(await vi.importActual<
+    typeof import("#/components/features/setup-guide/tour/tour-engine")
+  >("#/components/features/setup-guide/tour/tour-engine")),
+  startGuidedTour: mockStartGuidedTour,
+}));
+
 vi.mock("#/hooks/query/use-paginated-conversations", () => ({
   usePaginatedConversations: () => mockUsePaginatedConversations(),
 }));
@@ -392,9 +403,9 @@ describe("SidebarOnboardingChecklist", () => {
       });
     });
 
-    it("captures onboarding_link_clicked for an internal row and still navigates", async () => {
+    it("captures onboarding_link_clicked for an internal row and starts its tour", async () => {
       const user = userEvent.setup();
-      const { navigate } = renderChecklist();
+      renderChecklist();
 
       await user.click(
         screen.getByTestId("sidebar-onboarding-checklist-item-configure-llm"),
@@ -408,9 +419,14 @@ describe("SidebarOnboardingChecklist", () => {
         checklist_item: "configure_llm",
         is_external: false,
       });
-      expect(navigate).toHaveBeenCalledWith("/settings/llm", {
-        replace: false,
-      });
+      expect(mockStartGuidedTour).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "configure-llm",
+          stops: [expect.objectContaining({ route: "/settings/llm" })],
+        }),
+        expect.anything(),
+        expect.anything(),
+      );
     });
 
     it("captures open_docs with the owning checklist item when a preview docs link is clicked", async () => {
@@ -456,6 +472,49 @@ describe("SidebarOnboardingChecklist", () => {
         surface: "landing_checklist",
         checklist_item: "schedule_task",
         is_external: false,
+      });
+    });
+  });
+
+  describe("item tours", () => {
+    beforeEach(() => {
+      mockStartGuidedTour.mockClear();
+    });
+
+    it("starts the MCP setup tour from its row instead of only opening the page", async () => {
+      const user = userEvent.setup();
+      const { navigate } = renderChecklist();
+
+      await user.click(
+        screen.getByTestId("sidebar-onboarding-checklist-item-connect-mcp"),
+      );
+
+      expect(mockStartGuidedTour).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "add-integration",
+          stops: expect.arrayContaining([
+            expect.objectContaining({ route: "/mcp" }),
+          ]),
+        }),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it("opens the page without a tour for an item that has none", async () => {
+      const user = userEvent.setup();
+      const { navigate } = renderChecklist();
+
+      await user.click(
+        screen.getByTestId(
+          "sidebar-onboarding-checklist-item-start-conversation",
+        ),
+      );
+
+      expect(mockStartGuidedTour).not.toHaveBeenCalled();
+      expect(navigate).toHaveBeenCalledWith("/conversations", {
+        replace: false,
       });
     });
   });

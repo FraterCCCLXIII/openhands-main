@@ -46,8 +46,8 @@ vi.mock("#/api/automation-setup-handoff-store", () => ({
     mockMarkAutomationSetupHandoff(...args),
 }));
 
-vi.mock("#/stores/conversation-store", () => ({
-  useConversationStore: () => ({
+vi.mock("#/hooks/use-conversation-composer", () => ({
+  useConversationComposer: () => ({
     images: mockImages,
     files: mockFiles,
     imagesMarkedUploadAsFile: [],

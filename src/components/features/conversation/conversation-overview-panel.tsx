@@ -1,6 +1,17 @@
 import React, { useRef, useState } from "react";
-import { Laptop } from "lucide-react";
+import {
+  Clock,
+  GitFork,
+  Globe,
+  Laptop,
+  Layers,
+  MessagesSquare,
+  Terminal,
+  FilePen,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useConversationActivitySummary } from "#/hooks/use-conversation-activity-summary";
+import { formatRelativeTime } from "#/utils/format-relative-time";
 import { useConversationOverviewStats } from "#/hooks/use-conversation-overview-stats";
 import { useConversationId } from "#/hooks/use-conversation-id";
 import { useConversationPrimaryRepository } from "#/hooks/use-conversation-primary-repository";
@@ -74,8 +85,9 @@ type OverviewPanelBlock =
   | { kind: "git"; key: "git" };
 
 export function ConversationOverviewPanel() {
-  const { t } = useTranslation("openhands");
+  const { t, i18n } = useTranslation("openhands");
   const stats = useConversationOverviewStats();
+  const activity = useConversationActivitySummary();
   const { conversationId } = useConversationId();
   const { state } = useConversationLocalStorageState(conversationId);
   const { isConnected: isGitConnected } = useConversationPrimaryRepository();
@@ -95,22 +107,80 @@ export function ConversationOverviewPanel() {
     isPinned(CONVERSATION_OVERVIEW_SECTION.git) &&
     (showChanges || isGitConnected);
 
-  const workspaceSections = CONVERSATION_OVERVIEW_SECTION_GROUPS.flatMap(
-    (group) => group.sections.filter((section) => isPinned(section)),
-  );
-
-  // Git content first (untitled); Workspace sits below it.
+  // Each visual group is its own block, so dividers fall between groups.
+  // Git content first (untitled); the other groups sit below it.
   const panelBlocks: OverviewPanelBlock[] = [];
   if (showGitBlock) {
     panelBlocks.push({ kind: "git", key: "git" });
   }
-  if (workspaceSections.length > 0) {
-    panelBlocks.push({
-      kind: "sections",
-      key: workspaceSections.join("-"),
-      sections: workspaceSections,
-    });
+  for (const group of CONVERSATION_OVERVIEW_SECTION_GROUPS) {
+    const pinnedSections = group.sections.filter((section) =>
+      isPinned(section),
+    );
+    if (pinnedSections.length > 0) {
+      panelBlocks.push({
+        kind: "sections",
+        key: pinnedSections.join("-"),
+        sections: pinnedSections,
+      });
+    }
   }
+
+  const threadRows = (
+    <>
+      <OverviewRow
+        testId="conversation-overview-thread-messages"
+        icon={<MessagesSquare className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_THREAD_MESSAGES)}
+        value={activity.userMessages}
+      />
+      <OverviewRow
+        testId="conversation-overview-thread-compactions"
+        icon={<Layers className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_THREAD_COMPACTIONS)}
+        value={activity.compactions}
+      />
+      <OverviewRow
+        testId="conversation-overview-thread-last-active"
+        icon={<Clock className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_THREAD_LAST_ACTIVE)}
+        value={
+          activity.lastActiveAt
+            ? formatRelativeTime(activity.lastActiveAt, i18n.language, t)
+            : t(I18nKey.CONVERSATION$OVERVIEW_NONE)
+        }
+      />
+    </>
+  );
+
+  const activityRows = (
+    <>
+      <OverviewRow
+        testId="conversation-overview-activity-commands"
+        icon={<Terminal className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_ACTIVITY_COMMANDS)}
+        value={activity.commands}
+      />
+      <OverviewRow
+        testId="conversation-overview-activity-files"
+        icon={<FilePen className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_ACTIVITY_FILES)}
+        value={activity.filesTouched}
+      />
+      <OverviewRow
+        testId="conversation-overview-activity-pages"
+        icon={<Globe className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_ACTIVITY_PAGES)}
+        value={activity.pagesBrowsed}
+      />
+      <OverviewRow
+        testId="conversation-overview-activity-subthreads"
+        icon={<GitFork className={ROW_ICON_CLASSNAME} />}
+        label={t(I18nKey.CONVERSATION$OVERVIEW_ACTIVITY_SUBTHREADS)}
+        value={activity.subthreads}
+      />
+    </>
+  );
 
   const renderSection = (section: ConversationOverviewSection) => {
     switch (section) {
@@ -124,6 +194,10 @@ export function ConversationOverviewPanel() {
             value={stats.workspaceName ?? t(I18nKey.CONVERSATION$OVERVIEW_NONE)}
           />
         );
+      case CONVERSATION_OVERVIEW_SECTION.thread:
+        return <React.Fragment key={section}>{threadRows}</React.Fragment>;
+      case CONVERSATION_OVERVIEW_SECTION.activity:
+        return <React.Fragment key={section}>{activityRows}</React.Fragment>;
       case CONVERSATION_OVERVIEW_SECTION.git:
         // Rendered as its own panel block (not a group row).
         return null;

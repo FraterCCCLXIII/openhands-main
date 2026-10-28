@@ -19,6 +19,11 @@ export const useConfig = (options?: UseConfigOptions) =>
       !isAgentServerAuthError(error) &&
       failureCount < 3,
     meta: { disableToast: true },
+    // A failed probe with no data resets to `pending` on refetch. Mounting a
+    // second observer (the app shell under the recovery screen) would refetch,
+    // flip the root back to its loading state, unmount the shell, and loop.
+    // Recovery re-probes explicitly via invalidateQueries.
+    retryOnMount: false,
     ...CONFIG_CACHE_OPTIONS,
     enabled: options?.enabled,
   });

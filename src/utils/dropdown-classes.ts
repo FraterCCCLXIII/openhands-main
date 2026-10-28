@@ -48,6 +48,12 @@ export const dropdownMenuRowIconClassName = cn(
   dropdownInstantColorClassName,
 );
 
+/** Wrapper for pin toggle icons — no fixed size so filled/outline variants can match visually. */
+export const dropdownMenuPinIconWrapperClassName = cn(
+  "flex shrink-0 items-center justify-center [&_svg]:text-current",
+  dropdownMenuRowIconClassName,
+);
+
 /** Wrapper for SVG/React icon nodes inside a menu row. */
 export const dropdownMenuRowIconWrapperClassName = cn(
   "flex size-4 shrink-0 items-center justify-center [&_svg]:text-current",
@@ -57,8 +63,8 @@ export const dropdownMenuRowIconWrapperClassName = cn(
 /** Enum/filter dropdown trigger chip. */
 export const dropdownFilterTriggerClassName = cn(
   "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium",
-  "border-border bg-base-secondary text-contrast",
-  "focus-visible:border-contrast/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-contrast/20",
+  "border-border-input bg-base-secondary text-contrast dark:border-border",
+  "focus-visible:border-contrast/40 dark:focus-visible:border-contrast/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-contrast/20",
   dropdownInstantColorClassName,
 );
 

@@ -7,6 +7,7 @@ import {
   dropdownMenuRowClassName,
   dropdownMenuRowIconWrapperClassName,
 } from "#/utils/dropdown-classes";
+import { HoverMarqueeLabel } from "./hover-marquee-label";
 
 interface DropdownMenuProps {
   isOpen: boolean;
@@ -64,6 +65,7 @@ export function DropdownMenu({
                 index,
                 className: cn(
                   dropdownMenuRowClassName,
+                  "group relative",
                   "focus:outline-none",
                   selectedItem?.value === option.value &&
                     "bg-interactive-selected text-contrast",
@@ -75,9 +77,10 @@ export function DropdownMenu({
                   {option.prefix}
                 </span>
               ) : null}
-              <span className="min-w-0 truncate" title={option.label}>
+              <HoverMarqueeLabel className="flex-1">
                 {option.label}
-              </span>
+              </HoverMarqueeLabel>
+              {option.suffix}
             </li>
           ))}
       </ul>

@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoutesStub } from "react-router";
@@ -502,7 +503,7 @@ describe("App root agent-server availability guard", () => {
     await waitFor(() => {
       expect(screen.getByTestId("manage-backends-modal")).toBeInTheDocument();
     });
-    expect(screen.queryByTestId("app-outlet")).not.toBeInTheDocument();
+    expect(screen.getByTestId("app-outlet")).toBeInTheDocument();
   });
 
   it("shows the manage-backends modal when the server omits a version field", async () => {
@@ -520,7 +521,7 @@ describe("App root agent-server availability guard", () => {
         screen.getByTestId("agent-server-onboarding-screen"),
       ).toBeInTheDocument();
     });
-    expect(screen.queryByTestId("app-outlet")).not.toBeInTheDocument();
+    expect(screen.getByTestId("app-outlet")).toBeInTheDocument();
   });
 
   it("shows the manage-backends modal when the backend is unreachable", async () => {
@@ -553,7 +554,16 @@ describe("App root agent-server availability guard", () => {
       expect(screen.getByTestId("manage-backends-modal")).toBeInTheDocument();
     });
     expect(serverInfoRequests).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByTestId("app-outlet")).not.toBeInTheDocument();
+    expect(screen.getByTestId("app-outlet")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("close-manage-backends-modal"));
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("manage-backends-modal"),
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId("app-outlet")).toBeInTheDocument();
   });
 
   it("shows the manage-backends recovery modal when the active cloud backend is logged out", async () => {
@@ -596,7 +606,7 @@ describe("App root agent-server availability guard", () => {
     expect(
       screen.getByRole("button", { name: "Log back in" }),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId("app-outlet")).not.toBeInTheDocument();
+    expect(screen.getByTestId("app-outlet")).toBeInTheDocument();
   });
 
   it("shows locked Cloud reconnect recovery without add-backend controls", async () => {
@@ -639,7 +649,7 @@ describe("App root agent-server availability guard", () => {
     expect(
       screen.getByTestId("manage-backends-reconnect-cloud-login-button"),
     ).toHaveTextContent("Reconnect to Cloud");
-    expect(screen.queryByTestId("app-outlet")).not.toBeInTheDocument();
+    expect(screen.getByTestId("app-outlet")).toBeInTheDocument();
   });
 
   it("renders the routed page when the agent server is reachable", async () => {

@@ -22,6 +22,11 @@ function getDesktopShell(): DesktopShellBridge | undefined {
   return typeof window === "undefined" ? undefined : window.desktopShell;
 }
 
+/** True inside the Electron desktop app; false in a browser tab. */
+export function isDesktopShell(): boolean {
+  return getDesktopShell() !== undefined;
+}
+
 /**
  * True inside the macOS desktop app, where `titleBarStyle: "hiddenInset"`
  * leaves the traffic lights floating over the top-left of the app shell.

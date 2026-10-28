@@ -40,6 +40,7 @@ import { I18nKey } from "#/i18n/declaration";
 import type { Backend, BackendKind } from "#/api/backend-registry/types";
 import { getUserFacingConnectionErrorMessage } from "#/utils/user-facing-error";
 import { cn } from "#/utils/utils";
+import { statusToneBannerClassName } from "#/utils/status-tone-classes";
 import {
   modalTitleLgClassName,
   modalTitleLgMediumClassName,
@@ -271,7 +272,10 @@ function BackendStatusBadge({
       {disabled ? (
         <div
           data-testid={`${testIdRoot}-status-error`}
-          className="flex flex-col gap-1 rounded-md border border-semantic-danger/40 bg-semantic-danger/5 p-3 text-sm"
+          className={cn(
+            "flex flex-col gap-1 rounded-md p-3 text-sm dark:border-semantic-danger/40 dark:bg-semantic-danger/5",
+            statusToneBannerClassName.danger,
+          )}
         >
           <span className="font-semibold text-feedback-error">
             {t(I18nKey.BACKEND$HEALTH_FAILED_TITLE)}
@@ -659,7 +663,11 @@ export function BackendForm({
           <div
             role="alert"
             data-testid={`${testIdRoot}-error`}
-            className="rounded-md border border-semantic-danger/40 bg-semantic-danger/5 p-3 text-sm text-feedback-error whitespace-pre-wrap break-words"
+            className={cn(
+              "rounded-md p-3 text-sm whitespace-pre-wrap break-words dark:border-semantic-danger/40 dark:bg-semantic-danger/5",
+              statusToneBannerClassName.danger,
+              "text-feedback-error",
+            )}
           >
             {connectionError}
           </div>
@@ -760,6 +768,14 @@ export function BackendConnectionOptions({
       data-testid={`${testIdRoot}-connection-options`}
       className="flex flex-col gap-6 md:flex-row"
     >
+      <div className="flex-1 min-w-0 rounded-xl border border-border bg-base-secondary p-6">
+        <CloudLoginColumn
+          onConnected={onConnected}
+          testIdRoot={testIdRoot}
+          analyticsSource={analyticsSource}
+        />
+      </div>
+
       <div className="flex-1 min-w-0">
         <ManualConnectionColumn
           onConnected={onConnected}
@@ -772,14 +788,6 @@ export function BackendConnectionOptions({
             t(I18nKey.ONBOARDING$BACKEND_STATUS_CHECKING)
           }
           submitTestId={manualSubmitTestId}
-        />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <CloudLoginColumn
-          onConnected={onConnected}
-          testIdRoot={testIdRoot}
-          analyticsSource={analyticsSource}
         />
       </div>
     </div>
@@ -929,7 +937,11 @@ function ManualConnectionColumn({
         <div
           role="alert"
           data-testid={`${testIdRoot}-error`}
-          className="rounded-md border border-semantic-danger/40 bg-semantic-danger/5 p-3 text-sm text-feedback-error whitespace-pre-wrap break-words"
+          className={cn(
+            "rounded-md p-3 text-sm whitespace-pre-wrap break-words dark:border-semantic-danger/40 dark:bg-semantic-danger/5",
+            statusToneBannerClassName.danger,
+            "text-feedback-error",
+          )}
         >
           {connectionError}
         </div>
@@ -1185,7 +1197,9 @@ function AnimatedPanelHeight({ children }: AnimatedPanelHeightProps) {
     if (!content) return undefined;
 
     const measure = () => {
-      const nextHeight = content.getBoundingClientRect().height;
+      // offsetHeight is the layout height; getBoundingClientRect() would
+      // include the modal's open-animation scale and lock in a short height.
+      const nextHeight = content.offsetHeight;
       // jsdom reports zero-sized layout boxes; leaving height automatic there
       // keeps component tests representative without changing browser behavior.
       setHeight(nextHeight > 0 ? nextHeight : undefined);
@@ -1371,7 +1385,7 @@ function AddBackendChooser({
           type="button"
           data-testid="add-backend-provider-digitalocean"
           onClick={onSelectProvider}
-          className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-base-secondary px-4 py-3 text-left transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="flex w-full cursor-pointer items-center gap-3 rounded-3xl border border-border bg-base-secondary px-4 py-3 text-left transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           <span
             className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-raised"
@@ -1433,12 +1447,12 @@ function AddBackendChooser({
               {
                 value: "local",
                 label: t(I18nKey.BACKEND$KIND_LOCAL),
-                icon: <Monitor aria-hidden />,
+                icon: <Monitor className="size-4" aria-hidden />,
               },
               {
                 value: "remote",
                 label: t(I18nKey.BACKEND$KIND_REMOTE),
-                icon: <Globe aria-hidden />,
+                icon: <Globe className="size-4" aria-hidden />,
               },
             ]}
             onChange={setAgentServerLocation}
@@ -1732,7 +1746,7 @@ export function BackendFormModal({
             hideCloseButton ? "onboarding-modal" : "add-backend-modal"
           }
           className={cn(
-            "relative max-h-[92vh] w-180 overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-base-secondary p-6",
+            "relative max-h-[92vh] w-180 overflow-x-hidden overflow-y-auto rounded-3xl border border-border bg-base-secondary p-6",
             MODAL_MAX_WIDTH_VIEWPORT,
           )}
         >
@@ -1760,7 +1774,7 @@ export function BackendFormModal({
       <div
         data-testid={`${testIdRoot}-modal`}
         className={cn(
-          "relative max-h-[92dvh] bg-base-secondary p-6 rounded-xl flex flex-col gap-4 border border-border",
+          "relative max-h-[92dvh] bg-base-secondary p-6 rounded-3xl flex flex-col gap-4 border border-border",
           modalWidthClassName("md"),
           MODAL_MAX_WIDTH_VIEWPORT,
         )}

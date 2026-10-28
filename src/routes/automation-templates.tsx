@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAutomationSubPageNav } from "#/components/features/automations/dashboard/use-automation-sub-page-nav";
 import { RecommendedAutomationsLauncher } from "#/components/features/automations/recommended-automations-launcher";
 import { SearchInput } from "#/components/features/automations/search-input";
@@ -6,7 +7,12 @@ import {
   EMPTY_TEMPLATE_FILTERS,
   type TemplateFilters,
 } from "#/components/features/automations/template-filter-chips";
+import { BrandButton } from "#/components/features/settings/brand-button";
 import { ManifestSubpageLayout } from "#/components/features/manifest/manifest-subpage-layout";
+import { AutomationConversationLaunchModal } from "#/components/features/automations/automation-conversation-launch-modal";
+import type { AutomationConversationLaunchRequest } from "#/components/features/automations/use-launch-automation-conversation";
+import { useStartAutomationSetup } from "#/hooks/use-start-automation-setup";
+import { I18nKey } from "#/i18n/declaration";
 import { getTemplatesPageSpec } from "#/manifests/automation-interface";
 
 /**
@@ -22,34 +28,88 @@ export const clientLoader = () => {
 };
 
 export default function AutomationTemplates() {
+  const { t } = useTranslation("openhands");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<TemplateFilters>(
     EMPTY_TEMPLATE_FILTERS,
   );
+  const [launchRequest, setLaunchRequest] =
+    useState<AutomationConversationLaunchRequest | null>(null);
   const spec = getTemplatesPageSpec();
   const nav = useAutomationSubPageNav();
+  const { startSetup, isPending } = useStartAutomationSetup();
 
   if (!spec || !nav) return null;
 
+  const handleFindOpportunities = () => {
+    setLaunchRequest({
+      intent: "find_opportunities",
+      source: "templates_banner",
+      prompt: t(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_PROMPT),
+    });
+  };
+
   return (
-    <ManifestSubpageLayout
-      heading={nav.heading}
-      navTestIdBase="automations-navbar"
-      items={nav.items}
-    >
-      <div className="min-w-0">
-        <h1 className="text-xl font-semibold text-content">{spec.title}</h1>
-        <p className="mt-1 text-sm text-muted">{spec.description}</p>
-      </div>
-      <div className="w-full">
-        <SearchInput value={searchQuery} onChange={setSearchQuery} />
-      </div>
-      <RecommendedAutomationsLauncher
-        query={searchQuery}
-        onClearQuery={() => setSearchQuery("")}
-        filters={filters}
-        onFiltersChange={setFilters}
-      />
-    </ManifestSubpageLayout>
+    <>
+      <ManifestSubpageLayout
+        heading={nav.heading}
+        navTestIdBase="automations-navbar"
+        items={nav.items}
+      >
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold text-content">{spec.title}</h1>
+          <p className="mt-1 text-sm text-muted">{spec.description}</p>
+        </div>
+        <section
+          data-testid="automation-opportunities-cta"
+          className="flex flex-col gap-4 rounded-xl border border-[var(--oh-border)] bg-surface-raised p-4 lg:flex-row lg:items-center lg:justify-between"
+        >
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-content">
+              {t(I18nKey.AUTOMATIONS$TEMPLATES_CTA_TITLE)}
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              {t(I18nKey.AUTOMATIONS$TEMPLATES_CTA_DESC)}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <BrandButton
+              type="button"
+              variant="primary"
+              testId="automation-opportunities-cta-find"
+              className="px-4 text-center"
+              onClick={handleFindOpportunities}
+            >
+              {t(I18nKey.AUTOMATIONS$FIND_OPPORTUNITIES_BUTTON)}
+            </BrandButton>
+            <BrandButton
+              type="button"
+              variant="secondary"
+              testId="automation-opportunities-cta-add"
+              className="px-4 text-center"
+              isDisabled={isPending}
+              onClick={startSetup}
+            >
+              {t(I18nKey.AUTOMATIONS$CREATE_AUTOMATION_BUTTON)}
+            </BrandButton>
+          </div>
+        </section>
+        <div className="w-full">
+          <SearchInput value={searchQuery} onChange={setSearchQuery} />
+        </div>
+        <RecommendedAutomationsLauncher
+          query={searchQuery}
+          onClearQuery={() => setSearchQuery("")}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      </ManifestSubpageLayout>
+      {launchRequest ? (
+        <AutomationConversationLaunchModal
+          request={launchRequest}
+          onClose={() => setLaunchRequest(null)}
+        />
+      ) : null}
+    </>
   );
 }

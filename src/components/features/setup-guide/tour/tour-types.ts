@@ -31,6 +31,11 @@ export interface GuidedTourStop {
    * stop that only waits for the admin's click.
    */
   hideFooter?: boolean;
+  /**
+   * Extra selector (such as the settings nav tab) spotlighted beside the
+   * anchor, so the admin sees where this step lives. Not a stop of its own.
+   */
+  alsoHighlight?: string;
 }
 
 export interface GuidedTour {

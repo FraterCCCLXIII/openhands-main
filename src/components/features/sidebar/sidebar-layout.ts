@@ -14,8 +14,10 @@ export const SIDEBAR_COLLAPSED_ICON_SLOT_CLASS =
 
 export function sidebarHeaderRowClassName(collapsed: boolean): string {
   return cn(
-    "flex h-10 min-h-10 shrink-0 items-center w-full",
-    collapsed ? "px-0" : "gap-2 pl-2.5 pr-2.5",
+    "flex shrink-0 w-full",
+    collapsed
+      ? "h-10 min-h-10 items-center px-0"
+      : "h-auto min-h-12 items-center gap-0 pt-2.5 pl-2.5 pr-2.5",
   );
 }
 

@@ -1,10 +1,11 @@
 import React, { useLayoutEffect, useState } from "react";
-import ReactDOM from "react-dom";
 import {
+  Activity,
   FolderGit2,
   GitBranch,
   GitCommitHorizontal,
   Laptop,
+  MessagesSquare,
 } from "lucide-react";
 import { LuFileDiff } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
@@ -16,8 +17,7 @@ import { useConversationLocalStorageState } from "#/utils/conversation-local-sto
 import { useSelectConversationTab } from "#/hooks/use-select-conversation-tab";
 import { I18nKey } from "#/i18n/declaration";
 import PrIcon from "#/icons/u-pr.svg?react";
-import PillIcon from "#/icons/pill.svg?react";
-import PillFillIcon from "#/icons/pill-fill.svg?react";
+import { PinToggleIcon } from "#/components/shared/pin-toggle-icon";
 import { cn } from "#/utils/utils";
 import {
   dropdownInstantColorClassName,
@@ -37,6 +37,7 @@ import {
   type ConversationOverviewGitPart,
   type ConversationOverviewSection,
 } from "./conversation-overview-sections";
+import { AppearancePortal } from "#/components/shared/appearance-portal";
 
 interface ConversationOverviewContextMenuProps {
   isOpen: boolean;
@@ -69,6 +70,16 @@ const OVERVIEW_MENU_ITEMS_BY_SECTION: Record<
     section: CONVERSATION_OVERVIEW_SECTION.workspace,
     icon: Laptop,
     i18nKey: I18nKey.CONVERSATION$OVERVIEW_WORKSPACE,
+  },
+  [CONVERSATION_OVERVIEW_SECTION.thread]: {
+    section: CONVERSATION_OVERVIEW_SECTION.thread,
+    icon: MessagesSquare,
+    i18nKey: I18nKey.CONVERSATION$OVERVIEW_THREAD,
+  },
+  [CONVERSATION_OVERVIEW_SECTION.activity]: {
+    section: CONVERSATION_OVERVIEW_SECTION.activity,
+    icon: Activity,
+    i18nKey: I18nKey.CONVERSATION$OVERVIEW_ACTIVITY,
   },
 };
 
@@ -129,19 +140,7 @@ function OverviewPinButton({
       aria-label={pinned ? pinnedLabel : unpinnedLabel}
       onClick={onClick}
     >
-      <span
-        className={cn(
-          "ml-auto overflow-hidden",
-          dropdownMenuRowIconWrapperClassName,
-        )}
-        aria-hidden
-      >
-        {pinned ? (
-          <PillFillIcon className="size-4" width={16} height={16} />
-        ) : (
-          <PillIcon className="size-4" width={16} height={16} />
-        )}
-      </span>
+      <PinToggleIcon pinned={pinned} />
     </button>
   );
 }
@@ -410,9 +409,10 @@ export function ConversationOverviewContextMenu({
   );
 
   if (isPortaled && portalStyle && typeof document !== "undefined") {
-    return ReactDOM.createPortal(
-      <div style={portalStyle}>{menu}</div>,
-      document.body,
+    return (
+      <AppearancePortal>
+        <div style={portalStyle}>{menu}</div>
+      </AppearancePortal>
     );
   }
 

@@ -1,5 +1,5 @@
 import { useConversationWorkspace } from "#/hooks/query/use-conversation-workspace";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { CustomChatInput } from "#/components/features/chat/custom-chat-input";
@@ -13,6 +13,7 @@ import { HOME_PROMPT_DRAFT_KEY } from "#/hooks/chat/use-draft-persistence";
 import { useChatAttachmentUpload } from "#/hooks/chat/use-chat-attachment-upload";
 import { useConversationStore } from "#/stores/conversation-store";
 import { useModelStore } from "#/stores/model-store";
+import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import type { WorkspaceMode } from "#/api/conversation-metadata-store";
 import { setPendingTaskAttachments } from "#/stores/pending-task-attachments-store";
 import { enqueueHomeTaskPendingMessage } from "#/utils/enqueue-home-task-pending-message";
@@ -38,11 +39,6 @@ import type { PluginSpec } from "#/api/conversation-service/agent-server-convers
 import { markAutomationSetupHandoff } from "#/api/automation-setup-handoff-store";
 import { PluginPickerModal } from "#/components/features/plugins/plugin-picker-modal";
 import { PluginPickerTrigger } from "#/components/features/plugins/plugin-picker-trigger";
-import { RecommendedAutomationsLauncher } from "#/components/features/automations/recommended-automations-launcher";
-import { useHomeRecommendedAutomationsDismissed } from "./use-home-recommended-automations-dismissed";
-import { writeHomeRecommendedAutomationsDismissed } from "./home-recommended-automations-storage";
-import { PinnedAutomationsDashboard } from "./featured-automations/pinned-automations-dashboard";
-import { RunningAutomationsList } from "./featured-automations/running-automations-list";
 import { HomeHeaderTitle } from "./home-header/home-header-title";
 import {
   HomeLauncherModeToggle,
@@ -52,6 +48,10 @@ import { OpenLauncherButton } from "./open-launcher-button";
 import { OpenWorkspaceDialog } from "./open-workspace-dialog";
 import { OpenRepositoryDialog } from "./open-repository-dialog";
 import { HomeGitControlBarPreview } from "./home-git-control-bar-preview";
+import { HomeDashboardComponentsMenu } from "./home-dashboard-components-menu";
+import { HomeDashboardSection } from "./home-dashboard-section";
+import { getHomeDashboardWidget } from "./home-dashboard-widgets";
+import { useHomeDashboardVisibilityStore } from "#/stores/home-dashboard-visibility-store";
 
 export function HomeChatLauncher() {
   const { t } = useTranslation("openhands");
@@ -69,8 +69,9 @@ export function HomeChatLauncher() {
   const [workspaceMode, setWorkspaceModeState] = useState<WorkspaceMode>(() =>
     readStoredLocalWorkspaceMode(),
   );
-  const isRecommendedAutomationsDismissed =
-    useHomeRecommendedAutomationsDismissed();
+  const homeDashboardOrder = useHomeDashboardVisibilityStore(
+    (state) => state.order,
+  );
   const [selectedPlugins, setSelectedPlugins] = useState<PluginSpec[]>([]);
   const [isPluginPickerOpen, setIsPluginPickerOpen] = useState(false);
   const [launcherMode, setLauncherMode] = useState<HomeLauncherMode>("code");
@@ -104,7 +105,7 @@ export function HomeChatLauncher() {
     imagesMarkedUploadAsFile,
     clearAllFiles,
     restoreMessageToInputIfEmpty,
-  } = useConversationStore();
+  } = useConversationComposer();
   const { handleUpload } = useChatAttachmentUpload();
   const homeLlmProfile = useModelStore((s) => s.homeLlmProfile);
   const { data: llmProfiles } = useLlmProfiles();
@@ -305,7 +306,7 @@ export function HomeChatLauncher() {
       data-testid="home-chat-launcher"
       className="flex w-full flex-col items-center pt-[max(4rem,28vh)] pb-10"
     >
-      <div className="flex w-full max-w-200 flex-col gap-4 md:px-4">
+      <div className="flex w-full max-w-200 flex-col gap-[calc(1rem*var(--oh-padding-scale,1))] md:px-[calc(1rem*var(--oh-padding-scale,1))]">
         <div className="flex w-full justify-center">
           <HomeHeaderTitle />
         </div>
@@ -382,19 +383,27 @@ export function HomeChatLauncher() {
             onClick={() => setIsPluginPickerOpen(true)}
             disabled={isCreating || isAutomateMode}
           />
+          <div className="ml-auto">
+            <HomeDashboardComponentsMenu />
+          </div>
         </div>
 
         <div className="mt-8 flex w-full flex-col gap-8">
           {/* @spec HL-002 — Only Home's rail is dismissible; dismissal unmounts it, inset included */}
-          {!isRecommendedAutomationsDismissed && (
-            <RecommendedAutomationsLauncher
-              variant="rail"
-              dismissible
-              onDismiss={() => writeHomeRecommendedAutomationsDismissed(true)}
-            />
-          )}
-          <PinnedAutomationsDashboard />
-          <RunningAutomationsList />
+          {homeDashboardOrder.map((id) => {
+            const widget = getHomeDashboardWidget(id);
+            // Header-placed widgets (Learn resources) render above the composer.
+            if (widget.placement === "header") return null;
+            return (
+              <HomeDashboardSection
+                key={id}
+                id={id}
+                ownsDismiss={widget.ownsDismiss}
+              >
+                <Suspense fallback={null}>{widget.render()}</Suspense>
+              </HomeDashboardSection>
+            );
+          })}
         </div>
       </div>
 

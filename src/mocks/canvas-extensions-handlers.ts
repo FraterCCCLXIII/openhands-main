@@ -24,7 +24,20 @@ function readPersistedExtension(): InstalledCanvasExtensionInfo | null {
   }
 }
 
-let installedExtension = readPersistedExtension();
+/** Mock-mode Apps page starts with the demo extension already installed. */
+const DEFAULT_INSTALLED_EXTENSION: InstalledCanvasExtensionInfo = {
+  name: demoManifest.name,
+  version: demoManifest.version,
+  description: demoManifest.description,
+  enabled: true,
+  source: CANVAS_EXTENSION_DEMO_SOURCE,
+  installed_at: "2026-10-01T09:00:00Z",
+  install_path: "~/.openhands/canvas-extensions/demo-page",
+  manifest: demoManifest,
+};
+
+let installedExtension: InstalledCanvasExtensionInfo | null =
+  readPersistedExtension() ?? DEFAULT_INSTALLED_EXTENSION;
 
 function persistInstalledExtension(
   extension: InstalledCanvasExtensionInfo | null,

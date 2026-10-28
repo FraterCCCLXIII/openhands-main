@@ -1,0 +1,28 @@
+# Local Connectome-Alpha experiment. This file is gitignored.
+# The chat model and the memory embeddings both use the Ollama
+# server on this machine.
+
+[core]
+workspace_base = "/Users/paulbloch/Documents/github/OpenHands/OpenHands/workspace"
+file_store = "local"
+file_store_path = "/Users/paulbloch/.memory-agent/openhands-file-store"
+# Local runtime runs the coding sandbox on this machine. Docker Desktop
+# is installed but its daemon was not running.
+runtime = "local"
+enable_default_condenser = false
+
+[llm]
+model = "ollama/llama3.2"
+api_key = "ollama"
+base_url = "http://127.0.0.1:11434"
+ollama_base_url = "http://127.0.0.1:11434"
+temperature = 0.0
+native_tool_calling = false
+disable_vision = true
+
+[condenser]
+type = "overlap"
+max_size = 24
+keep_first = 2
+top_k = 3
+memory_dir = "/Users/paulbloch/.memory-agent/openhands"
