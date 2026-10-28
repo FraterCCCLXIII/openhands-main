@@ -7,7 +7,13 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { LayoutGroup } from "framer-motion";
-import { Gauge, Globe, ListTodo, SquareChevronRight } from "lucide-react";
+import {
+  ExternalLink,
+  Gauge,
+  Globe,
+  ListTodo,
+  SquareChevronRight,
+} from "lucide-react";
 import { LuFileDiff } from "react-icons/lu";
 import DocumentIcon from "#/icons/document.svg?react";
 import DoubleCheckIcon from "#/icons/double-check.svg?react";
@@ -136,6 +142,15 @@ export function ConversationTabs({
       tooltipContent: t(CONVERSATION_TAB_LABEL_KEYS.browser),
       tooltipAriaLabel: t(CONVERSATION_TAB_LABEL_KEYS.browser),
       label: t(CONVERSATION_TAB_LABEL_KEYS.browser),
+    },
+    {
+      tabValue: "webview",
+      isActive: isTabActive("webview"),
+      icon: ExternalLink,
+      onClick: () => selectTab("webview"),
+      tooltipContent: t(CONVERSATION_TAB_LABEL_KEYS.webview),
+      tooltipAriaLabel: t(CONVERSATION_TAB_LABEL_KEYS.webview),
+      label: t(CONVERSATION_TAB_LABEL_KEYS.webview),
     },
     {
       tabValue: "usage",

@@ -1,6 +1,16 @@
 export const CANVAS_EXTENSION_MANIFEST_SCHEMA_VERSION = 1 as const;
 export const CANVAS_EXTENSION_HOST_API_VERSION = "1" as const;
 
+/** Icon appearance configuration for the sidebar and cards. */
+export interface CanvasExtensionIconAppearance {
+  /** Background color for the icon (CSS color value or predefined key). */
+  background?: string | null;
+  /** Emoji to display as the icon (overrides SVG icon). */
+  emoji?: string | null;
+  /** Lucide icon name (e.g., "folder", "database"). */
+  lucide_icon?: string | null;
+}
+
 export interface CanvasExtensionPageContribution {
   id: string;
   title: string;
@@ -24,6 +34,8 @@ export interface CanvasExtensionManifest {
   contributes?: CanvasExtensionContributions | null;
   /** Package-relative SVG path; served by the Agent Server at `/installed/{name}/icon`. */
   icon?: string | null;
+  /** Icon appearance settings for sidebar and cards. */
+  icon_appearance?: CanvasExtensionIconAppearance | null;
 }
 
 export interface InstalledCanvasExtensionInfo {

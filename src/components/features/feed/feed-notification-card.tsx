@@ -17,6 +17,7 @@ import { cn } from "#/utils/utils";
 import { getFeedAgentRole } from "#/utils/feed-agent-role";
 import { FeedRoleBadge } from "./feed-role-badge";
 import { FeedAgentAvatar } from "./feed-agent-avatar";
+import { FeedCardReply } from "./feed-card-reply";
 
 const KIND_LABEL: Record<FeedNotificationKind, I18nKey> = {
   needs_input: I18nKey.FEED$NOTIFY_NEEDS_INPUT,
@@ -69,43 +70,46 @@ export function FeedNotificationCard({
       data-testid="feed-notification"
       data-kind={kind}
       className={cn(
-        "flex items-start gap-3 rounded-xl border border-l-4 border-border bg-surface-raised p-3",
+        "flex flex-col gap-3 rounded-xl border border-l-4 border-border bg-surface-raised p-3",
         KIND_ACCENT[kind],
       )}
     >
-      <FeedAgentAvatar agent={agent} size={36} />
-      <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">
-          <span
-            data-testid="feed-notification-status"
-            className={cn("font-semibold", KIND_LABEL_COLOR[kind])}
+      <div className="flex items-start gap-3">
+        <FeedAgentAvatar agent={agent} size={36} />
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">
+            <span
+              data-testid="feed-notification-status"
+              className={cn("font-semibold", KIND_LABEL_COLOR[kind])}
+            >
+              {t(KIND_LABEL[kind])}
+            </span>
+            <span>{agent.name}</span>
+            <FeedRoleBadge role={getFeedAgentRole(conversation, agent.demo)} />
+            <span>
+              {formatRelativeTime(conversation.updated_at, i18n.language, t)}
+            </span>
+          </p>
+          <NavigationLink
+            to={backendScopedPath(`/conversations/${conversation.id}`)}
+            className="mt-0.5 block truncate text-sm font-medium text-contrast hover:underline"
           >
-            {t(KIND_LABEL[kind])}
-          </span>
-          <span>{agent.name}</span>
-          <FeedRoleBadge role={getFeedAgentRole(conversation, agent.demo)} />
-          <span>
-            {formatRelativeTime(conversation.updated_at, i18n.language, t)}
-          </span>
-        </p>
+            {conversation.title || t(I18nKey.FEED$UNTITLED)}
+          </NavigationLink>
+          {latest ? (
+            <p className="mt-0.5 line-clamp-2 text-sm text-muted">
+              {latest.text}
+            </p>
+          ) : null}
+        </div>
         <NavigationLink
           to={backendScopedPath(`/conversations/${conversation.id}`)}
-          className="mt-0.5 block truncate text-sm font-medium text-contrast hover:underline"
+          className="shrink-0 rounded-lg bg-surface px-3 py-1.5 text-xs font-medium text-contrast hover:opacity-80"
         >
-          {conversation.title || t(I18nKey.FEED$UNTITLED)}
+          {t(I18nKey.FEED$OPEN_SHORT)}
         </NavigationLink>
-        {latest ? (
-          <p className="mt-0.5 line-clamp-2 text-sm text-muted">
-            {latest.text}
-          </p>
-        ) : null}
       </div>
-      <NavigationLink
-        to={backendScopedPath(`/conversations/${conversation.id}`)}
-        className="shrink-0 rounded-lg bg-surface px-3 py-1.5 text-xs font-medium text-contrast hover:opacity-80"
-      >
-        {t(I18nKey.FEED$OPEN_SHORT)}
-      </NavigationLink>
+      <FeedCardReply conversation={conversation} />
     </article>
   );
 }

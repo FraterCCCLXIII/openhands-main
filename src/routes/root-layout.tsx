@@ -34,6 +34,7 @@ import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 import { cn } from "#/utils/utils";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { Settings } from "lucide-react";
+import { ModalPreviewLauncher } from "#/components/dev/modal-preview-launcher";
 
 const EnvironmentSwitchOverlay = React.lazy(
   () => import("#/components/features/backends/environment-switch-overlay"),
@@ -226,6 +227,9 @@ function MainAppContent() {
             <SuperAdminSetupGuide />
           </React.Suspense>
           {showOnboardingPreview ? <OnboardingHost /> : null}
+          {import.meta.env.VITE_MOCK_API === "true" ? (
+            <ModalPreviewLauncher />
+          ) : null}
         </SidebarMobileNavProvider>
       </CanvasExtensionsRuntimeProvider>
     </ReactRouterNavigationProvider>
