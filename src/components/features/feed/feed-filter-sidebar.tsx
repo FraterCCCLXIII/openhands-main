@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FolderGit2 } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
@@ -11,46 +10,17 @@ import {
   countFeedProjects,
   type FeedFilter,
 } from "#/utils/feed-filters";
-import { cn } from "#/utils/utils";
-
-function FilterRow({
-  label,
-  count,
-  icon,
-  selected,
-  onSelect,
-  testId,
-}: {
-  label: string;
-  count?: number;
-  icon?: ReactNode;
-  selected: boolean;
-  onSelect: () => void;
-  testId: string;
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        data-testid={testId}
-        aria-pressed={selected}
-        onClick={onSelect}
-        className={cn(
-          "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm",
-          selected
-            ? "bg-surface-raised font-medium text-contrast"
-            : "text-muted hover:bg-surface-raised hover:text-contrast",
-        )}
-      >
-        {icon ? <span className="shrink-0">{icon}</span> : null}
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        {count !== undefined ? (
-          <span className="text-xs text-muted">{count}</span>
-        ) : null}
-      </button>
-    </li>
-  );
-}
+import {
+  FEED_FACTORIES,
+  FEED_ME_ID,
+  feedProfilePath,
+  getFeedFactory,
+  isFeedTeamDemoEnabled,
+} from "#/utils/feed-team-demo";
+import { FeedFilterRow } from "./feed-filter-row";
+import { FeedUserAvatar } from "./feed-user-avatar";
+import { NavigationLink } from "#/components/shared/navigation-link";
+import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
 
 interface FeedFilterSidebarProps {
   /** Every loaded conversation, so counts don't shrink as filters apply. */
@@ -69,6 +39,10 @@ export function FeedFilterSidebar({
   const { data: profileData } = useAgentProfiles();
   const projects = countFeedProjects(conversations);
   const profileCounts = countFeedAgentProfiles(conversations);
+  const backendScopedPath = useBackendScopedPath();
+  const teamDemo = isFeedTeamDemoEnabled(window.location.search);
+  const factoryCount = (id: string) =>
+    conversations.filter((c) => getFeedFactory(c.id).id === id).length;
   const profiles = (profileData?.profiles ?? []).filter(
     (profile): profile is typeof profile & { id: string } => !!profile.id,
   );
@@ -79,12 +53,53 @@ export function FeedFilterSidebar({
       aria-label={t(I18nKey.FEED$FILTERS)}
       className="flex flex-col gap-5"
     >
+      <NavigationLink
+        to={backendScopedPath(feedProfilePath(FEED_ME_ID))}
+        data-testid="feed-profile-link"
+        className="flex items-center gap-3 rounded-lg px-2 py-2 text-[15px] font-medium text-contrast hover:bg-surface-raised"
+      >
+        <FeedUserAvatar size={36} />
+        <span className="min-w-0 flex-1 truncate">
+          {t(I18nKey.FEED$ROLE_YOU)}
+        </span>
+        <span className="text-xs font-normal text-muted">
+          {t(I18nKey.FEED$PROFILE_VIEW)}
+        </span>
+      </NavigationLink>
+      {teamDemo ? (
+        <section data-testid="feed-factories">
+          <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
+            {t(I18nKey.FEED$FACTORIES)}
+          </h2>
+          <ul className="flex flex-col gap-0.5">
+            <FeedFilterRow
+              testId="feed-filter-factory-all"
+              label={t(I18nKey.FEED$ALL)}
+              count={conversations.length}
+              selected={filter.factoryId === null}
+              onSelect={() => onChange({ ...filter, factoryId: null })}
+            />
+            {FEED_FACTORIES.map(({ id, name, Icon }) => (
+              <FeedFilterRow
+                key={id}
+                testId="feed-filter-factory"
+                label={name}
+                count={factoryCount(id)}
+                icon={<Icon size={20} />}
+                selected={filter.factoryId === id}
+                onSelect={() => onChange({ ...filter, factoryId: id })}
+              />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section>
-        <h2 className="mb-1 px-2 text-xs font-semibold uppercase text-muted">
+        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
           {t(I18nKey.FEED$PROJECTS)}
         </h2>
         <ul className="flex flex-col gap-0.5">
-          <FilterRow
+          <FeedFilterRow
             testId="feed-filter-project-all"
             label={t(I18nKey.FEED$ALL)}
             count={conversations.length}
@@ -92,12 +107,12 @@ export function FeedFilterSidebar({
             onSelect={() => onChange({ ...filter, project: null })}
           />
           {projects.map(({ project, count }) => (
-            <FilterRow
+            <FeedFilterRow
               key={project}
               testId="feed-filter-project"
               label={project}
               count={count}
-              icon={<FolderGit2 size={14} />}
+              icon={<FolderGit2 size={20} />}
               selected={filter.project === project}
               onSelect={() => onChange({ ...filter, project })}
             />
@@ -106,18 +121,18 @@ export function FeedFilterSidebar({
       </section>
 
       <section>
-        <h2 className="mb-1 px-2 text-xs font-semibold uppercase text-muted">
+        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
           {t(I18nKey.FEED$AGENTS)}
         </h2>
         <ul className="flex flex-col gap-0.5">
-          <FilterRow
+          <FeedFilterRow
             testId="feed-filter-agent-all"
             label={t(I18nKey.FEED$ALL)}
             selected={filter.agentProfileId === null}
             onSelect={() => onChange({ ...filter, agentProfileId: null })}
           />
           {profiles.map((profile) => (
-            <FilterRow
+            <FeedFilterRow
               key={profile.id}
               testId="feed-filter-agent"
               label={profile.name}
@@ -129,7 +144,7 @@ export function FeedFilterSidebar({
                       ? ACP_PROVIDER_FALLBACK_ICON
                       : "openhands"
                   }
-                  size={12}
+                  size={20}
                 />
               }
               selected={filter.agentProfileId === profile.id}

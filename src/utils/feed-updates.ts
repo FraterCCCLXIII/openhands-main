@@ -19,12 +19,13 @@ export const FEED_UPDATE_LIMIT = 6;
 
 const MAX_UPDATE_TEXT = 280;
 
-const truncate = (text: string): string =>
-  text.length > MAX_UPDATE_TEXT
-    ? `${text.slice(0, MAX_UPDATE_TEXT).trimEnd()}…`
-    : text;
+const truncate = (text: string, max = MAX_UPDATE_TEXT): string =>
+  text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
 
-function toFeedUpdate(event: OpenHandsEvent): FeedUpdate | null {
+function toFeedUpdate(
+  event: OpenHandsEvent,
+  max = MAX_UPDATE_TEXT,
+): FeedUpdate | null {
   if (isMessageEvent(event)) {
     const text = event.llm_message.content
       .map((part) => (part.type === "text" ? part.text : ""))
@@ -35,7 +36,7 @@ function toFeedUpdate(event: OpenHandsEvent): FeedUpdate | null {
       id: event.id,
       kind: event.llm_message.role === "user" ? "user" : "agent",
       timestamp: event.timestamp,
-      text: truncate(text),
+      text: truncate(text, max),
     };
   }
   if (isActionEvent(event)) {
@@ -52,7 +53,7 @@ function toFeedUpdate(event: OpenHandsEvent): FeedUpdate | null {
       id: event.id,
       kind: "error",
       timestamp: event.timestamp,
-      text: truncate(event.detail ?? event.code ?? ""),
+      text: truncate(event.detail ?? event.code ?? "", max),
     };
   }
   return null;
@@ -63,9 +64,13 @@ function toFeedUpdate(event: OpenHandsEvent): FeedUpdate | null {
  * user and agent messages, tool calls, and conversation errors. Returns them
  * newest first.
  */
-export function toFeedUpdates(events: OpenHandsEvent[]): FeedUpdate[] {
+export function toFeedUpdates(
+  events: OpenHandsEvent[],
+  { fullText = false }: { fullText?: boolean } = {},
+): FeedUpdate[] {
+  const max = fullText ? Number.POSITIVE_INFINITY : MAX_UPDATE_TEXT;
   return events
-    .map(toFeedUpdate)
+    .map((event) => toFeedUpdate(event, max))
     .filter((update): update is FeedUpdate => update !== null)
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }

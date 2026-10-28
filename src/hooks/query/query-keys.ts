@@ -204,4 +204,19 @@ export const FEED_QUERY_KEYS = {
       conversationUrl,
       sessionApiKey,
     ] as const,
+  // The whole conversation, fetched when a card's accordion opens.
+  conversation: (
+    conversationId: string,
+    updatedAt: string,
+    conversationUrl: string | null,
+    sessionApiKey: string | null,
+  ) =>
+    [
+      "feed",
+      "conversation",
+      conversationId,
+      updatedAt,
+      conversationUrl,
+      sessionApiKey,
+    ] as const,
 } as const;

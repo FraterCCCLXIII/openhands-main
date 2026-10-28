@@ -12,6 +12,7 @@ import { ConversationStatusDot } from "#/components/features/conversation-panel/
 import { useFeedConversationFlags } from "#/hooks/use-feed-conversation-flags";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
 import { useFeedUpdates } from "#/hooks/query/use-feed-updates";
+import { useFeedConversation } from "#/hooks/query/use-feed-conversation";
 import { useInView } from "#/hooks/use-in-view";
 import { ExecutionStatus } from "#/types/agent-server/core";
 import { I18nKey } from "#/i18n/declaration";
@@ -22,6 +23,8 @@ import { FeedUserAvatar } from "./feed-user-avatar";
 import { FeedRoleBadge } from "./feed-role-badge";
 import { getFeedAgentRole } from "#/utils/feed-agent-role";
 import { FeedAgentAvatar } from "./feed-agent-avatar";
+import { FeedTeamThread } from "./feed-team-thread";
+import { isFeedTeamDemoEnabled } from "#/utils/feed-team-demo";
 import type { FeedUpdate, FeedUpdateKind } from "#/utils/feed-updates";
 
 const KIND_LABEL: Record<FeedUpdateKind, I18nKey> = {
@@ -87,6 +90,32 @@ function FeedUpdateRow({
   );
 }
 
+/** The accordion body: every update in the conversation, oldest first. */
+function FeedFullConversation({
+  conversation,
+  agent,
+}: {
+  conversation: AppConversation;
+  agent: FeedAgent;
+}) {
+  const { data: updates = [], isLoading } = useFeedConversation(
+    conversation,
+    true,
+  );
+  return (
+    <ul
+      data-testid="feed-card-conversation"
+      className="custom-scrollbar-always flex max-h-[28rem] flex-col gap-3 overflow-y-auto border-b border-border px-4 py-3"
+    >
+      {isLoading
+        ? null
+        : updates.map((update) => (
+            <FeedUpdateRow key={update.id} update={update} agent={agent} />
+          ))}
+    </ul>
+  );
+}
+
 interface FeedCardProps {
   conversation: AppConversation;
 }
@@ -101,6 +130,7 @@ export function FeedCard({ conversation }: FeedCardProps) {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref);
   const [expanded, setExpanded] = useState(false);
+  const [conversationOpen, setConversationOpen] = useState(false);
   const { data: updates = [], isLoading } = useFeedUpdates(
     conversation,
     inView,
@@ -124,9 +154,9 @@ export function FeedCard({ conversation }: FeedCardProps) {
       ref={ref}
       data-testid="feed-card"
       data-conversation-id={conversation.id}
-      className="rounded-xl border border-border bg-surface-raised"
+      className="rounded-lg border border-border bg-surface-raised"
     >
-      <header className="flex items-center gap-3 px-4 pt-4">
+      <header className="flex items-center gap-3 px-4 pt-3">
         <FeedAgentAvatar
           data-testid="feed-card-agent-avatar"
           agent={agent}
@@ -191,7 +221,12 @@ export function FeedCard({ conversation }: FeedCardProps) {
         inView={inView}
         updateCount={updates.length}
         actionCount={actionCount}
+        expanded={conversationOpen}
+        onToggle={() => setConversationOpen((value) => !value)}
       />
+      {conversationOpen ? (
+        <FeedFullConversation conversation={conversation} agent={agent} />
+      ) : null}
       <FeedSubagents conversation={conversation} inView={inView} />
 
       <div className="flex flex-col gap-3 px-4 py-3">
@@ -228,6 +263,10 @@ export function FeedCard({ conversation }: FeedCardProps) {
             </p>
           )}
         </div>
+
+        {isFeedTeamDemoEnabled(window.location.search) ? (
+          <FeedTeamThread conversation={conversation} />
+        ) : null}
 
         <FeedCardReply conversation={conversation} />
       </div>

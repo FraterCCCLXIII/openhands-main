@@ -1,16 +1,23 @@
 import { WORKSPACE_TAG_KEY } from "#/api/agent-server-adapter";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
+import { getFeedFactory, getFeedTeammateIds } from "./feed-team-demo";
 
 export interface FeedFilter {
   /** Project key from {@link getFeedProject}; null is every project. */
   project: string | null;
   /** AgentProfile id; null is every agent. */
   agentProfileId: string | null;
+  /** Simulated factory id from the team demo; null is every factory. */
+  factoryId: string | null;
+  /** Simulated teammate id from the team demo; null is every teammate. */
+  teammateId: string | null;
 }
 
 export const ALL_FEED_FILTER: FeedFilter = {
   project: null,
   agentProfileId: null,
+  factoryId: null,
+  teammateId: null,
 };
 
 const lastSegment = (path: string): string =>
@@ -46,6 +53,18 @@ export function matchesFeedFilter(
     filter.agentProfileId &&
     conversation.launched_agent_profile?.agent_profile_id !==
       filter.agentProfileId
+  ) {
+    return false;
+  }
+  if (
+    filter.factoryId &&
+    getFeedFactory(conversation.id).id !== filter.factoryId
+  ) {
+    return false;
+  }
+  if (
+    filter.teammateId &&
+    !getFeedTeammateIds(conversation.id).includes(filter.teammateId)
   ) {
     return false;
   }

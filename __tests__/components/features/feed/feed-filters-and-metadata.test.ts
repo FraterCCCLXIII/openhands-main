@@ -40,10 +40,18 @@ describe("feed filters", () => {
   it("combines project and agent profile, with All matching everything", () => {
     expect(matchesFeedFilter(a, ALL_FEED_FILTER)).toBe(true);
     expect(
-      matchesFeedFilter(b, { project: "site", agentProfileId: "p2" }),
+      matchesFeedFilter(b, {
+        ...ALL_FEED_FILTER,
+        project: "site",
+        agentProfileId: "p2",
+      }),
     ).toBe(true);
     expect(
-      matchesFeedFilter(a, { project: "acme/app", agentProfileId: "p2" }),
+      matchesFeedFilter(a, {
+        ...ALL_FEED_FILTER,
+        project: "acme/app",
+        agentProfileId: "p2",
+      }),
     ).toBe(false);
   });
 
