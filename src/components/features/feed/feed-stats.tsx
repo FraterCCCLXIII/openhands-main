@@ -56,12 +56,17 @@ export function FeedStats({
   const pullRequests = realPullRequests || (demo ? simulated.pullRequests : 0);
   const commits = demo ? simulated.commits : 0;
   const merges = demo ? simulated.merges : 0;
-  const cost = conversation.metrics?.accumulated_cost ?? 0;
-  const formattedCost = new Intl.NumberFormat(i18n.language, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(cost);
+  const money = (value: number) =>
+    new Intl.NumberFormat(i18n.language, {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(value);
+  // Only the server's own cost is shown. When tokens were used but no cost
+  // was reported, say so instead of showing nothing or a made-up figure.
+  const cost = usage?.cost ?? 0;
+  const budget = usage?.budget ?? null;
+  const overBudget = budget !== null && cost > budget;
 
   return (
     <button
@@ -94,14 +99,66 @@ export function FeedStats({
           {subagents}
         </span>
       ) : null}
-      {cost > 0 ? (
+      {usage?.costSource === "reported" ? (
         <span
           data-testid="feed-card-stat-cost"
-          title={t(I18nKey.FEED$STAT_COST, { cost: formattedCost })}
+          title={t(I18nKey.FEED$STAT_COST, { cost: money(cost) })}
           className="flex items-center gap-1.5"
         >
           <CircleDollarSign size={14} aria-hidden />
-          {formattedCost}
+          {money(cost)}
+        </span>
+      ) : null}
+      {usage?.costSource === "unpriced" ? (
+        <span
+          data-testid="feed-card-stat-unpriced"
+          title={t(I18nKey.FEED$STAT_UNPRICED_HINT)}
+          className="flex items-center gap-1.5 italic"
+        >
+          <CircleDollarSign size={14} aria-hidden />
+          {t(I18nKey.FEED$STAT_UNPRICED)}
+        </span>
+      ) : null}
+      {budget !== null ? (
+        <span
+          data-testid="feed-card-stat-budget"
+          data-over-budget={overBudget ? "true" : undefined}
+          title={t(
+            overBudget
+              ? I18nKey.FEED$STAT_OVER_BUDGET
+              : I18nKey.FEED$STAT_BUDGET,
+            { cost: money(cost), budget: money(budget) },
+          )}
+          className={cn(
+            "flex items-center gap-1.5",
+            overBudget && "font-medium text-danger",
+          )}
+        >
+          <span
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={budget}
+            aria-valuenow={Math.min(cost, budget)}
+            aria-label={t(I18nKey.FEED$STAT_BUDGET, {
+              cost: money(cost),
+              budget: money(budget),
+            })}
+            className="h-1.5 w-12 overflow-hidden rounded-full bg-surface"
+          >
+            <span
+              className={cn(
+                "block h-full",
+                overBudget ? "bg-danger" : "bg-contrast",
+              )}
+              ref={(el) => {
+                el?.style.setProperty(
+                  "width",
+                  `${Math.min(100, (cost / budget) * 100)}%`,
+                );
+              }}
+            />
+          </span>
+          {money(budget)}
         </span>
       ) : null}
       {diff.hasChanges ? (
@@ -144,7 +201,15 @@ export function FeedStats({
         </span>
       ) : null}
       {usage && usage.totalTokens > 0 ? (
-        <span data-testid="feed-card-tokens">
+        <span
+          data-testid="feed-card-tokens"
+          title={t(I18nKey.FEED$STAT_TOKENS_DETAIL, {
+            prompt: compact(usage.promptTokens),
+            completion: compact(usage.completionTokens),
+            cacheRead: compact(usage.cacheReadTokens),
+            cacheWrite: compact(usage.cacheWriteTokens),
+          })}
+        >
           {t(I18nKey.FEED$STAT_TOKENS, { count: compact(usage.totalTokens) })}
         </span>
       ) : null}

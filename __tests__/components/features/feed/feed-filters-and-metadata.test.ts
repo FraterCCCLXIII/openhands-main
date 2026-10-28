@@ -108,6 +108,43 @@ describe("feed metadata", () => {
   });
 });
 
+describe("feed cost source", () => {
+  const usage = {
+    prompt_tokens: 900,
+    completion_tokens: 100,
+    cache_read_tokens: 40,
+    cache_write_tokens: 10,
+    context_window: 200_000,
+    per_turn_token: 1_000,
+  };
+  const metrics = (cost: number | null, budget: number | null) => ({
+    accumulated_cost: cost,
+    max_budget_per_task: budget,
+    accumulated_token_usage: usage,
+  });
+
+  it("shows only the server's reported cost", () => {
+    expect(toFeedUsage(metrics(0.42, null))).toMatchObject({
+      costSource: "reported",
+      cost: 0.42,
+    });
+  });
+
+  it("marks tokens with no reported cost as unpriced, not free", () => {
+    expect(toFeedUsage(metrics(0, null))?.costSource).toBe("unpriced");
+    expect(toFeedUsage(metrics(null, null))?.costSource).toBe("unpriced");
+  });
+
+  it("keeps cache tokens and ignores a zero budget", () => {
+    expect(toFeedUsage(metrics(1, 0))).toMatchObject({
+      cacheReadTokens: 40,
+      cacheWriteTokens: 10,
+      budget: null,
+    });
+    expect(toFeedUsage(metrics(1, 5))?.budget).toBe(5);
+  });
+});
+
 describe("feed usage", () => {
   it("totals tokens and reports the share of the context window in use", () => {
     const usage = toFeedUsage({
