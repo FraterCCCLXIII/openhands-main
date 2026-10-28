@@ -10,6 +10,8 @@ interface FeedFilterRowProps {
   selected: boolean;
   onSelect: () => void;
   testId: string;
+  /** A second line under the label, such as diff numbers. */
+  meta?: ReactNode;
   /** Adds a link to this row's profile page beside the filter. */
   profile?: { to: string; label: string };
 }
@@ -22,6 +24,7 @@ export function FeedFilterRow({
   selected,
   onSelect,
   testId,
+  meta,
   profile,
 }: FeedFilterRowProps) {
   return (
@@ -43,7 +46,10 @@ export function FeedFilterRow({
             {icon}
           </span>
         ) : null}
-        <span className="min-w-0 flex-1 truncate">{label}</span>
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate">{label}</span>
+          {meta}
+        </span>
         {count !== undefined ? (
           <span
             data-testid="feed-filter-count"

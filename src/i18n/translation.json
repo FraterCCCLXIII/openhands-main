@@ -58192,5 +58192,23 @@
     "tr": "Son etkinlik {{time}}",
     "uk": "Остання активність {{time}}",
     "id": "Aktivitas terakhir {{time}}"
+  },
+  "FEED$ROW_AGENTS_ACTIVE": {
+    "en": "{{count}} agents active",
+    "ja": "稼働中のエージェント {{count}} 件",
+    "zh-CN": "{{count}} 个智能体运行中",
+    "zh-TW": "{{count}} 個代理運作中",
+    "ko-KR": "활성 에이전트 {{count}}개",
+    "no": "{{count}} aktive agenter",
+    "ar": "{{count}} وكلاء نشطين",
+    "de": "{{count}} aktive Agenten",
+    "fr": "{{count}} agents actifs",
+    "it": "{{count}} agenti attivi",
+    "pt": "{{count}} agentes ativos",
+    "es": "{{count}} agentes activos",
+    "ca": "{{count}} agents actius",
+    "tr": "{{count}} aktif ajan",
+    "uk": "Активних агентів: {{count}}",
+    "id": "{{count}} agen aktif"
   }
 }

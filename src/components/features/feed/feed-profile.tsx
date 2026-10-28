@@ -72,7 +72,7 @@ export function FeedProfile() {
 
   return (
     <FeedColumns openFeedOnFilter>
-      <div className="custom-scrollbar-always h-full overflow-y-auto px-4 py-4">
+      <div className="custom-scrollbar h-full overflow-y-auto px-4 py-4">
         <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4">
           <NavigationLink
             to={backendScopedPath("/feed")}

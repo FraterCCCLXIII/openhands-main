@@ -5,6 +5,8 @@ import {
   Smartphone,
   type LucideIcon,
 } from "lucide-react";
+import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
+import { ExecutionStatus } from "#/types/agent-server/core";
 import { pickFeedDemoAgent } from "./feed-demo-agents";
 
 /** Query parameter value that switches the simulated team off: `?demoTeam=off`. */
@@ -369,4 +371,47 @@ export function flattenFeedThread(
     message,
     ...flattenFeedThread(message.replies),
   ]);
+}
+
+export interface FeedGroupSummary {
+  /** Simulated lines added across the group. */
+  additions: number;
+  /** Simulated lines removed across the group. */
+  deletions: number;
+  /** Conversations whose agent is running right now. */
+  activeAgents: number;
+}
+
+/** Simulated diff size of one conversation: 20–1,019 added, 5–304 removed. */
+export function getFeedSimulatedDiff(conversationId: string): {
+  additions: number;
+  deletions: number;
+} {
+  const seed = hashId(conversationId);
+  return {
+    additions: 20 + ((seed >>> 2) % 1000),
+    deletions: 5 + ((seed >>> 11) % 300),
+  };
+}
+
+/**
+ * Numbers for a left-list row: diff lines (simulated, since the real totals
+ * need git requests per conversation) and agents running (real).
+ */
+export function summarizeFeedGroup(
+  conversations: AppConversation[],
+): FeedGroupSummary {
+  return conversations.reduce<FeedGroupSummary>(
+    (total, conversation) => {
+      const diff = getFeedSimulatedDiff(conversation.id);
+      return {
+        additions: total.additions + diff.additions,
+        deletions: total.deletions + diff.deletions,
+        activeAgents:
+          total.activeAgents +
+          (conversation.execution_status === ExecutionStatus.RUNNING ? 1 : 0),
+      };
+    },
+    { additions: 0, deletions: 0, activeAgents: 0 },
+  );
 }

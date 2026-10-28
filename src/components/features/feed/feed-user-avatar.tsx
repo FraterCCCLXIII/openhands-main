@@ -30,7 +30,12 @@ export function FeedUserAvatar({
       data-testid="feed-user-avatar"
       title={member?.name ?? undefined}
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface text-muted",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full",
+        // The user's own colour: a gradient behind the profile mark, until a
+        // picture replaces it.
+        member?.avatarUrl
+          ? "bg-surface text-muted"
+          : "bg-linear-to-br from-fuchsia-500 via-violet-500 to-sky-500 text-white",
         className,
       )}
       ref={(el) => {

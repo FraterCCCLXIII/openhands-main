@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Users } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
 import { I18nKey } from "#/i18n/declaration";
@@ -40,6 +41,7 @@ export function FeedContactsSidebar({
         <FeedFilterRow
           testId="feed-filter-teammate-all"
           label={t(I18nKey.FEED$ALL)}
+          icon={<Users size={20} />}
           selected={filter.teammateId === null}
           onSelect={() => onChange({ ...filter, teammateId: null })}
         />

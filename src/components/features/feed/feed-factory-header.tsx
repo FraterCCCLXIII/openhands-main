@@ -13,19 +13,24 @@ import {
   type FeedFactory,
 } from "#/utils/feed-team-demo";
 import { formatRelativeTime } from "#/utils/format-relative-time";
+import { cn } from "#/utils/utils";
 import { FeedTeammateAvatar } from "./feed-teammate-avatar";
 
 interface FeedFactoryHeaderProps {
   factory: FeedFactory;
   /** Every loaded conversation; the header picks out the factory's own. */
   conversations: AppConversation[];
+  /** "column" stacks the card for the narrow right column; "banner" spans the feed. */
+  variant?: "banner" | "column";
 }
 
 /** Banner for the selected factory: icon, description, owner and live numbers. */
 export function FeedFactoryHeader({
   factory,
   conversations,
+  variant = "banner",
 }: FeedFactoryHeaderProps) {
+  const isColumn = variant === "column";
   const { t, i18n } = useTranslation("openhands");
   const backendScopedPath = useBackendScopedPath();
   const own = conversations.filter(
@@ -46,14 +51,29 @@ export function FeedFactoryHeader({
     <header
       data-testid="feed-factory-header"
       data-factory-id={factory.id}
-      className="mx-auto w-full max-w-[680px] shrink-0 px-4 pt-4"
+      data-variant={variant}
+      className={
+        isColumn
+          ? "mb-5 border-b border-border px-2 pb-5"
+          : "shrink-0 px-[calc(1rem+var(--feed-gutter,0px))] pt-4"
+      }
     >
-      <div className="flex items-start gap-4 rounded-lg border border-border bg-surface-raised p-4">
+      <div
+        className={cn(
+          isColumn
+            ? "flex flex-col gap-4"
+            : "mx-auto flex w-full max-w-[680px] items-start gap-4 rounded-lg border border-border bg-surface-raised p-4",
+        )}
+      >
         <span
           data-testid="feed-factory-icon"
-          className={`flex size-16 shrink-0 items-center justify-center rounded-2xl ${factory.className}`}
+          className={cn(
+            "flex shrink-0 items-center justify-center",
+            isColumn ? "size-14 rounded-2xl" : "size-16 rounded-2xl",
+            factory.className,
+          )}
         >
-          <Icon size={32} aria-hidden />
+          <Icon size={isColumn ? 28 : 32} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <h2
@@ -70,7 +90,12 @@ export function FeedFactoryHeader({
           </p>
           <ul
             data-testid="feed-factory-metadata"
-            className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted"
+            className={cn(
+              "mt-3 flex text-xs text-muted",
+              isColumn
+                ? "mt-4 flex-col items-start gap-3"
+                : "flex-wrap items-center gap-x-4 gap-y-2",
+            )}
           >
             {owner && !owner.isMe ? (
               <li className="flex items-center gap-1.5">

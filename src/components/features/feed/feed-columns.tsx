@@ -10,6 +10,8 @@ import { FeedWordmark } from "./feed-wordmark";
 
 interface FeedColumnsProps {
   children: ReactNode;
+  /** Shown at the top of the right column, above the contacts. */
+  sidePanel?: ReactNode;
   /** Picking a filter here also opens the feed, for pages that are not it. */
   openFeedOnFilter?: boolean;
 }
@@ -18,7 +20,11 @@ interface FeedColumnsProps {
  * Facebook-style three columns: filters on the left, the page in the middle,
  * contacts on the right. The feed and every profile page share it.
  */
-export function FeedColumns({ children, openFeedOnFilter }: FeedColumnsProps) {
+export function FeedColumns({
+  children,
+  sidePanel,
+  openFeedOnFilter,
+}: FeedColumnsProps) {
   const { conversations } = useFeedConversations();
   const filter = useFeedFilterStore((state) => state.filter);
   const setFilter = useFeedFilterStore((state) => state.setFilter);
@@ -32,7 +38,7 @@ export function FeedColumns({ children, openFeedOnFilter }: FeedColumnsProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col md:flex-row">
-      <aside className="custom-scrollbar-always w-full shrink-0 overflow-y-auto border-border px-2 py-4 max-md:max-h-40 md:w-60 lg:w-[360px]">
+      <aside className="custom-scrollbar w-full shrink-0 overflow-y-auto border-border px-2 py-4 max-md:max-h-40 md:w-60 lg:w-[360px]">
         <FeedWordmark />
         <FeedFilterSidebar
           conversations={conversations}
@@ -43,8 +49,9 @@ export function FeedColumns({ children, openFeedOnFilter }: FeedColumnsProps) {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       <aside
         data-testid="feed-contacts"
-        className="custom-scrollbar-always hidden w-[360px] shrink-0 overflow-y-auto px-2 py-4 xl:block"
+        className="custom-scrollbar hidden w-[360px] shrink-0 overflow-y-auto px-2 py-4 xl:block"
       >
+        {sidePanel}
         <FeedContactsSidebar
           conversations={conversations}
           filter={filter}

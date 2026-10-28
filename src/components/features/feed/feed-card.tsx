@@ -105,7 +105,7 @@ function FeedFullConversation({
   return (
     <ul
       data-testid="feed-card-conversation"
-      className="custom-scrollbar-always flex max-h-[28rem] flex-col gap-3 overflow-y-auto border-b border-border px-4 py-3"
+      className="custom-scrollbar flex max-h-[28rem] flex-col gap-3 overflow-y-auto border-b border-border px-4 py-3"
     >
       {isLoading
         ? null
