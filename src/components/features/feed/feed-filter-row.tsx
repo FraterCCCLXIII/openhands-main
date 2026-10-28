@@ -12,10 +12,8 @@ interface FeedFilterRowProps {
   testId: string;
   /** A second line under the label, such as diff numbers. */
   meta?: ReactNode;
-  /** Extra control beside the row, such as an edit button. */
+  /** Control shown on hover to the left of the count, such as a menu button. */
   action?: ReactNode;
-  /** Content under the row, such as an inline editor. */
-  footer?: ReactNode;
   /** Adds a link to this row's profile page beside the filter. */
   profile?: { to: string; label: string };
 }
@@ -30,11 +28,17 @@ export function FeedFilterRow({
   testId,
   meta,
   action,
-  footer,
   profile,
 }: FeedFilterRowProps) {
   return (
-    <li className="flex flex-wrap items-center gap-1">
+    <li
+      className={cn(
+        "group flex items-center gap-1 rounded-lg",
+        selected
+          ? "bg-surface-raised text-contrast"
+          : "text-muted hover:bg-surface-raised hover:text-contrast",
+      )}
+    >
       <button
         type="button"
         data-testid={testId}
@@ -42,9 +46,7 @@ export function FeedFilterRow({
         onClick={onSelect}
         className={cn(
           "flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-2 text-left text-[15px]",
-          selected
-            ? "bg-surface-raised font-medium text-contrast"
-            : "text-muted hover:bg-surface-raised hover:text-contrast",
+          selected && "font-medium",
         )}
       >
         {icon ? (
@@ -56,28 +58,39 @@ export function FeedFilterRow({
           <span className="truncate">{label}</span>
           {meta}
         </span>
-        {count !== undefined ? (
-          <span
-            data-testid="feed-filter-count"
-            className="min-w-6 rounded-full bg-surface px-2 py-0.5 text-center text-xs text-muted"
-          >
-            {count}
-          </span>
-        ) : null}
       </button>
-      {action}
+      {action ? (
+        <span className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 has-[[aria-expanded=true]]:opacity-100">
+          {action}
+        </span>
+      ) : null}
+      {count !== undefined ? (
+        // The row's button is the accessible control; the chip just extends it.
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden
+          data-testid="feed-filter-count"
+          onClick={onSelect}
+          className={cn(
+            "min-w-6 rounded-full bg-surface px-2 py-0.5 text-center text-xs text-muted",
+            profile ? "" : "mr-2",
+          )}
+        >
+          {count}
+        </button>
+      ) : null}
       {profile ? (
         <NavigationLink
           to={profile.to}
           data-testid="feed-filter-profile-link"
           aria-label={profile.label}
           title={profile.label}
-          className="rounded-full p-2 text-muted hover:bg-surface-raised hover:text-contrast"
+          className="rounded-full p-2 text-muted hover:bg-surface hover:text-contrast"
         >
           <UserRound size={16} />
         </NavigationLink>
       ) : null}
-      {footer ? <div className="w-full">{footer}</div> : null}
     </li>
   );
 }
