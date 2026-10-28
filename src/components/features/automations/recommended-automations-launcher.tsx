@@ -38,7 +38,10 @@ import { isResponderAutomation } from "#/utils/responder-deployment";
 import { useAutomationHealth } from "#/hooks/query/use-automation-health";
 import { useAutomations } from "#/hooks/query/use-automations";
 import { useBuiltInIntegrationConnections } from "#/hooks/query/use-built-in-integration-connections";
-import { useNativeGitIntegrations } from "#/hooks/query/use-native-git-integrations";
+import {
+  isNativeGitCandidate,
+  useNativeGitIntegrations,
+} from "#/hooks/query/use-native-git-integrations";
 import { cloudIntegrationsUrl } from "#/utils/cloud-integrations-url";
 import {
   BuiltInIntegrationChoiceModal,
@@ -256,7 +259,6 @@ export function RecommendedAutomationsLauncher({
   };
 
   const isBuiltInIntegrationEnabled = (entryId: string) => {
-    if (entryId) return true; // TEMP mock hack
     if (entryId === "slack") return isSlackEnabled;
     if (entryId === "jira") return isJiraEnabled;
     if (entryId === "linear") return isLinearEnabled;
@@ -267,7 +269,6 @@ export function RecommendedAutomationsLauncher({
   // has no connection lookup on the cloud backend, so it is never known to be
   // connected and the modal keeps offering to connect it.
   const isBuiltInIntegrationConnected = (entryId: string) => {
-    if (entryId === "github") return true; // TEMP mock hack
     if (entryId === "slack") return isSlackConnected;
     if (entryId === "jira") return isJiraConnected;
     if (entryId === "linear") return false;
@@ -298,18 +299,20 @@ export function RecommendedAutomationsLauncher({
     // responder runs before committing to the local setup flow. On a cloud
     // backend the responder already runs in the cloud, so there is no choice.
     if (
-      false &&
+      activeBackend.backend.kind === "local" &&
       isResponderAutomation(automation)
     ) {
       setDeploymentChoiceAutomation(automation);
       return;
     }
 
-    // A built-in integration already covers this workflow: show how to use it
-    // when the user has connected it, or offer to connect it, with the polling
-    // automation as the alternative either way.
+    // A built-in integration already covers this workflow. A git provider the
+    // instance connects natively is the preferred route, so it goes straight to
+    // the native connect flow (or launches when connected) instead of offering
+    // polling. Other built-ins show how to use them when connected, or offer to
+    // connect them, with the polling automation as the alternative either way.
     const builtInIntegration = getBuiltInIntegration(automation);
-    if (builtInIntegration) {
+    if (builtInIntegration && !isNativeGitCandidate(builtInIntegration.id)) {
       setBuiltInChoice({
         automation,
         integration: builtInIntegration,
