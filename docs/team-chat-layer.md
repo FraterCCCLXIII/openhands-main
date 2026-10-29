@@ -1,6 +1,6 @@
 # Team chat layer (Slack replacement) — plan
 
-Status: proposal. No code written. Docs only until the spike below is done.
+Status: Buzz/Nostr spike written ([`nostr-buzz-spike.md`](nostr-buzz-spike.md)); transport interface, identity directory and local adapter exist in `src/chat-transport/` (no network). Next: a NIP-29 adapter against a local Buzz relay, once a signing dependency is approved.
 
 ## Goal
 

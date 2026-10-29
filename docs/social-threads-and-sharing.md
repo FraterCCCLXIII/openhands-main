@@ -1,7 +1,9 @@
 # Sharing and social threads across OpenHands nodes: design
 
-Status: proposal. Nothing here is built. The feed UI described under "What
-exists today" is a local simulation.
+Status: spike done ([`nostr-buzz-spike.md`](nostr-buzz-spike.md)) and phase 2 groundwork
+built in `src/chat-transport/` (interface, identity directory, local adapter,
+no network). The feed UI is not rewired yet and still reads the local
+simulation. Next: a NIP-29 adapter (needs a signing dependency).
 
 This builds on [`team-chat-layer.md`](team-chat-layer.md), which already
 decides the principles, the conversation-to-chat model and the transport
