@@ -187,6 +187,22 @@ section.card { background: var(--panel); border: 1px solid var(--rule); border-r
 .metric .h { font-size: 12px; color: var(--muted) }
 .metric.warn { border-color: var(--stale) } .metric.crit { border-color: var(--blocked) }
 
+/* Flow */
+.flow-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); padding: 12px }
+.flow { display: block; width: 100%; min-width: 760px; height: auto }
+.flow .fe { fill: none; stroke: var(--muted); stroke-width: 1.4 }
+.flow .fe.dash { stroke-dasharray: 5 4 }
+.flow .fa { fill: var(--muted) }
+.flow .fl { font: 11px var(--body); fill: var(--muted) }
+.flow .fn rect, .flow .fn polygon { fill: var(--raised); stroke: var(--rule); stroke-width: 1 }
+.flow .fn.human rect { fill: color-mix(in srgb, var(--done) 28%, var(--panel)); stroke: var(--done) }
+.flow .fn.sys rect { fill: var(--bg) }
+.flow .ft { font: 500 13px var(--body); fill: var(--ink) }
+.flow .fs { font: 11px var(--body); fill: var(--soft) }
+.flow .fc { font: 500 11px var(--mono); fill: var(--ink) }
+.flow-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted) }
+.flow-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; border: 1px solid var(--rule) }
+
 /* Agents */
 .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden }
 .principles div { background: var(--panel); padding: 12px 14px; display: grid; gap: 4px; align-content: start }
@@ -392,6 +408,16 @@ label { display: grid; gap: 4px; font: 500 11px var(--mono); color: var(--muted)
     <h2>Delivery metrics</h2>
     <div class="metrics" id="metrics"></div>
     <p class="sub">DORA metrics adapted for a local trunk: "deploy" is a land into proto; promotion to main is the release. Lead time is PR open to merge.</p>
+  </div>
+
+  <!-- Flow -->
+  <div class="view" id="v-flow" role="tabpanel" hidden>
+    <section class="card">
+      <h2>Agentic SDLC flow</h2>
+      <p class="muted">How work moves from a trigger to production. Green steps keep a human in the loop; grey steps run on their own. Counts under a step are live from the cards in scope.</p>
+      <div class="flow-legend"><span><i style="background:color-mix(in srgb, var(--done) 28%, var(--panel));border-color:var(--done)"></i>Human in the loop</span><span><i style="background:var(--raised)"></i>Autonomous</span></div>
+    </section>
+    <div class="flow-wrap"><svg class="flow" id="flow" viewBox="0 0 980 980" role="img" aria-label="Agentic software delivery flow from triggers through planning, coding, review, deploy and monitoring"></svg></div>
   </div>
 
   <!-- Agents -->
@@ -657,7 +683,7 @@ const pre = (pid) => (pid && multi() ? `${projOf(pid)?.key}:` : '');
 const localId = (pid, id) => (id && pre(pid) && String(id).startsWith(pre(pid)) ? String(id).slice(pre(pid).length) : id);
 const localTrack = (t) => (multi() && t ? t.slice(t.indexOf('/') + 1) : t);
 const repoUrl = (repo) => hubProjects().find((p) => p.repo === repo || p.id === repo)?.url || '';
-const VIEWS = [['schedule', 'Schedule'], ['board', 'Board'], ['list', 'List'], ['calendar', 'Calendar'], ['pipeline', 'Pipeline'], ['agents', 'Agents'], ['costs', 'Costs'], ['history', 'History'], ['decisions', 'Decisions']];
+const VIEWS = [['schedule', 'Schedule'], ['board', 'Board'], ['list', 'List'], ['calendar', 'Calendar'], ['pipeline', 'Pipeline'], ['flow', 'Flow'], ['agents', 'Agents'], ['costs', 'Costs'], ['history', 'History'], ['decisions', 'Decisions']];
 const GROUPS = ['Roadmap', 'Milestones', 'In flight', 'Waiting on you', 'Tracks'];
 const STATUSES = ['done', 'active', 'review', 'stale', 'blocked', 'planned', 'todo'];
 const STATUS_LABEL = { done: 'Done', active: 'Active', review: 'In review', stale: 'Stale', blocked: 'Blocked or waiting', planned: 'Planned', todo: 'Not started' };
@@ -768,7 +794,7 @@ function renderHeader() {
   $('tn-agents').textContent = S.jobs.length || '';
 }
 
-const renderers = { schedule: renderGantt, board: renderBoard, list: renderList, calendar: renderCalendar, pipeline: renderPipeline, agents: renderAgents, costs: renderCosts, history: renderHistory, decisions: renderDecisions };
+const renderers = { schedule: renderGantt, board: renderBoard, list: renderList, calendar: renderCalendar, pipeline: renderPipeline, flow: renderFlow, agents: renderAgents, costs: renderCosts, history: renderHistory, decisions: renderDecisions };
 function renderView() { renderHeader(); renderers[S.view]?.(); renderInbox(); }
 const rerender = debounce(() => { cardsCache = null; renderView(); });
 
@@ -1491,6 +1517,63 @@ function renderPipeline() {
     ['Release gap', '53<small> commits</small>', 'On proto, not yet promoted to main. Promotion is a person\'s call.', 'warn'],
   ];
   $('metrics').innerHTML = M.map(([k, v, hint, cls]) => `<div class="metric ${cls || ''}"><span class="k">${k}</span><span class="v">${v}</span><span class="h">${hint}</span></div>`).join('');
+}
+
+/* ---------- Flow ---------- */
+// Node: [id, kind (human|auto|sys), x, y, w, h, title, sub lines, live count]
+const FLOW_NODES = [
+  ['t1', 'human', 20, 10, 220, 54, 'Monitoring signals', ['Defines issue']],
+  ['t2', 'human', 255, 10, 220, 54, 'Jira ticket assigned', ['Defines outcome or issue']],
+  ['t3', 'human', 490, 10, 220, 54, 'Slack message @tag', ['Defines outcome']],
+  ['t4', 'human', 725, 10, 220, 54, 'Software "builder"', ['Defines outcome']],
+  ['ticket', 'auto', 40, 110, 340, 46, 'Ticket', [], (c) => [c.filter((x) => x.col === 'backlog').length, 'in backlog']],
+  ['hitl1', 'human', 40, 175, 340, 50, 'HITL review first → elevated to autonomous later', []],
+  ['plan', 'auto', 40, 250, 340, 70, 'Plan agent', ['Defines implementation spec (architect agent)'], (c) => [c.filter((x) => x.col === 'ready').length, 'ready']],
+  ['hitl2', 'human', 40, 345, 340, 50, 'HITL review first → elevated to autonomous later', []],
+  ['code', 'auto', 40, 420, 340, 80, 'Coding agents', ['Writes / edits the code (developer agent)'], (c) => [c.filter((x) => x.col === 'building').length, 'building']],
+  ['ci', 'auto', 70, 560, 280, 90, 'CI: build + test', ['CI pipeline hardened for agent-scale load', '+ Performance testing']],
+  ['sys', 'sys', 560, 250, 400, 200, 'Internal systems', ['Source code + docs', 'GitHub / GHE · Google Docs · Lucid', 'Slack · Confluence wiki', 'Internal skills and plugins', 'Internal data sources']],
+  ['review', 'auto', 560, 480, 400, 110, 'Agentic code review', ['Parallel review: security, quality, coding standards', '(security reviewer, quality agent, infra and cloud agents)', 'Risk classification'], (c) => [c.filter((x) => x.col === 'verify').length, 'in PR']],
+  ['risk', 'auto', 660, 610, 200, 80, 'Low-risk change?', []],
+  ['eng', 'human', 790, 720, 170, 80, 'Code review', ['Additional review', 'by an engineer'], (c) => [c.filter((x) => x.col === 'verify' && (x.tier >= 3 || x.f?.includes('human_review'))).length, 'need you']],
+  ['prod', 'auto', 40, 700, 440, 90, 'Production', ['Agent watches graphs / signals / alerts', 'Using custom dashboards built + internal stack']],
+  ['perf', 'auto', 40, 860, 260, 90, 'Performance monitoring agent', ['Detects latency regressions', 'Filters duplicate alerts, proposes fixes']],
+  ['sre', 'auto', 330, 860, 230, 90, 'SRE bot', ['Investigates incident', 'Proposes mitigations, answers questions']],
+  ['deploy', 'auto', 600, 860, 360, 90, 'Agentic deploy', ['Agent "babysits" the change until it makes it into prod,', 'incl. feature flag rollout. Creates own monitoring dashboards'], (c) => [c.filter((x) => x.col === 'done').length, 'done']],
+];
+// Edge: [points, dashed, label, label x, label y]
+const FLOW_EDGES = [
+  [[[130, 64], [210, 110]]], [[[365, 64], [210, 110]]], [[[600, 64], [210, 110]]], [[[835, 64], [210, 110]]],
+  [[[210, 156], [210, 175]]], [[[210, 225], [210, 250]]], [[[210, 320], [210, 345]]], [[[210, 395], [210, 420]]],
+  [[[380, 270], [560, 270]], false, 'gets context from', 470, 264], [[[560, 300], [380, 300]], true],
+  [[[380, 440], [560, 440]], false, 'gets context from', 470, 434], [[[560, 462], [380, 462]], true],
+  [[[210, 500], [210, 560]]],
+  [[[350, 605], [460, 605], [460, 560], [560, 560]]],
+  [[[70, 605], [30, 605], [30, 460], [40, 460]], true, 'Agent fixes issues until CI and reviews pass', 22, 540, 'rot'],
+  [[[790, 480], [790, 450]], true, 'gets context from', 800, 468], [[[760, 590], [760, 610]]],
+  [[[660, 650], [620, 650], [620, 860]], false, 'Yes', 628, 780],
+  [[[860, 650], [875, 650], [875, 720]], false, 'No', 880, 690], [[[875, 800], [875, 860]]],
+  [[[600, 905], [580, 905], [580, 745], [480, 745]]],
+  [[[160, 790], [160, 860]], true, 'Monitors', 168, 830], [[[420, 790], [420, 860]], false, 'outage detected', 428, 830],
+  [[[40, 905], [8, 905], [8, 37], [20, 37]], true, 'Proposes fixes for perf issues', 14, 900, 'rot'],
+];
+function renderFlow() {
+  const cs = cards();
+  const svg = ['<defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fa"/></marker></defs>'];
+  for (const [pts, dash, label, lx, ly, rot] of FLOW_EDGES) {
+    svg.push(`<path class="fe${dash ? ' dash' : ''}" d="M${pts.map((p) => p.join(' ')).join(' L')}" marker-end="url(#fa)"/>`);
+    if (label) svg.push(`<text class="fl" x="${lx}" y="${ly}"${rot ? ` transform="rotate(-90 ${lx} ${ly})"` : ''}>${label}</text>`);
+  }
+  for (const [id, kind, x, y, w, h, title, sub, count] of FLOW_NODES) {
+    const cx = x + w / 2;
+    const shape = id === 'risk' ? `<polygon points="${cx},${y} ${x + w},${y + h / 2} ${cx},${y + h} ${x},${y + h / 2}"/>` : `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${kind === 'human' && id.startsWith('t') ? 27 : 8}"/>`;
+    const head = id === 'sys' || sub.length ? y + 22 : count ? y + 18 : y + h / 2 + 4;
+    const live = count && cs.length ? count(cs) : null;
+    svg.push(`<g class="fn ${kind}" data-node="${id}">${shape}<text class="ft" x="${cx}" y="${id === 'risk' ? y + h / 2 + 4 : head}" text-anchor="middle">${title}</text>`
+      + sub.map((t, i) => `<text class="fs" x="${cx}" y="${head + 17 + i * 14}" text-anchor="middle">${t}</text>`).join('')
+      + (live ? `<text class="fc" x="${cx}" y="${y + h - 8}" text-anchor="middle">${live[0]} ${live[1]}</text>` : '') + '</g>');
+  }
+  $('flow').innerHTML = svg.join('');
 }
 
 /* ---------- Agents ---------- */
