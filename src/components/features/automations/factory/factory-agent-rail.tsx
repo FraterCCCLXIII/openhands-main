@@ -7,6 +7,8 @@ import { applyAgentConfig, getDemoAgentRole } from "#/utils/feed-agent-role";
 import type { FactoryTarget } from "#/utils/factory-routing";
 import { cn } from "#/utils/utils";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
+import { FeedCustomIcon } from "#/components/features/feed/feed-custom-icon";
+import { agentIconKey } from "#/utils/feed-icon-keys";
 import { FeedIconTile } from "#/components/features/feed/feed-icon-tile";
 import type { RosterAgent } from "./factory-routing-context";
 
@@ -56,9 +58,17 @@ function AgentButton({
               "ring-2 ring-focus ring-offset-2 ring-offset-canvas-base",
           )}
         >
-          <FeedIconTile className={agent.className}>
-            <Icon size={large ? 24 : 20} />
-          </FeedIconTile>
+          <FeedCustomIcon
+            iconKey={agentIconKey(`demo:${agent.name}`)}
+            size={large ? 48 : 40}
+            radius={12}
+            glyph={<Icon size={large ? 24 : 20} />}
+            fallback={
+              <FeedIconTile className={agent.className}>
+                <Icon size={large ? 24 : 20} />
+              </FeedIconTile>
+            }
+          />
         </span>
         <span className="truncate text-sm font-medium text-foreground">
           {agent.name}

@@ -11,7 +11,11 @@ import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { useFeedIconsStore } from "#/stores/feed-icons-store";
 import { usePlugins } from "#/hooks/query/use-plugins";
 import { useSkillCatalog } from "#/hooks/query/use-skill-catalog";
-import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
+import {
+  useFeedAgentConfigStore,
+  type FeedAgentConfig,
+} from "#/stores/feed-agent-config-store";
+import { ModalCloseButton } from "#/components/shared/modals/modal-close-button";
 import {
   applyAgentConfig,
   FEED_AGENT_ROLE_KEYS,
@@ -200,10 +204,22 @@ export function FactoryEditAgentModal({
   const { agent, conversations } = entry;
   const [tab, setTab] = useState<EditTab>("general");
   const iconKey = agentIconKey(`demo:${agent.name}`);
-  const value = useFeedIconsStore((state) => state.icons[iconKey]);
+  const savedIcon = useFeedIconsStore((state) => state.icons[iconKey]);
   const setIcon = useFeedIconsStore((state) => state.setIcon);
-  const config = useFeedAgentConfigStore((state) => state.configs[agent.name]);
-  const setConfig = useFeedAgentConfigStore((state) => state.setConfig);
+  const savedConfig = useFeedAgentConfigStore(
+    (state) => state.configs[agent.name],
+  );
+  const saveConfig = useFeedAgentConfigStore((state) => state.setConfig);
+  // Edits stay in a draft until Save; Cancel and the corner X drop them.
+  const [config, setDraft] = useState<FeedAgentConfig>(savedConfig ?? {});
+  const [value, setIconDraft] = useState(savedIcon ?? {});
+  const setConfig = (_name: string, patch: FeedAgentConfig) =>
+    setDraft((current) => ({ ...current, ...patch }));
+  const save = () => {
+    saveConfig(agent.name, config);
+    setIcon(iconKey, value);
+    onClose();
+  };
   const setCoordinator = useFeedFactoriesStore((state) => state.setCoordinator);
   const removeAgent = useFeedFactoriesStore((state) => state.removeAgent);
   const { data: skills = [] } = useSkillCatalog();
@@ -217,8 +233,9 @@ export function FactoryEditAgentModal({
       <ModalBody
         testID="factory-edit-agent-modal"
         width="xl"
-        className="max-h-[85vh] items-stretch border border-border"
+        className="relative max-h-[85vh] items-stretch border border-border"
       >
+        <ModalCloseButton testId="factory-edit-agent-close" onClose={onClose} />
         <div className="flex flex-col gap-1">
           <BaseModalTitle title={t(I18nKey.FACTORY$EDIT_AGENT)} />
           <p className="text-sm text-muted">{agent.name}</p>
@@ -330,7 +347,7 @@ export function FactoryEditAgentModal({
             {tab === "appearance" ? (
               <IconAppearancePanel
                 value={value ?? {}}
-                onChange={(next) => setIcon(iconKey, next)}
+                onChange={setIconDraft}
               />
             ) : null}
           </div>
@@ -365,14 +382,24 @@ export function FactoryEditAgentModal({
               </BrandButton>
             ) : null}
           </div>
-          <BrandButton
-            type="button"
-            variant="secondary"
-            testId="factory-edit-agent-close"
-            onClick={onClose}
-          >
-            {t(I18nKey.BUTTON$CLOSE)}
-          </BrandButton>
+          <div className="flex gap-2">
+            <BrandButton
+              type="button"
+              variant="secondary"
+              testId="factory-edit-agent-cancel"
+              onClick={onClose}
+            >
+              {t(I18nKey.BUTTON$CANCEL)}
+            </BrandButton>
+            <BrandButton
+              type="button"
+              variant="primary"
+              testId="factory-edit-agent-save"
+              onClick={save}
+            >
+              {t(I18nKey.BUTTON$SAVE)}
+            </BrandButton>
+          </div>
         </div>
         {isAdded && inUse ? (
           <p className="text-xs text-muted">
