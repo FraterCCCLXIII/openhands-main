@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
@@ -52,6 +52,24 @@ describe("TurnDetailsPanel conversation totals", () => {
     expect(extras).toContain("+1M");
     expect(extras).toContain("+5K");
     expect(extras).toContain("+$0.50");
+
+    // A call whose own cost was not reported does not get "+": the figure is the conversation's total.
+    useTurnDetailsStore.setState({ showConversationTotals: true });
+    cleanup();
+    render(
+      <TurnDetailsPanel
+        details={{
+          ...base,
+          usage: usage("anthropic/claude-sonnet", 0),
+          conversationUsage: total,
+        }}
+      />,
+    );
+    expect(
+      screen
+        .getAllByTestId("turn-details-stat-extra")
+        .map((n) => n.textContent),
+    ).toContain("FEED$DETAILS_COST_CONVERSATION $0.51");
     useTurnDetailsStore.setState({ showConversationTotals: false });
   });
 
@@ -60,6 +78,51 @@ describe("TurnDetailsPanel conversation totals", () => {
     expect(
       screen.queryByTestId("turn-details-totals-toggle"),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("TurnDetailsPanel code activity", () => {
+  it("shows diffs with added and removed lines, a lines chip and the git actions", () => {
+    render(
+      <TurnDetailsPanel
+        details={{
+          ...base,
+          changes: [
+            {
+              path: "/src/a.ts",
+              kind: "edit",
+              added: 1,
+              removed: 1,
+              truncated: false,
+              lines: [
+                { type: "del", text: "old" },
+                { type: "add", text: "new" },
+              ],
+            },
+          ],
+          gitActions: [
+            { command: "git commit", detail: "Fix it", sha: "abc1234" },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("turn-details-chip-lines")).toHaveTextContent(
+      "+1−1",
+    );
+    const rows = screen
+      .getAllByTestId("turn-details-diff")[0]
+      .querySelectorAll("[data-diff]");
+    expect([...rows].map((r) => r.getAttribute("data-diff"))).toEqual([
+      "del",
+      "add",
+    ]);
+    expect(screen.getByTestId("turn-details-git-actions")).toHaveTextContent(
+      "git commit",
+    );
+    expect(screen.getByTestId("turn-details-git-actions")).toHaveTextContent(
+      "abc1234",
+    );
   });
 });
 

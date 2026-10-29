@@ -19,25 +19,41 @@ export const KIND = {
 
 export const createGroup = (group: string, name: string): EventTemplate => ({
   kind: KIND.createGroup,
-  tags: [["h", group], ["name", name]],
+  tags: [
+    ["h", group],
+    ["name", name],
+  ],
   content: "",
 });
 
-export const putUser = (group: string, pubkey: string, roles: string[] = ["member"]): EventTemplate => ({
+export const putUser = (
+  group: string,
+  pubkey: string,
+  roles: string[] = ["member"],
+): EventTemplate => ({
   kind: KIND.putUser,
-  tags: [["h", group], ["p", pubkey, ...roles]],
+  tags: [
+    ["h", group],
+    ["p", pubkey, ...roles],
+  ],
   content: "",
 });
 
 export const removeUser = (group: string, pubkey: string): EventTemplate => ({
   kind: KIND.removeUser,
-  tags: [["h", group], ["p", pubkey]],
+  tags: [
+    ["h", group],
+    ["p", pubkey],
+  ],
   content: "",
 });
 
 export const createInvite = (group: string, code: string): EventTemplate => ({
   kind: KIND.createInvite,
-  tags: [["h", group], ["code", code]],
+  tags: [
+    ["h", group],
+    ["code", code],
+  ],
   content: "",
 });
 
@@ -48,7 +64,11 @@ export const joinRequest = (group: string, code?: string): EventTemplate => ({
 });
 
 /** A group message. A reply carries an NIP-10 `e` tag marked "reply"; mentions are `p` tags. */
-export const chatMessage = (group: string, text: string, opts: { parent?: string | null; mentions?: string[] } = {}): EventTemplate => ({
+export const chatMessage = (
+  group: string,
+  text: string,
+  opts: { parent?: string | null; mentions?: string[] } = {},
+): EventTemplate => ({
   kind: KIND.chat,
   tags: [
     ["h", group],
@@ -59,15 +79,31 @@ export const chatMessage = (group: string, text: string, opts: { parent?: string
 });
 
 /** A profile (kind 0). `bot` marks an agent (NIP-24); `owner` names the person who runs it. */
-export const profile = (p: { name: string; bot?: boolean; owner?: string; about?: string }): EventTemplate => ({
+export const profile = (p: {
+  name: string;
+  bot?: boolean;
+  owner?: string;
+  about?: string;
+}): EventTemplate => ({
   kind: KIND.profile,
   tags: [],
-  content: JSON.stringify({ name: p.name, ...(p.bot ? { bot: true } : {}), ...(p.owner ? { owner: p.owner } : {}), ...(p.about ? { about: p.about } : {}) }),
+  content: JSON.stringify({
+    name: p.name,
+    ...(p.bot ? { bot: true } : {}),
+    ...(p.owner ? { owner: p.owner } : {}),
+    ...(p.about ? { about: p.about } : {}),
+  }),
 });
 
-export const authEvent = (relayUrl: string, challenge: string): EventTemplate => ({
+export const authEvent = (
+  relayUrl: string,
+  challenge: string,
+): EventTemplate => ({
   kind: KIND.auth,
-  tags: [["relay", relayUrl], ["challenge", challenge]],
+  tags: [
+    ["relay", relayUrl],
+    ["challenge", challenge],
+  ],
   content: "",
 });
 
@@ -75,10 +111,18 @@ export const authEvent = (relayUrl: string, challenge: string): EventTemplate =>
  * An invite is one string that carries everything a newcomer needs:
  * `buzzteam:<relay url>#<group id>:<code>`. The code is single use.
  */
-export function encodeInvite(relayUrl: string, group: string, code: string): string {
+export function encodeInvite(
+  relayUrl: string,
+  group: string,
+  code: string,
+): string {
   return `buzzteam:${relayUrl}#${group}:${code}`;
 }
-export function decodeInvite(text: string): { relayUrl: string; group: string; code: string } {
+export function decodeInvite(text: string): {
+  relayUrl: string;
+  group: string;
+  code: string;
+} {
   const m = /^buzzteam:(.+)#([^:]+):([A-Za-z0-9_-]+)$/.exec(text.trim());
   if (!m) throw new Error("That is not a team invite.");
   return { relayUrl: m[1], group: m[2], code: m[3] };

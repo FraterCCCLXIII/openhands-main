@@ -8,6 +8,13 @@ import type {
   ConversationStats,
   TokenUsage,
 } from "#/types/agent-server/core/events/conversation-state-event";
+import {
+  fileChangeOf,
+  gitActionsOf,
+  mergeChanges,
+  type FileChange,
+  type GitAction,
+} from "./code-activity";
 import { SecurityRisk } from "#/types/agent-server/core/base/common";
 import {
   getActionThoughtText,
@@ -63,6 +70,9 @@ export interface FeedUpdateDetails {
   /** What the model call behind this step consumed. */
   /** All model calls in the conversation, so the others are this minus `usage`. */
   conversationUsage?: StepUsage;
+  /** File edits as diffs, and git or GitHub commands the agent ran. */
+  changes?: FileChange[];
+  gitActions?: GitAction[];
   usage?: StepUsage;
 }
 
@@ -428,6 +438,30 @@ export function indexSteps(events: OpenHandsEvent[]): StepIndex {
   return index;
 }
 
+/** The diffs and git commands in some actions, with results read from their observations. */
+function codeActivity(
+  actions: ActionEvent[],
+  index: StepIndex,
+): Pick<FeedUpdateDetails, "changes" | "gitActions"> {
+  const changes: FileChange[] = [];
+  const git: GitAction[] = [];
+  actions.forEach((a) => {
+    const act = a.action as unknown as Record<string, unknown>;
+    const change = fileChangeOf(act);
+    if (change) changes.push(change);
+    if (typeof act.command === "string" && a.tool_name !== "file_editor") {
+      const answer = index.answer.get(a.id);
+      const result = answer ? (resultText(answer) ?? "") : "";
+      git.push(...gitActionsOf(act.command, result));
+    }
+  });
+  const merged = mergeChanges(changes);
+  return {
+    changes: merged.length ? merged : undefined,
+    gitActions: git.length ? git : undefined,
+  };
+}
+
 /** Arguments, timing, delegation, hooks and model usage of one action. */
 export function getStepContext(
   events: OpenHandsEvent[],
@@ -436,7 +470,9 @@ export function getStepContext(
 ): Partial<FeedUpdateDetails> {
   const answer = index.answer.get(action.id);
   const position = index.position.get(action.id);
+  const code = codeActivity([action], index);
   return {
+    ...code,
     args: actionArguments(action),
     durationMs: stepDurationMs(action, answer),
     subagent: subagentOf(action, answer),
@@ -460,8 +496,10 @@ export function getTurnContext(
   const context: Partial<FeedUpdateDetails> = {};
   const hooks: HookRun[] = [];
   const condensations: NonNullable<FeedUpdateDetails["condensations"]> = [];
+  const turnActions: ActionEvent[] = [];
   for (let i = end - 1; i >= 0; i -= 1) {
     const e = events[i];
+    if (isActionEvent(e)) turnActions.unshift(e);
     if (isMessageEvent(e)) {
       if (e.source === "user" && !isCorrectiveNudge(e)) break;
       if (isCorrectiveNudge(e) && !context.promptedBy) {
@@ -481,6 +519,7 @@ export function getTurnContext(
   }
   return {
     ...context,
+    ...codeActivity(turnActions, indexSteps(events)),
     hooks: hooks.length ? hooks.slice(-MAX_HOOKS) : undefined,
     condensations: condensations.length ? condensations : undefined,
     usage: stepUsage(events, end),

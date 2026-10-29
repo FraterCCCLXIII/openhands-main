@@ -5,6 +5,8 @@ import {
   Brain,
   Check,
   ChevronDown,
+  FileDiff,
+  GitBranch,
   Clock,
   Coins,
   Cpu,
@@ -32,6 +34,8 @@ import { useTurnDetailsStore } from "#/stores/turn-details-store";
 import { Chip, type ChipTone } from "./turn-details/chip";
 import { CodeBlock, CopyButton } from "./turn-details/code-block";
 import { CollapsibleText } from "./turn-details/collapsible-text";
+import { DiffBlock } from "./turn-details/diff-block";
+import { GitActionList } from "./turn-details/git-actions";
 import { Module } from "./turn-details/module";
 import { StatGrid } from "./turn-details/stat-grid";
 
@@ -178,8 +182,16 @@ function UsageStats({ usage, total }: { usage: StepUsage; total?: StepUsage }) {
       label: t(I18nKey.FEED$DETAILS_STAT_COST),
       value: costLabel(usage, t),
       end: true,
+      // When this call's own cost was not reported, the conversation's reported
+      // total is not "other calls" on top of it, so say what it is.
       extra:
-        others && others.cost > 0 ? `+$${others.cost.toFixed(2)}` : undefined,
+        others && others.cost > 0
+          ? usage.cost > 0
+            ? `+$${others.cost.toFixed(2)}`
+            : t(I18nKey.FEED$DETAILS_COST_CONVERSATION, {
+                cost: `$${others.cost.toFixed(2)}`,
+              })
+          : undefined,
     },
   ].filter(
     (
@@ -197,7 +209,10 @@ function UsageStats({ usage, total }: { usage: StepUsage; total?: StepUsage }) {
       : null;
   return (
     <div className="flex flex-col gap-2">
-      <StatGrid stats={stats} />
+      <StatGrid
+        stats={stats}
+        extraTitle={t(I18nKey.FEED$DETAILS_TOTALS_TOGGLE)}
+      />
       {pct !== null ? (
         <div
           role="progressbar"
@@ -219,7 +234,7 @@ function UsageStats({ usage, total }: { usage: StepUsage; total?: StepUsage }) {
 
 function HeaderChips({ details }: { details: FeedUpdateDetails }) {
   const { t } = useTranslation("openhands");
-  const { outcome, usage } = details;
+  const { outcome, usage, changes } = details;
   const chips: React.ReactNode[] = [];
   if (outcome) {
     const rejected = !!outcome.rejectionReason;
@@ -277,6 +292,21 @@ function HeaderChips({ details }: { details: FeedUpdateDetails }) {
         mono
       >
         {t(I18nKey.FEED$DETAILS_EXIT_CODE, { code: outcome.exitCode })}
+      </Chip>,
+    );
+  }
+  if (changes && changes.length) {
+    const added = changes.reduce((n, c) => n + c.added, 0);
+    const removed = changes.reduce((n, c) => n + c.removed, 0);
+    chips.push(
+      <Chip
+        key="lines"
+        testId="turn-details-chip-lines"
+        mono
+        icon={<FileDiff />}
+      >
+        <span className="text-success">{`+${added}`}</span>
+        <span className="text-danger">{`−${removed}`}</span>
       </Chip>,
     );
   }
@@ -405,6 +435,28 @@ export function TurnDetailsPanel({
                 </div>
               ))}
             </dl>
+          </Module>
+        ) : null}
+        {details.changes?.length ? (
+          <Module
+            wide
+            icon={<FileDiff />}
+            title={t(I18nKey.FEED$DETAILS_CHANGES)}
+          >
+            <div className="flex flex-col gap-2">
+              {details.changes.map((change) => (
+                <DiffBlock key={change.path} change={change} />
+              ))}
+            </div>
+          </Module>
+        ) : null}
+        {details.gitActions?.length ? (
+          <Module
+            wide
+            icon={<GitBranch />}
+            title={t(I18nKey.FEED$DETAILS_CODE_ACTIONS)}
+          >
+            <GitActionList actions={details.gitActions} />
           </Module>
         ) : null}
         {details.usage ? (

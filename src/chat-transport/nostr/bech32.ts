@@ -43,7 +43,10 @@ function convertBits(data: number[], from: number, to: number, pad: boolean) {
 export function bech32Encode(hrp: string, bytes: Uint8Array): string {
   const data = convertBits([...bytes], 8, 5, true);
   const checksum = polymod([...hrpExpand(hrp), ...data, 0, 0, 0, 0, 0, 0]) ^ 1;
-  const tail = Array.from({ length: 6 }, (_, i) => (checksum >>> (5 * (5 - i))) & 31);
+  const tail = Array.from(
+    { length: 6 },
+    (_, i) => (checksum >>> (5 * (5 - i))) & 31,
+  );
   return `${hrp}1${[...data, ...tail].map((d) => CHARSET[d]).join("")}`;
 }
 
@@ -57,6 +60,10 @@ export function bech32Decode(text: string): { hrp: string; bytes: Uint8Array } {
     if (v < 0) throw new Error("Not a valid key.");
     return v;
   });
-  if (polymod([...hrpExpand(hrp), ...data]) !== 1) throw new Error("The key has a typo: its checksum does not match.");
-  return { hrp, bytes: Uint8Array.from(convertBits(data.slice(0, -6), 5, 8, false)) };
+  if (polymod([...hrpExpand(hrp), ...data]) !== 1)
+    throw new Error("The key has a typo: its checksum does not match.");
+  return {
+    hrp,
+    bytes: Uint8Array.from(convertBits(data.slice(0, -6), 5, 8, false)),
+  };
 }
