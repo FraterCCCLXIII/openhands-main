@@ -26,6 +26,7 @@ import { SettingsInput } from "#/components/features/settings/settings-input";
 import { SegmentedToggle } from "#/components/features/files-tab/segmented-toggle";
 import { useActiveBackendContext } from "#/contexts/active-backend-context";
 import { DetectedBackendsList } from "./detected-backends-list";
+import { useAddBackendPrefillStore } from "#/stores/add-backend-prefill-store";
 import { useBackendsHealth } from "#/hooks/query/use-backends-health";
 import { useTracking } from "#/hooks/use-tracking";
 import type { CloudConnectionSource } from "#/services/cloud-funnel-analytics";
@@ -880,16 +881,6 @@ function ManualConnectionColumn({
             setHost(backend.host);
             if (!name.trim()) setName(t(I18nKey.BACKEND$DETECTED_DEFAULT_NAME));
             setConnectionError(null);
-            // The server named its host; the key is the one thing left to enter.
-            if (backend.requiresApiKey) {
-              requestAnimationFrame(() =>
-                document
-                  .querySelector<HTMLInputElement>(
-                    `[name="${testIdRoot}-api-key"]`,
-                  )
-                  ?.focus(),
-              );
-            }
           }}
         />
       ) : null}
@@ -1388,8 +1379,14 @@ function AddBackendChooser({
   source: BackendAddedSource;
 }) {
   const { t } = useTranslation("openhands");
-  const [selectedOption, setSelectedOption] =
-    React.useState<AddBackendOption>("cloud");
+  // A backend picked from the detected list opens straight on its form.
+  const prefill = useAddBackendPrefillStore((state) => state.prefill);
+  const setPrefill = useAddBackendPrefillStore((state) => state.setPrefill);
+  const [selectedOption, setSelectedOption] = React.useState<AddBackendOption>(
+    prefill ? "agent-server" : "cloud",
+  );
+  // The choice is spent once the dialog closes.
+  React.useEffect(() => () => setPrefill(null), [setPrefill]);
   const [agentServerLocation, setAgentServerLocation] =
     React.useState<AgentServerLocation>("local");
   const panelId = "add-backend-selected-panel";
@@ -1493,6 +1490,7 @@ function AddBackendChooser({
           <ManualConnectionColumn
             onConnected={onConnected}
             testIdRoot="add-backend"
+            initialBackend={prefill ?? undefined}
             requireApiKey={agentServerLocation === "remote"}
             submitLabel={t(I18nKey.BACKEND$CONNECT)}
             submittingLabel={t(I18nKey.ONBOARDING$BACKEND_STATUS_CHECKING)}

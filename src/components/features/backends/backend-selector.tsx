@@ -28,6 +28,9 @@ import { NavigationLink } from "#/components/shared/navigation-link";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { useConversationStore } from "#/stores/conversation-store";
 import { AddBackendModal } from "./add-backend-modal";
+import { DetectedBackendsMenuSection } from "./detected-backends-menu-section";
+import { useAddBackendPrefillStore } from "#/stores/add-backend-prefill-store";
+import type { DetectedBackend } from "#/api/detect-local-backends";
 import { BackendDropdownRowMenu } from "./backend-dropdown-row-menu";
 import { BackendStatusDot } from "./backend-status-dot";
 import { EditableAccountIdentityTile } from "./backend-identity-editable-tile";
@@ -385,6 +388,20 @@ export function BackendSelector({
     [openAddBackendModal, preventDropdownMenuClose],
   );
 
+  const setAddBackendPrefill = useAddBackendPrefillStore(
+    (state) => state.setPrefill,
+  );
+  const handleDetectedBackendPick = React.useCallback(
+    (backend: DetectedBackend) => {
+      setAddBackendPrefill({
+        name: t(I18nKey.BACKEND$DETECTED_DEFAULT_NAME),
+        host: backend.host,
+      });
+      openAddBackendModal();
+    },
+    [openAddBackendModal, setAddBackendPrefill, t],
+  );
+
   const handleManageBackendsClick = React.useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       preventDropdownMenuClose(event);
@@ -402,70 +419,78 @@ export function BackendSelector({
   );
 
   const addBackendFooter = hideBackendFooter ? undefined : (
-    <div className={dropdownMenuListClassName}>
+    <>
       {isLockedToCloud ? null : (
-        <button
-          type="button"
-          data-testid="add-backend-menu-item"
-          onMouseDown={preventDropdownMenuClose}
-          onTouchStart={preventDropdownMenuClose}
-          onTouchEnd={handleAddBackendTouchEnd}
-          onClick={handleAddBackendClick}
-          className={cn(
-            dropdownFooterActionClassName,
-            "cursor-pointer rounded-md",
-          )}
-        >
-          <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
-            <Plus width={16} height={16} />
-          </span>
-          {t(I18nKey.BACKEND$ADD)}
-        </button>
+        <DetectedBackendsMenuSection
+          onPick={handleDetectedBackendPick}
+          preventClose={preventDropdownMenuClose}
+        />
       )}
-      {identityHeader ? (
+      <div className={dropdownMenuListClassName}>
+        {isLockedToCloud ? null : (
+          <button
+            type="button"
+            data-testid="add-backend-menu-item"
+            onMouseDown={preventDropdownMenuClose}
+            onTouchStart={preventDropdownMenuClose}
+            onTouchEnd={handleAddBackendTouchEnd}
+            onClick={handleAddBackendClick}
+            className={cn(
+              dropdownFooterActionClassName,
+              "cursor-pointer rounded-md",
+            )}
+          >
+            <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
+              <Plus width={16} height={16} />
+            </span>
+            {t(I18nKey.BACKEND$ADD)}
+          </button>
+        )}
+        {identityHeader ? (
+          <button
+            type="button"
+            data-testid="left-rail-menu-item"
+            aria-pressed={tileViewEnabled}
+            onMouseDown={preventDropdownMenuClose}
+            onTouchStart={preventDropdownMenuClose}
+            onClick={(event) => {
+              preventDropdownMenuClose(event);
+              toggleTileView();
+            }}
+            className={cn(
+              dropdownFooterActionClassName,
+              "cursor-pointer rounded-md",
+            )}
+          >
+            <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
+              <LayoutGrid width={16} height={16} />
+            </span>
+            {t(I18nKey.BACKEND$LEFT_RAIL)}
+          </button>
+        ) : null}
         <button
           type="button"
-          data-testid="left-rail-menu-item"
-          aria-pressed={tileViewEnabled}
+          data-testid="manage-backends-menu-item"
           onMouseDown={preventDropdownMenuClose}
           onTouchStart={preventDropdownMenuClose}
-          onClick={(event) => {
-            preventDropdownMenuClose(event);
-            toggleTileView();
-          }}
+          onTouchEnd={handleManageBackendsTouchEnd}
+          onClick={handleManageBackendsClick}
           className={cn(
             dropdownFooterActionClassName,
             "cursor-pointer rounded-md",
           )}
         >
           <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
-            <LayoutGrid width={16} height={16} />
+            <Settings width={16} height={16} />
           </span>
-          {t(I18nKey.BACKEND$LEFT_RAIL)}
+          {t(
+            isLockedToCloud
+              ? I18nKey.BACKEND$RECONNECT_CLOUD
+              : I18nKey.BACKEND$MANAGE,
+          )}
         </button>
-      ) : null}
-      <button
-        type="button"
-        data-testid="manage-backends-menu-item"
-        onMouseDown={preventDropdownMenuClose}
-        onTouchStart={preventDropdownMenuClose}
-        onTouchEnd={handleManageBackendsTouchEnd}
-        onClick={handleManageBackendsClick}
-        className={cn(
-          dropdownFooterActionClassName,
-          "cursor-pointer rounded-md",
-        )}
-      >
-        <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
-          <Settings width={16} height={16} />
-        </span>
-        {t(
-          isLockedToCloud
-            ? I18nKey.BACKEND$RECONNECT_CLOUD
-            : I18nKey.BACKEND$MANAGE,
-        )}
-      </button>
-    </div>
+      </div>
+    </>
   );
 
   const handleSelectBackend = useSelectBackendOption(options, onSelectOption);
