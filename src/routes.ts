@@ -42,6 +42,10 @@ export default [
     route("oauth/device/verify", "routes/device-verify.tsx"),
     route("automations", "routes/automations-list.tsx"),
     route("automations/git-sync", "routes/automation-git-sync.tsx"),
+    route(
+      "automations/factories/:factoryId/:section?",
+      "routes/automation-factory.tsx",
+    ),
     route("automations/templates", "routes/automation-templates.tsx"),
     route("automations/new/:automationId", "routes/automation-setup-route.tsx"),
     route("automations/setup", "routes/automation-setup-new.tsx"),

@@ -29,6 +29,7 @@ import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useNavigation } from "#/context/navigation-context";
 import { SearchInput } from "#/components/features/automations/search-input";
 import { AutomationGroup } from "#/components/features/automations/automation-group";
+import { FactoriesGroup } from "#/components/features/automations/factories-group";
 import { AutomationViewToggle } from "#/components/features/automations/automation-view-toggle";
 import {
   automationActivityListClassName,
@@ -791,6 +792,8 @@ export default function AutomationsList() {
 
       {/* Content */}
       <div className={cn("flex flex-col gap-6", !dashboard && "mt-6")}>
+        <FactoriesGroup query={searchQuery} />
+
         {isListLoading && (
           <div className="flex flex-col gap-3">
             {Array.from({ length: 3 }).map((_, i) => (

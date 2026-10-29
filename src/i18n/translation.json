@@ -58462,5 +58462,41 @@
     "tr": "API anahtarı gerekli",
     "uk": "Потрібен ключ API",
     "id": "Kunci API diperlukan"
+  },
+  "AUTOMATE$FACTORY_EMPTY": {
+    "en": "Nothing here yet.",
+    "ja": "まだ何もありません。",
+    "zh-CN": "这里还没有内容。",
+    "zh-TW": "這裡還沒有內容。",
+    "ko-KR": "아직 아무것도 없습니다.",
+    "no": "Ingenting her ennå.",
+    "ar": "لا شيء هنا بعد.",
+    "de": "Noch nichts vorhanden.",
+    "fr": "Rien ici pour l'instant.",
+    "it": "Ancora niente qui.",
+    "pt": "Nada aqui ainda.",
+    "es": "Aún no hay nada aquí.",
+    "ca": "Encara no hi ha res aquí.",
+    "tr": "Burada henüz bir şey yok.",
+    "uk": "Тут поки нічого немає.",
+    "id": "Belum ada apa pun di sini."
+  },
+  "AUTOMATE$FACTORY_NOT_FOUND": {
+    "en": "Factory not found.",
+    "ja": "ファクトリーが見つかりません。",
+    "zh-CN": "未找到工厂。",
+    "zh-TW": "找不到工廠。",
+    "ko-KR": "팩토리를 찾을 수 없습니다.",
+    "no": "Fant ikke fabrikken.",
+    "ar": "لم يتم العثور على المصنع.",
+    "de": "Fabrik nicht gefunden.",
+    "fr": "Usine introuvable.",
+    "it": "Fabbrica non trovata.",
+    "pt": "Fábrica não encontrada.",
+    "es": "Fábrica no encontrada.",
+    "ca": "No s'ha trobat la fàbrica.",
+    "tr": "Fabrika bulunamadı.",
+    "uk": "Фабрику не знайдено.",
+    "id": "Pabrik tidak ditemukan."
   }
 }
