@@ -38,6 +38,8 @@ export const CHANNELS = [
   { id: "ads", name: "Ad networks", feeds: "Paid spend, reach and cost per acquisition by network." },
   { id: "spotify", name: "Spotify", feeds: "Podcast episodes and audio ads, with listens per episode." },
 ];
+// Listed with the connectors but not part of the plan: campaigns cannot pick it.
+const EXCLUDED_CONNECTORS = [{ id: "resend", name: "Resend", feeds: "Transactional email. Not using it." }];
 export const ASSET_KINDS = [
   { id: "image2d", label: "2D image", tool: "Image generation" },
   { id: "model3d", label: "3D model", tool: "3D generation" },
@@ -59,7 +61,7 @@ const VIEWS = [
   ["assets", "Assets"],
   ["templates", "Templates"],
   ["costs", "Costs"],
-  ["connections", "Connections"],
+  ["connections", "Connectors"],
 ];
 const ZOOM_PPD = { month: 14, quarter: 4, year: 1.6 };
 const ROW_H = 32;
@@ -990,21 +992,22 @@ function mountProduction(host, { container }) {
 
   function viewConnections() {
     const wrap = el("div", "stack");
-    wrap.append(el("p", "muted small", "The services this plan will connect to. Nothing is connected yet, and no credentials are entered on this page."));
+    wrap.append(el("p", "muted small", "The connectors this plan will have. None is connected yet, and no credentials are entered on this page."));
     const grid = el("div", "cols");
-    CHANNELS.forEach((c) => {
-      const card = el("div", "card stack");
+    const card = (c, excluded) => {
+      const box = el("div", "card stack");
       const used = campaigns().filter((x) => x.channels.includes(c.id)).length;
-      card.append(el("h2", "", c.name), el("span", "chip", "Not connected"), el("span", "muted small", c.feeds), el("span", "small", `Used by ${used} campaign${used === 1 ? "" : "s"}`));
+      box.append(el("h2", "", c.name), el("span", "chip", excluded ? "Not using" : "Not connected"), el("span", "muted small", c.feeds));
+      if (!excluded) box.append(el("span", "small", `Used by ${used} campaign${used === 1 ? "" : "s"}`));
       const connect = button("Connect", () => {}, "ghost");
       connect.disabled = true;
-      connect.title = "Connections are not wired yet";
-      card.append(connect);
-      grid.append(card);
-    });
-    const note = el("div", "card");
-    note.append(el("h2", "", "Not used"), el("span", "muted small", "Resend is not part of this plan."));
-    wrap.append(grid, note);
+      connect.title = excluded ? "This connector is not used" : "Connectors are not wired yet";
+      box.append(connect);
+      return box;
+    };
+    CHANNELS.forEach((c) => grid.append(card(c, false)));
+    EXCLUDED_CONNECTORS.forEach((c) => grid.append(card(c, true)));
+    wrap.append(grid);
     return wrap;
   }
 

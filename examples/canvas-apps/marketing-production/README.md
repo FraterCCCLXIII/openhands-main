@@ -12,7 +12,7 @@ A Canvas App that plans marketing against the OpenHands product release schedule
 - **Assets**: 2D image, 3D model and Seedance video assets moving from brief to published, per campaign.
 - **Templates**: agent campaign templates as `.md` instructions and `.json` briefs. Copy them, create a campaign from one, or run one with an agent.
 - **Costs**: estimated asset generation cost per campaign from editable placeholder rates.
-- **Connections**: the services this plan will connect to (HubSpot, X, LinkedIn, Google Search Console, Google Analytics, Reddit, ad networks, Spotify). Nothing is connected yet and no credentials are entered. Resend is not used.
+- **Connectors**: the connectors this plan will have: HubSpot, X, LinkedIn, Google Search Console, Google Analytics, Reddit, ad networks and Spotify. Resend is listed as not using. Nothing is connected yet and no credentials are entered.
 
 ## AI
 

@@ -92,9 +92,10 @@ describe("page", () => {
     mount({ container });
     const tab = (name) => [...container.querySelectorAll('[role="tab"]')].find((t) => t.textContent === name);
 
-    tab("Connections").click();
+    tab("Connectors").click();
     expect(container.textContent).toContain("Google Search Console");
-    expect(container.textContent).toContain("Resend is not part of this plan.");
+    expect(container.textContent).toContain("Resend");
+    expect(container.textContent).toContain("Not using");
     tab("Assets").click();
     expect(container.textContent).toContain("Seedance");
     tab("Templates").click();
