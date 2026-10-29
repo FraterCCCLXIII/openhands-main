@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, buildTimeline, describeRow, extractRefs, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
+import { activate, buildTimeline, costShort, costText, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
 
 const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
 const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
@@ -136,6 +136,45 @@ describe("references, lines and usage", () => {
     expect(text).toContain("pm_project: web");
     expect(text).toContain("$0.02");
     expect(text).toContain("default");
+  });
+});
+
+describe("cost from our prices", () => {
+  it("matches a model by id, else by family, and not at all for an unknown model", () => {
+    expect(priceFor("anthropic/claude-opus-5-5")).toMatchObject({ family: false, row: { id: "claude-opus-5-5" } });
+    expect(priceFor("litellm_proxy/claude-opus-4-5-20251101")).toMatchObject({ family: true, row: { id: "claude-opus-5-5" } });
+    expect(priceFor("ollama_chat/gpt-oss:20b")).toBeNull();
+  });
+
+  it("prices cached tokens at the cache rate and the rest of the prompt at the input rate", () => {
+    const part = { model: "claude-sonnet-5-5", prompt: 1_000_000, completion: 100_000, cache: 600_000, cacheWrite: 0 };
+    // 400k fresh at $2, 100k out at $10, 600k cached at $0.20 per million.
+    expect(estimateCost({ parts: [part] }).cost).toBeCloseTo(0.8 + 1 + 0.12);
+  });
+
+  it("returns no cost for an unpriced model and flags family matches", () => {
+    expect(estimateCost({ parts: [{ model: "ollama_chat/gpt-oss:20b", prompt: 10, completion: 1, cache: 0, cacheWrite: 0 }] })).toMatchObject({ cost: null, unpriced: ["ollama_chat/gpt-oss:20b"] });
+    expect(estimateCost({ parts: [{ model: "litellm_proxy/claude-opus-4-5", prompt: 10, completion: 1, cache: 0, cacheWrite: 0 }] }).family).toBe(true);
+  });
+
+  it("shows the chosen basis first and the other in brackets", () => {
+    expect(costText(0, 0.5, "reported")).toBe("not reported (≈ $0.50 estimated)");
+    expect(costText(0.4, 0.5, "estimated")).toBe("≈ $0.50 ($0.40 reported)");
+  });
+
+  it("keeps a step's cost short for the side column in either basis", () => {
+    const usage = { cost: 0, prompt: 1000, completion: 100, cache: 0, cacheWrite: 0, models: ["claude-sonnet-5-5"], parts: [{ model: "claude-sonnet-5-5", prompt: 1000, completion: 100, cache: 0, cacheWrite: 0 }] };
+    expect(costShort(usage, "reported")).toMatch(/^n\/r \(≈ \$/);
+    expect(costShort(usage, "estimated")).toMatch(/^≈ \$/);
+    expect(costShort({ shared: true }, "reported")).toBe("same call");
+    expect(costShort(null, "reported")).toBe("");
+  });
+
+  it("totals a run's estimate over its calls, so an unreported cost still gets a figure", () => {
+    const tl = buildTimeline([stats("s1", "2026-10-29T10:00:05Z", 0, 1000, 200, "claude-sonnet-5-5"), stats("s2", "2026-10-29T10:00:09Z", 0, 2000, 500, "claude-sonnet-5-5")]);
+    const rc = runCost(tl);
+    expect(rc.reported).toBe(0);
+    expect(rc.estimate).toBeCloseTo((2000 * 2 + 500 * 10) / 1e6);
   });
 });
 

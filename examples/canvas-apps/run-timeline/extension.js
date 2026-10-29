@@ -102,6 +102,63 @@ function failed(obs) {
 }
 
 
+
+// ─── Our known prices ─────────────────────────────────────────────────────
+
+// List prices in USD per million tokens, copied from kosmos-engine tools/pm/prices.json
+// (as of 2026-10-24). Rows with verified: false came from an aggregator or an assumption.
+// These are list prices, not billing.
+export const PRICES_AS_OF = "2026-10-24";
+export const PRICES = [
+  { id: "claude-fable-5-1", name: "Claude Fable 5.1", input: 10, output: 50, cacheRead: 0.25, cacheWrite: 12.5, verified: true, match: /fable/i },
+  { id: "claude-opus-5-5", name: "Claude Opus 5.5", input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5, verified: true, match: /opus/i },
+  { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5, verified: true, match: /sonnet/i },
+  { id: "claude-haiku-5-5", name: "Claude Haiku 5.5", input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125, longOver: 100000, longInput: 0.5, longOutput: 2.5, longCacheRead: 0.05, tokenizer: 1.3, verified: false, match: /haiku/i },
+  { id: "gpt-5-5", name: "GPT-5.5", input: 5, output: 30, cacheRead: 0.5, cacheWrite: 5, longOver: 272000, longInput: 10, longOutput: 45, longCacheRead: 1, verified: false, match: /gpt-?5/i },
+  { id: "gemini-3-1-pro", name: "Gemini 3.1 Pro", input: 2, output: 12, cacheRead: 0.2, cacheWrite: 2, longOver: 200000, longInput: 4, longOutput: 18, longCacheRead: 0.4, verified: false, match: /gemini(?!.*flash)/i },
+  { id: "gemini-2-5-flash", name: "Gemini 2.5 Flash", input: 0.3, output: 2.5, cacheRead: 0.03, cacheWrite: 0.3, verified: false, match: /gemini.*flash/i },
+];
+
+/** The price row for a model name: an exact id match, else its model family. */
+export function priceFor(modelName) {
+  if (typeof modelName !== "string" || !modelName) return null;
+  const lower = modelName.toLowerCase().replace(/[._]/g, "-");
+  const exact = PRICES.find((p) => lower.includes(p.id));
+  if (exact) return { row: exact, family: false };
+  const fam = PRICES.find((p) => p.match.test(modelName));
+  return fam ? { row: fam, family: true } : null;
+}
+
+/**
+ * Prices one model call from our list prices. Prompt tokens include the cached ones,
+ * so cached reads and writes are priced at their own rate and the rest at the input rate.
+ * Returns null cost when no model in the call has a price.
+ */
+export function estimateCost(usage) {
+  if (!usage || usage.shared || !Array.isArray(usage.parts) || usage.parts.length === 0) return { cost: null, family: false, unverified: false, unpriced: [] };
+  let cost = 0;
+  let priced = 0;
+  let family = false;
+  let unverified = false;
+  const unpriced = [];
+  usage.parts.forEach((part) => {
+    const hit = priceFor(part.model);
+    if (!hit) { unpriced.push(part.model ?? "unknown model"); return; }
+    const r = hit.row;
+    const scale = r.tokenizer ?? 1;
+    const long = r.longOver && part.prompt * scale > r.longOver;
+    const inRate = long ? r.longInput : r.input;
+    const outRate = long ? r.longOutput : r.output;
+    const readRate = long ? r.longCacheRead : r.cacheRead;
+    const fresh = Math.max(0, part.prompt - part.cache - part.cacheWrite);
+    cost += scale * (fresh * inRate + part.completion * outRate + part.cache * readRate + part.cacheWrite * r.cacheWrite) / 1_000_000;
+    priced += 1;
+    family ||= hit.family;
+    unverified ||= !r.verified;
+  });
+  return { cost: priced ? cost : null, family, unverified, unpriced };
+}
+
 const NOT_TICKETS = new Set(["UTF", "ISO", "SHA", "MD", "AES", "RFC", "HTTP", "CVE", "TLS", "SSL", "JSON", "PNG", "ES", "X", "TCP", "UDP", "IPV"]);
 
 /** Ticket keys, pull requests and repositories mentioned in some text. */
@@ -136,18 +193,18 @@ const usageOf = (value) => {
   Object.entries(m).forEach(([id, u]) => {
     if (!isObj(u)) return;
     const tu = isObj(u.accumulated_token_usage) ? u.accumulated_token_usage : {};
-    out[id] = { model: u.model_name ?? tu.model ?? null, cost: Number(u.accumulated_cost) || 0, prompt: Number(tu.prompt_tokens) || 0, completion: Number(tu.completion_tokens) || 0, cache: Number(tu.cache_read_tokens) || 0, reasoning: Number(tu.reasoning_tokens) || 0 };
+    out[id] = { model: u.model_name ?? tu.model ?? null, cost: Number(u.accumulated_cost) || 0, prompt: Number(tu.prompt_tokens) || 0, completion: Number(tu.completion_tokens) || 0, cache: Number(tu.cache_read_tokens) || 0, cacheWrite: Number(tu.cache_write_tokens) || 0, reasoning: Number(tu.reasoning_tokens) || 0 };
   });
   return out;
 };
 
-const zeroUsage = () => ({ cost: 0, prompt: 0, completion: 0, cache: 0, reasoning: 0, models: [] });
+const zeroUsage = () => ({ cost: 0, prompt: 0, completion: 0, cache: 0, cacheWrite: 0, reasoning: 0, models: [], parts: [] });
 
 /** What changed between two cumulative stats snapshots: one model call's cost and tokens. */
 function usageDelta(now, before = {}) {
   const d = zeroUsage();
   Object.entries(now).forEach(([id, u]) => {
-    const b = before[id] ?? { cost: 0, prompt: 0, completion: 0, cache: 0, reasoning: 0 };
+    const b = before[id] ?? { cost: 0, prompt: 0, completion: 0, cache: 0, cacheWrite: 0, reasoning: 0 };
     const grew = u.cost > b.cost || u.prompt > b.prompt || u.completion > b.completion;
     if (!grew) return;
     d.cost += Math.max(0, u.cost - b.cost);
@@ -155,6 +212,8 @@ function usageDelta(now, before = {}) {
     d.completion += Math.max(0, u.completion - b.completion);
     d.cache += Math.max(0, u.cache - b.cache);
     d.reasoning += Math.max(0, u.reasoning - b.reasoning);
+    d.cacheWrite += Math.max(0, u.cacheWrite - b.cacheWrite);
+    d.parts.push({ model: u.model, prompt: Math.max(0, u.prompt - b.prompt), completion: Math.max(0, u.completion - b.completion), cache: Math.max(0, u.cache - b.cache), cacheWrite: Math.max(0, u.cacheWrite - b.cacheWrite) });
     if (u.model && !d.models.includes(u.model)) d.models.push(u.model);
   });
   return d;
@@ -252,6 +311,7 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
       if (used.has(j)) item.usage = { shared: true };
       else { used.add(j); item.usage = deltas[j]; }
     });
+  const calls = deltas.filter((d) => d.parts.length);
   const lastSnap = snapshots.at(-1);
   const usage = lastSnap ? usageDelta(lastSnap.usage) : null;
   const refs = { tickets: new Set(), prs: new Set(), repos: new Set() };
@@ -260,7 +320,7 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
   instants.forEach((i) => addRefs(i, i.text));
   const lines = list.reduce((acc, sp) => ({ added: acc.added + (sp.loc?.added ?? 0), removed: acc.removed + (sp.loc?.removed ?? 0) }), { added: 0, removed: 0 });
   const all = [...list.map((s) => s.start), ...list.map((s) => s.end).filter((t) => t !== null), ...instants.map((i) => i.t)];
-  return { spans: list, instants, warnings, ignored, usage, lines, refs: Object.fromEntries(Object.entries(refs).map(([k, v]) => [k, [...v]])), t0: all.length ? Math.min(...all) : null, t1: all.length ? Math.max(...all) : null };
+  return { spans: list, instants, warnings, ignored, usage, calls, lines, refs: Object.fromEntries(Object.entries(refs).map(([k, v]) => [k, [...v]])), t0: all.length ? Math.min(...all) : null, t1: all.length ? Math.max(...all) : null };
 }
 
 /** Totals for a timeline: time inside steps (overlaps merged), time between them, and the extremes. */
@@ -338,13 +398,17 @@ const STYLE = `
 .rt .tile, .rt .card { background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 12px; padding: 12px 14px; }
 .rt .tile b { display: block; font-size: 20px; color: var(--rt-contrast); overflow-wrap: anywhere; }
 .rt .sheet { background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 12px; overflow-x: auto; }
-.rt .wf { min-width: 760px; }
-.rt .wfrow { display: grid; grid-template-columns: 300px 1fr; width: 100%; border: 0; border-bottom: 1px solid var(--rt-border); border-radius: 0; background: none; padding: 0; text-align: left; align-items: stretch; }
+.rt .wf { min-width: 900px; }
+.rt .wfrow { display: grid; grid-template-columns: 300px 1fr 150px; width: 100%; border: 0; border-bottom: 1px solid var(--rt-border); border-radius: 0; background: none; padding: 0; text-align: left; align-items: stretch; }
 .rt .wfrow:hover, .rt .wfrow.sel { background: var(--rt-raised); }
 .rt .wfrow .lab { display: flex; gap: 8px; align-items: center; padding: 5px 10px; overflow: hidden; white-space: nowrap; border-right: 1px solid var(--rt-border); }
 .rt .wfrow .lab .t { overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .rt .wfrow .lab .off { color: var(--rt-muted); font: 11px ui-monospace, monospace; }
 .rt .track { position: relative; min-height: 28px; }
+.rt .metacol { position: sticky; right: 0; z-index: 2; background: var(--rt-panel); border-left: 1px solid var(--rt-border); padding: 5px 10px; display: flex; flex-direction: column; justify-content: center; gap: 1px; font: 12px ui-monospace, monospace; white-space: nowrap; }
+.rt .wfrow:hover .metacol, .rt .wfrow.sel .metacol { background: var(--rt-raised); }
+.rt .metacol .add { color: var(--rt-success); } .rt .metacol .del { color: var(--rt-danger); } .rt .metacol .dim { color: var(--rt-muted); }
+.rt .head .metacol { background: var(--rt-panel); font-size: 11px; }
 .rt .head .track, .rt .head .lab { min-height: 30px; background: var(--rt-panel); }
 .rt .tick { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rt-border); font-size: 10px; color: var(--rt-muted); padding: 2px 0 0 4px; white-space: nowrap; }
 .rt .bar { position: absolute; top: 6px; height: 16px; border-radius: 3px; border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 45%, transparent); min-width: 3px; }
@@ -397,6 +461,37 @@ const num = (n) => Math.round(n).toLocaleString();
 const money = (c) => (c > 0 ? `$${c.toFixed(c < 0.01 ? 4 : 2)}` : "not reported");
 const list = (a) => (a.length ? a.join(", ") : null);
 
+/** The run's cost as reported by the server and as estimated from our list prices, call by call. */
+export function runCost(tl) {
+  const calls = (tl.calls ?? []).map((c) => estimateCost(c));
+  const priced = calls.filter((c) => c.cost !== null);
+  return {
+    reported: tl.usage?.cost ?? 0,
+    hasUsage: Boolean(tl.usage),
+    estimate: priced.length ? priced.reduce((s, c) => s + c.cost, 0) : null,
+    unpricedCalls: calls.length - priced.length,
+    approx: priced.some((c) => c.family || c.unverified),
+  };
+}
+
+const est$ = (c) => `≈ $${c.toFixed(c < 0.01 ? 4 : 2)}`;
+
+/** A short cost for a step's right-hand column. */
+export function costShort(usage, mode) {
+  if (!usage) return "";
+  if (usage.shared) return "same call";
+  const e = estimateCost(usage);
+  if (mode === "estimated") return e.cost === null ? "no price" : `${est$(e.cost)}${e.family || e.unverified ? "*" : ""}`;
+  return usage.cost > 0 ? money(usage.cost) : e.cost === null ? "n/r" : `n/r (${est$(e.cost)})`;
+}
+
+/** One line for a cost: the chosen basis first, the other in brackets. */
+export function costText(reported, estimate, mode, { unpriced = false, approx = false } = {}) {
+  const rep = reported > 0 ? money(reported) : "not reported";
+  const est = estimate === null ? (unpriced ? "no price for this model" : "not priced") : `${est$(estimate)}${approx ? "*" : ""}`;
+  return mode === "estimated" ? `${est} (${rep} reported)` : `${rep} (${est} estimated)`;
+}
+
 function convMeta(conv) {
   if (!isObj(conv)) return null;
   const tags = isObj(conv.tags) ? Object.entries(conv.tags).filter(([, v]) => typeof v === "string" && v).map(([k, v]) => `${k}: ${v}`) : [];
@@ -410,7 +505,7 @@ function convMeta(conv) {
 }
 
 /** Labelled sections describing one row and its run, used by the hover card and the detail panel. */
-export function describeRow(item, tl, conv) {
+export function describeRow(item, tl, conv, mode = "reported") {
   const isSpan = item.kind === "span";
   const sections = [];
   const step = [];
@@ -419,9 +514,10 @@ export function describeRow(item, tl, conv) {
     if (item.loc) step.push(["Lines", `+${item.loc.added} −${item.loc.removed}${item.loc.path ? ` in ${item.loc.path}` : ""}`]);
   }
   const u = item.usage;
+  const e = estimateCost(u);
   if (u?.shared) step.push(["Model call", "same call as an earlier step"]);
   else if (u) {
-    step.push(["Model", list(u.models)], ["Tokens", `${num(u.prompt)} in · ${num(u.completion)} out${u.reasoning ? ` · ${num(u.reasoning)} reasoning` : ""}${u.cache ? ` · ${num(u.cache)} cached` : ""}`], ["Cost", money(u.cost)]);
+    step.push(["Model", list(u.models)], ["Tokens", `${num(u.prompt)} in · ${num(u.completion)} out${u.reasoning ? ` · ${num(u.reasoning)} reasoning` : ""}${u.cache ? ` · ${num(u.cache)} cached` : ""}`], ["Cost", costText(u.cost, e.cost, mode, { unpriced: e.unpriced.length > 0, approx: e.family || e.unverified })]);
   }
   if (step.length) sections.push(["This step", step]);
   const mine = [["Tickets", list(item.refs?.tickets ?? [])], ["Pull requests", list(item.refs?.prs ?? [])], ["Repositories", list(item.refs?.repos ?? [])]].filter(([, v]) => v);
@@ -439,7 +535,8 @@ export function describeRow(item, tl, conv) {
   run.push(["Models", list(total?.models ?? (meta?.model ? [meta.model] : [])) ?? "not in this log"]);
   run.push(["Lines changed", `+${tl.lines.added} −${tl.lines.removed}`]);
   run.push(["Tokens", total ? `${num(total.prompt + total.completion)} (${num(total.prompt)} in · ${num(total.completion)} out)` : "not in this log"]);
-  run.push(["Cost", total ? money(total.cost) : "not in this log"]);
+  const rc = runCost(tl);
+  run.push(["Cost", total ? costText(rc.reported, rc.estimate, mode, { unpriced: rc.unpricedCalls > 0, approx: rc.approx }) : "not in this log"]);
   [["Tickets", tl.refs.tickets], ["Pull requests", tl.refs.prs], ["Repositories", tl.refs.repos]].forEach(([k, v]) => { if (v.length) run.push([k, v.join(", ")]); });
   sections.push(["This run", run]);
   return sections;
@@ -454,7 +551,8 @@ function mountTimeline(host, { container }) {
   const root = el("div", "rt");
   container.append(root);
 
-  const ui = { convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null };
+  const readMode = () => { try { return window.localStorage.getItem("run-timeline:cost") === "estimated" ? "estimated" : "reported"; } catch { return "reported"; } };
+  const ui = { costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null };
   let disposed = false;
   let pollTimer = null;
   let loadToken = 0;
@@ -533,7 +631,7 @@ function mountTimeline(host, { container }) {
   const showTip = (item, tl, x, y) => {
     if (!tip) { tip = el("div", "tip"); tip.setAttribute("role", "tooltip"); root.append(tip); }
     tip.replaceChildren(el("h3", "", item.kind === "span" ? item.label : `${item.label}: ${item.text.split("\n")[0].slice(0, 80)}`));
-    describeRow(item, tl, ui.source?.conv).forEach(([title, rows]) => {
+    describeRow(item, tl, ui.source?.conv, ui.costMode).forEach(([title, rows]) => {
       tip.append(el("div", "sech", title));
       const grid = el("div", "sec");
       rows.forEach(([k, v]) => grid.append(el("span", "k", k), el("span", "v", String(v))));
@@ -559,6 +657,11 @@ function mountTimeline(host, { container }) {
     const axis = el("div", "track");
     [0, 25, 50, 75, 100].forEach((p) => { const tk = el("div", "tick", p === 0 ? "start" : fmtDuration((total * p) / 100)); tk.style.left = `${p === 100 ? 96 : p}%`; axis.append(tk); });
     head.append(axis);
+    const rcAll = runCost(tl);
+    const headMeta = el("div", "metacol");
+    headMeta.append(el("span", "dim", "Lines · Cost"));
+    headMeta.append(el("span", "", `+${tl.lines.added} −${tl.lines.removed} · ${tl.usage ? (ui.costMode === "estimated" ? (rcAll.estimate === null ? "no price" : est$(rcAll.estimate)) : money(rcAll.reported)) : "n/a"}`));
+    head.append(headMeta);
     wrap.append(head);
     rows.forEach((r) => {
       const row = el("button", `wfrow${ui.pick === (r.span?.id ?? r.inst.id) ? " sel" : ""}`);
@@ -582,7 +685,15 @@ function mountTimeline(host, { container }) {
         d.style.left = `${pct(r.inst.t)}%`;
         track.append(d);
       }
-      row.append(lab, track);
+      const meta = el("div", "metacol");
+      if (r.span?.loc && (r.span.loc.added || r.span.loc.removed)) {
+        const ln = el("span");
+        ln.append(el("span", "add", `+${r.span.loc.added}`), document.createTextNode(" "), el("span", "del", `−${r.span.loc.removed}`));
+        meta.append(ln);
+      }
+      const c = costShort(item.usage, ui.costMode);
+      if (c) meta.append(el("span", item.usage?.shared ? "dim" : "", c));
+      row.append(lab, track, meta);
       row.addEventListener("click", () => { hideTip(); ui.pick = item.id; render(); });
       row.addEventListener("mouseenter", (ev) => showTip(item, tl, ev.clientX, ev.clientY));
       row.addEventListener("mousemove", (ev) => showTip(item, tl, ev.clientX, ev.clientY));
@@ -615,7 +726,7 @@ function mountTimeline(host, { container }) {
     add("Time basis", { producer: "the event's own timestamp", observed: "the capture helper's receipt time", "assumed-utc": "the Agent Server's timestamp, read as UTC" }[item.basis]);
     add("Event", item.id);
     card.append(dl);
-    describeRow(item, tl, ui.source?.conv).forEach(([title, rows]) => {
+    describeRow(item, tl, ui.source?.conv, ui.costMode).forEach(([title, rows]) => {
       if (title === "This step") return;
       card.append(el("span", "muted small", title));
       const d2 = el("dl");
@@ -672,10 +783,11 @@ function mountTimeline(host, { container }) {
     });
     root.append(tiles);
     const more = el("div", "tiles");
+    const rc = runCost(tl);
     const toks = sum.usage ? sum.usage.prompt + sum.usage.completion : null;
     [["Lines changed", `+${sum.lines.added} −${sum.lines.removed}`, "from file edits"],
       ["Tokens", toks === null ? "not in this log" : num(toks), sum.usage ? `${num(sum.usage.prompt)} in · ${num(sum.usage.completion)} out` : ""],
-      ["Cost", sum.usage ? money(sum.usage.cost) : "not in this log", sum.usage ? "as reported by the server" : ""],
+      ["Cost", sum.usage ? (ui.costMode === "estimated" ? (rc.estimate === null ? "no price" : `${est$(rc.estimate)}${rc.approx ? "*" : ""}`) : money(rc.reported)) : "not in this log", sum.usage ? (ui.costMode === "estimated" ? `from our list prices, ${PRICES_AS_OF}${rc.unpricedCalls ? ` · ${rc.unpricedCalls} calls unpriced` : ""}` : `as reported by the server${rc.estimate !== null ? ` · ${est$(rc.estimate)} estimated` : ""}`) : ""],
       ["Models", list(sum.usage?.models ?? []) ?? "not in this log", ""],
       ["References", [...sum.refs.tickets, ...sum.refs.prs].slice(0, 4).join(", ") || "none found", `${sum.refs.tickets.length} tickets · ${sum.refs.prs.length} PRs`]].forEach(([k, v, d]) => {
       const t = el("div", "tile");
@@ -689,7 +801,12 @@ function mountTimeline(host, { container }) {
     const cb = el("input"); cb.type = "checkbox"; cb.checked = ui.showMessages;
     cb.addEventListener("change", () => { ui.showMessages = cb.checked; render(); });
     chk.append(cb, el("span", "", "Show messages"));
-    filters.append(chk, el("span", "muted small", "Hide steps shorter than"), select([["0", "Nothing"], ["100", "100 ms"], ["1000", "1 s"], ["10000", "10 s"]], String(ui.minMs), (v) => { ui.minMs = Number(v); render(); }, "Minimum step length"));
+    const costSel = select([["reported", "Cost: as reported by the server"], ["estimated", "Cost: estimated from our prices"]], ui.costMode, (v) => {
+      ui.costMode = v;
+      try { window.localStorage.setItem("run-timeline:cost", v); } catch { /* storage unavailable */ }
+      render();
+    }, "How cost is calculated");
+    filters.append(chk, costSel, el("span", "muted small", "Hide steps shorter than"), select([["0", "Nothing"], ["100", "100 ms"], ["1000", "1 s"], ["10000", "10 s"]], String(ui.minMs), (v) => { ui.minMs = Number(v); render(); }, "Minimum step length"));
     const sheet = el("div", "sheet");
     sheet.append(waterfall(tl, sum));
     const stack = el("div", "stack");
@@ -699,6 +816,13 @@ function mountTimeline(host, { container }) {
       stack.append(d);
       if (ui.source.type === "live") stack.append(button("Open the conversation", () => host.navigate(`/conversations/${ui.source.id}`), ""));
     }
+    const pricesBox = el("details", "card");
+    pricesBox.append(el("summary", "", `Prices used for estimates (list prices as of ${PRICES_AS_OF})`));
+    const pt = el("div", "stack");
+    pt.append(el("span", "muted small", "USD per million tokens, from kosmos-engine tools/pm/prices.json. List prices, not billing. A model without its own row is priced as its family (marked *). Cached tokens are priced at the cache rates and the rest of the prompt at the input rate. * also marks rows not verified against the provider."));
+    PRICES.forEach((r) => pt.append(el("span", "small", `${r.name}${r.verified ? "" : " *"}: input ${r.input} · output ${r.output} · cache read ${r.cacheRead} · cache write ${r.cacheWrite}${r.longOver ? ` · above ${r.longOver.toLocaleString()} prompt tokens ${r.longInput}/${r.longOutput}` : ""}`)));
+    pricesBox.append(pt);
+    stack.append(pricesBox);
     if (ui.warnings.length) {
       const w = el("div", "card stack");
       w.append(el("h2", "", `${ui.warnings.length} warning${ui.warnings.length === 1 ? "" : "s"}`));
