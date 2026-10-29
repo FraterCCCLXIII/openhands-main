@@ -14,12 +14,12 @@ export function ReorderGrip({ label, className, ...props }: ReorderGripProps) {
       type="button"
       aria-label={label}
       className={cn(
-        "flex size-6 shrink-0 cursor-grab items-center justify-center rounded text-muted hover:text-contrast active:cursor-grabbing",
+        "flex h-6 w-5 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted opacity-60 transition-opacity hover:bg-interactive-hover hover:text-contrast hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing motion-reduce:transition-none",
         className,
       )}
       {...props}
     >
-      <GripVertical aria-hidden className="size-4" />
+      <GripVertical aria-hidden className="size-3.5" />
     </button>
   );
 }
