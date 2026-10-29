@@ -31,7 +31,7 @@ function AgentButton({
   large?: boolean;
 }) {
   const { t } = useTranslation("openhands");
-  const { agent, conversations, live } = entry;
+  const { agent, live } = entry;
   const { Icon } = agent;
   return (
     <div className="group relative">
@@ -42,35 +42,28 @@ function AgentButton({
         aria-pressed={selected}
         onClick={onSelect}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-raised",
+          "flex w-full flex-col items-center gap-2 rounded-lg px-3 py-3 text-center hover:bg-surface-raised",
           !large && "border border-border",
           selected && "bg-surface-raised ring-1 ring-focus",
         )}
       >
-        <span className={cn("shrink-0", large ? "size-11" : "size-8")}>
+        <span className={cn("shrink-0", large ? "size-12" : "size-10")}>
           <FeedIconTile className={agent.className}>
-            <Icon size={large ? 22 : 16} />
+            <Icon size={large ? 24 : 20} />
           </FeedIconTile>
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-medium text-foreground">
-              {agent.name}
-            </span>
-            {live > 0 ? (
-              <span
-                aria-label={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
-                className="size-1.5 shrink-0 rounded-full bg-success"
-              />
-            ) : null}
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-sm font-medium text-foreground">
+            {agent.name}
           </span>
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
-            <FeedRoleBadge role={getDemoAgentRole(agent)} />
-            <span>
-              {t(I18nKey.FEED$FACTORY_CONVERSATIONS, { count: conversations })}
-            </span>
-          </span>
+          {live > 0 ? (
+            <span
+              aria-label={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
+              className="size-1.5 shrink-0 rounded-full bg-success"
+            />
+          ) : null}
         </span>
+        <FeedRoleBadge role={getDemoAgentRole(agent)} />
       </button>
       <button
         type="button"
