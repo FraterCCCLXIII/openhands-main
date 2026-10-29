@@ -25,6 +25,7 @@ import { BrandButton } from "#/components/features/settings/brand-button";
 import { SettingsInput } from "#/components/features/settings/settings-input";
 import { SegmentedToggle } from "#/components/features/files-tab/segmented-toggle";
 import { useActiveBackendContext } from "#/contexts/active-backend-context";
+import { DetectedBackendsList } from "./detected-backends-list";
 import { useBackendsHealth } from "#/hooks/query/use-backends-health";
 import { useTracking } from "#/hooks/use-tracking";
 import type { CloudConnectionSource } from "#/services/cloud-funnel-analytics";
@@ -810,6 +811,8 @@ interface ManualConnectionColumnProps {
   submitTestId?: string;
   fixedKind?: BackendKind;
   showKindSelector?: boolean;
+  /** Lists local Agent Servers found on this machine above the fields. */
+  showDetectedBackends?: boolean;
 }
 
 /**
@@ -826,6 +829,7 @@ function ManualConnectionColumn({
   submitTestId,
   fixedKind,
   showKindSelector = true,
+  showDetectedBackends = false,
 }: ManualConnectionColumnProps) {
   const { t } = useTranslation("openhands");
 
@@ -870,6 +874,15 @@ function ManualConnectionColumn({
       onSubmit={handleSubmit}
       className="flex flex-col gap-4 flex-1 min-w-0"
     >
+      {showDetectedBackends ? (
+        <DetectedBackendsList
+          onPick={(backend) => {
+            setHost(backend.host);
+            if (!name.trim()) setName(t(I18nKey.BACKEND$DETECTED_DEFAULT_NAME));
+            setConnectionError(null);
+          }}
+        />
+      ) : null}
       <SettingsInput
         testId={`${testIdRoot}-name`}
         name={`${testIdRoot}-name`}
@@ -1475,6 +1488,7 @@ function AddBackendChooser({
             submittingLabel={t(I18nKey.ONBOARDING$BACKEND_STATUS_CHECKING)}
             fixedKind="local"
             showKindSelector={false}
+            showDetectedBackends={agentServerLocation === "local"}
           />
         </div>
       </div>
