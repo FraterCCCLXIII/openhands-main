@@ -202,6 +202,26 @@ describe("conversation nav", () => {
   });
 });
 
+describe("info note", () => {
+  it("keeps the evidence note behind an info icon instead of a banner", () => {
+    let mount;
+    const c = document.createElement("div");
+    document.body.append(c);
+    activate({ apiVersion: "1", navigate() {}, registerPage: (_, m) => { mount = m; return () => {}; }, agentServer: { request: () => Promise.resolve({ items: [] }) } });
+    mount({ container: c });
+    const icon = c.querySelector(".info");
+    const note = c.querySelector(".infobox");
+    expect(c.querySelector(".banner")).toBeNull();
+    expect(note.hidden).toBe(true);
+    icon.dispatchEvent(new Event("mouseenter"));
+    expect(note.hidden).toBe(false);
+    expect(note.textContent).toContain("no result was observed");
+    icon.dispatchEvent(new Event("mouseleave"));
+    expect(note.hidden).toBe(true);
+    c.remove();
+  });
+});
+
 describe("page", () => {
   let container;
   beforeEach(() => { container = document.createElement("div"); document.body.append(container); });

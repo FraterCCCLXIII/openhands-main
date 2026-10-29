@@ -494,7 +494,10 @@ const STYLE = `
 .rt .conv .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rt .conv .age { color: var(--rt-muted); font-size: 11px; flex: none; font-weight: 400; }
 @media (max-width: 900px) { .rt .shell { grid-template-columns: 1fr; } .rt .nav { position: static; max-height: 240px; } }
-.rt .banner { background: var(--rt-panel); border: 1px dashed var(--rt-border); border-radius: 10px; padding: 8px 12px; }
+.rt .titlerow { display: flex; align-items: center; gap: 8px; position: relative; }
+.rt .info { background: none; border: 0; padding: 2px; border-radius: 50%; color: var(--rt-muted); display: inline-flex; cursor: help; }
+.rt .info:hover, .rt .info:focus-visible, .rt .info[aria-expanded="true"] { color: var(--rt-contrast); }
+.rt .infobox { position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40; width: min(460px, 86vw); background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 10px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 12px; line-height: 1.5; color: var(--rt-muted); }
 `;
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────
@@ -622,6 +625,39 @@ export function ageShort(iso, now = Date.now()) {
 }
 
 const STATUS_MARK = { finished: ["✓", "ok"], running: ["●", "run"], error: ["●", "err"], stuck: ["●", "err"] };
+
+const INFO_TEXT = "Intervals are between the timestamps the events carry. A step with no result is shown as open: no result was observed, which does not mean the tool is still running. Time between steps includes model and orchestration time and is not split further. Logs are not scrubbed: avoid sharing raw ones.";
+
+/** An info icon that shows a note on hover, focus or click. No outline, just the icon. */
+function infoIcon(text) {
+  const wrap = el("span", "titlerow");
+  const b = el("button", "info");
+  b.type = "button";
+  b.setAttribute("aria-label", "About these timings");
+  b.setAttribute("aria-expanded", "false");
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  [["width", 18], ["height", 18], ["viewBox", "0 0 24 24"], ["fill", "none"], ["stroke", "currentColor"], ["stroke-width", 2], ["stroke-linecap", "round"], ["stroke-linejoin", "round"], ["aria-hidden", "true"]].forEach(([k, v]) => svg.setAttribute(k, String(v)));
+  [["circle", { cx: 12, cy: 12, r: 10 }], ["path", { d: "M12 16v-4" }], ["path", { d: "M12 8h.01" }]].forEach(([tag, attrs]) => {
+    const n = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
+    svg.append(n);
+  });
+  b.append(svg);
+  const box = el("div", "infobox", text);
+  box.setAttribute("role", "tooltip");
+  box.id = "rt-info-box";
+  box.hidden = true;
+  b.setAttribute("aria-describedby", box.id);
+  const show = (on) => { box.hidden = !on; b.setAttribute("aria-expanded", String(on)); };
+  b.addEventListener("mouseenter", () => show(true));
+  b.addEventListener("mouseleave", () => show(false));
+  b.addEventListener("focus", () => show(true));
+  b.addEventListener("blur", () => show(false));
+  b.addEventListener("click", () => show(box.hidden));
+  wrap.append(b, box);
+  return wrap;
+}
 
 // ─── Mount ────────────────────────────────────────────────────────────────
 
@@ -958,7 +994,9 @@ function mountTimeline(host, { container }) {
     const top = el("div", "top");
     const left = el("div");
     left.style.cssText = "display:flex;flex-direction:column;gap:6px;align-items:flex-start;";
-    left.append(el("h1", "", "Run Timeline"), el("span", "muted", "Where the time went in an agent run"));
+    const title = el("div", "titlerow");
+    title.append(el("h1", "", "Run Timeline"), infoIcon(INFO_TEXT));
+    left.append(title, el("span", "muted", "Where the time went in an agent run"));
     const bar = el("div", "row");
     const refresh = button("Refresh", () => { if (ui.source?.type === "live") loadLive(ui.source.id); else loadConversations(); }, "");
     const input = el("input");
@@ -979,8 +1017,6 @@ function mountTimeline(host, { container }) {
     left.append(seg);
     main.append(top);
     if (ui.view === "prices") { main.append(viewPrices()); return; }
-
-    main.append(el("div", "banner small muted", "Intervals are between the timestamps the events carry. A step with no result is shown as open: no result was observed, which does not mean the tool is still running. Time between steps includes model and orchestration time and is not split further. Logs are not scrubbed: avoid sharing raw ones."));
 
     if (ui.convError) main.append(el("p", "warn small", `Could not list conversations: ${ui.convError}`));
     if (ui.error) main.append(el("p", "warn", ui.error));
