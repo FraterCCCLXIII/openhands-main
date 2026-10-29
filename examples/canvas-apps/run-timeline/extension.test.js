@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, buildTimeline, fmtDuration, parseImport, parseTime, summarize } from "./extension.js";
+import { activate, buildTimeline, describeRow, extractRefs, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
 
 const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
 const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
@@ -86,6 +86,56 @@ describe("parseImport", () => {
   it("unwraps an event that carries a capture time beside it", () => {
     const wrapped = { event: action("a1", "2026-10-29T10:00:00"), runwardObservedAt: "2026-10-29T10:00:01Z" };
     expect(buildTimeline(parseImport(JSON.stringify(wrapped)).events).spans).toHaveLength(1);
+  });
+});
+
+const stats = (id, ts, cost, prompt, completion, model = "anthropic/claude-sonnet") => ({
+  id, timestamp: ts, source: "environment", kind: "ConversationStateUpdateEvent", key: "stats",
+  value: { usage_to_metrics: { default: { model_name: model, accumulated_cost: cost, accumulated_token_usage: { prompt_tokens: prompt, completion_tokens: completion, cache_read_tokens: 0, reasoning_tokens: 0 } } } },
+});
+
+describe("references, lines and usage", () => {
+  it("finds tickets, pull requests and repositories and ignores look-alikes", () => {
+    const r = extractRefs("Analyze OSS-7564 and UTF-8 text; see https://github.com/OpenHands/OpenHands/pull/18887 and PR #12");
+    expect(r.tickets).toEqual(["OSS-7564"]);
+    expect(r.prs).toEqual(["OpenHands/OpenHands#18887", "#12"]);
+    expect(r.repos).toEqual(["OpenHands/OpenHands"]);
+  });
+
+  it("counts the lines a file edit adds and removes", () => {
+    expect(linesOf({ command: "str_replace", old_str: "a\nb", new_str: "c\nd\ne", path: "/x.js" })).toEqual({ added: 3, removed: 2, path: "/x.js" });
+    expect(linesOf({ command: "create", file_text: "1\n2" })).toMatchObject({ added: 2, removed: 0 });
+    expect(linesOf({ command: "view" })).toBeNull();
+  });
+
+  it("gives each model call its own cost and tokens from the stats snapshots before it", () => {
+    const tl = buildTimeline([
+      stats("s0", "2026-10-29T10:00:00Z", 0, 0, 0),
+      stats("s1", "2026-10-29T10:00:05Z", 0.02, 1000, 200),
+      action("a1", "2026-10-29T10:00:05.001Z", { action: { kind: "FileEditorAction", command: "create", file_text: "x\ny", path: "/a.js" } }),
+      obs("o1", "a1", "2026-10-29T10:00:06Z"),
+      stats("s2", "2026-10-29T10:00:09Z", 0.05, 2500, 500),
+      action("a2", "2026-10-29T10:00:09.001Z"),
+    ]);
+    const [a1, a2] = tl.spans;
+    expect(a1.usage).toMatchObject({ cost: 0.02, prompt: 1000, completion: 200, models: ["anthropic/claude-sonnet"] });
+    expect(a2.usage.cost).toBeCloseTo(0.03);
+    expect(tl.usage.cost).toBeCloseTo(0.05);
+    expect(tl.lines).toEqual({ added: 2, removed: 0 });
+  });
+
+  it("marks a second action of the same model call as sharing it", () => {
+    const tl = buildTimeline([stats("s1", "2026-10-29T10:00:05Z", 0.02, 1000, 200), action("a1", "2026-10-29T10:00:05.001Z"), action("a2", "2026-10-29T10:00:05.002Z")]);
+    expect(tl.spans[1].usage).toEqual({ shared: true });
+  });
+
+  it("describes a row with its step, its mentions and the whole run", () => {
+    const tl = buildTimeline([msg("m0", "2026-10-29T10:00:00Z", "user", "Analyze OSS-7564"), stats("s1", "2026-10-29T10:00:05Z", 0.02, 1000, 200), action("a1", "2026-10-29T10:00:05.001Z")]);
+    const text = JSON.stringify(describeRow(tl.spans[0], tl, { id: "c1", tags: { pm_project: "web" }, launched_agent_profile: "default" }));
+    expect(text).toContain("OSS-7564");
+    expect(text).toContain("pm_project: web");
+    expect(text).toContain("$0.02");
+    expect(text).toContain("default");
   });
 });
 

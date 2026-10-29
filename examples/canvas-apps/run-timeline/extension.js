@@ -101,6 +101,65 @@ function failed(obs) {
   return typeof obs.exit_code === "number" && obs.exit_code !== 0 && obs.exit_code !== -1;
 }
 
+
+const NOT_TICKETS = new Set(["UTF", "ISO", "SHA", "MD", "AES", "RFC", "HTTP", "CVE", "TLS", "SSL", "JSON", "PNG", "ES", "X", "TCP", "UDP", "IPV"]);
+
+/** Ticket keys, pull requests and repositories mentioned in some text. */
+export function extractRefs(text) {
+  const tickets = new Set();
+  const prs = new Set();
+  const repos = new Set();
+  if (typeof text !== "string" || !text) return { tickets: [], prs: [], repos: [] };
+  for (const m of text.matchAll(/\b([A-Z][A-Z0-9]{1,9})-(\d{1,6})\b/g)) if (!NOT_TICKETS.has(m[1])) tickets.add(`${m[1]}-${m[2]}`);
+  for (const m of text.matchAll(/github\.com\/([\w.-]+\/[\w.-]+?)(?:\.git)?\/pull\/(\d+)/g)) { prs.add(`${m[1]}#${m[2]}`); repos.add(m[1]); }
+  for (const m of text.matchAll(/\bPR\s*#(\d+)/gi)) prs.add(`#${m[1]}`);
+  for (const m of text.matchAll(/github\.com\/([\w.-]+\/[\w.-]+?)(?:\.git|\/|\s|$|[)"'`,.])/g)) repos.add(m[1]);
+  return { tickets: [...tickets], prs: [...prs], repos: [...repos] };
+}
+
+const lineCount = (text) => (typeof text === "string" && text ? text.split("\n").length : 0);
+
+/** Lines added and removed by a file edit action. Other actions change none. */
+export function linesOf(action) {
+  if (!isObj(action)) return null;
+  const cmd = action.command;
+  if (cmd === "create") return { added: lineCount(action.file_text), removed: 0, path: action.path ?? null };
+  if (cmd === "str_replace") return { added: lineCount(action.new_str), removed: lineCount(action.old_str), path: action.path ?? null };
+  if (cmd === "insert") return { added: lineCount(action.new_str), removed: 0, path: action.path ?? null };
+  return null;
+}
+
+const usageOf = (value) => {
+  const m = value?.stats?.usage_to_metrics ?? value?.usage_to_metrics;
+  if (!isObj(m)) return null;
+  const out = {};
+  Object.entries(m).forEach(([id, u]) => {
+    if (!isObj(u)) return;
+    const tu = isObj(u.accumulated_token_usage) ? u.accumulated_token_usage : {};
+    out[id] = { model: u.model_name ?? tu.model ?? null, cost: Number(u.accumulated_cost) || 0, prompt: Number(tu.prompt_tokens) || 0, completion: Number(tu.completion_tokens) || 0, cache: Number(tu.cache_read_tokens) || 0, reasoning: Number(tu.reasoning_tokens) || 0 };
+  });
+  return out;
+};
+
+const zeroUsage = () => ({ cost: 0, prompt: 0, completion: 0, cache: 0, reasoning: 0, models: [] });
+
+/** What changed between two cumulative stats snapshots: one model call's cost and tokens. */
+function usageDelta(now, before = {}) {
+  const d = zeroUsage();
+  Object.entries(now).forEach(([id, u]) => {
+    const b = before[id] ?? { cost: 0, prompt: 0, completion: 0, cache: 0, reasoning: 0 };
+    const grew = u.cost > b.cost || u.prompt > b.prompt || u.completion > b.completion;
+    if (!grew) return;
+    d.cost += Math.max(0, u.cost - b.cost);
+    d.prompt += Math.max(0, u.prompt - b.prompt);
+    d.completion += Math.max(0, u.completion - b.completion);
+    d.cache += Math.max(0, u.cache - b.cache);
+    d.reasoning += Math.max(0, u.reasoning - b.reasoning);
+    if (u.model && !d.models.includes(u.model)) d.models.push(u.model);
+  });
+  return d;
+}
+
 const classify = (e) => {
   if (isObj(e.action) && typeof e.tool_name === "string" && e.source === "agent") return "action";
   if (isObj(e.observation) && typeof e.action_id === "string") return "observation";
@@ -108,6 +167,7 @@ const classify = (e) => {
   if (e.source === "agent" && typeof e.tool_call_id === "string" && "error" in e && !e.action) return "agent-error";
   if (isObj(e.llm_message)) return "message";
   if (e.kind === "ConversationErrorEvent" || e.kind === "ServerErrorEvent") return "error";
+  if (e.kind === "ConversationStateUpdateEvent" && (e.key === "stats" || e.key === "full_state")) return "stats";
   return null;
 };
 
@@ -121,6 +181,7 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
   const spans = new Map();
   const byCall = new Map();
   const instants = [];
+  const snapshots = [];
   let skippedNaive = 0;
   let ignored = 0;
 
@@ -132,12 +193,17 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
     if (!time) { skippedNaive += 1; return; }
     const id = typeof e.id === "string" ? e.id : `${kind}-${time.t}`;
 
+    if (kind === "stats") {
+      const usage = usageOf(e.value);
+      if (usage && Object.keys(usage).length) snapshots.push({ t: time.t, usage });
+      return;
+    }
     if (kind === "action") {
       if (spans.size >= MAX_SPANS) { warn(`Only the first ${MAX_SPANS} steps are shown.`); return; }
       const span = {
         kind: "span", id, label: (typeof e.summary === "string" && e.summary.trim()) || e.tool_name, tool: e.tool_name,
         start: time.t, end: null, status: "open", args: argsText(e.action), result: "", risk: e.security_risk ?? null,
-        basis: time.basis, callId: e.tool_call_id ?? null,
+        basis: time.basis, callId: e.tool_call_id ?? null, loc: linesOf(e.action), usage: null,
       };
       spans.set(id, span);
       if (span.callId) byCall.set(span.callId, span);
@@ -166,7 +232,7 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
     } else if (kind === "message") {
       const role = e.llm_message.role === "user" ? "user" : "agent";
       const text = contentText(e.llm_message.content);
-      if (text) instants.push({ kind: "message", id, t: time.t, role, label: role === "user" ? "You" : "Agent", text: clip(text), basis: time.basis });
+      if (text) instants.push({ kind: "message", id, t: time.t, role, label: role === "user" ? "You" : "Agent", text: clip(text), basis: time.basis, usage: null });
     } else {
       instants.push({ kind: "error", id, t: time.t, label: e.code ?? "Error", text: clip(String(e.detail ?? e.code ?? "")), basis: time.basis });
     }
@@ -174,8 +240,27 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
 
   if (skippedNaive) warn(`${skippedNaive} events were skipped: their timestamps have no timezone and no capture time.`);
   const list = [...spans.values()];
+  snapshots.sort((a, b) => a.t - b.t);
+  const deltas = snapshots.map((snap, i) => usageDelta(snap.usage, snapshots[i - 1]?.usage));
+  const used = new Set();
+  [...list.map((s) => ({ item: s, t: s.start })), ...instants.filter((i) => i.kind === "message" && i.role === "agent").map((i) => ({ item: i, t: i.t }))]
+    .sort((a, b) => a.t - b.t)
+    .forEach(({ item, t }) => {
+      let j = -1;
+      snapshots.forEach((snap, k) => { if (snap.t <= t + 100 && t - snap.t <= 10_000) j = k; });
+      if (j < 0) return;
+      if (used.has(j)) item.usage = { shared: true };
+      else { used.add(j); item.usage = deltas[j]; }
+    });
+  const lastSnap = snapshots.at(-1);
+  const usage = lastSnap ? usageDelta(lastSnap.usage) : null;
+  const refs = { tickets: new Set(), prs: new Set(), repos: new Set() };
+  const addRefs = (obj, text) => { obj.refs = extractRefs(text); Object.entries(obj.refs).forEach(([k, v]) => v.forEach((x) => refs[k].add(x))); };
+  list.forEach((sp) => addRefs(sp, `${sp.label}\n${sp.args}\n${sp.result}`));
+  instants.forEach((i) => addRefs(i, i.text));
+  const lines = list.reduce((acc, sp) => ({ added: acc.added + (sp.loc?.added ?? 0), removed: acc.removed + (sp.loc?.removed ?? 0) }), { added: 0, removed: 0 });
   const all = [...list.map((s) => s.start), ...list.map((s) => s.end).filter((t) => t !== null), ...instants.map((i) => i.t)];
-  return { spans: list, instants, warnings, ignored, t0: all.length ? Math.min(...all) : null, t1: all.length ? Math.max(...all) : null };
+  return { spans: list, instants, warnings, ignored, usage, lines, refs: Object.fromEntries(Object.entries(refs).map(([k, v]) => [k, [...v]])), t0: all.length ? Math.min(...all) : null, t1: all.length ? Math.max(...all) : null };
 }
 
 /** Totals for a timeline: time inside steps (overlaps merged), time between them, and the extremes. */
@@ -197,6 +282,7 @@ export function summarize(tl) {
   const slowest = [...tl.spans].filter((s) => s.end !== null).sort((a, b) => b.end - b.start - (a.end - a.start))[0] ?? null;
   return {
     total, inSteps, between: Math.max(0, total - inSteps), longestGap, slowest,
+    lines: tl.lines, usage: tl.usage, refs: tl.refs,
     steps: tl.spans.length, open: tl.spans.filter((s) => s.end === null).length,
     errors: tl.spans.filter((s) => s.status === "error" || s.status === "rejected").length + tl.instants.filter((i) => i.kind === "error").length,
   };
@@ -250,7 +336,7 @@ const STYLE = `
 .rt label.chk { display: flex; gap: 6px; align-items: center; }
 .rt .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 16px 0; }
 .rt .tile, .rt .card { background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 12px; padding: 12px 14px; }
-.rt .tile b { display: block; font-size: 20px; color: var(--rt-contrast); }
+.rt .tile b { display: block; font-size: 20px; color: var(--rt-contrast); overflow-wrap: anywhere; }
 .rt .sheet { background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 12px; overflow-x: auto; }
 .rt .wf { min-width: 760px; }
 .rt .wfrow { display: grid; grid-template-columns: 300px 1fr; width: 100%; border: 0; border-bottom: 1px solid var(--rt-border); border-radius: 0; background: none; padding: 0; text-align: left; align-items: stretch; }
@@ -270,6 +356,11 @@ const STYLE = `
 .rt pre { background: var(--rt-bg); border: 1px solid var(--rt-border); border-radius: 8px; padding: 10px; overflow: auto; max-height: 260px; font-size: 12px; margin: 6px 0 0; white-space: pre-wrap; }
 .rt dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0; }
 .rt dt { color: var(--rt-muted); } .rt dd { margin: 0; }
+.rt .tip { position: fixed; z-index: 50; max-width: 380px; background: var(--rt-panel); border: 1px solid var(--rt-muted); border-radius: 10px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.45); pointer-events: none; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+.rt .tip h3 { margin: 0; font-size: 13px; color: var(--rt-contrast); }
+.rt .tip .sec { display: grid; grid-template-columns: max-content 1fr; gap: 1px 10px; }
+.rt .tip .sec .k { color: var(--rt-muted); } .rt .tip .sec .v { word-break: break-word; }
+.rt .tip .sech { color: var(--rt-muted); text-transform: uppercase; letter-spacing: .06em; font-size: 10px; margin-top: 2px; }
 .rt .banner { background: var(--rt-panel); border: 1px dashed var(--rt-border); border-radius: 10px; padding: 8px 12px; }
 `;
 
@@ -301,6 +392,59 @@ function normalizePage(response, label) {
   return { items: response.items.filter(isObj), next: typeof response.next_page_id === "string" && response.next_page_id ? response.next_page_id : null };
 }
 
+
+const num = (n) => Math.round(n).toLocaleString();
+const money = (c) => (c > 0 ? `$${c.toFixed(c < 0.01 ? 4 : 2)}` : "not reported");
+const list = (a) => (a.length ? a.join(", ") : null);
+
+function convMeta(conv) {
+  if (!isObj(conv)) return null;
+  const tags = isObj(conv.tags) ? Object.entries(conv.tags).filter(([, v]) => typeof v === "string" && v).map(([k, v]) => `${k}: ${v}`) : [];
+  const agent = conv.launched_agent_profile;
+  const dir = isObj(conv.workspace) ? conv.workspace.working_dir ?? conv.workspace.path : typeof conv.workspace === "string" ? conv.workspace : null;
+  return {
+    id: conv.id, tags, workspace: dir ?? null, repo: typeof conv.selected_repository === "string" ? conv.selected_repository : null,
+    agent: (isObj(agent) ? agent.name ?? agent.id : agent) ?? (isObj(conv.agent) ? conv.agent.kind : null) ?? null,
+    model: conv.current_model_id ?? (isObj(conv.agent) && isObj(conv.agent.llm) ? conv.agent.llm.model : null) ?? null,
+  };
+}
+
+/** Labelled sections describing one row and its run, used by the hover card and the detail panel. */
+export function describeRow(item, tl, conv) {
+  const isSpan = item.kind === "span";
+  const sections = [];
+  const step = [];
+  if (isSpan) {
+    step.push(["Tool", item.tool], ["Duration", fmtDuration(item.end === null ? null : item.end - item.start)], ["Status", item.status === "open" ? "open: no result observed" : item.status]);
+    if (item.loc) step.push(["Lines", `+${item.loc.added} −${item.loc.removed}${item.loc.path ? ` in ${item.loc.path}` : ""}`]);
+  }
+  const u = item.usage;
+  if (u?.shared) step.push(["Model call", "same call as an earlier step"]);
+  else if (u) {
+    step.push(["Model", list(u.models)], ["Tokens", `${num(u.prompt)} in · ${num(u.completion)} out${u.reasoning ? ` · ${num(u.reasoning)} reasoning` : ""}${u.cache ? ` · ${num(u.cache)} cached` : ""}`], ["Cost", money(u.cost)]);
+  }
+  if (step.length) sections.push(["This step", step]);
+  const mine = [["Tickets", list(item.refs?.tickets ?? [])], ["Pull requests", list(item.refs?.prs ?? [])], ["Repositories", list(item.refs?.repos ?? [])]].filter(([, v]) => v);
+  if (mine.length) sections.push(["Mentioned here", mine]);
+  const meta = convMeta(conv);
+  const total = tl.usage;
+  const run = [];
+  if (meta) {
+    run.push(["Conversation", meta.id]);
+    if (meta.repo) run.push(["Repository", meta.repo]);
+    if (meta.workspace) run.push(["Workspace", meta.workspace]);
+    if (meta.tags.length) run.push(["Tags", meta.tags.join(" · ")]);
+    run.push(["Agent", meta.agent ?? "not reported"]);
+  }
+  run.push(["Models", list(total?.models ?? (meta?.model ? [meta.model] : [])) ?? "not in this log"]);
+  run.push(["Lines changed", `+${tl.lines.added} −${tl.lines.removed}`]);
+  run.push(["Tokens", total ? `${num(total.prompt + total.completion)} (${num(total.prompt)} in · ${num(total.completion)} out)` : "not in this log"]);
+  run.push(["Cost", total ? money(total.cost) : "not in this log"]);
+  [["Tickets", tl.refs.tickets], ["Pull requests", tl.refs.prs], ["Repositories", tl.refs.repos]].forEach(([k, v]) => { if (v.length) run.push([k, v.join(", ")]); });
+  sections.push(["This run", run]);
+  return sections;
+}
+
 // ─── Mount ────────────────────────────────────────────────────────────────
 
 function mountTimeline(host, { container }) {
@@ -329,7 +473,7 @@ function mountTimeline(host, { container }) {
   async function loadLive(id, { quiet = false } = {}) {
     const token = (loadToken += 1);
     const conv = ui.convs.find((c) => c.id === id);
-    if (!quiet) { ui.loading = true; ui.error = null; ui.source = { type: "live", id, title: conv?.title || id, status: conv?.execution_status ?? null }; render(); }
+    if (!quiet) { ui.loading = true; ui.error = null; ui.source = { type: "live", id, title: conv?.title || id, status: conv?.execution_status ?? null, conv }; render(); }
     try {
       const events = [];
       let pageId = null;
@@ -385,6 +529,22 @@ function mountTimeline(host, { container }) {
   }, POLL_MS);
 
   // ── Render ──
+  let tip = null;
+  const showTip = (item, tl, x, y) => {
+    if (!tip) { tip = el("div", "tip"); tip.setAttribute("role", "tooltip"); root.append(tip); }
+    tip.replaceChildren(el("h3", "", item.kind === "span" ? item.label : `${item.label}: ${item.text.split("\n")[0].slice(0, 80)}`));
+    describeRow(item, tl, ui.source?.conv).forEach(([title, rows]) => {
+      tip.append(el("div", "sech", title));
+      const grid = el("div", "sec");
+      rows.forEach(([k, v]) => grid.append(el("span", "k", k), el("span", "v", String(v))));
+      tip.append(grid);
+    });
+    const r = tip.getBoundingClientRect();
+    tip.style.left = `${Math.max(8, Math.min(x + 16, window.innerWidth - r.width - 8))}px`;
+    tip.style.top = `${Math.max(8, Math.min(y + 16, window.innerHeight - r.height - 8))}px`;
+  };
+  const hideTip = () => { tip?.remove(); tip = null; };
+
   function waterfall(tl, sum) {
     const total = Math.max(1, tl.t1 - tl.t0);
     const rows = [
@@ -423,7 +583,12 @@ function mountTimeline(host, { container }) {
         track.append(d);
       }
       row.append(lab, track);
-      row.addEventListener("click", () => { ui.pick = item.id; render(); });
+      row.addEventListener("click", () => { hideTip(); ui.pick = item.id; render(); });
+      row.addEventListener("mouseenter", (ev) => showTip(item, tl, ev.clientX, ev.clientY));
+      row.addEventListener("mousemove", (ev) => showTip(item, tl, ev.clientX, ev.clientY));
+      row.addEventListener("mouseleave", hideTip);
+      row.addEventListener("focus", () => { const b = row.getBoundingClientRect(); showTip(item, tl, b.left + 40, b.top); });
+      row.addEventListener("blur", hideTip);
       wrap.append(row);
     });
     return wrap;
@@ -450,6 +615,13 @@ function mountTimeline(host, { container }) {
     add("Time basis", { producer: "the event's own timestamp", observed: "the capture helper's receipt time", "assumed-utc": "the Agent Server's timestamp, read as UTC" }[item.basis]);
     add("Event", item.id);
     card.append(dl);
+    describeRow(item, tl, ui.source?.conv).forEach(([title, rows]) => {
+      if (title === "This step") return;
+      card.append(el("span", "muted small", title));
+      const d2 = el("dl");
+      rows.forEach(([k, v]) => d2.append(el("dt", "", k), el("dd", "", String(v))));
+      card.append(d2);
+    });
     if (span?.args) { card.append(el("span", "muted small", "Arguments")); card.append(el("pre", "", span.args)); }
     const body = span ? span.result : inst.text;
     if (body) { card.append(el("span", "muted small", span ? "Result" : "Text")); card.append(el("pre", "", body)); }
@@ -458,6 +630,7 @@ function mountTimeline(host, { container }) {
 
   function render() {
     if (disposed) return;
+    tip = null;
     root.replaceChildren();
     const top = el("div", "top");
     const left = el("div");
@@ -498,6 +671,18 @@ function mountTimeline(host, { container }) {
       tiles.append(t);
     });
     root.append(tiles);
+    const more = el("div", "tiles");
+    const toks = sum.usage ? sum.usage.prompt + sum.usage.completion : null;
+    [["Lines changed", `+${sum.lines.added} −${sum.lines.removed}`, "from file edits"],
+      ["Tokens", toks === null ? "not in this log" : num(toks), sum.usage ? `${num(sum.usage.prompt)} in · ${num(sum.usage.completion)} out` : ""],
+      ["Cost", sum.usage ? money(sum.usage.cost) : "not in this log", sum.usage ? "as reported by the server" : ""],
+      ["Models", list(sum.usage?.models ?? []) ?? "not in this log", ""],
+      ["References", [...sum.refs.tickets, ...sum.refs.prs].slice(0, 4).join(", ") || "none found", `${sum.refs.tickets.length} tickets · ${sum.refs.prs.length} PRs`]].forEach(([k, v, d]) => {
+      const t = el("div", "tile");
+      t.append(el("span", "muted small", k), el("b", "", v), el("span", "muted small", d));
+      more.append(t);
+    });
+    root.append(more);
 
     const filters = el("div", "row");
     const chk = el("label", "chk");
