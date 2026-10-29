@@ -37,7 +37,8 @@ function AgentButton({
       onClick={onSelect}
       className={cn(
         "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-raised",
-        selected && "bg-surface-raised",
+        !large && "border border-border",
+        selected && "bg-surface-raised ring-1 ring-focus",
       )}
     >
       <span className={cn("shrink-0", large ? "size-11" : "size-8")}>
@@ -68,7 +69,10 @@ function AgentButton({
   );
 }
 
-/** Every agent working in a factory, with the coordinator in its own spot. */
+/**
+ * Every agent working in a factory as a rail: the coordinator in its own spot
+ * first, then the other agents side by side, scrolling when there are many.
+ */
 export function FactoryAgentRail({
   coordinator,
   others,
@@ -80,10 +84,13 @@ export function FactoryAgentRail({
     target.kind === "agent" && target.agentName === name;
 
   return (
-    <aside data-testid="factory-agent-rail" className="flex flex-col gap-5">
+    <aside
+      data-testid="factory-agent-rail"
+      className="flex flex-col gap-3 md:flex-row md:items-stretch"
+    >
       <section
         data-testid="factory-coordinator-spot"
-        className="rounded-xl border border-border bg-surface-raised p-3"
+        className="shrink-0 rounded-xl border border-border bg-surface-raised p-3 md:w-64"
       >
         <h2 className="text-xs font-semibold uppercase text-muted">
           {t(I18nKey.FACTORY$COORDINATOR)}
@@ -100,18 +107,18 @@ export function FactoryAgentRail({
           />
         </div>
       </section>
-      <section>
-        <h2 className="mb-1 px-2 text-xs font-semibold uppercase text-muted">
+      <section className="flex min-w-0 flex-1 flex-col">
+        <h2 className="mb-1 px-1 text-xs font-semibold uppercase text-muted">
           {t(I18nKey.FEED$AGENTS)}
         </h2>
         {others.length === 0 ? (
-          <p className="px-2 text-xs text-muted">
+          <p className="px-1 text-xs text-muted">
             {t(I18nKey.AUTOMATE$FACTORY_EMPTY)}
           </p>
         ) : (
-          <ul className="flex flex-col gap-0.5">
+          <ul className="custom-scrollbar flex gap-2 overflow-x-auto pb-1">
             {others.map((entry) => (
-              <li key={entry.agent.name}>
+              <li key={entry.agent.name} className="w-56 shrink-0">
                 <AgentButton
                   entry={entry}
                   selected={isTargeted(entry.agent.name)}

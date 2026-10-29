@@ -328,28 +328,25 @@ export function FactoryPage() {
         <>
           <FactoryHeader factory={factory} />
           {section === "overview" ? (
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
-              <div className="flex min-w-0 flex-col gap-6">
-                <ManifestOverviewTiles
-                  label={t(I18nKey.CONVERSATION$OVERVIEW)}
-                  tiles={tiles}
-                  columnsClassName="grid-cols-2"
-                />
-                <section>
-                  <h2 className="mb-3 text-base font-semibold text-foreground">
-                    {t(I18nKey.HOME$DASHBOARD_RECENT_CONVERSATIONS)}
-                  </h2>
-                  <ConversationRows
-                    conversations={data.conversations.slice(0, RECENT_LIMIT)}
-                  />
-                </section>
-              </div>
+            <>
+              <ManifestOverviewTiles
+                label={t(I18nKey.CONVERSATION$OVERVIEW)}
+                tiles={tiles}
+              />
               <FactoryAgentRail
                 {...buildRoster(data)}
                 target={target}
                 onTarget={setTarget}
               />
-            </div>
+              <section>
+                <h2 className="mb-3 text-base font-semibold text-foreground">
+                  {t(I18nKey.HOME$DASHBOARD_RECENT_CONVERSATIONS)}
+                </h2>
+                <ConversationRows
+                  conversations={data.conversations.slice(0, RECENT_LIMIT)}
+                />
+              </section>
+            </>
           ) : section === "pipeline" ? (
             <PipelinePage factory={factory} data={data} />
           ) : (
