@@ -80,7 +80,7 @@ describe("page", () => {
 
     expect(container.textContent).toContain("Release train");
     expect(container.textContent).toContain("Quarterly campaigns");
-    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(9);
+    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(10);
     expect(container.querySelectorAll(".links line").length).toBeGreaterThan(0);
     cleanup();
     expect(container.querySelector(".mp")).toBeNull();
@@ -115,5 +115,24 @@ describe("page", () => {
     await vi.waitFor(() => expect(host.navigate).toHaveBeenCalledWith("/conversations/c-9"));
     const post = host.agentServer.request.mock.calls.find(([r]) => r.method === "POST")[0];
     expect(post.body.initial_message.content[0].text).toContain("Goal:");
+  });
+
+  it("maps each campaign to the generators and connectors it uses, and toggles a connector", () => {
+    let mount;
+    activate(hostWith((_, m) => { mount = m; }));
+    mount({ container });
+    const click = (el) => el.click();
+    click([...container.querySelectorAll('[role="tab"]')].find((t) => t.textContent === "Map"));
+
+    const modules = container.querySelectorAll(".node.mod");
+    expect(modules.length).toBeGreaterThan(3);
+    expect(container.querySelectorAll(".node.gen")).toHaveLength(3);
+    expect(container.querySelectorAll(".node.con")).toHaveLength(8);
+
+    click(modules[0]);
+    const before = container.querySelectorAll(".node.con.on").length;
+    const off = [...container.querySelectorAll(".node.con:not(.on)")][0];
+    click(off);
+    expect(container.querySelectorAll(".node.con.on").length).toBe(before + 1);
   });
 });

@@ -58,6 +58,7 @@ const VIEWS = [
   ["calendar", "Calendar"],
   ["list", "List"],
   ["campaigns", "Campaigns"],
+  ["map", "Map"],
   ["assets", "Assets"],
   ["templates", "Templates"],
   ["costs", "Costs"],
@@ -299,6 +300,7 @@ export function validateItem(raw) {
     channels: Array.isArray(raw.channels) ? raw.channels.filter((c) => known.has(c)) : [],
     links: Array.isArray(raw.links) ? raw.links.filter((l) => typeof l === "string") : [],
     note: typeof raw.note === "string" ? raw.note.slice(0, 400) : "",
+    template: TEMPLATES.some((t) => t.id === raw.template) ? raw.template : lane === "campaign" ? "quarterly-campaign" : "",
   };
 }
 
@@ -485,6 +487,19 @@ const STYLE = `
 .mp .checks label { display: flex; gap: 4px; align-items: center; color: var(--mp-text); font-size: 13px; }
 .mp .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 30; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .mp .dlg { background: var(--mp-panel); border: 1px solid var(--mp-border); border-radius: 14px; padding: 18px; width: min(720px, 100%); max-height: 88vh; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+.mp .map { position: relative; }
+.mp .map .edges { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.mp .map .e { fill: none; stroke: var(--mp-muted); stroke-width: 1.5; opacity: .45; }
+.mp .map .e.off { stroke-dasharray: 4 4; opacity: .25; }
+.mp .map .e.hot { stroke: var(--mp-primary); opacity: .95; }
+.mp .map .e.off.hot { opacity: .5; }
+.mp .node { position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 1px; text-align: left; padding: 6px 10px; border-radius: 10px; overflow: hidden; background: var(--mp-raised); }
+.mp .node b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.mp .node .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp .node.on { border-color: var(--mp-primary); }
+.mp .node.mod { background: var(--mp-panel); }
+.mp .node.mod.on { box-shadow: 0 0 0 2px var(--mp-primary); }
+.mp .map .colhead { position: absolute; top: -22px; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
 @media (prefers-reduced-motion: no-preference) { .mp .bar, .mp .kcard { transition: background .15s ease; } }
 `;
 
@@ -553,7 +568,7 @@ function mountProduction(host, { container }) {
   container.append(root);
 
   const st = loadState();
-  const ui = { view: "timeline", zoom: "quarter", editing: null, dialog: null, toast: null, calMonth: toIso(todayT()).slice(0, 7), lane: "all", status: "all", search: "", assetCampaign: "all", scrolled: false, busy: false };
+  const ui = { view: "timeline", zoom: "quarter", editing: null, dialog: null, toast: null, calMonth: toIso(todayT()).slice(0, 7), mapSel: null, lane: "all", status: "all", search: "", assetCampaign: "all", scrolled: false, busy: false };
   let toastTimer = null;
   let disposed = false;
 
@@ -889,6 +904,93 @@ function mountProduction(host, { container }) {
     return wrap;
   }
 
+  function viewMap() {
+    const camps = campaigns().sort((a, b) => toT(a.start) - toT(b.start));
+    const sel = camps.find((c) => c.id === ui.mapSel) ?? null;
+    const GAP = 78;
+    const NODE_W = 210;
+    const NODE_H = 58;
+    const cols = { tpl: 0, mod: 290, gen: 600, con: 880 };
+    const rows = Math.max(TEMPLATES.length, camps.length, ASSET_KINDS.length, CHANNELS.length);
+    const height = rows * GAP + 20;
+    const place = (n, count) => 10 + (rows - count) * GAP / 2 + n * GAP;
+    const pos = { tpl: {}, mod: {}, gen: {}, con: {} };
+    TEMPLATES.forEach((t, i) => { pos.tpl[t.id] = place(i, TEMPLATES.length); });
+    camps.forEach((c, i) => { pos.mod[c.id] = place(i, camps.length); });
+    ASSET_KINDS.forEach((k, i) => { pos.gen[k.id] = place(i, ASSET_KINDS.length); });
+    CHANNELS.forEach((c, i) => { pos.con[c.id] = place(i, CHANNELS.length); });
+
+    const wrap = el("div", "stack");
+    const bar = el("div", "row");
+    bar.append(el("span", "muted small", sel ? `Selected: ${sel.title}. Click a generator to add an asset brief, or a connector to turn it on or off for this campaign.` : "Each campaign is a module built from an agent template. Select one to see everything it can connect to; solid lines are what it uses."));
+    if (sel) bar.append(button("Clear selection", () => { ui.mapSel = null; render(); }, "ghost"));
+    const canvas = el("div", "map");
+    canvas.style.height = `${height}px`;
+    canvas.style.width = `${cols.con + NODE_W + 10}px`;
+    canvas.setAttribute("data-testid", "mp-map");
+    const edges = svg("svg", { class: "edges", width: cols.con + NODE_W + 10, height });
+    const edge = (x1, y1, x2, y2, cls) => edges.append(svg("path", { d: `M${x1} ${y1} C${x1 + 70} ${y1} ${x2 - 70} ${y2} ${x2} ${y2}`, class: cls }));
+    const mid = NODE_H / 2;
+    camps.forEach((c) => {
+      const mine = st.assets.filter((a) => a.campaign === c.id);
+      const hot = sel?.id === c.id;
+      const tpl = c.template || "quarterly-campaign";
+      if (pos.tpl[tpl] !== undefined) edge(cols.tpl + NODE_W, pos.tpl[tpl] + mid, cols.mod, pos.mod[c.id] + mid, hot ? "e hot" : "e");
+      ASSET_KINDS.forEach((k) => {
+        const used = mine.some((a) => a.kind === k.id);
+        if (used || hot) edge(cols.mod + NODE_W, pos.mod[c.id] + mid, cols.gen, pos.gen[k.id] + mid, `${used ? "e" : "e off"}${hot ? " hot" : ""}`);
+      });
+      CHANNELS.forEach((ch) => {
+        const used = c.channels.includes(ch.id);
+        if (used || hot) edge(cols.mod + NODE_W, pos.mod[c.id] + mid, cols.con, pos.con[ch.id] + mid, `${used ? "e" : "e off"}${hot ? " hot" : ""}`);
+      });
+    });
+    canvas.append(edges);
+    const node = (kind, x, y, title, lines, on, onClick, cls = "") => {
+      const n = el("button", `node ${kind} ${cls}${on ? " on" : ""}`);
+      n.type = "button";
+      n.style.left = `${x}px`;
+      n.style.top = `${y}px`;
+      n.style.width = `${NODE_W}px`;
+      n.style.height = `${NODE_H}px`;
+      n.append(el("b", "", title), ...lines.map((l) => el("span", "muted small", l)));
+      if (onClick) n.addEventListener("click", onClick); else n.disabled = true;
+      canvas.append(n);
+      return n;
+    };
+    TEMPLATES.forEach((t) => node("tpl", cols.tpl, pos.tpl[t.id], t.name, [`${t.id}.md + .json`], camps.some((c) => (c.template || "quarterly-campaign") === t.id), null));
+    camps.forEach((c) => {
+      const n = st.assets.filter((a) => a.campaign === c.id).length;
+      const tname = TEMPLATES.find((t) => t.id === (c.template || "quarterly-campaign"))?.name ?? "No template";
+      node("mod", cols.mod, pos.mod[c.id], c.title, [`${tname} · ${n} assets · ${c.channels.length} connectors`], sel?.id === c.id, () => { ui.mapSel = sel?.id === c.id ? null : c.id; render(); }, `s-${c.status}`);
+    });
+    ASSET_KINDS.forEach((k) => {
+      const count = st.assets.filter((a) => a.kind === k.id && (!sel || a.campaign === sel.id)).length;
+      node("gen", cols.gen, pos.gen[k.id], `${k.label} generator`, [`${st.settings.tools[k.id]} · ${count} asset${count === 1 ? "" : "s"}`], count > 0, sel ? () => {
+        st.assets.push(validateAsset({ campaign: sel.id, kind: k.id, name: `${sel.title}: new ${k.label.toLowerCase()}`, seconds: k.id === "video" ? 15 : undefined }));
+        change();
+      } : null);
+    });
+    CHANNELS.forEach((ch) => {
+      const used = campaigns().filter((c) => c.channels.includes(ch.id)).length;
+      const on = sel ? sel.channels.includes(ch.id) : used > 0;
+      node("con", cols.con, pos.con[ch.id], ch.name, [sel ? (on ? "On for this campaign" : "Off for this campaign") : `${used} campaign${used === 1 ? "" : "s"} · not connected`], on, sel ? () => {
+        sel.channels = on ? sel.channels.filter((x) => x !== ch.id) : [...sel.channels, ch.id];
+        change();
+      } : null);
+    });
+    ["Agent templates", "Campaign modules", "Generators", "Connectors"].forEach((label, i) => {
+      const h = el("span", "colhead small muted", label);
+      h.style.left = `${Object.values(cols)[i]}px`;
+      canvas.append(h);
+    });
+    const sheet = el("div", "sheet");
+    sheet.style.padding = "28px 14px 14px";
+    sheet.append(canvas);
+    wrap.append(bar, sheet);
+    return wrap;
+  }
+
   function viewAssets() {
     const wrap = el("div", "stack");
     const camps = campaigns();
@@ -1026,12 +1128,13 @@ function mountProduction(host, { container }) {
     const start = el("input"); start.type = "date"; start.value = item.start;
     const end = el("input"); end.type = "date"; end.value = item.end;
     const status = select(STATUSES.map((s) => [s.id, s.label]), item.status);
+    const template = select([["", "No template"], ...TEMPLATES.map((t) => [t.id, t.name])], item.template ?? "");
     const note = el("textarea"); note.rows = 2; note.value = item.note ?? "";
     const ch = checks(CHANNELS.map((c) => [c.id, c.name]), item.channels, "channel");
     const lk = checks(features().filter((f) => f.id !== item.id).map((f) => [f.id, f.title]), item.links, "link");
     const form = el("div", "form");
-    form.append(field("Title", title), field("Lane", lane), field("Start", start), field("End", end), field("Status", status));
-    const read = () => validateItem({ ...item, title: title.value, lane: lane.value, start: start.value, end: end.value, status: status.value, channels: picked(ch), links: picked(lk), note: note.value });
+    form.append(field("Title", title), field("Lane", lane), field("Start", start), field("End", end), field("Status", status), field("Agent template (campaigns)", template));
+    const read = () => validateItem({ ...item, title: title.value, lane: lane.value, start: start.value, end: end.value, status: status.value, template: template.value, channels: picked(ch), links: picked(lk), note: note.value });
     const acts = el("div", "row");
     acts.append(button("Save", () => {
       const v = read();
@@ -1104,7 +1207,7 @@ function mountProduction(host, { container }) {
       acts.append(button("Create campaign", () => {
         if (!name.value.trim()) return;
         const qq = qs[Number(q.value)];
-        const camp = validateItem({ lane: "campaign", title: name.value, start: toIso(qq.start), end: toIso(qq.end), channels: t.json.channels ?? [], links: [], note: `From the ${t.name} template.` });
+        const camp = validateItem({ lane: "campaign", title: name.value, start: toIso(qq.start), end: toIso(qq.end), channels: t.json.channels ?? [], links: [], template: t.id, note: `From the ${t.name} template.` });
         st.items.push(camp);
         (t.json.assets ?? []).forEach((a) => {
           const v = validateAsset({ campaign: camp.id, kind: a.kind, name: a.name || `${t.name} asset`, seconds: a.kind === "video" ? 15 : undefined });
@@ -1122,7 +1225,7 @@ function mountProduction(host, { container }) {
   }
 
   // ── Render ──
-  const bodies = { timeline: viewTimeline, board: viewBoard, calendar: viewCalendar, list: viewList, campaigns: viewCampaigns, assets: viewAssets, templates: viewTemplates, costs: viewCosts, connections: viewConnections };
+  const bodies = { timeline: viewTimeline, board: viewBoard, calendar: viewCalendar, list: viewList, campaigns: viewCampaigns, map: viewMap, assets: viewAssets, templates: viewTemplates, costs: viewCosts, connections: viewConnections };
   let bodyHost = null;
 
   function renderBody() {

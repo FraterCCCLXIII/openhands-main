@@ -9,6 +9,7 @@ A Canvas App that plans marketing against the OpenHands product release schedule
 - **Calendar**: a month grid of what is happening each day, with release counts.
 - **List**: sortable, filterable table of everything.
 - **Campaigns**: the next six quarters, flagging any quarter with no campaign, with each campaign's linked launches and how many days apart they are.
+- **Map**: a nodal map. Each campaign is a module built from an agent template, connected to the 2D, 3D and Seedance video generators and to every connector. Select a campaign to see all it can connect to; click a generator to add an asset brief or a connector to switch it on or off for that campaign.
 - **Assets**: 2D image, 3D model and Seedance video assets moving from brief to published, per campaign.
 - **Templates**: agent campaign templates as `.md` instructions and `.json` briefs. Copy them, create a campaign from one, or run one with an agent.
 - **Costs**: estimated asset generation cost per campaign from editable placeholder rates.
