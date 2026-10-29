@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, buildTimeline, costShort, costText, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
+import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
 
 const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
 const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
@@ -142,7 +142,8 @@ describe("references, lines and usage", () => {
 describe("cost from our prices", () => {
   it("matches a model by id, else by family, and not at all for an unknown model", () => {
     expect(priceFor("anthropic/claude-opus-5-5")).toMatchObject({ family: false, row: { id: "claude-opus-5-5" } });
-    expect(priceFor("litellm_proxy/claude-opus-4-5-20251101")).toMatchObject({ family: true, row: { id: "claude-opus-5-5" } });
+    expect(priceFor("litellm_proxy/claude-opus-4-5-20251101")).toMatchObject({ family: false, row: { id: "claude-opus-4-5", input: 5, output: 25, cacheRead: 0.5 } });
+    expect(priceFor("claude-opus-9-9")).toMatchObject({ family: true, row: { id: "claude-opus-5-5" } });
     expect(priceFor("ollama_chat/gpt-oss:20b")).toBeNull();
   });
 
@@ -154,7 +155,20 @@ describe("cost from our prices", () => {
 
   it("returns no cost for an unpriced model and flags family matches", () => {
     expect(estimateCost({ parts: [{ model: "ollama_chat/gpt-oss:20b", prompt: 10, completion: 1, cache: 0, cacheWrite: 0 }] })).toMatchObject({ cost: null, unpriced: ["ollama_chat/gpt-oss:20b"] });
-    expect(estimateCost({ parts: [{ model: "litellm_proxy/claude-opus-4-5", prompt: 10, completion: 1, cache: 0, cacheWrite: 0 }] }).family).toBe(true);
+    expect(estimateCost({ parts: [{ model: "litellm_proxy/claude-opus-9-9", prompt: 10, completion: 1, cache: 0, cacheWrite: 0 }] }).family).toBe(true);
+  });
+
+  it("carries first-party public prices and keeps ours ahead of them", () => {
+    expect(PRICES.length).toBeGreaterThan(100);
+    expect(new Set(PRICES.filter((r) => !r.ours).map((r) => r.provider)).size).toBeGreaterThan(3);
+    expect(new Set(PRICES.map((r) => r.id)).size).toBe(PRICES.length);
+    expect(PRICES.filter((r) => r.ours)).toHaveLength(7);
+  });
+
+  it("re-prices a run's tokens on another model", () => {
+    const tl = buildTimeline([stats("s1", "2026-10-29T10:00:05Z", 0, 1_000_000, 100_000, "claude-sonnet-5-5")]);
+    const opus = PRICES.find((r) => r.id === "claude-opus-5-5");
+    expect(repriceRun(tl, opus)).toBeCloseTo(4 + 2);
   });
 
   it("shows the chosen basis first and the other in brackets", () => {
@@ -182,6 +196,17 @@ describe("page", () => {
   let container;
   beforeEach(() => { container = document.createElement("div"); document.body.append(container); });
   afterEach(() => container.remove());
+
+  it("opens the price matrix with every provider", () => {
+    let mount;
+    activate({ apiVersion: "1", navigate() {}, registerPage: (_, m) => { mount = m; return () => {}; }, agentServer: { request: () => Promise.resolve({ items: [] }) } });
+    mount({ container });
+    [...container.querySelectorAll(".seg button")].find((b) => b.textContent === "Prices").click();
+    const table = container.querySelector('[data-testid="rt-price-matrix"]');
+    expect(table.textContent).toContain("Claude Opus 5.5");
+    expect(table.textContent).toContain("claude-opus-4-5");
+    expect(container.querySelectorAll(".chip").length).toBeGreaterThan(5);
+  });
 
   it("lists conversations, loads one's events and draws the waterfall", async () => {
     let mount;

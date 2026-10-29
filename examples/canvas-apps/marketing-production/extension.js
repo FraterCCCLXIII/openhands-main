@@ -268,7 +268,7 @@ function seedState() {
   ];
   return {
     items, assets, releases: RELEASE_SNAPSHOT.map((r) => ({ ...r })), releasesFetchedAt: null,
-    settings: { value: { ...DEFAULT_VALUE }, rates: { image2d: 0.05, model3d: 1, video: 0.4 }, tools: { image2d: "Image generation", model3d: "3D generation", video: "Seedance" } },
+    settings: { pricing: { ...DEFAULT_PRICING }, conv: { ...DEFAULT_CONV }, value: { ...DEFAULT_VALUE }, rates: { image2d: 0.05, model3d: 1, video: 0.4 }, tools: { image2d: "Image generation", model3d: "3D generation", video: "Seedance" } },
     log: [],
   };
 }
@@ -280,7 +280,7 @@ function loadState() {
       const s = JSON.parse(raw);
       if (s && Array.isArray(s.items) && Array.isArray(s.releases)) {
         const seed = seedState();
-        return { ...seed, ...s, settings: { ...seed.settings, ...s.settings, value: { ...DEFAULT_VALUE, ...s.settings?.value } } };
+        return { ...seed, ...s, settings: { ...seed.settings, ...s.settings, value: { ...DEFAULT_VALUE, ...s.settings?.value }, conv: { ...DEFAULT_CONV, ...s.settings?.conv }, pricing: { ...DEFAULT_PRICING, ...s.settings?.pricing } } };
       }
     }
   } catch { /* fall back to the sample plan */ }
@@ -404,6 +404,19 @@ const AD_BASE = {
   app: { google: [2200, 38], linkedin: [1800, 62], x: [400, 80] },
   github: { reddit: [500, 2.4], x: [350, 3.1], linkedin: [250, 4] },
 };
+/** Placeholder conversion rates (percent) for Teams and Enterprise accounts, editable on the page. */
+export const DEFAULT_CONV = { teamCreate: 12, teamPaid: 18, entLead: 1.2, entQualified: 35, entWon: 22 };
+export const FUNNELS = [
+  { id: "teams", label: "Teams", stages: [["teamCreate", "Team workspaces created", "of activated users"], ["teamPaid", "Paid Teams accounts", "of new team workspaces"]] },
+  { id: "enterprise", label: "Enterprise", stages: [["entLead", "Enterprise leads", "of activated users"], ["entQualified", "Qualified opportunities", "of leads"], ["entWon", "Closed-won accounts", "of qualified opportunities"]] },
+];
+/** What openhands.dev/pricing showed on 2026-10-29. Enterprise is "Custom pricing", so its value is an assumption. */
+export const PRICING = {
+  source: "https://openhands.dev/pricing",
+  fetched: "2026-10-29",
+  teams: { base: 500, includedSeats: 10, extraSeat: 50, trialDays: 30, sessionCap: 5000 },
+};
+export const DEFAULT_PRICING = { seats: 10, entAcv: 50000 };
 const DEFAULT_VALUE = { web: 15, docs: 6, app: 40, github: 4 };
 
 /** A small deterministic random source, so the sample data is stable. */
@@ -546,6 +559,50 @@ export function growthMatrix(ads, growth, factor = 1) {
       lift12: f.future[FORECAST_WEEKS - 1].value - h.future[FORECAST_WEEKS - 1].value,
     };
   });
+}
+
+
+/**
+ * Applies conversion rates (percent) down each funnel from the activated-users row:
+ * what each stage is producing a week now, and what it would in 4 and 12 weeks.
+ */
+export function funnelMatrix(rows, conv = DEFAULT_CONV) {
+  const base = rows.find((r) => r.id === "activated");
+  if (!base) return [];
+  return FUNNELS.map((f) => {
+    let factor = 1;
+    return {
+      id: f.id,
+      label: f.label,
+      stages: f.stages.map(([key, label, of]) => {
+        const rate = Math.max(0, Math.min(100, Number(conv[key]) || 0));
+        factor *= rate / 100;
+        const sum = (a = []) => a.reduce((x, y) => x + y.value, 0);
+        return { key, label, of, rate, fromActivated: factor * 100, now: base.last4 * factor, at4: base.at4 * factor, at12: base.at12 * factor, lift12: base.lift12 * factor, added12: sum(base.future) * factor, added12Hold: sum(base.hold) * factor };
+      }),
+    };
+  });
+}
+
+/** Monthly price of one Teams account on the pricing page: the base fee plus each seat past the included ones. */
+export const teamsMonthly = (seats) => PRICING.teams.base + Math.max(0, Math.round(seats) - PRICING.teams.includedSeats) * PRICING.teams.extraSeat;
+
+/**
+ * Revenue from the funnel at the pricing-page prices. Teams is paid accounts times the
+ * monthly price (per week of new MRR, and ARR at 12 times that). Enterprise is closed-won
+ * accounts times an assumed annual contract value, since the page only says "Custom pricing".
+ */
+export function revenueMatrix(funnels, pricing = DEFAULT_PRICING) {
+  const paid = funnels.find((f) => f.id === "teams")?.stages.find((x) => x.key === "teamPaid");
+  const won = funnels.find((f) => f.id === "enterprise")?.stages.find((x) => x.key === "entWon");
+  if (!paid || !won) return null;
+  const perAccount = teamsMonthly(pricing.seats);
+  const acv = Math.max(0, Number(pricing.entAcv) || 0);
+  const teams = { perAccount, nowMrr: paid.now * perAccount, at4Mrr: paid.at4 * perAccount, at12Mrr: paid.at12 * perAccount, addedMrr: paid.added12 * perAccount, addedMrrHold: paid.added12Hold * perAccount };
+  const enterprise = { acv, nowAcv: won.now * acv, at4Acv: won.at4 * acv, at12Acv: won.at12 * acv, addedAcv: won.added12 * acv, addedAcvHold: won.added12Hold * acv };
+  const added = teams.addedMrr * 12 + enterprise.addedAcv;
+  const hold = teams.addedMrrHold * 12 + enterprise.addedAcvHold;
+  return { teams, enterprise, addedAnnual: added, liftAnnual: added - hold };
 }
 
 /** Where a shift of weekly spend from the weakest to the strongest cell would help, at observed rates. */
@@ -882,6 +939,63 @@ function mountProduction(host, { container }) {
     });
     const sheet = el("div", "sheet"); sheet.append(table);
     card.append(head, sheet, el("p", "muted small", "Each metric is fitted to a weekly trend plus that week's total ad spend, then projected 12 weeks at the chosen spend. The shaded band is a rough 90% range. This is sample data and a simple model: it does not know about launches, seasonality or diminishing returns, so treat it as a direction."));
+    card.append(funnelSection(rows));
+    return card;
+  }
+
+  function funnelSection(rows) {
+    const card = el("div", "card stack");
+    card.setAttribute("data-testid", "mp-funnel");
+    const head = el("div", "row");
+    head.append(el("h2", "", "Teams and Enterprise conversion"), el("span", "muted small", "Each % is a variable: change it and the projections follow."));
+    const table = el("table");
+    const hr = el("tr");
+    ["Account type and stage", "Conversion", "From activated", "Now (per week)", "In 4 weeks", "In 12 weeks", "12 weeks vs holding spend"].forEach((h) => hr.append(el("th", "", h)));
+    table.append(hr);
+    const f1 = (n) => (n >= 100 ? Math.round(n).toLocaleString() : n.toFixed(n < 10 ? 1 : 0));
+    funnelMatrix(rows, st.settings.conv).forEach((track) => {
+      const g = el("tr");
+      const gh = el("td", "", track.label); gh.colSpan = 7; gh.style.cssText = "font-weight:600;color:var(--mp-contrast);background:var(--mp-bg);";
+      g.append(gh);
+      table.append(g);
+      track.stages.forEach((stage) => {
+        const tr = el("tr");
+        const first = el("td"); first.append(el("span", "", stage.label), el("br"), el("span", "muted small", stage.of));
+        const rateTd = el("td");
+        const input = el("input"); input.type = "number"; input.min = "0"; input.max = "100"; input.step = "0.1"; input.value = String(stage.rate); input.style.width = "78px";
+        input.setAttribute("aria-label", `${stage.label} conversion percent`);
+        input.addEventListener("change", () => { st.settings.conv[stage.key] = Math.max(0, Math.min(100, Number(input.value) || 0)); change(); });
+        rateTd.append(input, el("span", "muted small", " %"));
+        tr.append(first, rateTd, el("td", "", `${stage.fromActivated.toFixed(stage.fromActivated < 1 ? 2 : 1)}%`), el("td", "", f1(stage.now)), el("td", "", f1(stage.at4)), el("td", "", f1(stage.at12)), el("td", stage.lift12 >= 0 ? "" : "warn", `${stage.lift12 >= 0 ? "+" : ""}${f1(stage.lift12)}`));
+        table.append(tr);
+      });
+    });
+    const sheet = el("div", "sheet"); sheet.append(table);
+    card.append(head, sheet, el("p", "muted small", "Starts from activated users, so it moves with the ad spend scenario above. The percentages are placeholders: set them from HubSpot and product data once those connectors are live. Counts are accounts per week, not users."));
+    const revenue = revenueMatrix(funnelMatrix(rows, st.settings.conv), st.settings.pricing);
+    const usd = (n) => `$${Math.round(n).toLocaleString()}`;
+    const rv = el("div", "stack");
+    rv.append(el("h2", "", "Revenue at the openhands.dev pricing"));
+    const form = el("div", "form");
+    const seats = el("input"); seats.type = "number"; seats.min = "1"; seats.step = "1"; seats.value = String(st.settings.pricing.seats);
+    seats.addEventListener("change", () => { st.settings.pricing.seats = Math.max(1, Math.round(Number(seats.value) || 1)); change(); });
+    const acv = el("input"); acv.type = "number"; acv.min = "0"; acv.step = "1000"; acv.value = String(st.settings.pricing.entAcv);
+    acv.addEventListener("change", () => { st.settings.pricing.entAcv = Math.max(0, Number(acv.value) || 0); change(); });
+    form.append(field("Seats per Teams account (the page: $500 a month for up to 10, $50 a month per seat beyond)", seats), field("Enterprise annual contract value, USD (the page says Custom pricing: an assumption)", acv));
+    const rt = el("table");
+    const rh = el("tr");
+    ["", "Now (per week)", "In 4 weeks", "In 12 weeks", "Added over 12 weeks"].forEach((h) => rh.append(el("th", "", h)));
+    rt.append(rh);
+    const line = (label, a, b, c, d) => { const tr = el("tr"); tr.append(el("td", "", label), el("td", "", a), el("td", "", b), el("td", "", c), el("td", "", d)); rt.append(tr); };
+    line(`New Teams MRR (${usd(revenue.teams.perAccount)} per account a month)`, usd(revenue.teams.nowMrr), usd(revenue.teams.at4Mrr), usd(revenue.teams.at12Mrr), usd(revenue.teams.addedMrr));
+    line("Same as annual (ARR)", usd(revenue.teams.nowMrr * 12), usd(revenue.teams.at4Mrr * 12), usd(revenue.teams.at12Mrr * 12), usd(revenue.teams.addedMrr * 12));
+    line(`New Enterprise contract value (${usd(revenue.enterprise.acv)} each, assumed)`, usd(revenue.enterprise.nowAcv), usd(revenue.enterprise.at4Acv), usd(revenue.enterprise.at12Acv), usd(revenue.enterprise.addedAcv));
+    const tot = el("tr");
+    tot.append(el("td", "", "New annual revenue, Teams and Enterprise"), el("td"), el("td"), el("td"), el("td", revenue.liftAnnual >= 0 ? "" : "warn", `${usd(revenue.addedAnnual)} (${revenue.liftAnnual >= 0 ? "+" : "−"}${usd(Math.abs(revenue.liftAnnual))} against holding spend)`));
+    rt.append(tot);
+    const rsheet = el("div", "sheet"); rsheet.append(rt);
+    rv.append(form, rsheet, el("p", "muted small", `Prices read from ${PRICING.source} on ${PRICING.fetched}: Teams $500 a month (30-day trial) for up to 10 users, with $50 a month per seat beyond; capped at 5,000 sessions a month. The page did not say how seats above 10 are billed, so that is read as stated. Agent Canvas is free, and Enterprise is custom, so its value is your assumption. Trials are not modeled: set the paid-Teams % net of trials. New revenue only: no churn and no existing customers.`));
+    card.append(rv);
     return card;
   }
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  activate, adMatrix, applyPlan, assetCost, forecastMetric, growthMatrix, olsFit, sampleAds, sampleGrowth, SITES, weeklySpend, launchLead, projectReleases, quarterCoverage, releaseItems, TEMPLATES, toT, validateItem,
+  activate, adMatrix, applyPlan, funnelMatrix, revenueMatrix, teamsMonthly, assetCost, forecastMetric, growthMatrix, olsFit, sampleAds, sampleGrowth, SITES, weeklySpend, launchLead, projectReleases, quarterCoverage, releaseItems, TEMPLATES, toT, validateItem,
 } from "./extension.js";
 
 const DAY = 86_400_000;
@@ -87,6 +87,30 @@ describe("ad efficiency and growth", () => {
     hold.forEach((row, i) => expect(more[i].at12).toBeGreaterThan(row.at12));
   });
 
+  it("applies each conversion percent down the Teams and Enterprise funnels", () => {
+    const rows = [{ id: "activated", last4: 1000, at4: 1100, at12: 1200, lift12: 100 }];
+    const [teams, ent] = funnelMatrix(rows, { teamCreate: 10, teamPaid: 50, entLead: 2, entQualified: 50, entWon: 20 });
+    expect(teams.stages.map((s) => s.now)).toEqual([100, 50]);
+    expect(teams.stages[1].fromActivated).toBeCloseTo(5);
+    expect(ent.stages.map((s) => Math.round(s.at12 * 100) / 100)).toEqual([24, 12, 2.4]);
+    expect(funnelMatrix([{ id: "visitors" }])).toEqual([]);
+  });
+
+  it("prices Teams from the pricing page and values Enterprise at an assumed contract", () => {
+    expect(teamsMonthly(10)).toBe(500);
+    expect(teamsMonthly(14)).toBe(700);
+    const future = [{ value: 1000 }, { value: 1000 }];
+    const rows = [{ id: "activated", last4: 1000, at4: 1000, at12: 1000, lift12: 0, future, hold: future }];
+    const funnels = funnelMatrix(rows, { teamCreate: 10, teamPaid: 50, entLead: 2, entQualified: 50, entWon: 20 });
+    const r = revenueMatrix(funnels, { seats: 10, entAcv: 40000 });
+    // 1000 activated: 10% make a team, 50% of those pay -> 50 accounts a week at $500.
+    expect(r.teams.nowMrr).toBe(50 * 500);
+    // 1000 * 2% * 50% * 20% = 2 enterprise wins a week at $40,000.
+    expect(r.enterprise.nowAcv).toBe(2 * 40000);
+    expect(r.addedAnnual).toBe(2 * 50 * 500 * 12 + 2 * 2 * 40000);
+    expect(r.liftAnnual).toBe(0);
+  });
+
   it("is stable and its totals add up", () => {
     const a = sampleAds(now);
     expect(sampleAds(now)).toEqual(a);
@@ -170,6 +194,12 @@ describe("page", () => {
     activate(hostWith((_, m) => { mount = m; }));
     mount({ container });
     expect(container.querySelector('[data-testid="mp-growth"]').textContent).toContain("Weekly active users");
+    const funnel = container.querySelector('[data-testid="mp-funnel"]');
+    expect(funnel.textContent).toContain("Closed-won accounts");
+    const rate = funnel.querySelector("input");
+    rate.value = "20";
+    rate.dispatchEvent(new Event("change"));
+    expect(container.querySelector('[data-testid="mp-funnel"] input').value).toBe("20");
 
     [...container.querySelectorAll('[role="tab"]')].find((t) => t.textContent === "Ad spend").click();
     const matrix = container.querySelector('[data-testid="mp-ad-matrix"]');
