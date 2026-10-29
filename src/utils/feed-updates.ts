@@ -45,6 +45,8 @@ export interface FeedUpdateDetails {
   result?: string;
   /** For a message: the tool results of the turn before it. */
   evidence?: { label: string; result: string }[];
+  /** The tool the step ran. */
+  tool?: string;
   /** The event the details belong to. */
   eventId?: string;
   /** What the tool was asked to do, as key and value pairs. */
@@ -184,6 +186,7 @@ export function getActionDetails(
         ? event.security_risk
         : undefined,
     outcome,
+    tool: event.tool_name || undefined,
     eventId: event.id,
   };
 }

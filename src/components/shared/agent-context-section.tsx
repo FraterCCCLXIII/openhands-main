@@ -1,4 +1,5 @@
 import React from "react";
+import { Bot, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
 import { getDisplayConversationTags } from "#/api/agent-server-adapter";
@@ -7,6 +8,8 @@ import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
 import { useConversationSkills } from "#/hooks/query/use-conversation-skills";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { useGoalStore } from "#/stores/goal-store";
+import { cn } from "#/utils/utils";
+import { Chip } from "./turn-details/chip";
 
 const MAX_SKILLS = 8;
 
@@ -29,45 +32,60 @@ function AgentContextRows() {
   const tags = getDisplayConversationTags(conversation.tags).map(
     ([key, value]) => (value ? `${key}=${value}` : key),
   );
-  const rows: [string, string | undefined][] = [
-    [I18nKey.FEED$DETAILS_AGENT_PROFILE, profileName],
-    [I18nKey.FEED$DETAILS_MODEL, conversation.llm_model ?? undefined],
-    [I18nKey.FEED$DETAILS_TAGS, tags.join(", ") || undefined],
-    [
-      I18nKey.FEED$DETAILS_WORKSPACE,
-      conversation.workspace?.working_dir ?? undefined,
-    ],
-    [
-      I18nKey.FEED$DETAILS_SKILLS_AVAILABLE,
-      skills?.length
-        ? `${skills
-            .slice(0, MAX_SKILLS)
-            .map((skill) => skill.name)
-            .join(
-              ", ",
-            )}${skills.length > MAX_SKILLS ? ` +${skills.length - MAX_SKILLS}` : ""}`
-        : undefined,
-    ],
-    [
-      I18nKey.FEED$DETAILS_GOAL,
-      goal
-        ? `${goal.objective} · ${t(I18nKey.FEED$DETAILS_GOAL_PROGRESS, {
-            iteration: goal.iteration,
-            max: goal.max_iterations,
-          })}`
-        : undefined,
-    ],
+  const chips: { label: string; values: string[] }[] = [
+    { label: I18nKey.FEED$DETAILS_AGENT_PROFILE, values: [profileName ?? ""] },
+    {
+      label: I18nKey.FEED$DETAILS_MODEL,
+      values: [conversation.llm_model ?? ""],
+    },
+    { label: I18nKey.FEED$DETAILS_TAGS, values: tags },
+    {
+      label: I18nKey.FEED$DETAILS_WORKSPACE,
+      values: [conversation.workspace?.working_dir ?? ""],
+    },
+    {
+      label: I18nKey.FEED$DETAILS_SKILLS_AVAILABLE,
+      values: [
+        ...(skills ?? []).slice(0, MAX_SKILLS).map((skill) => skill.name),
+        ...(skills && skills.length > MAX_SKILLS
+          ? [`+${skills.length - MAX_SKILLS}`]
+          : []),
+      ],
+    },
+    {
+      label: I18nKey.FEED$DETAILS_GOAL,
+      values: [
+        goal
+          ? `${goal.objective} · ${t(I18nKey.FEED$DETAILS_GOAL_PROGRESS, {
+              iteration: goal.iteration,
+              max: goal.max_iterations,
+            })}`
+          : "",
+      ],
+    },
   ];
   return (
-    <dl className="custom-scrollbar max-h-40 overflow-auto">
-      {rows.map(([label, value]) =>
-        value ? (
-          <div key={label} className="flex gap-1.5">
-            <dt className="flex-shrink-0 font-semibold">{t(label)}:</dt>
-            <dd className="break-words">{value}</dd>
+    <dl className="custom-scrollbar flex max-h-48 flex-col gap-1.5 overflow-auto">
+      {chips.map(({ label, values }) => {
+        const shown = values.filter(Boolean);
+        return shown.length ? (
+          <div key={label} className="flex flex-col gap-1">
+            <dt className="text-xs uppercase tracking-wider text-muted">
+              {t(label)}
+            </dt>
+            <dd className="flex flex-wrap gap-1.5">
+              {shown.map((value) => (
+                <Chip
+                  key={value}
+                  mono={label === I18nKey.FEED$DETAILS_WORKSPACE}
+                >
+                  {value}
+                </Chip>
+              ))}
+            </dd>
           </div>
-        ) : null,
-      )}
+        ) : null;
+      })}
     </dl>
   );
 }
@@ -77,17 +95,33 @@ export function AgentContextSection() {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = React.useState(false);
   return (
-    <div>
+    <section
+      data-testid="turn-details-module"
+      className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-surface p-2.5 @lg:col-span-2"
+    >
       <button
         type="button"
         data-testid="agent-context-toggle"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="cursor-pointer font-semibold hover:text-foreground"
+        className="flex w-full cursor-pointer items-center gap-1.5 text-muted transition-colors hover:text-foreground"
       >
-        {t(I18nKey.FEED$DETAILS_AGENT_CONTEXT)}
+        <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+        <span className="flex-1 truncate text-left text-xs font-semibold uppercase tracking-wider">
+          {t(I18nKey.FEED$DETAILS_AGENT_CONTEXT)}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-3 w-3 flex-shrink-0 transition-transform",
+            open && "rotate-180",
+          )}
+        />
       </button>
-      {open ? <AgentContextRows /> : null}
-    </div>
+      {open ? (
+        <div className="text-xs text-foreground">
+          <AgentContextRows />
+        </div>
+      ) : null}
+    </section>
   );
 }
