@@ -1,10 +1,11 @@
-import { Pencil, Plus } from "lucide-react";
+import { Activity, Pencil, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FeedRoleBadge } from "#/components/features/feed/feed-role-badge";
 import { I18nKey } from "#/i18n/declaration";
 import { getDemoAgentRole } from "#/utils/feed-agent-role";
 import type { FactoryTarget } from "#/utils/factory-routing";
 import { cn } from "#/utils/utils";
+import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { FeedIconTile } from "#/components/features/feed/feed-icon-tile";
 import type { RosterAgent } from "./factory-routing-context";
 
@@ -43,7 +44,6 @@ function AgentButton({
         onClick={onSelect}
         className={cn(
           "flex w-full flex-col items-center gap-2 rounded-lg px-3 py-3 text-center hover:bg-surface-raised",
-          !large && "border border-border",
           selected && "bg-surface-raised ring-1 ring-focus",
         )}
       >
@@ -52,18 +52,26 @@ function AgentButton({
             <Icon size={large ? 24 : 20} />
           </FeedIconTile>
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-foreground">
-            {agent.name}
-          </span>
-          {live > 0 ? (
-            <span
-              aria-label={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
-              className="size-1.5 shrink-0 rounded-full bg-success"
-            />
-          ) : null}
+        <span className="truncate text-sm font-medium text-foreground">
+          {agent.name}
         </span>
         <FeedRoleBadge role={getDemoAgentRole(agent)} />
+        <StyledTooltip
+          content={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
+          placement="bottom"
+        >
+          <span
+            data-testid="factory-agent-live"
+            aria-label={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
+            className={cn(
+              "flex items-center gap-1 text-xs text-muted",
+              live > 0 && "text-success",
+            )}
+          >
+            <Activity size={12} aria-hidden />
+            {live}
+          </span>
+        </StyledTooltip>
       </button>
       <button
         type="button"
@@ -101,7 +109,7 @@ export function FactoryAgentRail({
     >
       <section
         data-testid="factory-coordinator-spot"
-        className="shrink-0 rounded-xl border border-border bg-surface-raised p-3 md:w-64"
+        className="shrink-0 md:w-64"
       >
         <h2 className="text-xs font-semibold uppercase text-muted">
           {t(I18nKey.FACTORY$COORDINATOR)}
