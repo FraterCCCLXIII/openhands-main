@@ -477,6 +477,20 @@ const STYLE = `
 .rt .pm .id { font-weight: 500; color: var(--rt-contrast); } .rt .pm .sub { color: var(--rt-muted); font-size: 11px; }
 .rt .pm .tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10px; border: 1px solid var(--rt-border); color: var(--rt-muted); }
 .rt .pm .tag.ours { color: var(--rt-success); border-color: var(--rt-success); } .rt .pm .tag.used { color: var(--rt-primary); border-color: var(--rt-primary); }
+.rt .shell { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+.rt .main { min-width: 0; }
+.rt .nav { position: sticky; top: 0; max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 8px; }
+.rt .nav h2 { margin: 0; padding: 0 6px; }
+.rt .nav input[type=search] { background: var(--rt-bg); border: 1px solid var(--rt-border); border-radius: 8px; padding: 6px 10px; width: 100%; }
+.rt .navlist { overflow-y: auto; display: flex; flex-direction: column; gap: 1px; padding-right: 2px; scrollbar-width: thin; scrollbar-color: var(--rt-border) transparent; }
+.rt .conv { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 6px 8px; color: var(--rt-text); }
+.rt .conv:hover:not(:disabled) { background: var(--rt-raised); }
+.rt .conv[aria-current="true"] { background: var(--rt-raised); color: var(--rt-contrast); font-weight: 600; }
+.rt .conv .mk { width: 14px; text-align: center; flex: none; font-size: 11px; }
+.rt .conv .mk.ok { color: var(--rt-success); } .rt .conv .mk.run { color: var(--rt-success); } .rt .conv .mk.err { color: var(--rt-danger); } .rt .conv .mk.idle { color: var(--rt-muted); }
+.rt .conv .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rt .conv .age { color: var(--rt-muted); font-size: 11px; flex: none; font-weight: 400; }
+@media (max-width: 900px) { .rt .shell { grid-template-columns: 1fr; } .rt .nav { position: static; max-height: 240px; } }
 .rt .banner { background: var(--rt-panel); border: 1px dashed var(--rt-border); border-radius: 10px; padding: 8px 12px; }
 `;
 
@@ -594,6 +608,18 @@ export function describeRow(item, tl, conv, mode = "reported") {
   return sections;
 }
 
+/** A short age like the sidebar shows: 5m, 3h, 5d. */
+export function ageShort(iso, now = Date.now()) {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  const m = Math.max(0, Math.round((now - t) / 60_000));
+  if (m < 60) return `${m}m`;
+  if (m < 1440) return `${Math.round(m / 60)}h`;
+  return `${Math.round(m / 1440)}d`;
+}
+
+const STATUS_MARK = { finished: ["✓", "ok"], running: ["●", "run"], error: ["●", "err"], stuck: ["●", "err"] };
+
 // ─── Mount ────────────────────────────────────────────────────────────────
 
 function mountTimeline(host, { container }) {
@@ -604,7 +630,7 @@ function mountTimeline(host, { container }) {
   container.append(root);
 
   const readMode = () => { try { return window.localStorage.getItem("run-timeline:cost") === "estimated" ? "estimated" : "reported"; } catch { return "reported"; } };
-  const ui = { costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, view: "timeline", priceQ: "", priceProvider: "All" };
+  const ui = { costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All" };
   let disposed = false;
   let pollTimer = null;
   let loadToken = 0;
@@ -856,20 +882,55 @@ function mountTimeline(host, { container }) {
     if (disposed) return;
     tip = null;
     root.replaceChildren();
+    const shell = el("div", "shell");
+    const nav = el("nav", "nav");
+    nav.setAttribute("aria-label", "Conversations");
+    const main = el("div", "main");
+    shell.append(nav, main);
+    root.append(shell);
+
+    nav.append(el("h2", "", `Conversations${ui.convs.length ? ` (${ui.convs.length})` : ""}`));
+    const search = el("input");
+    search.type = "search"; search.placeholder = "Search conversations"; search.value = ui.navQ; search.setAttribute("aria-label", "Search conversations");
+    const navList = el("div", "navlist");
+    const fillNav = () => {
+      const q = ui.navQ.trim().toLowerCase();
+      navList.replaceChildren();
+      if (ui.source?.type === "file") {
+        const f = el("button", "conv");
+        f.type = "button";
+        f.setAttribute("aria-current", "true");
+        f.append(el("span", "mk idle", "↥"), el("span", "nm", `Imported: ${ui.source.name}`));
+        navList.append(f);
+      }
+      ui.convs.filter((c) => !q || `${c.title ?? ""} ${c.id}`.toLowerCase().includes(q)).forEach((c) => {
+        const [glyph, tone] = STATUS_MARK[c.execution_status] ?? ["●", "idle"];
+        const row = el("button", "conv");
+        row.type = "button";
+        row.setAttribute("data-testid", "rt-conv");
+        row.setAttribute("aria-current", String(ui.source?.type === "live" && ui.source.id === c.id));
+        row.title = c.title || c.id;
+        row.append(el("span", `mk ${tone}`, glyph), el("span", "nm", c.title || c.id), el("span", "age", ageShort(c.updated_at)));
+        row.addEventListener("click", () => loadLive(c.id));
+        navList.append(row);
+      });
+      if (!navList.children.length) navList.append(el("p", "muted small", ui.convError ? `Could not list conversations: ${ui.convError}` : "No conversations."));
+    };
+    search.addEventListener("input", () => { ui.navQ = search.value; fillNav(); });
+    fillNav();
+    nav.append(search, navList);
     const top = el("div", "top");
     const left = el("div");
     left.style.cssText = "display:flex;flex-direction:column;gap:6px;align-items:flex-start;";
     left.append(el("h1", "", "Run Timeline"), el("span", "muted", "Where the time went in an agent run"));
     const bar = el("div", "row");
-    const opts = ui.convs.map((c) => [c.id, `${c.title || c.id}${c.execution_status ? ` (${c.execution_status})` : ""}`]);
-    const pickConv = select([["", ui.convError ? "Conversations unavailable" : opts.length ? "Choose a conversation" : "No conversations"], ...opts], ui.source?.type === "live" ? ui.source.id : "", (v) => { if (v) loadLive(v); }, "Conversation");
     const refresh = button("Refresh", () => { if (ui.source?.type === "live") loadLive(ui.source.id); else loadConversations(); }, "");
     const input = el("input");
     input.type = "file";
     input.accept = ".json,.jsonl,.txt";
     input.hidden = true;
     input.addEventListener("change", () => { if (input.files?.[0]) importFile(input.files[0]); });
-    bar.append(pickConv, refresh, button("Import log", () => input.click(), "primary"), input);
+    bar.append(refresh, button("Import log", () => input.click(), "primary"), input);
     top.append(left, bar);
     const seg = el("div", "seg");
     [["timeline", "Timeline"], ["prices", "Prices"]].forEach(([v, label]) => {
@@ -880,19 +941,19 @@ function mountTimeline(host, { container }) {
       seg.append(b);
     });
     left.append(seg);
-    root.append(top);
-    if (ui.view === "prices") { root.append(viewPrices()); return; }
+    main.append(top);
+    if (ui.view === "prices") { main.append(viewPrices()); return; }
 
-    root.append(el("div", "banner small muted", "Intervals are between the timestamps the events carry. A step with no result is shown as open: no result was observed, which does not mean the tool is still running. Time between steps includes model and orchestration time and is not split further. Logs are not scrubbed: avoid sharing raw ones."));
+    main.append(el("div", "banner small muted", "Intervals are between the timestamps the events carry. A step with no result is shown as open: no result was observed, which does not mean the tool is still running. Time between steps includes model and orchestration time and is not split further. Logs are not scrubbed: avoid sharing raw ones."));
 
-    if (ui.convError) root.append(el("p", "warn small", `Could not list conversations: ${ui.convError}`));
-    if (ui.error) root.append(el("p", "warn", ui.error));
-    if (ui.loading) root.append(el("p", "muted", "Loading…"));
+    if (ui.convError) main.append(el("p", "warn small", `Could not list conversations: ${ui.convError}`));
+    if (ui.error) main.append(el("p", "warn", ui.error));
+    if (ui.loading) main.append(el("p", "muted", "Loading…"));
 
     const tl = ui.tl;
     const sum = tl ? summarize(tl) : null;
     if (!tl || !sum) {
-      if (!ui.loading && !ui.error) root.append(el("p", "muted", "Choose a conversation or import an OpenHands CLI JSONL or SDK event file to see its timeline."));
+      if (!ui.loading && !ui.error) main.append(el("p", "muted", "Choose a conversation or import an OpenHands CLI JSONL or SDK event file to see its timeline."));
       return;
     }
     const tiles = el("div", "tiles");
@@ -905,7 +966,7 @@ function mountTimeline(host, { container }) {
       t.append(el("span", "muted small", k), el("b", "", v), el("span", "muted small", d));
       tiles.append(t);
     });
-    root.append(tiles);
+    main.append(tiles);
     const more = el("div", "tiles");
     const rc = runCost(tl);
     const toks = sum.usage ? sum.usage.prompt + sum.usage.completion : null;
@@ -918,7 +979,7 @@ function mountTimeline(host, { container }) {
       t.append(el("span", "muted small", k), el("b", "", v), el("span", "muted small", d));
       more.append(t);
     });
-    root.append(more);
+    main.append(more);
 
     const filters = el("div", "row");
     const chk = el("label", "chk");
@@ -946,7 +1007,7 @@ function mountTimeline(host, { container }) {
       ui.warnings.slice(0, 20).forEach((x) => w.append(el("span", "muted small", x)));
       stack.append(w);
     }
-    root.append(stack);
+    main.append(stack);
   }
 
   render();

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
+import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, ageShort, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
 
 const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
 const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
@@ -192,6 +192,16 @@ describe("cost from our prices", () => {
   });
 });
 
+describe("conversation nav", () => {
+  it("shows ages like the sidebar", () => {
+    const now = Date.parse("2026-10-29T12:00:00Z");
+    expect(ageShort("2026-10-29T11:30:00Z", now)).toBe("30m");
+    expect(ageShort("2026-10-29T06:00:00Z", now)).toBe("6h");
+    expect(ageShort("2026-10-24T12:00:00Z", now)).toBe("5d");
+    expect(ageShort("nope", now)).toBe("");
+  });
+});
+
 describe("page", () => {
   let container;
   beforeEach(() => { container = document.createElement("div"); document.body.append(container); });
@@ -218,11 +228,10 @@ describe("page", () => {
     };
     activate(host);
     mount({ container });
-    await vi.waitFor(() => expect(container.querySelector("select").options.length).toBe(2));
+    await vi.waitFor(() => expect(container.querySelectorAll('[data-testid="rt-conv"]')).toHaveLength(1));
+    expect(container.querySelector('[data-testid="rt-conv"]').textContent).toContain("Fix build");
 
-    const picker = container.querySelector("select");
-    picker.value = "c1";
-    picker.dispatchEvent(new Event("change"));
+    container.querySelector('[data-testid="rt-conv"]').click();
     await vi.waitFor(() => expect(container.querySelector('[data-testid="rt-waterfall"]')).not.toBeNull());
     expect(container.querySelectorAll('[data-testid="rt-row"]')).toHaveLength(2);
     expect(container.textContent).toContain("terminal");
