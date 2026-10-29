@@ -1,0 +1,119 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { activate, buildTimeline, fmtDuration, parseImport, parseTime, summarize } from "./extension.js";
+
+const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
+const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
+const msg = (id, ts, role = "assistant", text = "hello") => ({ id, timestamp: ts, source: role === "user" ? "user" : "agent", llm_message: { role, content: [{ type: "text", text }] } });
+
+describe("time", () => {
+  it("trusts an offset, uses a capture time for a naive value, and skips otherwise", () => {
+    expect(parseTime("2026-10-29T10:00:00Z")).toMatchObject({ basis: "producer" });
+    expect(parseTime("2026-10-29T10:00:00", "2026-10-29T10:00:05Z")).toMatchObject({ basis: "observed", t: Date.parse("2026-10-29T10:00:05Z") });
+    expect(parseTime("2026-10-29T10:00:00")).toBeNull();
+    expect(parseTime("2026-10-29T10:00:00", undefined, true)).toMatchObject({ basis: "assumed-utc" });
+  });
+
+  it("formats durations", () => {
+    expect(fmtDuration(250)).toBe("250 ms");
+    expect(fmtDuration(2500)).toBe("2.50 s");
+    expect(fmtDuration(null)).toBe("no result");
+  });
+});
+
+describe("buildTimeline", () => {
+  it("pairs an action with its observation into a span", () => {
+    const tl = buildTimeline([action("a1", "2026-10-29T10:00:00Z"), obs("o1", "a1", "2026-10-29T10:00:02Z")]);
+    expect(tl.spans).toHaveLength(1);
+    expect(tl.spans[0]).toMatchObject({ status: "ok", end: Date.parse("2026-10-29T10:00:02Z") });
+    expect(tl.spans[0].args).toContain("command: ls");
+  });
+
+  it("leaves an unanswered action open and creates no interval for an orphan result", () => {
+    const tl = buildTimeline([action("a1", "2026-10-29T10:00:00Z"), obs("o9", "missing", "2026-10-29T10:00:03Z")]);
+    expect(tl.spans[0]).toMatchObject({ status: "open", end: null });
+    expect(tl.warnings.join(" ")).toMatch(/no matching action/);
+  });
+
+  it("marks a nonzero exit code or an error flag as an error, and a rejection as rejected", () => {
+    const tl = buildTimeline([
+      action("a1", "2026-10-29T10:00:00Z"), obs("o1", "a1", "2026-10-29T10:00:01Z", { exit_code: 2 }),
+      action("a2", "2026-10-29T10:00:02Z"), { id: "r2", timestamp: "2026-10-29T10:00:03Z", source: "environment", action_id: "a2", rejection_reason: "blocked by hook" },
+    ]);
+    expect(tl.spans.map((s) => s.status)).toEqual(["error", "rejected"]);
+  });
+
+  it("never reads success or failure from message text", () => {
+    const tl = buildTimeline([action("a1", "2026-10-29T10:00:00Z"), obs("o1", "a1", "2026-10-29T10:00:01Z", { content: [{ type: "text", text: "Error: it failed" }] })]);
+    expect(tl.spans[0].status).toBe("ok");
+  });
+
+  it("skips events with naive timestamps unless a capture time is present", () => {
+    const naive = action("a1", "2026-10-29T10:00:00");
+    expect(buildTimeline([naive]).spans).toHaveLength(0);
+    expect(buildTimeline([naive]).warnings.join(" ")).toMatch(/no timezone/);
+    expect(buildTimeline([{ ...naive, runwardObservedAt: "2026-10-29T10:00:01Z" }]).spans).toHaveLength(1);
+  });
+
+  it("keeps messages as instants", () => {
+    const tl = buildTimeline([msg("m1", "2026-10-29T10:00:00Z", "user", "do it")]);
+    expect(tl.instants[0]).toMatchObject({ kind: "message", role: "user" });
+  });
+});
+
+describe("summarize", () => {
+  it("separates time inside steps from time between them, merging overlaps", () => {
+    const tl = buildTimeline([
+      action("a1", "2026-10-29T10:00:00Z"), obs("o1", "a1", "2026-10-29T10:00:04Z"),
+      action("a2", "2026-10-29T10:00:02Z"), obs("o2", "a2", "2026-10-29T10:00:05Z"),
+      action("a3", "2026-10-29T10:00:10Z"), obs("o3", "a3", "2026-10-29T10:00:11Z"),
+    ]);
+    const s = summarize(tl);
+    expect(s.total).toBe(11_000);
+    expect(s.inSteps).toBe(6_000);
+    expect(s.longestGap.ms).toBe(5_000);
+  });
+});
+
+describe("parseImport", () => {
+  it("reads JSONL, a JSON array, an events object and a single event, and counts bad lines", () => {
+    const e = msg("m1", "2026-10-29T10:00:00Z");
+    expect(parseImport(`${JSON.stringify(e)}\nnot json\n${JSON.stringify(e)}`)).toMatchObject({ events: [e, e], warnings: [expect.stringMatching(/1 lines/)] });
+    expect(parseImport(JSON.stringify([e])).events).toHaveLength(1);
+    expect(parseImport(JSON.stringify({ events: [e, e] })).events).toHaveLength(2);
+    expect(parseImport(JSON.stringify(e)).events).toHaveLength(1);
+  });
+
+  it("unwraps an event that carries a capture time beside it", () => {
+    const wrapped = { event: action("a1", "2026-10-29T10:00:00"), runwardObservedAt: "2026-10-29T10:00:01Z" };
+    expect(buildTimeline(parseImport(JSON.stringify(wrapped)).events).spans).toHaveLength(1);
+  });
+});
+
+describe("page", () => {
+  let container;
+  beforeEach(() => { container = document.createElement("div"); document.body.append(container); });
+  afterEach(() => container.remove());
+
+  it("lists conversations, loads one's events and draws the waterfall", async () => {
+    let mount;
+    const events = [msg("m1", "2026-10-29T10:00:00", "user", "go"), action("a1", "2026-10-29T10:00:01"), obs("o1", "a1", "2026-10-29T10:00:03")];
+    const host = {
+      apiVersion: "1", navigate: vi.fn(),
+      registerPage: (_, m) => { mount = m; return () => {}; },
+      agentServer: { request: vi.fn(({ path }) => Promise.resolve(path.startsWith("/api/conversations/search") ? { items: [{ id: "c1", title: "Fix build", execution_status: "finished", updated_at: "2026-10-29T10:05:00Z" }] } : { items: events })) },
+    };
+    activate(host);
+    mount({ container });
+    await vi.waitFor(() => expect(container.querySelector("select").options.length).toBe(2));
+
+    const picker = container.querySelector("select");
+    picker.value = "c1";
+    picker.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(container.querySelector('[data-testid="rt-waterfall"]')).not.toBeNull());
+    expect(container.querySelectorAll('[data-testid="rt-row"]')).toHaveLength(2);
+    expect(container.textContent).toContain("terminal");
+
+    container.querySelectorAll('[data-testid="rt-row"]')[1].click();
+    expect(container.querySelector('[data-testid="rt-detail"]').textContent).toContain("command: ls");
+  });
+});

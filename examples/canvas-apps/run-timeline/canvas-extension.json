@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "run-timeline",
+  "display_name": "Run Timeline",
+  "version": "0.1.0",
+  "description": "A waterfall timeline of an OpenHands run: paired actions and observations, messages and errors, from live conversations or an imported CLI JSONL or SDK event file.",
+  "entrypoint": "extension.js",
+  "contributes": {
+    "pages": [
+      {
+        "id": "timeline",
+        "title": "Run Timeline",
+        "path": "/timeline",
+        "nav_label": "Run Timeline",
+        "description": "See where the time went in an agent run."
+      }
+    ]
+  }
+}
