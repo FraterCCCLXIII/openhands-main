@@ -1,4 +1,8 @@
-import type { OpenHandsEvent } from "#/types/agent-server/core";
+import type {
+  ActionEvent,
+  MessageEvent,
+  OpenHandsEvent,
+} from "#/types/agent-server/core";
 import { SecurityRisk } from "#/types/agent-server/core/base/common";
 import {
   getActionThoughtText,
@@ -27,6 +31,10 @@ export interface FeedUpdateDetails {
     exitCode?: number | null;
     rejectionReason?: string;
   };
+  /** Skills the agent loaded for a message. */
+  skills?: string[];
+  /** The event the details belong to. */
+  eventId?: string;
 }
 
 export interface FeedUpdate {
@@ -47,7 +55,7 @@ const truncate = (text: string, max = MAX_UPDATE_TEXT): string =>
 
 type Reasoning = Parameters<typeof getReasoningContent>[0];
 
-function reasoningDetails(source: Reasoning): FeedUpdateDetails {
+export function reasoningDetails(source: Reasoning): FeedUpdateDetails {
   return {
     reasoning: getReasoningContent(source).trim() || undefined,
     redacted: !!source.thinking_blocks?.some(
@@ -57,7 +65,56 @@ function reasoningDetails(source: Reasoning): FeedUpdateDetails {
 }
 
 const hasDetails = (d: FeedUpdateDetails): boolean =>
-  !!(d.reasoning || d.redacted || d.thought || d.risk || d.outcome);
+  !!(
+    d.reasoning ||
+    d.redacted ||
+    d.thought ||
+    d.risk ||
+    d.outcome ||
+    d.skills?.length
+  );
+
+/** The outcome an observation reports for the action it answers. */
+export function outcomeOf(
+  event: OpenHandsEvent,
+): FeedUpdateDetails["outcome"] | undefined {
+  if (isUserRejectObservation(event)) {
+    return { isError: true, rejectionReason: event.rejection_reason };
+  }
+  if (!isObservationEvent(event)) return undefined;
+  const obs = event.observation as {
+    is_error?: boolean;
+    error?: boolean;
+    exit_code?: number | null;
+  };
+  return { isError: !!(obs.is_error ?? obs.error), exitCode: obs.exit_code };
+}
+
+/** Reasoning, thought, risk and outcome of one action. */
+export function getActionDetails(
+  event: ActionEvent,
+  outcome?: FeedUpdateDetails["outcome"],
+): FeedUpdateDetails {
+  return {
+    ...reasoningDetails(event),
+    thought: getActionThoughtText(event).trim() || undefined,
+    risk:
+      event.security_risk && event.security_risk !== SecurityRisk.UNKNOWN
+        ? event.security_risk
+        : undefined,
+    outcome,
+    eventId: event.id,
+  };
+}
+
+/** Reasoning and loaded skills of an agent message. */
+export function getMessageDetails(event: MessageEvent): FeedUpdateDetails {
+  return {
+    ...reasoningDetails(event.llm_message),
+    skills: event.activated_skills?.length ? event.activated_skills : undefined,
+    eventId: event.id,
+  };
+}
 
 /** Pairs each action with the observation that answered it. */
 function indexOutcomes(
@@ -65,21 +122,9 @@ function indexOutcomes(
 ): Map<string, NonNullable<FeedUpdateDetails["outcome"]>> {
   const outcomes = new Map<string, NonNullable<FeedUpdateDetails["outcome"]>>();
   events.forEach((event) => {
-    if (isUserRejectObservation(event)) {
-      outcomes.set(event.action_id, {
-        isError: true,
-        rejectionReason: event.rejection_reason,
-      });
-    } else if (isObservationEvent(event)) {
-      const obs = event.observation as {
-        is_error?: boolean;
-        error?: boolean;
-        exit_code?: number | null;
-      };
-      outcomes.set(event.action_id, {
-        isError: !!(obs.is_error ?? obs.error),
-        exitCode: obs.exit_code,
-      });
+    const outcome = outcomeOf(event);
+    if (outcome && "action_id" in event) {
+      outcomes.set(event.action_id as string, outcome);
     }
   });
   return outcomes;
@@ -107,15 +152,7 @@ function toFeedUpdate(
     };
   }
   if (isActionEvent(event)) {
-    const details: FeedUpdateDetails = {
-      ...reasoningDetails(event),
-      thought: getActionThoughtText(event).trim() || undefined,
-      risk:
-        event.security_risk && event.security_risk !== SecurityRisk.UNKNOWN
-          ? event.security_risk
-          : undefined,
-      outcome: outcomes.get(event.id),
-    };
+    const details = getActionDetails(event, outcomes.get(event.id));
     return {
       id: event.id,
       kind: "action",

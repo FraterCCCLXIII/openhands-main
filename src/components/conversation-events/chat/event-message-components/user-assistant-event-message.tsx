@@ -12,6 +12,9 @@ import {
   getReasoningContent,
   splitInlineThink,
 } from "../event-thought-helpers";
+import { Info } from "lucide-react";
+import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
+import { getMessageDetails } from "#/utils/feed-updates";
 import RepoForkedIcon from "#/icons/repo-forked.svg?react";
 import { I18nKey } from "#/i18n/declaration";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
@@ -117,15 +120,29 @@ function UserAssistantEventMessageComponent({
       },
     );
   };
-  const actions = canBranch
-    ? [
-        {
-          icon: <RepoForkedIcon width={15} height={15} aria-hidden />,
-          onClick: handleBranch,
-          tooltip: t(I18nKey.CHAT_INTERFACE$BRANCH_FROM_HERE),
-        },
-      ]
-    : undefined;
+  const [showDetails, setShowDetails] = React.useState(false);
+  const canShowDetails = event.source === "agent";
+  const actionList = [
+    ...(canBranch
+      ? [
+          {
+            icon: <RepoForkedIcon width={15} height={15} aria-hidden />,
+            onClick: handleBranch,
+            tooltip: t(I18nKey.CHAT_INTERFACE$BRANCH_FROM_HERE),
+          },
+        ]
+      : []),
+    ...(canShowDetails
+      ? [
+          {
+            icon: <Info size={15} aria-hidden />,
+            onClick: () => setShowDetails((open) => !open),
+            tooltip: t(I18nKey.CHAT_INTERFACE$DETAILS),
+          },
+        ]
+      : []),
+  ];
+  const actions = actionList.length > 0 ? actionList : undefined;
 
   const isUserMessage = event.source === "user";
 
@@ -148,6 +165,11 @@ function UserAssistantEventMessageComponent({
           <ImageCarousel size="small" images={imageUrls} />
         )}
       </ChatMessage>
+      {showDetails && canShowDetails ? (
+        <div className="mb-1 w-full pl-1">
+          <TurnDetailsPanel details={getMessageDetails(event)} />
+        </div>
+      ) : null}
       {event.source === "agent" && event.critic_result != null && (
         <CriticResultDisplay criticResult={event.critic_result} />
       )}

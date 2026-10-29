@@ -29,13 +29,10 @@ import { FeedUserAvatar } from "./feed-user-avatar";
 import { FeedRoleBadge } from "./feed-role-badge";
 import { getFeedAgentRole } from "#/utils/feed-agent-role";
 import { FeedAgentAvatar } from "./feed-agent-avatar";
+import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
 import { FeedTeamThread } from "./feed-team-thread";
 import { isFeedTeamDemoEnabled } from "#/utils/feed-team-demo";
-import type {
-  FeedUpdate,
-  FeedUpdateDetails,
-  FeedUpdateKind,
-} from "#/utils/feed-updates";
+import type { FeedUpdate, FeedUpdateKind } from "#/utils/feed-updates";
 
 const KIND_LABEL: Record<FeedUpdateKind, I18nKey> = {
   user: I18nKey.FEED$ROLE_YOU,
@@ -65,55 +62,6 @@ function UpdateAvatar({
     return <FeedUserAvatar />;
   }
   return <span className={`${AVATAR_CLASS} size-8`}>{glyph}</span>;
-}
-
-function FeedUpdateDetailsPanel({ details }: { details: FeedUpdateDetails }) {
-  const { t } = useTranslation("openhands");
-  const { outcome } = details;
-  return (
-    <div
-      data-testid="feed-update-details"
-      className="mt-1.5 flex flex-col gap-1.5 border-l-2 border-border pl-2 text-xs text-muted"
-    >
-      {details.reasoning ? (
-        <div>
-          <p className="font-semibold">{t(I18nKey.FEED$DETAILS_REASONING)}</p>
-          <p className="whitespace-pre-wrap break-words">{details.reasoning}</p>
-        </div>
-      ) : details.redacted ? (
-        <p>{t(I18nKey.FEED$DETAILS_REASONING_REDACTED)}</p>
-      ) : null}
-      {details.thought ? (
-        <div>
-          <p className="font-semibold">{t(I18nKey.FEED$DETAILS_THOUGHT)}</p>
-          <p className="whitespace-pre-wrap break-words">{details.thought}</p>
-        </div>
-      ) : null}
-      {details.risk || outcome ? (
-        <p className="flex flex-wrap gap-x-3">
-          {details.risk ? (
-            <span>{t(I18nKey.FEED$DETAILS_RISK, { level: details.risk })}</span>
-          ) : null}
-          {outcome ? (
-            <span className={outcome.isError ? "text-danger" : undefined}>
-              {outcome.rejectionReason
-                ? t(I18nKey.FEED$DETAILS_REJECTED, {
-                    reason: outcome.rejectionReason,
-                  })
-                : t(
-                    outcome.isError
-                      ? I18nKey.FEED$DETAILS_OUTCOME_ERROR
-                      : I18nKey.FEED$DETAILS_OUTCOME_OK,
-                  )}
-              {typeof outcome.exitCode === "number"
-                ? ` · ${t(I18nKey.FEED$DETAILS_EXIT_CODE, { code: outcome.exitCode })}`
-                : ""}
-            </span>
-          ) : null}
-        </p>
-      ) : null}
-    </div>
-  );
 }
 
 function FeedUpdateRow({
@@ -165,9 +113,7 @@ function FeedUpdateRow({
                   : I18nKey.FEED$DETAILS_SHOW,
               )}
             </button>
-            {showDetails ? (
-              <FeedUpdateDetailsPanel details={update.details} />
-            ) : null}
+            {showDetails ? <TurnDetailsPanel details={update.details} /> : null}
           </>
         ) : null}
       </div>

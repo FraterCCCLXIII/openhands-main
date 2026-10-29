@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toFeedUpdates } from "#/utils/feed-updates";
+import { getMessageDetails, toFeedUpdates } from "#/utils/feed-updates";
 import type { OpenHandsEvent } from "#/types/agent-server/core";
 
 const action = (overrides: Record<string, unknown> = {}) =>
@@ -52,6 +52,7 @@ describe("toFeedUpdates details", () => {
       thought: undefined,
       risk: "LOW",
       outcome: { isError: true, exitCode: 2 },
+      eventId: "a1",
     });
   });
 
@@ -68,5 +69,25 @@ describe("toFeedUpdates details", () => {
   it("leaves details off an action with nothing to show", () => {
     const [update] = toFeedUpdates([action()]);
     expect(update.details).toBeUndefined();
+  });
+});
+
+describe("getMessageDetails", () => {
+  it("reports reasoning, the skills a message loaded and its event id", () => {
+    const details = getMessageDetails({
+      id: "m1",
+      llm_message: {
+        role: "assistant",
+        content: [],
+        reasoning_content: "Why.",
+      },
+      activated_skills: ["git"],
+    } as unknown as Parameters<typeof getMessageDetails>[0]);
+
+    expect(details).toMatchObject({
+      reasoning: "Why.",
+      skills: ["git"],
+      eventId: "m1",
+    });
   });
 });

@@ -59524,5 +59524,41 @@
     "tr": "Henüz planlanacak konuşma yok.",
     "uk": "Ще немає розмов для планування.",
     "id": "Belum ada percakapan untuk dijadwalkan."
+  },
+  "FEED$DETAILS_SKILLS": {
+    "en": "Skills used",
+    "ja": "使用したスキル",
+    "zh-CN": "使用的技能",
+    "zh-TW": "使用的技能",
+    "ko-KR": "사용한 스킬",
+    "no": "Brukte ferdigheter",
+    "ar": "المهارات المستخدمة",
+    "de": "Verwendete Skills",
+    "fr": "Compétences utilisées",
+    "it": "Skill usate",
+    "pt": "Skills usadas",
+    "es": "Habilidades usadas",
+    "ca": "Habilitats utilitzades",
+    "tr": "Kullanılan beceriler",
+    "uk": "Використані навички",
+    "id": "Skill yang digunakan"
+  },
+  "CHAT_INTERFACE$DETAILS": {
+    "en": "Details",
+    "ja": "詳細",
+    "zh-CN": "详情",
+    "zh-TW": "詳細資料",
+    "ko-KR": "상세 정보",
+    "no": "Detaljer",
+    "ar": "التفاصيل",
+    "de": "Details",
+    "fr": "Détails",
+    "it": "Dettagli",
+    "pt": "Detalhes",
+    "es": "Detalles",
+    "ca": "Detalls",
+    "tr": "Ayrıntılar",
+    "uk": "Подробиці",
+    "id": "Detail"
   }
 }

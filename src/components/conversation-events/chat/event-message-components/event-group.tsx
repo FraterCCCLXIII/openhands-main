@@ -17,6 +17,12 @@ import { ExpandChevron } from "#/components/shared/expand-chevron";
 import { RotatingStatus } from "#/components/shared/rotating-status";
 import { SkeletonLines } from "#/components/shared/skeleton-lines";
 import { TokenMeter } from "#/components/shared/token-meter";
+import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
+import {
+  getActionDetails,
+  outcomeOf,
+  type FeedUpdateDetails,
+} from "#/utils/feed-updates";
 import useMetricsStore from "#/stores/metrics-store";
 
 /** Refresh rate of the live elapsed time, in milliseconds. */
@@ -146,6 +152,7 @@ export function EventGroup({
   }, [isTicking]);
 
   const usage = useMetricsStore((state) => state.usage);
+  const [showDetails, setShowDetails] = React.useState(false);
 
   if (events.length === 0) {
     return null;
@@ -157,6 +164,21 @@ export function EventGroup({
   // AgentErrorEvent resolved it: that event carries no action id and renders
   // on its own, so it never replaces the action it answers.
   const lookupSource = allEvents ?? events;
+  const steps = events.flatMap((e) => {
+    const action = isActionEvent(e)
+      ? e
+      : lookupSource.find(
+          (candidate): candidate is ActionEvent =>
+            isActionEvent(candidate) &&
+            "action_id" in e &&
+            candidate.id === e.action_id,
+        );
+    if (!action) return [];
+    const details = getActionDetails(action, outcomeOf(e));
+    return [
+      { id: e.id, label: action.summary?.trim() || action.tool_name, details },
+    ];
+  });
   const unreplacedActions = events.filter(isActionEvent);
   const erroredToolCallIds =
     unreplacedActions.length > 0
@@ -204,6 +226,31 @@ export function EventGroup({
   const elapsedMs = isRunning ? now - mountedAt : eventSpanMs(events);
   const elapsedLabel =
     isRail && elapsedMs !== null ? formatElapsed(elapsedMs) : null;
+  const detailsBlock = (
+    <div className="mt-1.5 ml-1 flex flex-col gap-1.5">
+      <button
+        type="button"
+        data-testid="event-group-details-toggle"
+        aria-expanded={showDetails}
+        onClick={() => setShowDetails((open) => !open)}
+        className="w-fit cursor-pointer text-xs text-muted transition-colors hover:text-foreground"
+      >
+        {t(I18nKey.CHAT_INTERFACE$DETAILS)}
+      </button>
+      {showDetails ? (
+        <ul data-testid="event-group-details" className="flex flex-col gap-2">
+          {steps.map((step) => (
+            <li key={step.id}>
+              <p className="text-xs font-medium text-foreground">
+                {step.label}
+              </p>
+              <TurnDetailsPanel details={step.details as FeedUpdateDetails} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
   const expanded = userExpanded ?? (isRail && isRunning && !isFinalized);
   return (
     <div
@@ -349,6 +396,7 @@ export function EventGroup({
             className="min-h-0 overflow-hidden"
             data-testid="event-group-content"
           >
+            {detailsBlock}
             <div
               data-rail-thread
               className="relative ml-3.25 mt-1.5 flex flex-col"
@@ -386,6 +434,7 @@ export function EventGroup({
             className="mt-1.5 flex flex-col"
             data-testid="event-group-content"
           >
+            {detailsBlock}
             <IsInEventGroupContext.Provider value>
               {children}
             </IsInEventGroupContext.Provider>
