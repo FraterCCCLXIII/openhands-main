@@ -4,7 +4,7 @@ import { cn } from "#/utils/utils";
 export function StatGrid({
   stats,
 }: {
-  stats: { label: string; value: string; end?: boolean }[];
+  stats: { label: string; value: string; end?: boolean; extra?: string }[];
 }) {
   return (
     <dl className="custom-scrollbar flex flex-nowrap gap-x-6 overflow-x-auto">
@@ -18,6 +18,14 @@ export function StatGrid({
           </dt>
           <dd className="whitespace-nowrap font-mono text-xs tabular-nums text-foreground">
             {stat.value}
+            {stat.extra ? (
+              <span
+                data-testid="turn-details-stat-extra"
+                className="ml-1.5 text-muted"
+              >
+                {stat.extra}
+              </span>
+            ) : null}
           </dd>
         </div>
       ))}

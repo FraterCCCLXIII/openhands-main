@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
 import { SecurityRisk } from "#/types/agent-server/core/base/common";
+import { useTurnDetailsStore } from "#/stores/turn-details-store";
 import type { FeedUpdateDetails } from "#/utils/feed-updates";
 
 vi.mock("react-i18next", () => ({
@@ -24,6 +25,42 @@ const usage = (model: string, cost: number) => ({
   contextWindow: 0,
   cost,
   shared: false,
+});
+
+describe("TurnDetailsPanel conversation totals", () => {
+  it("adds the other model calls beside each number when the toggle is on", async () => {
+    useTurnDetailsStore.setState({ showConversationTotals: false });
+    const call = usage("anthropic/claude-sonnet", 0.01);
+    const total = {
+      ...call,
+      promptTokens: 1_028_979,
+      completionTokens: 5100,
+      cost: 0.51,
+    };
+    render(
+      <TurnDetailsPanel
+        details={{ ...base, usage: call, conversationUsage: total }}
+      />,
+    );
+    expect(screen.queryAllByTestId("turn-details-stat-extra")).toHaveLength(0);
+
+    await userEvent.click(screen.getByTestId("turn-details-totals-toggle"));
+
+    const extras = screen
+      .getAllByTestId("turn-details-stat-extra")
+      .map((n) => n.textContent);
+    expect(extras).toContain("+1M");
+    expect(extras).toContain("+5K");
+    expect(extras).toContain("+$0.50");
+    useTurnDetailsStore.setState({ showConversationTotals: false });
+  });
+
+  it("has no toggle without a conversation total", () => {
+    render(<TurnDetailsPanel details={{ ...base, usage: usage("m", 0) }} />);
+    expect(
+      screen.queryByTestId("turn-details-totals-toggle"),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("TurnDetailsPanel cost", () => {

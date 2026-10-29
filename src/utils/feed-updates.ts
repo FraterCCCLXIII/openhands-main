@@ -61,7 +61,20 @@ export interface FeedUpdateDetails {
   /** A step that delegated to a subagent. */
   subagent?: { type: string; description?: string; status?: string };
   /** What the model call behind this step consumed. */
+  /** All model calls in the conversation, so the others are this minus `usage`. */
+  conversationUsage?: StepUsage;
   usage?: StepUsage;
+}
+
+/** The whole conversation's model usage so far, from its latest stats snapshot. */
+export function conversationUsage(
+  events: OpenHandsEvent[],
+): StepUsage | undefined {
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const stats = statsOf(events[i]);
+    if (stats) return statsDelta(stats);
+  }
+  return undefined;
 }
 
 export interface HookRun {
@@ -429,6 +442,7 @@ export function getStepContext(
     subagent: subagentOf(action, answer),
     hooks: index.hooks.get(action.id)?.slice(0, MAX_HOOKS),
     usage: position === undefined ? undefined : stepUsage(events, position),
+    conversationUsage: conversationUsage(events),
   };
 }
 
@@ -470,6 +484,7 @@ export function getTurnContext(
     hooks: hooks.length ? hooks.slice(-MAX_HOOKS) : undefined,
     condensations: condensations.length ? condensations : undefined,
     usage: stepUsage(events, end),
+    conversationUsage: conversationUsage(events),
   };
 }
 

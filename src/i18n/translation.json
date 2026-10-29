@@ -60190,5 +60190,23 @@
     "tr": "Ücretsiz (yerel model)",
     "uk": "Безкоштовно (локальна модель)",
     "id": "Gratis (model lokal)"
+  },
+  "FEED$DETAILS_TOTALS_TOGGLE": {
+    "en": "Add the other model calls in this conversation",
+    "ja": "この会話の他のモデル呼び出しを加算",
+    "zh-CN": "加上此对话中的其他模型调用",
+    "zh-TW": "加上此對話中的其他模型呼叫",
+    "ko-KR": "이 대화의 다른 모델 호출 합계 추가",
+    "no": "Legg til de andre modellkallene i denne samtalen",
+    "ar": "إضافة استدعاءات النموذج الأخرى في هذه المحادثة",
+    "de": "Die anderen Modellaufrufe dieser Unterhaltung addieren",
+    "fr": "Ajouter les autres appels de modèle de cette conversation",
+    "it": "Aggiungi le altre chiamate al modello di questa conversazione",
+    "pt": "Somar as outras chamadas de modelo desta conversa",
+    "es": "Sumar las otras llamadas al modelo de esta conversación",
+    "ca": "Suma les altres crides al model d'aquesta conversa",
+    "tr": "Bu konuşmadaki diğer model çağrılarını ekle",
+    "uk": "Додати інші виклики моделі в цій розмові",
+    "id": "Tambahkan panggilan model lain dalam percakapan ini"
   }
 }

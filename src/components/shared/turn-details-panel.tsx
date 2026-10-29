@@ -20,6 +20,7 @@ import {
   Users,
   Webhook,
   X,
+  Sigma,
   Zap,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +28,7 @@ import { I18nKey } from "#/i18n/declaration";
 import type { FeedUpdateDetails, StepUsage } from "#/utils/feed-updates";
 import { SecurityRisk } from "#/types/agent-server/core/base/common";
 import { cn } from "#/utils/utils";
+import { useTurnDetailsStore } from "#/stores/turn-details-store";
 import { Chip, type ChipTone } from "./turn-details/chip";
 import { CodeBlock, CopyButton } from "./turn-details/code-block";
 import { CollapsibleText } from "./turn-details/collapsible-text";
@@ -77,6 +79,31 @@ function EvidenceItem({ label, result }: { label: string; result: string }) {
   );
 }
 
+/** A small switch that adds the rest of the conversation's usage beside each number. */
+function TotalsToggle() {
+  const { t } = useTranslation("openhands");
+  const on = useTurnDetailsStore((state) => state.showConversationTotals);
+  const set = useTurnDetailsStore((state) => state.setShowConversationTotals);
+  return (
+    <button
+      type="button"
+      data-testid="turn-details-totals-toggle"
+      aria-pressed={on}
+      aria-label={t(I18nKey.FEED$DETAILS_TOTALS_TOGGLE)}
+      title={t(I18nKey.FEED$DETAILS_TOTALS_TOGGLE)}
+      onClick={() => set(!on)}
+      className={cn(
+        "flex size-5 items-center justify-center rounded-md text-xs transition-colors",
+        on
+          ? "bg-surface-raised text-contrast"
+          : "text-muted hover:text-contrast",
+      )}
+    >
+      <Sigma size={12} aria-hidden />
+    </button>
+  );
+}
+
 /** Local runtimes report no price because they cost nothing per token. */
 const LOCAL_MODEL = /^(ollama|ollama_chat|lm_studio|llamafile|llama_cpp)\b/i;
 
@@ -89,27 +116,53 @@ function costLabel(usage: StepUsage, t: (key: I18nKey) => string): string {
   return t(I18nKey.FEED$DETAILS_COST_NOT_REPORTED);
 }
 
-function UsageStats({ usage }: { usage: StepUsage }) {
+const compact = (value: number): string =>
+  new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+
+/** What the other model calls in the conversation used: the total less this call. */
+function othersOf(total: StepUsage, usage: StepUsage) {
+  const rest = (a: number, b: number) => Math.max(0, a - b);
+  return {
+    promptTokens: rest(total.promptTokens, usage.promptTokens),
+    completionTokens: rest(total.completionTokens, usage.completionTokens),
+    reasoningTokens: rest(total.reasoningTokens, usage.reasoningTokens),
+    cacheReadTokens: rest(total.cacheReadTokens, usage.cacheReadTokens),
+    cost: rest(total.cost, usage.cost),
+  };
+}
+
+function UsageStats({ usage, total }: { usage: StepUsage; total?: StepUsage }) {
   const { t } = useTranslation("openhands");
+  const show = useTurnDetailsStore((state) => state.showConversationTotals);
+  const others = show && total ? othersOf(total, usage) : null;
+  const extra = (value: number | undefined): string | undefined =>
+    others && value !== undefined ? `+${compact(value)}` : undefined;
   const stats = [
     {
       label: t(I18nKey.FEED$DETAILS_STAT_INPUT),
       value: formatNumber(usage.promptTokens),
+      extra: extra(others?.promptTokens),
     },
     {
       label: t(I18nKey.FEED$DETAILS_STAT_OUTPUT),
       value: formatNumber(usage.completionTokens),
+      extra: extra(others?.completionTokens),
     },
     usage.reasoningTokens > 0
       ? {
           label: t(I18nKey.FEED$DETAILS_REASONING),
           value: formatNumber(usage.reasoningTokens),
+          extra: extra(others?.reasoningTokens),
         }
       : null,
     usage.cacheReadTokens > 0
       ? {
           label: t(I18nKey.FEED$DETAILS_STAT_CACHED),
           value: formatNumber(usage.cacheReadTokens),
+          extra: extra(others?.cacheReadTokens),
         }
       : null,
     usage.contextTokens > 0
@@ -125,10 +178,18 @@ function UsageStats({ usage }: { usage: StepUsage }) {
       label: t(I18nKey.FEED$DETAILS_STAT_COST),
       value: costLabel(usage, t),
       end: true,
+      extra:
+        others && others.cost > 0 ? `+$${others.cost.toFixed(2)}` : undefined,
     },
   ].filter(
-    (stat): stat is { label: string; value: string; end?: boolean } =>
-      stat !== null,
+    (
+      stat,
+    ): stat is {
+      label: string;
+      value: string;
+      end?: boolean;
+      extra?: string;
+    } => stat !== null,
   );
   const pct =
     usage.contextWindow > 0 && usage.contextTokens > 0
@@ -347,8 +408,16 @@ export function TurnDetailsPanel({
           </Module>
         ) : null}
         {details.usage ? (
-          <Module icon={<Coins />} title={t(I18nKey.FEED$DETAILS_USAGE)}>
-            <UsageStats usage={details.usage} />
+          <Module
+            wide
+            icon={<Coins />}
+            title={t(I18nKey.FEED$DETAILS_USAGE)}
+            actions={details.conversationUsage ? <TotalsToggle /> : undefined}
+          >
+            <UsageStats
+              usage={details.usage}
+              total={details.conversationUsage}
+            />
           </Module>
         ) : null}
         {details.result ? (
