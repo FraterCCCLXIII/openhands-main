@@ -1,3 +1,4 @@
+import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import type { FeedAgentRoleKey, FeedAgentTier } from "./feed-agent-role";
 import {
   Bot,
@@ -83,8 +84,17 @@ export const FEED_DEMO_AGENTS: readonly FeedDemoAgent[] = [
   },
 ];
 
-/** A stable simulated persona for a conversation, so reloads keep it. */
+/**
+ * The persona for a conversation: the agent the factory inbox gave it to, else
+ * a stable simulated one so reloads keep it.
+ */
 export function pickFeedDemoAgent(conversationId: string): FeedDemoAgent {
+  const assigned =
+    useFeedFactoriesStore.getState().assignments[conversationId]?.agentName;
+  const placed = assigned
+    ? FEED_DEMO_AGENTS.find((agent) => agent.name === assigned)
+    : undefined;
+  if (placed) return placed;
   let hash = 0;
   for (let i = 0; i < conversationId.length; i += 1) {
     hash = (hash * 31 + conversationId.charCodeAt(i)) >>> 0;

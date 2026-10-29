@@ -7,7 +7,12 @@ import {
 } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { ExecutionStatus } from "#/types/agent-server/core";
-import { pickFeedDemoAgent } from "./feed-demo-agents";
+import { Factory } from "lucide-react";
+import {
+  useFeedFactoriesStore,
+  type CustomFactory,
+} from "#/stores/feed-factories-store";
+import { pickFeedDemoAgent, pickFeedTint } from "./feed-demo-agents";
 
 /** Query parameter value that switches the simulated team off: `?demoTeam=off`. */
 export const FEED_TEAM_DEMO_PARAM = "demoTeam";
@@ -163,8 +168,26 @@ const hashId = (id: string): number => {
   return hash;
 };
 
-/** A stable simulated factory for a conversation, so reloads keep it. */
+/** A factory someone added, shaped like the built-in ones. */
+export function toFeedFactory(factory: CustomFactory): FeedFactory {
+  return { ...factory, Icon: Factory, className: pickFeedTint(factory.id) };
+}
+
+/**
+ * The factory a conversation belongs to: the one the inbox placed it in, else
+ * a stable simulated one so reloads keep it.
+ */
 export function getFeedFactory(conversationId: string): FeedFactory {
+  const { assignments, custom } = useFeedFactoriesStore.getState();
+  const assigned = assignments[conversationId];
+  if (assigned) {
+    const found =
+      FEED_FACTORIES.find((factory) => factory.id === assigned.factoryId) ??
+      custom
+        .filter((factory) => factory.id === assigned.factoryId)
+        .map(toFeedFactory)[0];
+    if (found) return found;
+  }
   return FEED_FACTORIES[hashId(conversationId) % FEED_FACTORIES.length];
 }
 

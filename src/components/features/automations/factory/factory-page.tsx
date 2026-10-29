@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import {
@@ -39,6 +40,10 @@ import {
   automationActivityRowClassName,
 } from "../automation-view-mode";
 import { useFactoryData, type FactoryData } from "./use-factory-data";
+import { FactoryAgentRail } from "./factory-agent-rail";
+import { FactoryComposer } from "./factory-composer";
+import { buildRoster } from "./factory-routing-context";
+import type { FactoryTarget } from "#/utils/factory-routing";
 
 type FactorySection = "overview" | "conversations" | "agents" | "projects";
 
@@ -232,6 +237,7 @@ export function FactoryPage() {
   const factories = useFeedFactories();
   const factory = factories.find((candidate) => candidate.id === factoryId);
   const data = useFactoryData(factoryId);
+  const [target, setTarget] = useState<FactoryTarget>({ kind: "inbox" });
   const section: FactorySection = SECTIONS.includes(
     sectionParam as FactorySection,
   )
@@ -311,20 +317,28 @@ export function FactoryPage() {
         <>
           <FactoryHeader factory={factory} />
           {section === "overview" ? (
-            <>
-              <ManifestOverviewTiles
-                label={t(I18nKey.CONVERSATION$OVERVIEW)}
-                tiles={tiles}
-              />
-              <section>
-                <h2 className="mb-3 text-base font-semibold text-foreground">
-                  {t(I18nKey.HOME$DASHBOARD_RECENT_CONVERSATIONS)}
-                </h2>
-                <ConversationRows
-                  conversations={data.conversations.slice(0, RECENT_LIMIT)}
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
+              <div className="flex min-w-0 flex-col gap-6">
+                <ManifestOverviewTiles
+                  label={t(I18nKey.CONVERSATION$OVERVIEW)}
+                  tiles={tiles}
+                  columnsClassName="grid-cols-2"
                 />
-              </section>
-            </>
+                <section>
+                  <h2 className="mb-3 text-base font-semibold text-foreground">
+                    {t(I18nKey.HOME$DASHBOARD_RECENT_CONVERSATIONS)}
+                  </h2>
+                  <ConversationRows
+                    conversations={data.conversations.slice(0, RECENT_LIMIT)}
+                  />
+                </section>
+              </div>
+              <FactoryAgentRail
+                {...buildRoster(data)}
+                target={target}
+                onTarget={setTarget}
+              />
+            </div>
           ) : (
             <section data-testid={`factory-section-${section}`}>
               <h2 className="mb-3 text-base font-semibold text-foreground">
@@ -333,6 +347,12 @@ export function FactoryPage() {
               <SectionBody section={section} data={data} />
             </section>
           )}
+          <FactoryComposer
+            factory={factory}
+            data={data}
+            target={target}
+            onTarget={setTarget}
+          />
         </>
       ) : (
         <p data-testid="factory-not-found" className="text-sm text-muted">

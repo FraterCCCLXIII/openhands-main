@@ -14,6 +14,8 @@ interface ManifestOverviewTilesProps {
   /** Names the section for assistive technology. */
   label: string;
   tiles: OverviewTileView[];
+  /** Grid columns for the tiles; four across on wide screens by default. */
+  columnsClassName?: string;
 }
 
 /**
@@ -23,12 +25,10 @@ interface ManifestOverviewTilesProps {
 export function ManifestOverviewTiles({
   label,
   tiles,
+  columnsClassName = "grid-cols-2 xl:grid-cols-4",
 }: ManifestOverviewTilesProps) {
   return (
-    <section
-      aria-label={label}
-      className="grid grid-cols-2 gap-3 xl:grid-cols-4"
-    >
+    <section aria-label={label} className={cn("grid gap-3", columnsClassName)}>
       {tiles.map((tile) => (
         <div
           key={tile.key}

@@ -74,6 +74,15 @@ function tierFromModel(model: string | null | undefined): FeedAgentTier | null {
   );
 }
 
+/** The role and tier of a simulated agent persona. */
+export function getDemoAgentRole(demo: FeedDemoAgent): FeedAgentRole {
+  return {
+    role: demo.role,
+    tier: demo.tier,
+    model: demo.tier ? TIER_MODEL[demo.tier] : null,
+  };
+}
+
 /**
  * The role and tier a conversation's agent runs as. An explicit `role` / `tier`
  * tag wins; otherwise a conversation that manages subagents reads as the
@@ -83,13 +92,7 @@ export function getFeedAgentRole(
   conversation: AppConversation,
   demo?: FeedDemoAgent,
 ): FeedAgentRole {
-  if (demo) {
-    return {
-      role: demo.role,
-      tier: demo.tier,
-      model: demo.tier ? TIER_MODEL[demo.tier] : null,
-    };
-  }
+  if (demo) return getDemoAgentRole(demo);
   const tagged = readTag(conversation.tags, ROLE_TAG_KEYS);
   const role =
     ROLE_KEYS.find((key) => key === tagged) ??
