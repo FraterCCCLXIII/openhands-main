@@ -4,7 +4,9 @@ import { useParams } from "react-router";
 import {
   ArrowLeft,
   Bot,
+  ChartNoAxesGantt,
   FolderGit2,
+  Inbox,
   LayoutDashboard,
   MessagesSquare,
   Activity,
@@ -44,6 +46,8 @@ import { useFactoryData, type FactoryData } from "./use-factory-data";
 import { FactoryAgentRail } from "./factory-agent-rail";
 import { PipelinePage } from "./pipeline-page";
 import { FactoryComposer } from "./factory-composer";
+import { FactoryGantt } from "./factory-gantt";
+import { FactoryIncoming } from "./factory-incoming";
 import { useFactoryRoster } from "#/hooks/use-factory-roster";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import {
@@ -54,14 +58,18 @@ import type { FactoryTarget } from "#/utils/factory-routing";
 
 type FactorySection =
   | "overview"
+  | "incoming"
   | "pipeline"
+  | "schedule"
   | "conversations"
   | "agents"
   | "projects";
 
 const SECTIONS: FactorySection[] = [
   "overview",
+  "incoming",
   "pipeline",
+  "schedule",
   "conversations",
   "agents",
   "projects",
@@ -271,7 +279,12 @@ export function FactoryPage() {
       label: t(I18nKey.CONVERSATION$OVERVIEW),
       Icon: LayoutDashboard,
     },
+    incoming: { label: t(I18nKey.FACTORY$INCOMING), Icon: Inbox },
     pipeline: { label: t(I18nKey.FACTORY$PIPELINE), Icon: Workflow },
+    schedule: {
+      label: t(I18nKey.AUTOMATIONS$DETAIL$SCHEDULE),
+      Icon: ChartNoAxesGantt,
+    },
     conversations: {
       label: t(I18nKey.SIDEBAR$CONVERSATIONS),
       Icon: MessagesSquare,
@@ -327,7 +340,11 @@ export function FactoryPage() {
       navTestIdBase="factory-navbar"
       items={items}
       // A node map needs room; the other sections read best in a narrow column.
-      contentClassName={section === "pipeline" ? "max-w-none" : undefined}
+      contentClassName={
+        section === "pipeline" || section === "schedule"
+          ? "max-w-none"
+          : undefined
+      }
       footer={
         factory && section === "overview" ? (
           <FactoryComposer
@@ -373,6 +390,20 @@ export function FactoryPage() {
                 />
               </section>
             </>
+          ) : section === "incoming" ? (
+            <section data-testid="factory-section-incoming">
+              <h2 className="mb-3 text-base font-semibold text-foreground">
+                {rail.incoming.label}
+              </h2>
+              <FactoryIncoming factory={factory} data={data} />
+            </section>
+          ) : section === "schedule" ? (
+            <section data-testid="factory-section-schedule">
+              <h2 className="mb-3 text-base font-semibold text-foreground">
+                {rail.schedule.label}
+              </h2>
+              <FactoryGantt conversations={data.conversations} />
+            </section>
           ) : section === "pipeline" ? (
             <PipelinePage factory={factory} data={data} />
           ) : (
