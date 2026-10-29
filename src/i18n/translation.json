@@ -59560,5 +59560,41 @@
     "tr": "Ayrıntılar",
     "uk": "Подробиці",
     "id": "Detail"
+  },
+  "FEED$DETAILS_RESULT": {
+    "en": "Result",
+    "ja": "結果",
+    "zh-CN": "结果",
+    "zh-TW": "結果",
+    "ko-KR": "결과",
+    "no": "Resultat",
+    "ar": "النتيجة",
+    "de": "Ergebnis",
+    "fr": "Résultat",
+    "it": "Risultato",
+    "pt": "Resultado",
+    "es": "Resultado",
+    "ca": "Resultat",
+    "tr": "Sonuç",
+    "uk": "Результат",
+    "id": "Hasil"
+  },
+  "FEED$DETAILS_BASED_ON": {
+    "en": "Based on these results",
+    "ja": "これらの結果に基づく",
+    "zh-CN": "基于这些结果",
+    "zh-TW": "基於這些結果",
+    "ko-KR": "이 결과를 기반으로",
+    "no": "Basert på disse resultatene",
+    "ar": "استنادًا إلى هذه النتائج",
+    "de": "Basierend auf diesen Ergebnissen",
+    "fr": "D'après ces résultats",
+    "it": "Sulla base di questi risultati",
+    "pt": "Com base nestes resultados",
+    "es": "Basado en estos resultados",
+    "ca": "Basat en aquests resultats",
+    "tr": "Bu sonuçlara göre",
+    "uk": "На основі цих результатів",
+    "id": "Berdasarkan hasil ini"
   }
 }

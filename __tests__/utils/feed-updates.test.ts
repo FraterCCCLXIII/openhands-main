@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getMessageDetails, toFeedUpdates } from "#/utils/feed-updates";
+import {
+  getMessageDetails,
+  resultText,
+  toFeedUpdates,
+} from "#/utils/feed-updates";
 import type { OpenHandsEvent } from "#/types/agent-server/core";
 
 const action = (overrides: Record<string, unknown> = {}) =>
@@ -89,5 +93,23 @@ describe("getMessageDetails", () => {
       skills: ["git"],
       eventId: "m1",
     });
+  });
+});
+
+describe("resultText", () => {
+  it("returns what a tool printed so a conclusion can be traced to it", () => {
+    const text = resultText(
+      observation({
+        observation: {
+          kind: "FileEditorObservation",
+          content: [{ type: "text", text: "- [x] CARD-1 (S)" }],
+        },
+      }),
+    );
+    expect(text).toBe("- [x] CARD-1 (S)");
+  });
+
+  it("is empty for an event that is not an observation", () => {
+    expect(resultText(action())).toBeUndefined();
   });
 });

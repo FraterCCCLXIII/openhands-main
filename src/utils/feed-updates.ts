@@ -33,8 +33,35 @@ export interface FeedUpdateDetails {
   };
   /** Skills the agent loaded for a message. */
   skills?: string[];
+  /** What the tool printed, so the conclusion can be traced to it. */
+  result?: string;
+  /** For a message: the tool results of the turn before it. */
+  evidence?: { label: string; result: string }[];
   /** The event the details belong to. */
   eventId?: string;
+}
+
+const MAX_RESULT = 1200;
+
+/** The text an observation showed the agent, trimmed for display. */
+export function resultText(event: OpenHandsEvent): string | undefined {
+  if (!isObservationEvent(event)) return undefined;
+  const obs = event.observation as { content?: unknown; output?: unknown };
+  let text = "";
+  if (Array.isArray(obs.content)) {
+    text = obs.content
+      .map((part) =>
+        part && typeof part === "object" && "text" in part
+          ? String((part as { text: unknown }).text)
+          : "",
+      )
+      .join("\n");
+  } else if (typeof obs.output === "string") {
+    text = obs.output;
+  }
+  text = text.trim();
+  if (!text) return undefined;
+  return text.length > MAX_RESULT ? `${text.slice(0, MAX_RESULT)}…` : text;
 }
 
 export interface FeedUpdate {
@@ -71,6 +98,7 @@ const hasDetails = (d: FeedUpdateDetails): boolean =>
     d.thought ||
     d.risk ||
     d.outcome ||
+    d.result ||
     d.skills?.length
   );
 
@@ -94,8 +122,10 @@ export function outcomeOf(
 export function getActionDetails(
   event: ActionEvent,
   outcome?: FeedUpdateDetails["outcome"],
+  result?: string,
 ): FeedUpdateDetails {
   return {
+    result,
     ...reasoningDetails(event),
     thought: getActionThoughtText(event).trim() || undefined,
     risk:
@@ -108,8 +138,12 @@ export function getActionDetails(
 }
 
 /** Reasoning and loaded skills of an agent message. */
-export function getMessageDetails(event: MessageEvent): FeedUpdateDetails {
+export function getMessageDetails(
+  event: MessageEvent,
+  evidence?: FeedUpdateDetails["evidence"],
+): FeedUpdateDetails {
   return {
+    evidence: evidence?.length ? evidence : undefined,
     ...reasoningDetails(event.llm_message),
     skills: event.activated_skills?.length ? event.activated_skills : undefined,
     eventId: event.id,

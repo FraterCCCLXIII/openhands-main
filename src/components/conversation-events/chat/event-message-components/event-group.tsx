@@ -21,6 +21,7 @@ import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
 import {
   getActionDetails,
   outcomeOf,
+  resultText,
   type FeedUpdateDetails,
 } from "#/utils/feed-updates";
 import useMetricsStore from "#/stores/metrics-store";
@@ -174,7 +175,7 @@ export function EventGroup({
             candidate.id === e.action_id,
         );
     if (!action) return [];
-    const details = getActionDetails(action, outcomeOf(e));
+    const details = getActionDetails(action, outcomeOf(e), resultText(e));
     return [
       { id: e.id, label: action.summary?.trim() || action.tool_name, details },
     ];

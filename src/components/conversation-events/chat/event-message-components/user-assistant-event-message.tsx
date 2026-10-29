@@ -14,7 +14,14 @@ import {
 } from "../event-thought-helpers";
 import { Info } from "lucide-react";
 import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
-import { getMessageDetails } from "#/utils/feed-updates";
+import { getMessageDetails, resultText } from "#/utils/feed-updates";
+import { isCorrectiveNudge } from "../event-content-helpers/should-render-event";
+import { useEventStore } from "#/stores/use-event-store";
+import {
+  isActionEvent,
+  isMessageEvent,
+  isObservationEvent,
+} from "#/types/agent-server/type-guards";
 import RepoForkedIcon from "#/icons/repo-forked.svg?react";
 import { I18nKey } from "#/i18n/declaration";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
@@ -121,6 +128,35 @@ function UserAssistantEventMessageComponent({
     );
   };
   const [showDetails, setShowDetails] = React.useState(false);
+  // The tool results the agent had in front of it: everything since the last
+  // message. Read when the panel is open, so closed messages do not subscribe.
+  const turnEvidence = (messageId: string) => {
+    const all = useEventStore.getState().events;
+    const end = all.findIndex((e) => e.id === messageId);
+    if (end <= 0) return [];
+    const found: { label: string; result: string }[] = [];
+    for (let i = end - 1; i >= 0 && found.length < 6; i -= 1) {
+      const e = all[i];
+      // The turn starts at the person's message. Agent messages and
+      // corrective nudges in between belong to it.
+      if (isMessageEvent(e) && e.source === "user" && !isCorrectiveNudge(e)) {
+        break;
+      }
+      const result = resultText(e);
+      if (result && isObservationEvent(e)) {
+        const action = all.find(
+          (a) => isActionEvent(a) && a.id === e.action_id,
+        );
+        found.unshift({
+          label:
+            (action && isActionEvent(action) && action.summary?.trim()) ||
+            e.tool_name,
+          result,
+        });
+      }
+    }
+    return found;
+  };
   const canShowDetails = event.source === "agent";
   const actionList = [
     ...(canBranch
@@ -167,7 +203,9 @@ function UserAssistantEventMessageComponent({
       </ChatMessage>
       {showDetails && canShowDetails ? (
         <div className="mb-1 w-full pl-1">
-          <TurnDetailsPanel details={getMessageDetails(event)} />
+          <TurnDetailsPanel
+            details={getMessageDetails(event, turnEvidence(event.id))}
+          />
         </div>
       ) : null}
       {event.source === "agent" && event.critic_result != null && (

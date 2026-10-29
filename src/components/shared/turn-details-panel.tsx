@@ -25,6 +25,29 @@ export function TurnDetailsPanel({ details }: { details: FeedUpdateDetails }) {
           <p className="whitespace-pre-wrap break-words">{details.thought}</p>
         </div>
       ) : null}
+      {details.result ? (
+        <div>
+          <p className="font-semibold">{t(I18nKey.FEED$DETAILS_RESULT)}</p>
+          <pre className="custom-scrollbar max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px]">
+            {details.result}
+          </pre>
+        </div>
+      ) : null}
+      {details.evidence?.length ? (
+        <div>
+          <p className="font-semibold">{t(I18nKey.FEED$DETAILS_BASED_ON)}</p>
+          <ul className="flex flex-col gap-1.5">
+            {details.evidence.map((item, index) => (
+              <li key={index}>
+                <p>{item.label}</p>
+                <pre className="custom-scrollbar max-h-32 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px]">
+                  {item.result}
+                </pre>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {details.skills?.length ? (
         <p>
           <span className="font-semibold">
