@@ -1,0 +1,44 @@
+{
+  "template": "quarterly-campaign",
+  "version": 1,
+  "campaign": {
+    "name": "",
+    "quarter": "2027-Q1",
+    "theme": "",
+    "audience": "",
+    "outcome": ""
+  },
+  "channels": [
+    "hubspot",
+    "linkedin",
+    "x",
+    "ga"
+  ],
+  "linkedFeatures": [],
+  "beats": [
+    {
+      "name": "Launch week",
+      "start": "",
+      "end": "",
+      "feature": ""
+    }
+  ],
+  "assets": [
+    {
+      "kind": "image2d",
+      "name": "Campaign hero",
+      "spec": "16:9, product UI on dark background"
+    },
+    {
+      "kind": "video",
+      "name": "Campaign teaser",
+      "spec": "15s, Seedance, 16:9"
+    }
+  ],
+  "kpis": [
+    {
+      "channel": "ga",
+      "metric": "Sessions from campaign links"
+    }
+  ]
+}

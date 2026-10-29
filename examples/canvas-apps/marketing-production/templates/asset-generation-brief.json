@@ -1,0 +1,38 @@
+{
+  "template": "asset-generation-brief",
+  "version": 1,
+  "campaign": "",
+  "brand": {
+    "palette": [],
+    "tone": "",
+    "references": []
+  },
+  "assets": [
+    {
+      "kind": "image2d",
+      "name": "",
+      "prompt": "",
+      "negative": "",
+      "aspect": "16:9"
+    },
+    {
+      "kind": "model3d",
+      "name": "",
+      "prompt": "",
+      "polyBudget": 50000,
+      "format": "glb"
+    },
+    {
+      "kind": "video",
+      "name": "",
+      "tool": "Seedance",
+      "shots": [
+        {
+          "seconds": 3,
+          "camera": "",
+          "motion": ""
+        }
+      ]
+    }
+  ]
+}

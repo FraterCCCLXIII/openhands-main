@@ -1,0 +1,29 @@
+{
+  "template": "feature-launch-kit",
+  "version": 1,
+  "feature": {
+    "name": "",
+    "release": "",
+    "launchDate": ""
+  },
+  "claim": "",
+  "proof": [],
+  "channels": [
+    "linkedin",
+    "x",
+    "reddit",
+    "hubspot"
+  ],
+  "assets": [
+    {
+      "kind": "image2d",
+      "name": "Hero image",
+      "spec": "16:9"
+    },
+    {
+      "kind": "video",
+      "name": "Demo cut",
+      "spec": "20s, Seedance"
+    }
+  ]
+}

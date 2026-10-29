@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "name": "marketing-production",
+  "display_name": "Marketing Production",
+  "version": "0.1.0",
+  "description": "Timeline of OpenHands releases, feature launches, quarterly campaigns and production projects, with asset pipelines and agent campaign templates.",
+  "entrypoint": "extension.js",
+  "contributes": {
+    "pages": [
+      {
+        "id": "production",
+        "title": "Marketing Production",
+        "path": "/production",
+        "nav_label": "Marketing",
+        "description": "Plan campaigns against the product release schedule."
+      }
+    ]
+  }
+}
