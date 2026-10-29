@@ -131,7 +131,7 @@ export function FactoriesGroup({ query = "" }: FactoriesGroupProps) {
           onClose={() => setAdding(false)}
           onCreated={(id) => {
             setAdding(false);
-            navigate(backendScopedPath(factoryPath(id)));
+            navigate(backendScopedPath(factoryPath(id, "pipeline")));
           }}
         />
       ) : null}

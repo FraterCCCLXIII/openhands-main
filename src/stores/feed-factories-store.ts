@@ -20,6 +20,8 @@ interface FeedFactoriesState {
   custom: CustomFactory[];
   /** Conversations the factory inbox started or placed, by conversation id. */
   assignments: Record<string, ConversationAssignment>;
+  /** The pipeline template each factory uses, by factory id. */
+  templates: Record<string, string>;
 }
 
 interface FeedFactoriesActions {
@@ -28,6 +30,7 @@ interface FeedFactoriesActions {
     conversationId: string,
     assignment: ConversationAssignment,
   ) => void;
+  setTemplate: (factoryId: string, templateId: string) => void;
 }
 
 /** Owns the factories people add; every factory list reads from here. */
@@ -38,6 +41,11 @@ export const useFeedFactoriesStore = create<
     (set) => ({
       custom: [],
       assignments: {},
+      templates: {},
+      setTemplate: (factoryId, templateId) =>
+        set((state) => ({
+          templates: { ...state.templates, [factoryId]: templateId },
+        })),
       addFactory: (factory) =>
         set((state) => ({ custom: [...state.custom, factory] })),
       assignConversation: (conversationId, assignment) =>

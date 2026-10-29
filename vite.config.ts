@@ -311,6 +311,8 @@ export default defineConfig(({ mode }) => {
         "@xterm/addon-fit",
         "@xterm/xterm",
         "@xterm/xterm/css/xterm.css",
+        // Pipeline map on the factory page
+        "@xyflow/react",
         // OpenHands typescript client
         "@openhands/typescript-client",
         "@openhands/typescript-client/client/http-client",

@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   MessagesSquare,
   Activity,
+  Workflow,
 } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { ConversationStatusDot } from "#/components/features/conversation-panel/conversation-status-dot";
@@ -41,14 +42,21 @@ import {
 } from "../automation-view-mode";
 import { useFactoryData, type FactoryData } from "./use-factory-data";
 import { FactoryAgentRail } from "./factory-agent-rail";
+import { PipelinePage } from "./pipeline-page";
 import { FactoryComposer } from "./factory-composer";
 import { buildRoster } from "./factory-routing-context";
 import type { FactoryTarget } from "#/utils/factory-routing";
 
-type FactorySection = "overview" | "conversations" | "agents" | "projects";
+type FactorySection =
+  | "overview"
+  | "pipeline"
+  | "conversations"
+  | "agents"
+  | "projects";
 
 const SECTIONS: FactorySection[] = [
   "overview",
+  "pipeline",
   "conversations",
   "agents",
   "projects",
@@ -249,6 +257,7 @@ export function FactoryPage() {
       label: t(I18nKey.CONVERSATION$OVERVIEW),
       Icon: LayoutDashboard,
     },
+    pipeline: { label: t(I18nKey.FACTORY$PIPELINE), Icon: Workflow },
     conversations: {
       label: t(I18nKey.SIDEBAR$CONVERSATIONS),
       Icon: MessagesSquare,
@@ -303,6 +312,8 @@ export function FactoryPage() {
       heading={factory?.name ?? t(I18nKey.FEED$FACTORIES)}
       navTestIdBase="factory-navbar"
       items={items}
+      // A node map needs room; the other sections read best in a narrow column.
+      contentClassName={section === "pipeline" ? "max-w-none" : undefined}
     >
       <NavigationLink
         to={backendScopedPath("/automations")}
@@ -339,6 +350,8 @@ export function FactoryPage() {
                 onTarget={setTarget}
               />
             </div>
+          ) : section === "pipeline" ? (
+            <PipelinePage factory={factory} data={data} />
           ) : (
             <section data-testid={`factory-section-${section}`}>
               <h2 className="mb-3 text-base font-semibold text-foreground">
@@ -347,12 +360,14 @@ export function FactoryPage() {
               <SectionBody section={section} data={data} />
             </section>
           )}
-          <FactoryComposer
-            factory={factory}
-            data={data}
-            target={target}
-            onTarget={setTarget}
-          />
+          {section === "overview" ? (
+            <FactoryComposer
+              factory={factory}
+              data={data}
+              target={target}
+              onTarget={setTarget}
+            />
+          ) : null}
         </>
       ) : (
         <p data-testid="factory-not-found" className="text-sm text-muted">
