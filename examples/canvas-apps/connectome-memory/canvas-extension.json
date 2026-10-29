@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "connectome-memory",
+  "display_name": "Connectome memory",
+  "version": "0.1.0",
+  "description": "Options and metrics for the Connectome overlap memory used beside the Agent Canvas model.",
+  "entrypoint": "extension.js",
+  "icon": "icon.svg",
+  "contributes": {
+    "pages": [
+      {
+        "id": "memory",
+        "title": "Connectome memory",
+        "path": "/memory",
+        "nav_label": "Memory",
+        "description": "Memory options, conversation indexes, and eval results."
+      }
+    ]
+  }
+}

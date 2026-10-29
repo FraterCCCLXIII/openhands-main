@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "description": "Timeline of OpenHands releases, feature launches, quarterly campaigns and production projects, with asset pipelines and agent campaign templates.",
   "entrypoint": "extension.js",
+  "icon": "icon.svg",
   "contributes": {
     "pages": [
       {
