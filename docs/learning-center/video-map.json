@@ -1,0 +1,5160 @@
+{
+ "generated": "2026-10-29",
+ "modules": {
+  "M01": {
+   "module": "M01",
+   "title": "AI, machine learning, LLMs, tokens and context",
+   "moduleOverview": {
+    "videoId": "LPZh9BOjkQs",
+    "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+    "title": "Large Language Models explained briefly",
+    "channel": "3Blue1Brown",
+    "durationSeconds": 478,
+    "views": 8298260,
+    "uploadDate": "20241120",
+    "license": "NA",
+    "source": "external",
+    "article": null,
+    "fit": "best",
+    "level": "Beginner",
+    "use": "whole",
+    "clips": [],
+    "why": "Best single watch: eight-minute explanation of LLMs and next-word prediction.",
+    "caveat": "Does not cover tokens, cost or hallucination in detail; pair with the picks above."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "LPZh9BOjkQs",
+       "url": "https://www.youtube.com/watch?v=LPZh9BOjkQs",
+       "title": "Large Language Models explained briefly",
+       "channel": "3Blue1Brown",
+       "durationSeconds": 478,
+       "views": 8298260,
+       "uploadDate": "20241120",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Eight-minute visual explanation of what an LLM is and how it predicts next text, matching the course's definition.",
+       "caveat": null
+      },
+      {
+       "videoId": "qYNweeDHiyU",
+       "url": "https://www.youtube.com/watch?v=qYNweeDHiyU",
+       "title": "AI, Machine Learning, Deep Learning and Generative AI Explained",
+       "channel": "IBM Technology",
+       "durationSeconds": 600,
+       "views": 3795734,
+       "uploadDate": "20240805",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Sorts out AI vs machine learning vs deep learning vs generative AI, the umbrella-term part of the concepts list.",
+       "caveat": "2024; does not cover tokens or context windows."
+      },
+      {
+       "videoId": "nKSk_TiR8YA",
+       "url": "https://www.youtube.com/watch?v=nKSk_TiR8YA",
+       "title": "Most devs don't understand how LLM tokens work",
+       "channel": "Matt Pocock",
+       "durationSeconds": 657,
+       "views": 433539,
+       "uploadDate": "20250919",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Shows what tokens are and why prices and limits are counted in them.",
+       "caveat": "Tokens only; made for developers."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "TeQDr4DkLYo",
+       "url": "https://www.youtube.com/watch?v=TeQDr4DkLYo",
+       "title": "Why LLMs get dumb (Context Windows Explained)",
+       "channel": "NetworkChuck",
+       "durationSeconds": 917,
+       "views": 210138,
+       "uploadDate": "20250409",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Why quality falls as the context fills, supporting 'quality can fall before the limit'.",
+       "caveat": "Chat-focused, not agent-focused."
+      },
+      {
+       "videoId": "005JLRt3gXI",
+       "url": "https://www.youtube.com/watch?v=005JLRt3gXI",
+       "title": "Why do AI models hallucinate?",
+       "channel": "Claude",
+       "durationSeconds": 313,
+       "views": 395537,
+       "uploadDate": "20260415",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Anthropic explains why models hallucinate, covering the 'fluent but wrong' point.",
+       "caveat": "Does not cover package hallucination/slopsquatting."
+      },
+      {
+       "videoId": "Gauk0F6UBFo",
+       "url": "https://www.youtube.com/watch?v=Gauk0F6UBFo",
+       "title": "AI Foundations: Tokens & Pricing",
+       "channel": "Cursor",
+       "durationSeconds": 212,
+       "views": 55940,
+       "uploadDate": "20250927",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Short intro to how tokens turn into price and cost.",
+       "caveat": "Made by a vendor (Cursor); tool-specific examples."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "ysPbXH0LpIE",
+       "url": "https://www.youtube.com/watch?v=ysPbXH0LpIE",
+       "title": "Prompting 101 | Code w/ Claude",
+       "channel": "Anthropic",
+       "durationSeconds": 1492,
+       "views": 557407,
+       "uploadDate": "20250731",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Practical prompting: put the needed context, constraints and definition of done in the prompt.",
+       "caveat": "25 minutes; Claude-centric, not coding-agent specific."
+      },
+      {
+       "videoId": "W29N0Ad7yUY",
+       "url": "https://www.youtube.com/watch?v=W29N0Ad7yUY",
+       "title": "How do you handle Context Management with an agent?",
+       "channel": "OpenHands",
+       "durationSeconds": 166,
+       "views": 66,
+       "uploadDate": "20260430",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands clip on keeping context small and focused as agents work (one task per conversation).",
+       "caveat": "Short webinar clip; fit judged from description."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "cfqtFvWOfg0",
+       "url": "https://www.youtube.com/watch?v=cfqtFvWOfg0",
+       "title": "Why Large Language Models Hallucinate",
+       "channel": "IBM Technology",
+       "durationSeconds": 577,
+       "views": 376741,
+       "uploadDate": "20230420",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Explains why LLMs hallucinate and why confident answers are not verified answers.",
+       "caveat": "2023, older; concepts still hold. No verified video found on slopsquatting specifically."
+      },
+      {
+       "videoId": "W29N0Ad7yUY",
+       "url": "https://www.youtube.com/watch?v=W29N0Ad7yUY",
+       "title": "How do you handle Context Management with an agent?",
+       "channel": "OpenHands",
+       "durationSeconds": 166,
+       "views": 66,
+       "uploadDate": "20260430",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Shows how piling history and tool output into a limited context window degrades results.",
+       "caveat": "Short webinar clip."
+      },
+      {
+       "videoId": "-uW5-TaVXu4",
+       "url": "https://www.youtube.com/watch?v=-uW5-TaVXu4",
+       "title": "Most devs don\u2019t understand how context windows work",
+       "channel": "Matt Pocock",
+       "durationSeconds": 573,
+       "views": 302032,
+       "uploadDate": "20251022",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Counters 'bigger context window is always better' from a developer's view.",
+       "caveat": "Not agent specific."
+      }
+     ],
+     "gap": null
+    }
+   ]
+  },
+  "M02": {
+   "module": "M02",
+   "title": "Choosing models: families, tiers, cost, open vs closed, local",
+   "moduleOverview": {
+    "videoId": "r_AS63moJiA",
+    "url": "https://www.youtube.com/watch?v=r_AS63moJiA",
+    "title": "The BEST AI Models Right Now (Save MONEY & Get BETTER Results)",
+    "channel": "OpenHands",
+    "durationSeconds": 481,
+    "views": 326,
+    "uploadDate": "20260526",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "best",
+    "level": "Beginner",
+    "use": "whole",
+    "clips": [],
+    "why": "OpenHands team on choosing models by cost and performance.",
+    "caveat": "Rankings dated (May 2026)."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "pYax2rupKEY",
+       "url": "https://www.youtube.com/watch?v=pYax2rupKEY",
+       "title": "How to Choose Large Language Models: A Developer\u2019s Guide to LLMs",
+       "channel": "IBM Technology",
+       "durationSeconds": 416,
+       "views": 125542,
+       "uploadDate": "20250514",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Overview of model families, sizes and the criteria for choosing a model.",
+       "caveat": "May 2025; model names dated."
+      },
+      {
+       "videoId": "KL_hBC3XcrY",
+       "url": "https://www.youtube.com/watch?v=KL_hBC3XcrY",
+       "title": "Open Source vs Open Weight AI Models Explained",
+       "channel": "KodeKloud",
+       "durationSeconds": 462,
+       "views": 52111,
+       "uploadDate": "20260909",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Open-source vs open-weight models, matching the OSI caveat in the course.",
+       "caveat": "Sep 2026; check against current licences."
+      },
+      {
+       "videoId": "sYDlVVyJYn4",
+       "url": "https://www.youtube.com/watch?v=sYDlVVyJYn4",
+       "title": "What is Mixture of Experts?",
+       "channel": "IBM Technology",
+       "durationSeconds": 477,
+       "views": 75358,
+       "uploadDate": "20240828",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Explains mixture of experts and why total size differs from active size.",
+       "caveat": "2024; generic, no OpenHands link."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "r_AS63moJiA",
+       "url": "https://www.youtube.com/watch?v=r_AS63moJiA",
+       "title": "The BEST AI Models Right Now (Save MONEY & Get BETTER Results)",
+       "channel": "OpenHands",
+       "durationSeconds": 481,
+       "views": 326,
+       "uploadDate": "20260526",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 28,
+         "endSeconds": 155,
+         "note": "What the Index measures and how to read cost vs performance"
+        },
+        {
+         "startSeconds": 380,
+         "endSeconds": 435,
+         "note": "When to use expensive vs cheap models"
+        }
+       ],
+       "why": "OpenHands team on cost vs performance, which models they use and when expensive vs cheap pays off.",
+       "caveat": "Model rankings date quickly (May 2026)."
+      },
+      {
+       "videoId": "edIHPoWgIKU",
+       "url": "https://www.youtube.com/watch?v=edIHPoWgIKU",
+       "title": "Local AI Explained: How to Run AI Models on Your Computer",
+       "channel": "Tech With Tim",
+       "durationSeconds": 1467,
+       "views": 902145,
+       "uploadDate": "20260831",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 62,
+         "endSeconds": 583,
+         "note": "Cloud vs local, model file, sizes, quantization, inference engine, hardware"
+        }
+       ],
+       "why": "Cloud vs local AI, model sizes, quantization and hardware needs in one walkthrough.",
+       "caveat": "Aug 2026; tool-specific second half (LM Studio, Ollama, Docker)."
+      },
+      {
+       "videoId": "oV9tAkS2Xic",
+       "url": "https://www.youtube.com/watch?v=oV9tAkS2Xic",
+       "title": "OpenHands + Devstral = A Fully Local Coding Agent",
+       "channel": "OpenHands",
+       "durationSeconds": 489,
+       "views": 33680,
+       "uploadDate": "20250521",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/devstral-a-new-state-of-the-art-open-model-for-coding-agents",
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Running a fully local coding agent with an open-weight model.",
+       "caveat": "May 2025; Devstral era, dated model."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Steps in OpenHands (verified in code/strings)",
+     "picks": [
+      {
+       "videoId": "TQAdEjmpVfc",
+       "url": "https://www.youtube.com/watch?v=TQAdEjmpVfc",
+       "title": "Flexibly Choose your Coding Model with OpenHands LLM Profiles",
+       "channel": "OpenHands",
+       "durationSeconds": 193,
+       "views": 7287,
+       "uploadDate": "20260527",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/model-choice-llm-profiles",
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Shows LLM profiles: picking a default model and switching.",
+       "caveat": "Mentions a /model command; the course flags that as unverified in this Canvas version."
+      },
+      {
+       "videoId": "Omk9szFLQcA",
+       "url": "https://www.youtube.com/watch?v=Omk9szFLQcA",
+       "title": "One AI Agent, Multiple LLMs: Automatic Model Routing in OpenHands",
+       "channel": "OpenHands",
+       "durationSeconds": 1142,
+       "views": 1498,
+       "uploadDate": "20261015",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 21,
+         "endSeconds": 611,
+         "note": "What the router is, choosing models per task, demo"
+        }
+       ],
+       "why": "Automatic model routing across profiles with a classifier prompt, matching the Model Router page.",
+       "caveat": "19 minutes. Chapters: 21-253 router intro and benefits, 253-611 demo."
+      },
+      {
+       "videoId": "lbY9kNTdWec",
+       "url": "https://www.youtube.com/watch?v=lbY9kNTdWec",
+       "title": "OpenHands Community Update: Agent Canvas, GPT-5.5 & LLM Profiles",
+       "channel": "OpenHands",
+       "durationSeconds": 1967,
+       "views": 479,
+       "uploadDate": "20260522",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 1675,
+         "endSeconds": 1967,
+         "note": "LLM profiles, multi-model workflows, using profiles in Agent Canvas"
+        }
+       ],
+       "why": "Community call; LLM profiles segment shows multi-model workflows and cost optimisation.",
+       "caveat": "Long call; only the clip is relevant."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "cEugXkov4IA",
+       "url": "https://www.youtube.com/watch?v=cEugXkov4IA",
+       "title": "How important is benchmarking and testing different LLMs?",
+       "channel": "OpenHands",
+       "durationSeconds": 98,
+       "views": 736,
+       "uploadDate": "20260407",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands clip on why you should benchmark and test different LLMs yourself.",
+       "caveat": "Short clip; fit judged from title only."
+      },
+      {
+       "videoId": "iOnvLwxECP0",
+       "url": "https://www.youtube.com/watch?v=iOnvLwxECP0",
+       "title": "The Best AI Coding Models Right Now (OpenHands Index Update)",
+       "channel": "OpenHands",
+       "durationSeconds": 334,
+       "views": 1723,
+       "uploadDate": "20260709",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 55,
+         "endSeconds": 168,
+         "note": "Cost vs performance and issue-resolution/testing benchmarks"
+        },
+        {
+         "startSeconds": 317,
+         "endSeconds": 332,
+         "note": "Final recommendations"
+        }
+       ],
+       "why": "Index update by task type with final model recommendations, useful for choosing per task.",
+       "caveat": "Jul 2026; rankings dated."
+      },
+      {
+       "videoId": "gMQ4JRdsyy0",
+       "url": "https://www.youtube.com/watch?v=gMQ4JRdsyy0",
+       "title": "The OpenHands Index: Benchmarking LLMs as Software Engineering Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 284,
+       "views": 1474,
+       "uploadDate": "20260129",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Explains the OpenHands Index as a way to choose models by evidence.",
+       "caveat": "Jan 2026; does not teach the cheap-vs-strong workflow."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "KL_hBC3XcrY",
+       "url": "https://www.youtube.com/watch?v=KL_hBC3XcrY",
+       "title": "Open Source vs Open Weight AI Models Explained",
+       "channel": "KodeKloud",
+       "durationSeconds": 462,
+       "views": 52111,
+       "uploadDate": "20260909",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Covers 'open does not mean free to use however you like'.",
+       "caveat": "Does not cover single-benchmark or local-privacy mistakes."
+      },
+      {
+       "videoId": "cEugXkov4IA",
+       "url": "https://www.youtube.com/watch?v=cEugXkov4IA",
+       "title": "How important is benchmarking and testing different LLMs?",
+       "channel": "OpenHands",
+       "durationSeconds": 98,
+       "views": 736,
+       "uploadDate": "20260407",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Counters picking a model by one benchmark score.",
+       "caveat": "Fit judged from title."
+      },
+      {
+       "videoId": "_QfxGZGITGw",
+       "url": "https://www.youtube.com/watch?v=_QfxGZGITGw",
+       "title": "Open Source vs Closed AI: LLMs, Agents & the AI Stack Explained",
+       "channel": "IBM Technology",
+       "durationSeconds": 513,
+       "views": 36575,
+       "uploadDate": "20251123",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Open vs closed AI trade-offs including ecosystem and control.",
+       "caveat": "Nov 2025; broad, not coding specific."
+      }
+     ],
+     "gap": "No verified video found that addresses 'local does not mean private' directly; the local-model videos above cover the setup only."
+    }
+   ]
+  },
+  "M03": {
+   "module": "M03",
+   "title": "What an AI agent is (and is not)",
+   "moduleOverview": {
+    "videoId": "F8NKVhkZZWI",
+    "url": "https://www.youtube.com/watch?v=F8NKVhkZZWI",
+    "title": "What are AI Agents?",
+    "channel": "IBM Technology",
+    "durationSeconds": 748,
+    "views": 1797306,
+    "uploadDate": "20240715",
+    "license": "NA",
+    "source": "external",
+    "article": null,
+    "fit": "best",
+    "level": "Beginner",
+    "use": "whole",
+    "clips": [],
+    "why": "Clear definition of AI agents.",
+    "caveat": "Jul 2024; general not coding-specific."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "F8NKVhkZZWI",
+       "url": "https://www.youtube.com/watch?v=F8NKVhkZZWI",
+       "title": "What are AI Agents?",
+       "channel": "IBM Technology",
+       "durationSeconds": 748,
+       "views": 1797306,
+       "uploadDate": "20240715",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Defines AI agents: goals, tools, reasoning and acting.",
+       "caveat": "Jul 2024; general, not coding-specific."
+      },
+      {
+       "videoId": "M2C-yFocLu0",
+       "url": "https://www.youtube.com/watch?v=M2C-yFocLu0",
+       "title": "Chatbots vs AI Assistants: Key Differences",
+       "channel": "IBM Technology",
+       "durationSeconds": 393,
+       "views": 30787,
+       "uploadDate": "20250225",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Chatbot vs assistant distinction; useful alongside the agent definition.",
+       "caveat": "2025; assistant/agent boundary stays fuzzy."
+      },
+      {
+       "videoId": "ZELPNFXJ4_o",
+       "url": "https://www.youtube.com/watch?v=ZELPNFXJ4_o",
+       "title": "AI Model vs Agentic Harness: What Actually Drives AI",
+       "channel": "IBM Technology",
+       "durationSeconds": 510,
+       "views": 216812,
+       "uploadDate": "20260825",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Model vs harness: why the same model behaves differently in different agent software.",
+       "caveat": "Aug 2026."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "C0kz3ps8RSk",
+       "url": "https://www.youtube.com/watch?v=C0kz3ps8RSk",
+       "title": "The Two Worlds of AI Coding",
+       "channel": "OpenHands",
+       "durationSeconds": 110,
+       "views": 179,
+       "uploadDate": "20260501",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands explains inner loop vs outer loop agent workflows.",
+       "caveat": "110-second clip."
+      },
+      {
+       "videoId": "Sxn5rAoOZ2I",
+       "url": "https://www.youtube.com/watch?v=Sxn5rAoOZ2I",
+       "title": "From Coding Assistants to AI Software Factories",
+       "channel": "OpenHands",
+       "durationSeconds": 521,
+       "views": 1813,
+       "uploadDate": "20261020",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands talk on moving from coding assistants to autonomous software factories.",
+       "caveat": "Fit judged from title; could not read the description."
+      },
+      {
+       "videoId": "D7_ipDqhtwk",
+       "url": "https://www.youtube.com/watch?v=D7_ipDqhtwk",
+       "title": "How We Build Effective Agents: Barry Zhang, Anthropic",
+       "channel": "AI Engineer",
+       "durationSeconds": 909,
+       "views": 574687,
+       "uploadDate": "20250404",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Anthropic on how agents work as an LLM using tools in a loop, and when not to build one.",
+       "caveat": "Apr 2025; builder-oriented."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "9iS-YYLIXiw",
+       "url": "https://www.youtube.com/watch?v=9iS-YYLIXiw",
+       "title": "What is Human In The Loop with AI? How HITL Shapes AI Systems",
+       "channel": "IBM Technology",
+       "durationSeconds": 644,
+       "views": 49555,
+       "uploadDate": "20260317",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Human-in-the-loop: where people should approve or review agent actions.",
+       "caveat": "Mar 2026; general AI, not coding."
+      },
+      {
+       "videoId": "E1JhEyWic0Y",
+       "url": "https://www.youtube.com/watch?v=E1JhEyWic0Y",
+       "title": "What are the risks of running autonomous AI?",
+       "channel": "OpenHands",
+       "durationSeconds": 56,
+       "views": 168,
+       "uploadDate": "20260423",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands clip on safeguards for autonomous loops: iteration limits and auto-approval risks.",
+       "caveat": "56-second clip."
+      },
+      {
+       "videoId": "uhJJgc-0iTQ",
+       "url": "https://www.youtube.com/watch?v=uhJJgc-0iTQ",
+       "title": "Building more effective AI agents",
+       "channel": "Anthropic",
+       "durationSeconds": 1138,
+       "views": 103001,
+       "uploadDate": "20251017",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 900,
+         "endSeconds": 1035,
+         "note": "Best practices for getting started with building agents"
+        }
+       ],
+       "why": "Anthropic talk on simple agent architectures, tools and context.",
+       "caveat": "19 minutes; includes multi-agent material beyond this module."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "E1JhEyWic0Y",
+       "url": "https://www.youtube.com/watch?v=E1JhEyWic0Y",
+       "title": "What are the risks of running autonomous AI?",
+       "channel": "OpenHands",
+       "durationSeconds": 56,
+       "views": 168,
+       "uploadDate": "20260423",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Covers over-trusting autonomous runs: arbitrary commands, no human, cost blowouts.",
+       "caveat": "Short clip."
+      },
+      {
+       "videoId": "NcJYr1VaIXI",
+       "url": "https://www.youtube.com/watch?v=NcJYr1VaIXI",
+       "title": "Prompt Injection Security for AI Agents Webinar by OpenHands",
+       "channel": "OpenHands",
+       "durationSeconds": 1922,
+       "views": 306,
+       "uploadDate": "20250912",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Prompt-injection webinar on what happens when agents hold broad access.",
+       "caveat": "32 minutes; fit judged from title."
+      },
+      {
+       "videoId": "_rltvykJV4E",
+       "url": "https://www.youtube.com/watch?v=_rltvykJV4E",
+       "title": "AI Coding Agents: What Works and What Doesn't (Webinar)",
+       "channel": "OpenHands",
+       "durationSeconds": 2714,
+       "views": 1652,
+       "uploadDate": "20250624",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands webinar on what coding agents do well and badly.",
+       "caveat": "Jun 2025, 45 minutes; fit judged from title."
+      }
+     ],
+     "gap": null
+    }
+   ]
+  },
+  "M04": {
+   "module": "M04",
+   "title": "AI-assisted software development: workflow, best practices, common mistakes",
+   "moduleOverview": {
+    "videoId": "gv0WHhKelSE",
+    "url": "https://www.youtube.com/watch?v=gv0WHhKelSE",
+    "title": "Claude Code best practices | Code w/ Claude",
+    "channel": "Anthropic",
+    "durationSeconds": 1553,
+    "views": 589134,
+    "uploadDate": "20250731",
+    "license": "NA",
+    "source": "external",
+    "article": null,
+    "fit": "good",
+    "level": "Intermediate",
+    "use": "whole",
+    "clips": [],
+    "why": "Anthropic's own talk on the agentic coding loop and practical habits that transfer to any coding agent.",
+    "caveat": "Claude Code specific; mid-2025. Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "xJQuF02NAK8",
+       "url": "https://www.youtube.com/watch?v=xJQuF02NAK8",
+       "title": "The Explore \u2192 Plan \u2192 Code \u2192 Commit workflow in Claude Code",
+       "channel": "Claude",
+       "durationSeconds": 191,
+       "views": 521139,
+       "uploadDate": "20260517",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Short walkthrough of explore, plan, code, commit, the plan-first loop behind the plan mode concept.",
+       "caveat": "Claude Code UI, not OpenHands; Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+      },
+      {
+       "videoId": "aSXaxOdVtAQ",
+       "url": "https://www.youtube.com/watch?v=aSXaxOdVtAQ",
+       "title": "TDD, AI agents and coding with Kent Beck",
+       "channel": "The Pragmatic Engineer",
+       "durationSeconds": 4532,
+       "views": 210328,
+       "uploadDate": "20250611",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Kent Beck on TDD with agents, covering test-first and agent behaviour.",
+       "caveat": "Long (about 75 min), June 2025, general not OpenHands."
+      }
+     ]
+    },
+    {
+     "heading": "The workflow",
+     "picks": [
+      {
+       "videoId": "xJQuF02NAK8",
+       "url": "https://www.youtube.com/watch?v=xJQuF02NAK8",
+       "title": "The Explore \u2192 Plan \u2192 Code \u2192 Commit workflow in Claude Code",
+       "channel": "Claude",
+       "durationSeconds": 191,
+       "views": 521139,
+       "uploadDate": "20260517",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Explore, plan, code, commit in under 4 minutes.",
+       "caveat": "Claude Code UI. Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+      },
+      {
+       "videoId": "shZgedW15vg",
+       "url": "https://www.youtube.com/watch?v=shZgedW15vg",
+       "title": "How Anthropic uses Claude Code: Agentic Software Engineering at Scale - Daisy Hollman",
+       "channel": "NDC Conferences",
+       "durationSeconds": 3625,
+       "views": 38755,
+       "uploadDate": "20260811",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "How Anthropic engineers run agentic software engineering at scale.",
+       "caveat": "Long (about 60 min); Claude Code specific."
+      },
+      {
+       "videoId": "_rltvykJV4E",
+       "url": "https://www.youtube.com/watch?v=_rltvykJV4E",
+       "title": "AI Coding Agents: What Works and What Doesn't (Webinar)",
+       "channel": "OpenHands",
+       "durationSeconds": 2714,
+       "views": 1652,
+       "uploadDate": "20250624",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands webinar on what coding agents do well and badly in a real workflow.",
+       "caveat": "Mid-2025, long (about 45 min); skim."
+      }
+     ]
+    },
+    {
+     "heading": "Prompting essentials",
+     "picks": [
+      {
+       "videoId": "gv0WHhKelSE",
+       "url": "https://www.youtube.com/watch?v=gv0WHhKelSE",
+       "title": "Claude Code best practices | Code w/ Claude",
+       "channel": "Anthropic",
+       "durationSeconds": 1553,
+       "views": 589134,
+       "uploadDate": "20250731",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Anthropic's best practices on clear prompts, instruction files and giving the agent a way to verify.",
+       "caveat": "Mid-2025; Claude Code specific. Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+      },
+      {
+       "videoId": "y60vYnBAvBI",
+       "url": "https://www.youtube.com/watch?v=y60vYnBAvBI",
+       "title": "Stop Shipping Slop: The Future of AI Code Is Quality",
+       "channel": "OpenHands",
+       "durationSeconds": 3422,
+       "views": 1016,
+       "uploadDate": "20260331",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands talk on quality-focused agent use; touches on specifying work well.",
+       "caveat": "Long (about 57 min); only partly about prompting."
+      }
+     ]
+    },
+    {
+     "heading": "Context hygiene",
+     "picks": [
+      {
+       "videoId": "IS_y40zY-hc",
+       "url": "https://www.youtube.com/watch?v=IS_y40zY-hc",
+       "title": "Advanced Context Engineering for Agents",
+       "channel": "YC Root Access",
+       "durationSeconds": 877,
+       "views": 216674,
+       "uploadDate": "20250825",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Context engineering for agents: keeping context small, compaction and sub-agents.",
+       "caveat": "Aug 2025; not OpenHands specific."
+      },
+      {
+       "videoId": "W29N0Ad7yUY",
+       "url": "https://www.youtube.com/watch?v=W29N0Ad7yUY",
+       "title": "How do you handle Context Management with an agent?",
+       "channel": "OpenHands",
+       "durationSeconds": 166,
+       "views": 66,
+       "uploadDate": "20260430",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands short answer on managing context with an agent.",
+       "caveat": "Under 3 min Q&A clip; thin depth."
+      }
+     ]
+    },
+    {
+     "heading": "Where agents shine and struggle",
+     "picks": [
+      {
+       "videoId": "6_Smtxb_afw",
+       "url": "https://www.youtube.com/watch?v=6_Smtxb_afw",
+       "title": "Ray Myers: \"Velocity Is Dead.\"",
+       "channel": "OpenHands",
+       "durationSeconds": 31,
+       "views": 1412,
+       "uploadDate": "20260417",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Ray Myers short on the Velocity Is Dead article's argument.",
+       "caveat": "31-second short; teaser only."
+      },
+      {
+       "videoId": "zV1PYhuZwFY",
+       "url": "https://www.youtube.com/watch?v=zV1PYhuZwFY",
+       "title": "Trusting Legacy Codebase Migrations: the Snapshot Tests Strategy",
+       "channel": "OpenHands",
+       "durationSeconds": 146,
+       "views": 171,
+       "uploadDate": "20260417",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "Snapshot (characterization) tests as the way to trust legacy migrations.",
+       "caveat": "Short clip about 2.5 min."
+      },
+      {
+       "videoId": "_rltvykJV4E",
+       "url": "https://www.youtube.com/watch?v=_rltvykJV4E",
+       "title": "AI Coding Agents: What Works and What Doesn't (Webinar)",
+       "channel": "OpenHands",
+       "durationSeconds": 2714,
+       "views": 1652,
+       "uploadDate": "20250624",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "What works and what does not with coding agents, from OpenHands.",
+       "caveat": "Mid-2025, long."
+      }
+     ]
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "g627Apd9zvY",
+       "url": "https://www.youtube.com/watch?v=g627Apd9zvY",
+       "title": "Can AI Do Test-Driven Development? With Emily Bache",
+       "channel": "OpenHands",
+       "durationSeconds": 1516,
+       "views": 1265,
+       "uploadDate": "20251117",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "TDD with agents and Emily Bache, test-first discipline and small steps.",
+       "caveat": "Long (about 25 min); Nov 2025."
+      },
+      {
+       "videoId": "XDIe6EEoRvI",
+       "url": "https://www.youtube.com/watch?v=XDIe6EEoRvI",
+       "title": "How do you keep AI on track when doing refactors?",
+       "channel": "OpenHands",
+       "durationSeconds": 90,
+       "views": 93,
+       "uploadDate": "20260219",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Keeping AI on track in refactors with tests and small steps.",
+       "caveat": "90-second clip."
+      },
+      {
+       "videoId": "tWwiZnW2McI",
+       "url": "https://www.youtube.com/watch?v=tWwiZnW2McI",
+       "title": "Testing strategy and increments",
+       "channel": "OpenHands",
+       "durationSeconds": 72,
+       "views": 309,
+       "uploadDate": "20260501",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Testing strategy and increments for agent-driven changes.",
+       "caveat": "72-second clip."
+      }
+     ]
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "hTAWHgQI4xg",
+       "url": "https://www.youtube.com/watch?v=hTAWHgQI4xg",
+       "title": "5 Concepts to Know for Coding with AI Agents",
+       "channel": "IBM Technology",
+       "durationSeconds": 602,
+       "views": 167678,
+       "uploadDate": "20261012",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Concepts every developer should know when coding with agents, including pitfalls.",
+       "caveat": "Oct 2026; general not OpenHands; not a dedicated mistakes list."
+      },
+      {
+       "videoId": "_rltvykJV4E",
+       "url": "https://www.youtube.com/watch?v=_rltvykJV4E",
+       "title": "AI Coding Agents: What Works and What Doesn't (Webinar)",
+       "channel": "OpenHands",
+       "durationSeconds": 2714,
+       "views": 1652,
+       "uploadDate": "20250624",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Webinar discussion of what does not work with agents.",
+       "caveat": "Mid-2025, long."
+      }
+     ],
+     "gap": "No verified video is a dedicated 'common mistakes' list for agentic coding; picks are partial."
+    }
+   ]
+  },
+  "M05": {
+   "module": "M05",
+   "title": "OpenHands basics: conversations and the feed",
+   "moduleOverview": {
+    "videoId": "FpO-4bbM8Ko",
+    "url": "https://www.youtube.com/watch?v=FpO-4bbM8Ko",
+    "title": "Agent Canvas v1 Is Live! Complete Setup & Getting Started Guide",
+    "channel": "OpenHands",
+    "durationSeconds": 720,
+    "views": 3576,
+    "uploadDate": "20260616",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "good",
+    "level": "Beginner",
+    "use": "clip",
+    "clips": [
+     {
+      "startSeconds": 255,
+      "endSeconds": 319,
+      "note": "Launch Agent Canvas and first run, choose your AI model"
+     }
+    ],
+    "why": "Official v1 walkthrough; the first-run and model-choice chapters show starting a first agent conversation.",
+    "caveat": "may be outdated (June 2026 UI)"
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "6c6QWRGJ8vs",
+       "url": "https://www.youtube.com/watch?v=6c6QWRGJ8vs",
+       "title": "Agent Canvas Is Production Ready: Run & Automate AI Coding Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 528,
+       "views": 2640,
+       "uploadDate": "20260707",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 23,
+         "endSeconds": 70,
+         "note": "What is Agent Canvas + parallel agents and git worktrees"
+        }
+       ],
+       "why": "Explains what Agent Canvas is, parallel agents and worktrees.",
+       "caveat": null
+      },
+      {
+       "videoId": "PvIDa_U2Uc8",
+       "url": "https://www.youtube.com/watch?v=PvIDa_U2Uc8",
+       "title": "Previewing Agent Canvas \u2014 Open Source AI Coding Platform",
+       "channel": "OpenHands",
+       "durationSeconds": 214,
+       "views": 1856,
+       "uploadDate": "20260528",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Early preview of the Canvas idea.",
+       "caveat": "pre-v1 preview (May 2026); UI may differ"
+      }
+     ],
+     "gap": "No video explains the Feed or conversation/workspace/backend vocabulary; a short recording is needed."
+    },
+    {
+     "heading": "Steps",
+     "picks": [
+      {
+       "videoId": "dz6zgOK0_7Q",
+       "url": "https://www.youtube.com/watch?v=dz6zgOK0_7Q",
+       "title": "Agent Canvas in under 10 Minutes: Mac Setup (No Docker) + First AI Agent Chat",
+       "channel": "OpenHands",
+       "durationSeconds": 662,
+       "views": 680,
+       "uploadDate": "20260622",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Mac setup then a first agent chat in Agent Canvas.",
+       "caveat": "June 2026 UI; chapters not verified"
+      },
+      {
+       "videoId": "FpO-4bbM8Ko",
+       "url": "https://www.youtube.com/watch?v=FpO-4bbM8Ko",
+       "title": "Agent Canvas v1 Is Live! Complete Setup & Getting Started Guide",
+       "channel": "OpenHands",
+       "durationSeconds": 720,
+       "views": 3576,
+       "uploadDate": "20260616",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 255,
+         "endSeconds": 319,
+         "note": "Launch and first run, choose AI model"
+        }
+       ],
+       "why": "First run and model selection inside the v1 walkthrough.",
+       "caveat": null
+      }
+     ],
+     "gap": "Not covered: Feed page (/feed), Overview panel, context meter and Compact context, stop/archive/delete. Record on the current UI."
+    },
+    {
+     "heading": "Choosing an agent",
+     "picks": [
+      {
+       "videoId": "6c6QWRGJ8vs",
+       "url": "https://www.youtube.com/watch?v=6c6QWRGJ8vs",
+       "title": "Agent Canvas Is Production Ready: Run & Automate AI Coding Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 528,
+       "views": 2640,
+       "uploadDate": "20260707",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 106,
+         "endSeconds": 140,
+         "note": "Bring your own AI agent (ACP)"
+        }
+       ],
+       "why": "Short segment on bringing your own agent via ACP.",
+       "caveat": null
+      },
+      {
+       "videoId": "ZeqmkbICrrg",
+       "url": "https://www.youtube.com/watch?v=ZeqmkbICrrg",
+       "title": "Agent Canvas Is Officially Production Ready \u2014 Local AI Agents, Automations & Parallel Workflows",
+       "channel": "OpenHands",
+       "durationSeconds": 2882,
+       "views": 3498,
+       "uploadDate": "20260618",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 520,
+         "endSeconds": 633,
+         "note": "Bring Your Own Agent (ACP)"
+        }
+       ],
+       "why": "Longer ACP segment of the community call.",
+       "caveat": "long parent video; clip only"
+      },
+      {
+       "videoId": "vhpM_pfhwf0",
+       "url": "https://www.youtube.com/watch?v=vhpM_pfhwf0",
+       "title": "How to Perform Agent Agnostic Automated Software Engineering with the Agent Canvas",
+       "channel": "OpenHands",
+       "durationSeconds": 329,
+       "views": 1767,
+       "uploadDate": "20260617",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Agent-agnostic use: switching between OpenHands, Codex, Gemini and others.",
+       "caveat": "no chapters; description-based fit"
+      }
+     ]
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "S_wap45Iq8U",
+       "url": "https://www.youtube.com/watch?v=S_wap45Iq8U",
+       "title": "Performing Your Daily Workflow with AI Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 690,
+       "views": 3605,
+       "uploadDate": "20260807",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 282,
+         "endSeconds": 690,
+         "note": "Automating daily routines, reading the report, scaling and delegation"
+        }
+       ],
+       "why": "Shows organising many parallel tasks and delegation in Agent Canvas.",
+       "caveat": null
+      }
+     ],
+     "gap": "No video on one-task-per-conversation, checking Changes view. Needs a screen recording."
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [],
+     "gap": "Nothing available (skills not appearing in running conversation, uncompacted context). Needs new recording."
+    }
+   ]
+  },
+  "M06": {
+   "module": "M06",
+   "title": "Reviewing, testing and verifying agent work",
+   "moduleOverview": {
+    "videoId": "y60vYnBAvBI",
+    "url": "https://www.youtube.com/watch?v=y60vYnBAvBI",
+    "title": "Stop Shipping Slop: The Future of AI Code Is Quality",
+    "channel": "OpenHands",
+    "durationSeconds": 3422,
+    "views": 1016,
+    "uploadDate": "20260331",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "good",
+    "level": "Intermediate",
+    "use": "whole",
+    "clips": [],
+    "why": "OpenHands talk on quality and verification of AI-generated code.",
+    "caveat": "Long (about 57 min), March 2026. Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "JgzwwLP8jL8",
+       "url": "https://www.youtube.com/watch?v=JgzwwLP8jL8",
+       "title": "OpenHands Critic is Here to Roast Your Code (CLI Demo + Ralph Wiggum + Community Updates)",
+       "channel": "OpenHands",
+       "durationSeconds": 1450,
+       "views": 432,
+       "uploadDate": "20260123",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Community call demoing the OpenHands Critic.",
+       "caveat": "Long (about 24 min) and mixed topics; whole call, find the critic segment."
+      },
+      {
+       "videoId": "ZwKfvRyfOlw",
+       "url": "https://www.youtube.com/watch?v=ZwKfvRyfOlw",
+       "title": "Using AI models to determine agent quality",
+       "channel": "OpenHands",
+       "durationSeconds": 294,
+       "views": 87,
+       "uploadDate": "20260504",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "Using AI models to judge agent quality, the LLM-as-judge idea.",
+       "caveat": "About 5 min clip."
+      }
+     ]
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "y60vYnBAvBI",
+       "url": "https://www.youtube.com/watch?v=y60vYnBAvBI",
+       "title": "Stop Shipping Slop: The Future of AI Code Is Quality",
+       "channel": "OpenHands",
+       "durationSeconds": 3422,
+       "views": 1016,
+       "uploadDate": "20260331",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Why verification is the bottleneck and what quality tooling looks like.",
+       "caveat": "Long; March 2026."
+      },
+      {
+       "videoId": "_mi3alkqy4s",
+       "url": "https://www.youtube.com/watch?v=_mi3alkqy4s",
+       "title": "The Death of the Code Review: What the Data Actually Says \u2014 Laurie Voss, Arize AI",
+       "channel": "AI Engineer",
+       "durationSeconds": 1480,
+       "views": 114885,
+       "uploadDate": "20260930",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Data on whether code review survives AI code, discussed with evidence.",
+       "caveat": "Sept 2026; external, not OpenHands."
+      },
+      {
+       "videoId": "b2QkhmQ0sT0",
+       "url": "https://www.youtube.com/watch?v=b2QkhmQ0sT0",
+       "title": "How I Review AI Code - (Meta Senior Staff Engineer)",
+       "channel": "John Kim",
+       "durationSeconds": 1231,
+       "views": 379142,
+       "uploadDate": "20260921",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "A senior engineer's practical method for reviewing AI code.",
+       "caveat": "Sept 2026; single creator opinion."
+      }
+     ]
+    },
+    {
+     "heading": "Steps in OpenHands",
+     "picks": [
+      {
+       "videoId": "JgzwwLP8jL8",
+       "url": "https://www.youtube.com/watch?v=JgzwwLP8jL8",
+       "title": "OpenHands Critic is Here to Roast Your Code (CLI Demo + Ralph Wiggum + Community Updates)",
+       "channel": "OpenHands",
+       "durationSeconds": 1450,
+       "views": 432,
+       "uploadDate": "20260123",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Shows the OpenHands Critic in the CLI.",
+       "caveat": "CLI demo from Jan 2026, not Canvas Verification settings."
+      },
+      {
+       "videoId": "NNqhqlk87TY",
+       "url": "https://www.youtube.com/watch?v=NNqhqlk87TY",
+       "title": "Exploring concrete scoring for the critic agent (Full)",
+       "channel": "OpenHands",
+       "durationSeconds": 204,
+       "views": 50,
+       "uploadDate": "20260417",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "Discussion on concrete scoring for the critic agent.",
+       "caveat": "Engineering discussion, not a UI how-to."
+      }
+     ],
+     "gap": "No verified video shows Canvas Settings > Verification or the PR review automation."
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "b2QkhmQ0sT0",
+       "url": "https://www.youtube.com/watch?v=b2QkhmQ0sT0",
+       "title": "How I Review AI Code - (Meta Senior Staff Engineer)",
+       "channel": "John Kim",
+       "durationSeconds": 1231,
+       "views": 379142,
+       "uploadDate": "20260921",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Review habits for AI-written code.",
+       "caveat": "Sept 2026."
+      },
+      {
+       "videoId": "LnZDY6XC5pA",
+       "url": "https://www.youtube.com/watch?v=LnZDY6XC5pA",
+       "title": "\"Looks Good to Me\": A Practical Guide to Handling AI-Generated Code - Roman Zhukov",
+       "channel": "NDC Conferences",
+       "durationSeconds": 3646,
+       "views": 5537,
+       "uploadDate": "20260731",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Practical guide to handling AI-generated code in review.",
+       "caveat": "Long (about 61 min); July 2026."
+      },
+      {
+       "videoId": "g627Apd9zvY",
+       "url": "https://www.youtube.com/watch?v=g627Apd9zvY",
+       "title": "Can AI Do Test-Driven Development? With Emily Bache",
+       "channel": "OpenHands",
+       "durationSeconds": 1516,
+       "views": 1265,
+       "uploadDate": "20251117",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Test-first as a verification practice.",
+       "caveat": "Nov 2025."
+      }
+     ]
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "_mi3alkqy4s",
+       "url": "https://www.youtube.com/watch?v=_mi3alkqy4s",
+       "title": "The Death of the Code Review: What the Data Actually Says \u2014 Laurie Voss, Arize AI",
+       "channel": "AI Engineer",
+       "durationSeconds": 1480,
+       "views": 114885,
+       "uploadDate": "20260930",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "What goes wrong when review is skipped or rushed for AI code.",
+       "caveat": "Sept 2026."
+      },
+      {
+       "videoId": "LnZDY6XC5pA",
+       "url": "https://www.youtube.com/watch?v=LnZDY6XC5pA",
+       "title": "\"Looks Good to Me\": A Practical Guide to Handling AI-Generated Code - Roman Zhukov",
+       "channel": "NDC Conferences",
+       "durationSeconds": 3646,
+       "views": 5537,
+       "uploadDate": "20260731",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Pitfalls of rubber-stamping AI changes.",
+       "caveat": "Long."
+      }
+     ],
+     "gap": "No verified short video on the specific mistakes listed (agent editing its own tests, giant diffs)."
+    }
+   ]
+  },
+  "M07": {
+   "module": "M07",
+   "title": "Security and guardrails for agents",
+   "moduleOverview": {
+    "videoId": "NcJYr1VaIXI",
+    "url": "https://www.youtube.com/watch?v=NcJYr1VaIXI",
+    "title": "Prompt Injection Security for AI Agents Webinar by OpenHands",
+    "channel": "OpenHands",
+    "durationSeconds": 1922,
+    "views": 306,
+    "uploadDate": "20250912",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "best",
+    "level": "Intermediate",
+    "use": "whole",
+    "clips": [],
+    "why": "OpenHands' own webinar on prompt injection for software agents, matching the course source article.",
+    "caveat": "Sept 2025, long (about 32 min). Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "jrHRe9lSqqA",
+       "url": "https://www.youtube.com/watch?v=jrHRe9lSqqA",
+       "title": "What Is a Prompt Injection Attack?",
+       "channel": "IBM Technology",
+       "durationSeconds": 657,
+       "views": 303804,
+       "uploadDate": "20240530",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Clear introduction to prompt injection.",
+       "caveat": "2024; short 11 min and general, not agent-specific."
+      },
+      {
+       "videoId": "gUNXZMcd2jU",
+       "url": "https://www.youtube.com/watch?v=gUNXZMcd2jU",
+       "title": "OWASP's Top 10 Ways to Attack LLMs: AI Vulnerabilities Exposed",
+       "channel": "IBM Technology",
+       "durationSeconds": 1511,
+       "views": 337568,
+       "uploadDate": "20260307",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OWASP LLM Top 10 including excessive agency.",
+       "caveat": "Long (25 min); LLM apps in general."
+      },
+      {
+       "videoId": "FgxwCaL6UTA",
+       "url": "https://www.youtube.com/watch?v=FgxwCaL6UTA",
+       "title": "Prompt Injection, explained",
+       "channel": "Simon Willison",
+       "durationSeconds": 736,
+       "views": 22971,
+       "uploadDate": "20230503",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Simon Willison's explanation of prompt injection.",
+       "caveat": "Dated (May 2023), predates agents."
+      }
+     ]
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "NcJYr1VaIXI",
+       "url": "https://www.youtube.com/watch?v=NcJYr1VaIXI",
+       "title": "Prompt Injection Security for AI Agents Webinar by OpenHands",
+       "channel": "OpenHands",
+       "durationSeconds": 1922,
+       "views": 306,
+       "uploadDate": "20250912",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Mitigations compared for software agents, by OpenHands.",
+       "caveat": "Long; Sept 2025."
+      },
+      {
+       "videoId": "abw_m-DRi1k",
+       "url": "https://www.youtube.com/watch?v=abw_m-DRi1k",
+       "title": "The Lethal Trifecta Is Already on Your Laptops \u2014 Michael Patterson, Coder",
+       "channel": "AI Engineer",
+       "durationSeconds": 1243,
+       "views": 139640,
+       "uploadDate": "20261010",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "The lethal trifecta in practice with coding agents on laptops.",
+       "caveat": "Oct 2026; external."
+      },
+      {
+       "videoId": "7Z7ID5BbZU4",
+       "url": "https://www.youtube.com/watch?v=7Z7ID5BbZU4",
+       "title": "Containers Don't Make Your AI Agent Safe",
+       "channel": "Web Dev Simplified",
+       "durationSeconds": 2176,
+       "views": 58746,
+       "uploadDate": "20260630",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Why containers alone do not make an agent safe.",
+       "caveat": "June 2026; single creator."
+      }
+     ]
+    },
+    {
+     "heading": "Steps in OpenHands",
+     "picks": [
+      {
+       "videoId": "9tuGbS0sZtI",
+       "url": "https://www.youtube.com/watch?v=9tuGbS0sZtI",
+       "title": "How does OpenHands account for security while automating?",
+       "channel": "OpenHands",
+       "durationSeconds": 88,
+       "views": 1001,
+       "uploadDate": "20260226",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands answer on security while automating.",
+       "caveat": "88-second Q&A, conceptual not a UI walkthrough."
+      },
+      {
+       "videoId": "ovX-zk8eC_E",
+       "url": "https://www.youtube.com/watch?v=ovX-zk8eC_E",
+       "title": "OpenHands Vulnerability Fixer - Dispatch Agents to Secure Your Code",
+       "channel": "OpenHands",
+       "durationSeconds": 217,
+       "views": 1476,
+       "uploadDate": "20260223",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/20260303-vulnerability-fixer",
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Vulnerability Fixer agents dispatched with a human in the loop.",
+       "caveat": "Product demo, marketing flavour."
+      }
+     ],
+     "gap": "No verified video demonstrates Secrets, Confirmation Mode, Security Analyzer or the Docker runtime in Canvas."
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "EHO5rzHt1a4",
+       "url": "https://www.youtube.com/watch?v=EHO5rzHt1a4",
+       "title": "How important is it to have a human in the CVE fix process?",
+       "channel": "OpenHands",
+       "durationSeconds": 42,
+       "views": 1085,
+       "uploadDate": "20260310",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Why a human stays in the CVE fix process.",
+       "caveat": "42-second clip."
+      },
+      {
+       "videoId": "9tuGbS0sZtI",
+       "url": "https://www.youtube.com/watch?v=9tuGbS0sZtI",
+       "title": "How does OpenHands account for security while automating?",
+       "channel": "OpenHands",
+       "durationSeconds": 88,
+       "views": 1001,
+       "uploadDate": "20260226",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Security considerations while automating.",
+       "caveat": "88 seconds."
+      },
+      {
+       "videoId": "1USXbQyJk3w",
+       "url": "https://www.youtube.com/watch?v=1USXbQyJk3w",
+       "title": "OpenHands & Grayswan: How AI is Transforming Cybersecurity",
+       "channel": "OpenHands",
+       "durationSeconds": 2478,
+       "views": 1383,
+       "uploadDate": "20260901",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands with Grayswan on AI in cybersecurity.",
+       "caveat": "Long (about 41 min), Sept 2026; partner-led, partly marketing."
+      }
+     ]
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "E1JhEyWic0Y",
+       "url": "https://www.youtube.com/watch?v=E1JhEyWic0Y",
+       "title": "What are the risks of running autonomous AI?",
+       "channel": "OpenHands",
+       "durationSeconds": 56,
+       "views": 168,
+       "uploadDate": "20260423",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Risks of running autonomous AI.",
+       "caveat": "56-second clip, shallow."
+      },
+      {
+       "videoId": "7Z7ID5BbZU4",
+       "url": "https://www.youtube.com/watch?v=7Z7ID5BbZU4",
+       "title": "Containers Don't Make Your AI Agent Safe",
+       "channel": "Web Dev Simplified",
+       "durationSeconds": 2176,
+       "views": 58746,
+       "uploadDate": "20260630",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Mistake of trusting a container as the whole defence.",
+       "caveat": "June 2026."
+      }
+     ]
+    }
+   ]
+  },
+  "M08": {
+   "module": "M08",
+   "title": "Setting up Automations",
+   "moduleOverview": {
+    "videoId": "3FzRrT3HH3w",
+    "url": "https://www.youtube.com/watch?v=3FzRrT3HH3w",
+    "title": "Automate Repetitive Tasks with Agent Canvas",
+    "channel": "OpenHands",
+    "durationSeconds": 169,
+    "views": 760,
+    "uploadDate": "20260929",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "best",
+    "level": "Intermediate",
+    "use": "whole",
+    "clips": [],
+    "why": "Official demo: create a scheduled automation from natural language (daily 9am news summary).",
+    "caveat": "short; schedule trigger only"
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "6c6QWRGJ8vs",
+       "url": "https://www.youtube.com/watch?v=6c6QWRGJ8vs",
+       "title": "Agent Canvas Is Production Ready: Run & Automate AI Coding Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 528,
+       "views": 2640,
+       "uploadDate": "20260707",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 70,
+         "endSeconds": 106,
+         "note": "Built-in automations"
+        }
+       ],
+       "why": "Brief on built-in automations in Agent Canvas.",
+       "caveat": null
+      },
+      {
+       "videoId": "3FzRrT3HH3w",
+       "url": "https://www.youtube.com/watch?v=3FzRrT3HH3w",
+       "title": "Automate Repetitive Tasks with Agent Canvas",
+       "channel": "OpenHands",
+       "durationSeconds": 169,
+       "views": 760,
+       "uploadDate": "20260929",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Shows prompt, schedule and destination as an always-on workflow.",
+       "caveat": null
+      }
+     ],
+     "gap": "Schedule vs Event vs webhook triggers, runs and statuses are not taught by any verified video. An outside concept video could not be verified (YouTube bot check blocked metadata calls)."
+    },
+    {
+     "heading": "Steps (UI labels from the app)",
+     "picks": [
+      {
+       "videoId": "3FzRrT3HH3w",
+       "url": "https://www.youtube.com/watch?v=3FzRrT3HH3w",
+       "title": "Automate Repetitive Tasks with Agent Canvas",
+       "channel": "OpenHands",
+       "durationSeconds": 169,
+       "views": 760,
+       "uploadDate": "20260929",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Creates a scheduled automation with natural language in current Agent Canvas (Sept 2026).",
+       "caveat": null
+      },
+      {
+       "videoId": "FpO-4bbM8Ko",
+       "url": "https://www.youtube.com/watch?v=FpO-4bbM8Ko",
+       "title": "Agent Canvas v1 Is Live! Complete Setup & Getting Started Guide",
+       "channel": "OpenHands",
+       "durationSeconds": 720,
+       "views": 3576,
+       "uploadDate": "20260616",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 396,
+         "endSeconds": 459,
+         "note": "Build your first automation; run on a schedule"
+        }
+       ],
+       "why": "First automation and running on a schedule.",
+       "caveat": "may be outdated (June 2026)"
+      },
+      {
+       "videoId": "FpO-4bbM8Ko",
+       "url": "https://www.youtube.com/watch?v=FpO-4bbM8Ko",
+       "title": "Agent Canvas v1 Is Live! Complete Setup & Getting Started Guide",
+       "channel": "OpenHands",
+       "durationSeconds": 720,
+       "views": 3576,
+       "uploadDate": "20260616",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 459,
+         "endSeconds": 710,
+         "note": "Connect Slack, GitHub and configure automated code reviews"
+        }
+       ],
+       "why": "Event triggers via Slack and GitHub integrations and automated code reviews.",
+       "caveat": "may be outdated (June 2026)"
+      }
+     ],
+     "gap": "Not covered: Templates page, Find opportunities, Import automation, Test/Draft, Activity Log, Git Sync, Agent Profile choice. Record on the current UI."
+    },
+    {
+     "heading": "Design guidance (from the workflow-automation article)",
+     "picks": [
+      {
+       "videoId": "S_wap45Iq8U",
+       "url": "https://www.youtube.com/watch?v=S_wap45Iq8U",
+       "title": "Performing Your Daily Workflow with AI Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 690,
+       "views": 3605,
+       "uploadDate": "20260807",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 282,
+         "endSeconds": 544,
+         "note": "Automating daily routines and interpreting the workflow report"
+        }
+       ],
+       "why": "Practical example of a daily automated workflow and its report.",
+       "caveat": null
+      }
+     ],
+     "gap": "Shadow mode, least privilege and caps are not covered in a video."
+    },
+    {
+     "heading": "Best practices",
+     "picks": [],
+     "gap": "No video. Record or write."
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [],
+     "gap": "No video (public URL for events, disabled imports, SKIPPED). Needs a recording."
+    }
+   ]
+  },
+  "M09": {
+   "module": "M09",
+   "title": "Skills, plugins, MCP servers, agent profiles and settings",
+   "moduleOverview": {
+    "videoId": "hGm1XVwwIVk",
+    "url": "https://www.youtube.com/watch?v=hGm1XVwwIVk",
+    "title": "OpenHands Roadmap Reveal: Plugins, Sub-Agents, Verification, and More",
+    "channel": "OpenHands",
+    "durationSeconds": 2474,
+    "views": 608,
+    "uploadDate": "20260316",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "partial",
+    "level": "Intermediate",
+    "use": "clip",
+    "clips": [
+     {
+      "startSeconds": 636,
+      "endSeconds": 766,
+      "note": "OpenHands strategy: plugins, skills, and repeatable use cases"
+     }
+    ],
+    "why": "Strategy segment on plugins, skills and repeatable use cases.",
+    "caveat": "may be outdated (Mar 2026); long parent video"
+   },
+   "submodules": [
+    {
+     "heading": "What each thing is",
+     "picks": [
+      {
+       "videoId": "eur8dUO9mvE",
+       "url": "https://www.youtube.com/watch?v=eur8dUO9mvE",
+       "title": "What is MCP? Integrate AI Agents with Databases & APIs",
+       "channel": "IBM Technology",
+       "durationSeconds": 226,
+       "views": 783357,
+       "uploadDate": "20250219",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Short, clear explanation of what the Model Context Protocol is and how it connects agents to tools and data.",
+       "caveat": "external; generic (not OpenHands UI)"
+      },
+      {
+       "videoId": "k-L0z97QWHs",
+       "url": "https://www.youtube.com/watch?v=k-L0z97QWHs",
+       "title": "Your AI Agent Skills Might Be Hurting Performance?! And, how to fix it!",
+       "channel": "OpenHands",
+       "durationSeconds": 2291,
+       "views": 311,
+       "uploadDate": "20260327",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 810,
+         "endSeconds": 1110,
+         "note": "Evaluating Agent Skills (main topic)"
+        }
+       ],
+       "why": "Explains what skills are and how they can help or hurt.",
+       "caveat": "community call; clip only"
+      },
+      {
+       "videoId": "TQAdEjmpVfc",
+       "url": "https://www.youtube.com/watch?v=TQAdEjmpVfc",
+       "title": "Flexibly Choose your Coding Model with OpenHands LLM Profiles",
+       "channel": "OpenHands",
+       "durationSeconds": 193,
+       "views": 7275,
+       "uploadDate": "20260527",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/model-choice-llm-profiles",
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "LLM profiles: save and switch model configurations.",
+       "caveat": null
+      }
+     ],
+     "gap": "No verified video on plugins vs skills vs agent profiles. Agent profiles and Skills/Plugins/MCP pages need a new recording."
+    },
+    {
+     "heading": "Steps",
+     "picks": [
+      {
+       "videoId": "vDv1AQW3cfY",
+       "url": "https://www.youtube.com/watch?v=vDv1AQW3cfY",
+       "title": "OpenHands + MCPs in Action: Figma and Context7 Demos",
+       "channel": "OpenHands",
+       "durationSeconds": 2425,
+       "views": 941,
+       "uploadDate": "20251020",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 639,
+         "endSeconds": 790,
+         "note": "Figma MCP example"
+        }
+       ],
+       "why": "Using an MCP server (Figma) with OpenHands.",
+       "caveat": "may be outdated (Oct 2025, old UI)"
+      },
+      {
+       "videoId": "FpO-4bbM8Ko",
+       "url": "https://www.youtube.com/watch?v=FpO-4bbM8Ko",
+       "title": "Agent Canvas v1 Is Live! Complete Setup & Getting Started Guide",
+       "channel": "OpenHands",
+       "durationSeconds": 720,
+       "views": 3576,
+       "uploadDate": "20260616",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 356,
+         "endSeconds": 396,
+         "note": "Create LLM profiles"
+        }
+       ],
+       "why": "Creating LLM profiles in v1.",
+       "caveat": "may be outdated (June 2026)"
+      },
+      {
+       "videoId": "Omk9szFLQcA",
+       "url": "https://www.youtube.com/watch?v=Omk9szFLQcA",
+       "title": "One AI Agent, Multiple LLMs: Automatic Model Routing in OpenHands",
+       "channel": "OpenHands",
+       "durationSeconds": 1142,
+       "views": 1480,
+       "uploadDate": "20261015",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 21,
+         "endSeconds": 253,
+         "note": "What is the Model Router and benefits"
+        }
+       ],
+       "why": "Model Router setting.",
+       "caveat": null
+      }
+     ],
+     "gap": "Not covered: /add-skill, Skills page, Plugins page, MCP page and marketplace, Agent profiles, Condenser, Secrets. All need a recording on the current UI."
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "k-L0z97QWHs",
+       "url": "https://www.youtube.com/watch?v=k-L0z97QWHs",
+       "title": "Your AI Agent Skills Might Be Hurting Performance?! And, how to fix it!",
+       "channel": "OpenHands",
+       "durationSeconds": 2291,
+       "views": 311,
+       "uploadDate": "20260327",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 810,
+         "endSeconds": 1250,
+         "note": "Evaluating skills and performance insights across models"
+        }
+       ],
+       "why": "Skill performance insights across models, why to test against a baseline.",
+       "caveat": "community call; clip only"
+      }
+     ]
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [],
+     "gap": "No video. Needs a recording."
+    }
+   ]
+  },
+  "M10": {
+   "module": "M10",
+   "title": "Multi-agent systems: coordinators, workers and verifiers",
+   "moduleOverview": {
+    "videoId": "IPu3HwtQb18",
+    "url": "https://www.youtube.com/watch?v=IPu3HwtQb18",
+    "title": "How Anthropic Builds Multi-Agent Systems: Patterns and Pitfalls",
+    "channel": "Databricks Events",
+    "durationSeconds": 1075,
+    "views": 399,
+    "uploadDate": "20260825",
+    "license": "NA",
+    "source": "external",
+    "article": null,
+    "fit": "best",
+    "level": "Advanced",
+    "use": "whole",
+    "clips": [],
+    "why": "Anthropic's own patterns (single agent first, generator-verifier, orchestrator-subagent, agent teams) map directly onto the module.",
+    "caveat": "Conference-style talk, 18 min; low view count."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "sWH0T4Zez6I",
+       "url": "https://www.youtube.com/watch?v=sWH0T4Zez6I",
+       "title": "Multi Agent Systems Explained: How AI Agents & LLMs Work Together",
+       "channel": "IBM Technology",
+       "durationSeconds": 477,
+       "views": 107542,
+       "uploadDate": "20251215",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Short plain-English definition of multi-agent systems and how agents collaborate.",
+       "caveat": "Generic, not coding-specific."
+      },
+      {
+       "videoId": "4nZl32FwU-o",
+       "url": "https://www.youtube.com/watch?v=4nZl32FwU-o",
+       "title": "Conceptual Guide: Multi Agent Architectures",
+       "channel": "LangChain",
+       "durationSeconds": 538,
+       "views": 130969,
+       "uploadDate": "20241016",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Names the supervisor, hierarchical and network architectures, i.e. coordinator/worker vocabulary.",
+       "caveat": "Oct 2024, LangGraph-flavoured."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "IPu3HwtQb18",
+       "url": "https://www.youtube.com/watch?v=IPu3HwtQb18",
+       "title": "How Anthropic Builds Multi-Agent Systems: Patterns and Pitfalls",
+       "channel": "Databricks Events",
+       "durationSeconds": 1075,
+       "views": 399,
+       "uploadDate": "20260825",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Advanced",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 153,
+         "endSeconds": 546,
+         "note": "Start with one agent; three signals that justify multi-agent; generator-verifier; orchestrator/sub-agent (chapters)"
+        }
+       ],
+       "why": "Covers when multi-agent is justified (three signals), generator-verifier and orchestrator-subagent patterns, and the start-single advice.",
+       "caveat": "Talk, not a tutorial."
+      },
+      {
+       "videoId": "2lTFI6FAqhk",
+       "url": "https://www.youtube.com/watch?v=2lTFI6FAqhk",
+       "title": "Single Agent Vs. Multi-Agent Systems in AI | How To Choose The Right Architecture",
+       "channel": "Snowflake Developers",
+       "durationSeconds": 224,
+       "views": 1812,
+       "uploadDate": "20251106",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Direct single versus multi-agent decision framing in under 4 minutes.",
+       "caveat": "Vendor (Snowflake) perspective."
+      },
+      {
+       "videoId": "MKrPPa6lE0s",
+       "url": "https://www.youtube.com/watch?v=MKrPPa6lE0s",
+       "title": "Automating Massive Refactors with OpenHands Agents Working in Parallel",
+       "channel": "OpenHands",
+       "durationSeconds": 3301,
+       "views": 1795,
+       "uploadDate": "20251205",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands demo of many agents working a large refactor in parallel.",
+       "caveat": "55 min; no chapters; whole video only."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "In this repo (prototype)",
+     "picks": [
+      {
+       "videoId": "20HNd4cb2vA",
+       "url": "https://www.youtube.com/watch?v=20HNd4cb2vA",
+       "title": "OpenHands Community Call: Agent Control Plane, Async AI Engineering & What\u2019s Next",
+       "channel": "OpenHands",
+       "durationSeconds": 1033,
+       "views": 463,
+       "uploadDate": "20260508",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands community call with chapters on the Agent Control Plane and multi-agent orchestration, closest to conductor/worker roles.",
+       "caveat": "Chapter timestamps appear to be in minutes mislabeled as seconds (last chapter 27-1033), so do not clip from them; whole video only."
+      }
+     ],
+     "gap": "No video shows the six factory roles (conductor, dispatcher, worker, verifier, janitor, scout); needs a new recording."
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "BGTOnMz_qcw",
+       "url": "https://www.youtube.com/watch?v=BGTOnMz_qcw",
+       "title": "Git Worktrees Explained: The Feature That Unlocks Parallel AI Agents",
+       "channel": "Augment Code",
+       "durationSeconds": 231,
+       "views": 9494,
+       "uploadDate": "20260310",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Why git worktree isolation lets parallel agents avoid collisions.",
+       "caveat": "Augment Code product context."
+      },
+      {
+       "videoId": "IPu3HwtQb18",
+       "url": "https://www.youtube.com/watch?v=IPu3HwtQb18",
+       "title": "How Anthropic Builds Multi-Agent Systems: Patterns and Pitfalls",
+       "channel": "Databricks Events",
+       "durationSeconds": 1075,
+       "views": 399,
+       "uploadDate": "20260825",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 810,
+         "endSeconds": 1075,
+         "note": "Test each agent in isolation; simplicity (chapters)"
+        }
+       ],
+       "why": "Test each agent in isolation, keep it simple, verify independently.",
+       "caveat": "See above."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "IPu3HwtQb18",
+       "url": "https://www.youtube.com/watch?v=IPu3HwtQb18",
+       "title": "How Anthropic Builds Multi-Agent Systems: Patterns and Pitfalls",
+       "channel": "Databricks Events",
+       "durationSeconds": 1075,
+       "views": 399,
+       "uploadDate": "20260825",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 91,
+         "endSeconds": 218,
+         "note": "Why teams start multi-agent too early; start with one agent (chapters)"
+        }
+       ],
+       "why": "Why most teams go multi-agent too early.",
+       "caveat": "See above."
+      },
+      {
+       "videoId": "_IQ08vPFc7I",
+       "url": "https://www.youtube.com/watch?v=_IQ08vPFc7I",
+       "title": "Is Ralph multi-agent?",
+       "channel": "OpenHands",
+       "durationSeconds": 72,
+       "views": 137,
+       "uploadDate": "20260505",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Short OpenHands answer on whether the Ralph loop is multi-agent.",
+       "caveat": "Very short, narrow."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Check your understanding",
+     "picks": [],
+     "gap": "Assessment items; no video needed."
+    },
+    {
+     "heading": "Sources",
+     "picks": [],
+     "gap": "Reference list; no video needed."
+    },
+    {
+     "heading": "To verify",
+     "picks": [],
+     "gap": "Open question on sub-agent support. The OpenHands roadmap call (hGm1XVwwIVk) lists sub-agents but I did not verify its content beyond chapters; a product demo of sub-agent delegation needs recording."
+    }
+   ]
+  },
+  "M11": {
+   "module": "M11",
+   "title": "Setting up a Factory (prototype on this branch)",
+   "moduleOverview": {
+    "videoId": "Sxn5rAoOZ2I",
+    "url": "https://www.youtube.com/watch?v=Sxn5rAoOZ2I",
+    "title": "From Coding Assistants to AI Software Factories",
+    "channel": "OpenHands",
+    "durationSeconds": 521,
+    "views": 1813,
+    "uploadDate": "20261020",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "partial",
+    "level": "Intermediate",
+    "use": "whole",
+    "clips": [],
+    "why": "OpenHands talk on moving from coding assistants to AI software factories, the closest conceptual framing of the prototype.",
+    "caveat": "Chapters are about market/security/standards, so mostly adjacent; marketing-leaning, 9 min."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "kkvi2Rm-K84",
+       "url": "https://www.youtube.com/watch?v=kkvi2Rm-K84",
+       "title": "The Dark Factory: How Twin Sun Automated Their Entire Dev Pipeline",
+       "channel": "Arcturus Labs",
+       "durationSeconds": 4034,
+       "views": 6848,
+       "uploadDate": "20260429",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 645,
+         "endSeconds": 1670,
+         "note": "What is a dark factory; PR review bot; inside the factory step by step (chapters)"
+        }
+       ],
+       "why": "Explains the dark factory concept and walks a real factory pipeline step by step.",
+       "caveat": "67 min; external company's Jira-based setup, not OpenHands."
+      },
+      {
+       "videoId": "Sxn5rAoOZ2I",
+       "url": "https://www.youtube.com/watch?v=Sxn5rAoOZ2I",
+       "title": "From Coding Assistants to AI Software Factories",
+       "channel": "OpenHands",
+       "durationSeconds": 521,
+       "views": 1813,
+       "uploadDate": "20261020",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands framing of software factories.",
+       "caveat": "Adjacent, see overview."
+      }
+     ],
+     "gap": "Coordinator, inbox and owner as shipped UI concepts: no video; new recording needed."
+    },
+    {
+     "heading": "Steps (prototype, from code)",
+     "picks": [
+      {
+       "videoId": "M2Qnz-cqARU",
+       "url": "https://www.youtube.com/watch?v=M2Qnz-cqARU",
+       "title": "Build A Kanban Board For Agent Workflows",
+       "channel": "OpenHands",
+       "durationSeconds": 384,
+       "views": 1137,
+       "uploadDate": "20260929",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/new-in-agent-canvas-september-2026",
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands Kanban for agent workflows in Agent Canvas: nearest real UI for organising work across agents.",
+       "caveat": "Not the Factory page."
+      }
+     ],
+     "gap": "Nothing teaches Add Factory, pipeline templates, agent rail or composer routing. New screen recording required."
+    },
+    {
+     "heading": "What is simulated",
+     "picks": [],
+     "gap": "Prototype-specific; no video can cover it. Needs a new recording with demoTeam on/off."
+    },
+    {
+     "heading": "Best practices (for the real concept)",
+     "picks": [
+      {
+       "videoId": "kkvi2Rm-K84",
+       "url": "https://www.youtube.com/watch?v=kkvi2Rm-K84",
+       "title": "The Dark Factory: How Twin Sun Automated Their Entire Dev Pipeline",
+       "channel": "Arcturus Labs",
+       "durationSeconds": 4034,
+       "views": 6848,
+       "uploadDate": "20260429",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 2429,
+         "endSeconds": 2778,
+         "note": "Incremental adoption and opinionated approach (chapters)"
+        }
+       ],
+       "why": "Incremental adoption, going gradually darker, narrowing the space: matches start with one repeatable job and human review at ends.",
+       "caveat": "Long; use clip."
+      },
+      {
+       "videoId": "Xg0tNz9pICI",
+       "url": "https://www.youtube.com/watch?v=Xg0tNz9pICI",
+       "title": "Building an AI Dark Factory:  A Codebase That Writes Its Own Code, Live",
+       "channel": "Cole Medin",
+       "durationSeconds": 8615,
+       "views": 68634,
+       "uploadDate": "20260414",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "Live build of a self-writing codebase pipeline.",
+       "caveat": "2.4 hours; whole video only (chapters not checked)."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "89KKm_a4M7A",
+       "url": "https://www.youtube.com/watch?v=89KKm_a4M7A",
+       "title": "3 Advanced AI agent design patterns",
+       "channel": "Google Cloud Tech",
+       "durationSeconds": 480,
+       "views": 93164,
+       "uploadDate": "20260317",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Routing/coordinator patterns and their failure modes, relevant to the word-matching router caveat.",
+       "caveat": "Google Cloud agent patterns, generic."
+      }
+     ],
+     "gap": "Router-specific pitfalls (vague request creates duplicate conversation) are prototype-only."
+    },
+    {
+     "heading": "Check your understanding",
+     "picks": [],
+     "gap": "Assessment; no video needed."
+    },
+    {
+     "heading": "Sources",
+     "picks": [],
+     "gap": "Reference list; no video needed."
+    },
+    {
+     "heading": "To verify",
+     "picks": [],
+     "gap": "Open product questions; nothing to show."
+    }
+   ]
+  },
+  "M12": {
+   "module": "M12",
+   "title": "Evaluating agents: benchmarks and your own evals",
+   "moduleOverview": {
+    "videoId": "gMQ4JRdsyy0",
+    "url": "https://www.youtube.com/watch?v=gMQ4JRdsyy0",
+    "title": "The OpenHands Index: Benchmarking LLMs as Software Engineering Agents",
+    "channel": "OpenHands",
+    "durationSeconds": 284,
+    "views": 1474,
+    "uploadDate": "20260129",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "good",
+    "level": "Intermediate",
+    "use": "whole",
+    "clips": [],
+    "why": "Introduces the OpenHands Index and how LLMs are benchmarked as software engineering agents.",
+    "caveat": "About 5 min, Jan 2026; marketing flavour. Index figures date quickly. Whole video only: chapters were not read (YouTube blocked lookups), so no clip timestamps are proposed."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "gMQ4JRdsyy0",
+       "url": "https://www.youtube.com/watch?v=gMQ4JRdsyy0",
+       "title": "The OpenHands Index: Benchmarking LLMs as Software Engineering Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 284,
+       "views": 1474,
+       "uploadDate": "20260129",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "What the OpenHands Index measures.",
+       "caveat": "Jan 2026; dated scores."
+      },
+      {
+       "videoId": "NKPwFRu_CgA",
+       "url": "https://www.youtube.com/watch?v=NKPwFRu_CgA",
+       "title": "OpenHands Index Explained in Community Call plus AMD and Share Convos",
+       "channel": "OpenHands",
+       "durationSeconds": 1926,
+       "views": 218,
+       "uploadDate": "20260206",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Community call explaining the Index.",
+       "caveat": "Long (about 32 min), Feb 2026; find the Index segment."
+      }
+     ]
+    },
+    {
+     "heading": "Explanation",
+     "picks": [
+      {
+       "videoId": "iOnvLwxECP0",
+       "url": "https://www.youtube.com/watch?v=iOnvLwxECP0",
+       "title": "The Best AI Coding Models Right Now (OpenHands Index Update)",
+       "channel": "OpenHands",
+       "durationSeconds": 334,
+       "views": 1723,
+       "uploadDate": "20260709",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Index update on which coding models lead and at what cost.",
+       "caveat": "July 2026, leaderboard values will age."
+      },
+      {
+       "videoId": "cEugXkov4IA",
+       "url": "https://www.youtube.com/watch?v=cEugXkov4IA",
+       "title": "How important is benchmarking and testing different LLMs?",
+       "channel": "OpenHands",
+       "durationSeconds": 98,
+       "views": 736,
+       "uploadDate": "20260407",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Why benchmark and test different LLMs yourself.",
+       "caveat": "About 98 seconds."
+      },
+      {
+       "videoId": "BsWxPI9UM4c",
+       "url": "https://www.youtube.com/watch?v=BsWxPI9UM4c",
+       "title": "Why AI evals are the hottest new skill for product builders | Hamel Husain & Shreya Shankar",
+       "channel": "Lenny's Podcast",
+       "durationSeconds": 6393,
+       "views": 164348,
+       "uploadDate": "20250925",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Hamel Husain and Shreya Shankar on building your own evals.",
+       "caveat": "Long (over 1h45); Sept 2025, product-focused not coding-agent specific."
+      }
+     ]
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "Xfl50508LZM",
+       "url": "https://www.youtube.com/watch?v=Xfl50508LZM",
+       "title": "Ship Real Agents: Hands-On Evals for Agentic Applications \u2014 Laurie Voss, Arize",
+       "channel": "AI Engineer",
+       "durationSeconds": 7458,
+       "views": 23200,
+       "uploadDate": "20260514",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "Hands-on evals for agentic applications.",
+       "caveat": "Long (over 2h); May 2026, workshop style."
+      },
+      {
+       "videoId": "k-L0z97QWHs",
+       "url": "https://www.youtube.com/watch?v=k-L0z97QWHs",
+       "title": "Your AI Agent Skills Might Be Hurting Performance?! And, how to fix it!",
+       "channel": "OpenHands",
+       "durationSeconds": 2291,
+       "views": 311,
+       "uploadDate": "20260327",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Advanced",
+       "use": "whole",
+       "clips": [],
+       "why": "Evaluating skills with repeated runs, matching the skills article.",
+       "caveat": "About 38 min, March 2026."
+      }
+     ]
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [
+      {
+       "videoId": "BsWxPI9UM4c",
+       "url": "https://www.youtube.com/watch?v=BsWxPI9UM4c",
+       "title": "Why AI evals are the hottest new skill for product builders | Hamel Husain & Shreya Shankar",
+       "channel": "Lenny's Podcast",
+       "durationSeconds": 6393,
+       "views": 164348,
+       "uploadDate": "20250925",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Covers common eval pitfalls in conversation.",
+       "caveat": "Long; not a dedicated mistakes list."
+      },
+      {
+       "videoId": "cEugXkov4IA",
+       "url": "https://www.youtube.com/watch?v=cEugXkov4IA",
+       "title": "How important is benchmarking and testing different LLMs?",
+       "channel": "OpenHands",
+       "durationSeconds": 98,
+       "views": 736,
+       "uploadDate": "20260407",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Warns against trusting one benchmark.",
+       "caveat": "Short."
+      }
+     ],
+     "gap": "No verified video on benchmark contamination or quoting scores without harness and date; candidate videos were blocked before verification (see unverifiedCandidates)."
+    }
+   ]
+  },
+  "M13": {
+   "module": "M13",
+   "title": "Where agents run: backends, self-hosting and ACP agents",
+   "moduleOverview": {
+    "videoId": "6c6QWRGJ8vs",
+    "url": "https://www.youtube.com/watch?v=6c6QWRGJ8vs",
+    "title": "Agent Canvas Is Production Ready: Run & Automate AI Coding Agents",
+    "channel": "OpenHands",
+    "durationSeconds": 528,
+    "views": 2640,
+    "uploadDate": "20260707",
+    "license": "NA",
+    "source": "openhands-channel",
+    "article": null,
+    "fit": "good",
+    "level": "Beginner",
+    "use": "clip",
+    "clips": [
+     {
+      "startSeconds": 106,
+      "endSeconds": 193,
+      "note": "Bring Your Own AI Agent (ACP); Local-First, Cloud-Ready Workflows (chapters)"
+     }
+    ],
+    "why": "OpenHands Agent Canvas overview covering local-first, cloud-ready workflows and bring-your-own agent via ACP.",
+    "caveat": "9 min; chapters let you clip."
+   },
+   "submodules": [
+    {
+     "heading": "Key concepts",
+     "picks": [
+      {
+       "videoId": "6c6QWRGJ8vs",
+       "url": "https://www.youtube.com/watch?v=6c6QWRGJ8vs",
+       "title": "Agent Canvas Is Production Ready: Run & Automate AI Coding Agents",
+       "channel": "OpenHands",
+       "durationSeconds": 528,
+       "views": 2640,
+       "uploadDate": "20260707",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "clip",
+       "clips": [
+        {
+         "startSeconds": 23,
+         "endSeconds": 193,
+         "note": "What is Agent Canvas through local-first/cloud-ready (chapters)"
+        }
+       ],
+       "why": "Agent Canvas, local-first and cloud-ready, ACP agents.",
+       "caveat": "Overview level."
+      },
+      {
+       "videoId": "YkNulwcc5jk",
+       "url": "https://www.youtube.com/watch?v=YkNulwcc5jk",
+       "title": "ACP: The Universal Remote Control for AI Agents \u2014 Alex Hancock, Block",
+       "channel": "AI Engineer",
+       "durationSeconds": 660,
+       "views": 14972,
+       "uploadDate": "20260909",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "best",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Block engineer explains ACP: what it standardises and why.",
+       "caveat": "Conference talk, 11 min."
+      },
+      {
+       "videoId": "Tn1Rl-qBOr4",
+       "url": "https://www.youtube.com/watch?v=Tn1Rl-qBOr4",
+       "title": "Agent Client Protocol : The \u201cNew MCP\u201d for IDEs and Coding Agents",
+       "channel": "Prompt Engineering",
+       "durationSeconds": 523,
+       "views": 11079,
+       "uploadDate": "20250914",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "ACP as the 'new MCP' for coding agents and IDEs.",
+       "caveat": "Third-party explainer; Sept 2025."
+      }
+     ],
+     "gap": null
+    },
+    {
+     "heading": "Steps",
+     "picks": [
+      {
+       "videoId": "-z__jyDoOv4",
+       "url": "https://www.youtube.com/watch?v=-z__jyDoOv4",
+       "title": "Agent Canvas Mac Docker Install Guide + Slack, GitHub & Automations",
+       "channel": "OpenHands",
+       "durationSeconds": 512,
+       "views": 364,
+       "uploadDate": "20260624",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "best",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Official Mac Docker install, plus Slack, GitHub and automations.",
+       "caveat": "Vendor demo; UI may have changed."
+      },
+      {
+       "videoId": "Vmqxr65baAE",
+       "url": "https://www.youtube.com/watch?v=Vmqxr65baAE",
+       "title": "Agent Canvas Windows Docker Install Guide + First AI Agent Chat",
+       "channel": "OpenHands",
+       "durationSeconds": 555,
+       "views": 724,
+       "uploadDate": "20260626",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "good",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Official Windows Docker install and first agent chat.",
+       "caveat": "Windows only."
+      },
+      {
+       "videoId": "ItnMgC5sc40",
+       "url": "https://www.youtube.com/watch?v=ItnMgC5sc40",
+       "title": "OpenHands x Toad Partnership: Agent Client Protocol (ACP)",
+       "channel": "OpenHands",
+       "durationSeconds": 170,
+       "views": 465,
+       "uploadDate": "20251223",
+       "license": "NA",
+       "source": "openhands-channel",
+       "article": null,
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands with Toad via ACP.",
+       "caveat": "Dec 2025, pre-Canvas; ACP presets in Settings are not shown."
+      }
+     ],
+     "gap": "No video on provisioning a remote VM with nginx and Let's Encrypt, connecting to several backends, or the Settings > Agent ACP preset flow. New recording needed."
+    },
+    {
+     "heading": "Best practices",
+     "picks": [
+      {
+       "videoId": "DQdB7wFEygo",
+       "url": "https://www.youtube.com/watch?v=DQdB7wFEygo",
+       "title": "The Only Docker Tutorial You Need To Get Started",
+       "channel": "The Coding Sloth",
+       "durationSeconds": 713,
+       "views": 1518962,
+       "uploadDate": "20250128",
+       "license": "NA",
+       "source": "external",
+       "article": null,
+       "fit": "partial",
+       "level": "Beginner",
+       "use": "whole",
+       "clips": [],
+       "why": "Docker fundamentals before self-hosting an agent server.",
+       "caveat": "Generic Docker, not agent specific."
+      },
+      {
+       "videoId": "z13qTHR3tS0",
+       "url": "https://www.youtube.com/watch?v=z13qTHR3tS0",
+       "title": "OpenHands Running Local LMs on the DGX Spark",
+       "channel": "OpenHands",
+       "durationSeconds": 38,
+       "views": 649,
+       "uploadDate": "20251014",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/host-your-own-coding-agents-with-openhands-using-nvidia-dgx-spark",
+       "fit": "good",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "OpenHands running local models on NVIDIA DGX Spark, a self-hosted setup.",
+       "caveat": "Very short (38 s) and specific to that hardware."
+      }
+     ],
+     "gap": "Securing a remote machine before exposing ports is not covered by any verified video; new recording needed."
+    },
+    {
+     "heading": "Common mistakes",
+     "picks": [],
+     "gap": "No video covers exposing an unauthenticated server, per-backend settings or Pi/OpenCode on Cloud."
+    },
+    {
+     "heading": "Check your understanding",
+     "picks": [],
+     "gap": "Assessment; no video needed."
+    },
+    {
+     "heading": "Sources",
+     "picks": [],
+     "gap": "Reference list; no video needed."
+    },
+    {
+     "heading": "To verify",
+     "picks": [
+      {
+       "videoId": "4ukm7XK27ms",
+       "url": "https://www.youtube.com/watch?v=4ukm7XK27ms",
+       "title": "Using a Local Agentic Coding LLM through Slack or GitHub with OpenHands",
+       "channel": "OpenHands",
+       "durationSeconds": 200,
+       "views": 2601,
+       "uploadDate": "20251105",
+       "license": "NA",
+       "source": "article-embedded",
+       "article": "https://www.openhands.dev/blog/host-your-own-coding-agents-with-openhands-using-nvidia-dgx-spark",
+       "fit": "partial",
+       "level": "Intermediate",
+       "use": "whole",
+       "clips": [],
+       "why": "Local model reached through Slack or GitHub with OpenHands, relevant to running models self-hosted.",
+       "caveat": "3 min 20 s, chapters unavailable; whole video only."
+      }
+     ],
+     "gap": "Gentoo and Cursor via Custom ACP cannot be answered by video."
+    }
+   ]
+  }
+ },
+ "recordingBacklog": [
+  {
+   "module": "M02",
+   "subLesson": "Common mistakes",
+   "missing": "No verified video found that addresses 'local does not mean private' directly; the local-model videos above cover the setup only."
+  },
+  {
+   "module": "M04",
+   "subLesson": "Common mistakes",
+   "missing": "No verified video is a dedicated 'common mistakes' list for agentic coding; picks are partial."
+  },
+  {
+   "module": "M05",
+   "subLesson": "Key concepts",
+   "missing": "No video explains the Feed or conversation/workspace/backend vocabulary; a short recording is needed."
+  },
+  {
+   "module": "M05",
+   "subLesson": "Steps",
+   "missing": "Not covered: Feed page (/feed), Overview panel, context meter and Compact context, stop/archive/delete. Record on the current UI."
+  },
+  {
+   "module": "M05",
+   "subLesson": "Best practices",
+   "missing": "No video on one-task-per-conversation, checking Changes view. Needs a screen recording."
+  },
+  {
+   "module": "M05",
+   "subLesson": "Common mistakes",
+   "missing": "Nothing available (skills not appearing in running conversation, uncompacted context). Needs new recording."
+  },
+  {
+   "module": "M06",
+   "subLesson": "Steps in OpenHands",
+   "missing": "No verified video shows Canvas Settings > Verification or the PR review automation."
+  },
+  {
+   "module": "M06",
+   "subLesson": "Common mistakes",
+   "missing": "No verified short video on the specific mistakes listed (agent editing its own tests, giant diffs)."
+  },
+  {
+   "module": "M07",
+   "subLesson": "Steps in OpenHands",
+   "missing": "No verified video demonstrates Secrets, Confirmation Mode, Security Analyzer or the Docker runtime in Canvas."
+  },
+  {
+   "module": "M08",
+   "subLesson": "Key concepts",
+   "missing": "Schedule vs Event vs webhook triggers, runs and statuses are not taught by any verified video. An outside concept video could not be verified (YouTube bot check blocked metadata calls)."
+  },
+  {
+   "module": "M08",
+   "subLesson": "Steps (UI labels from the app)",
+   "missing": "Not covered: Templates page, Find opportunities, Import automation, Test/Draft, Activity Log, Git Sync, Agent Profile choice. Record on the current UI."
+  },
+  {
+   "module": "M08",
+   "subLesson": "Design guidance (from the workflow-automation article)",
+   "missing": "Shadow mode, least privilege and caps are not covered in a video."
+  },
+  {
+   "module": "M08",
+   "subLesson": "Best practices",
+   "missing": "No video. Record or write."
+  },
+  {
+   "module": "M08",
+   "subLesson": "Common mistakes",
+   "missing": "No video (public URL for events, disabled imports, SKIPPED). Needs a recording."
+  },
+  {
+   "module": "M09",
+   "subLesson": "What each thing is",
+   "missing": "No verified video on plugins vs skills vs agent profiles. Agent profiles and Skills/Plugins/MCP pages need a new recording."
+  },
+  {
+   "module": "M09",
+   "subLesson": "Steps",
+   "missing": "Not covered: /add-skill, Skills page, Plugins page, MCP page and marketplace, Agent profiles, Condenser, Secrets. All need a recording on the current UI."
+  },
+  {
+   "module": "M09",
+   "subLesson": "Common mistakes",
+   "missing": "No video. Needs a recording."
+  },
+  {
+   "module": "M10",
+   "subLesson": "In this repo (prototype)",
+   "missing": "No video shows the six factory roles (conductor, dispatcher, worker, verifier, janitor, scout); needs a new recording."
+  },
+  {
+   "module": "M10",
+   "subLesson": "Check your understanding",
+   "missing": "Assessment items; no video needed."
+  },
+  {
+   "module": "M10",
+   "subLesson": "Sources",
+   "missing": "Reference list; no video needed."
+  },
+  {
+   "module": "M10",
+   "subLesson": "To verify",
+   "missing": "Open question on sub-agent support. The OpenHands roadmap call (hGm1XVwwIVk) lists sub-agents but I did not verify its content beyond chapters; a product demo of sub-agent delegation needs recording."
+  },
+  {
+   "module": "M11",
+   "subLesson": "Key concepts",
+   "missing": "Coordinator, inbox and owner as shipped UI concepts: no video; new recording needed."
+  },
+  {
+   "module": "M11",
+   "subLesson": "Steps (prototype, from code)",
+   "missing": "Nothing teaches Add Factory, pipeline templates, agent rail or composer routing. New screen recording required."
+  },
+  {
+   "module": "M11",
+   "subLesson": "What is simulated",
+   "missing": "Prototype-specific; no video can cover it. Needs a new recording with demoTeam on/off."
+  },
+  {
+   "module": "M11",
+   "subLesson": "Common mistakes",
+   "missing": "Router-specific pitfalls (vague request creates duplicate conversation) are prototype-only."
+  },
+  {
+   "module": "M11",
+   "subLesson": "Check your understanding",
+   "missing": "Assessment; no video needed."
+  },
+  {
+   "module": "M11",
+   "subLesson": "Sources",
+   "missing": "Reference list; no video needed."
+  },
+  {
+   "module": "M11",
+   "subLesson": "To verify",
+   "missing": "Open product questions; nothing to show."
+  },
+  {
+   "module": "M12",
+   "subLesson": "Common mistakes",
+   "missing": "No verified video on benchmark contamination or quoting scores without harness and date; candidate videos were blocked before verification (see unverifiedCandidates)."
+  },
+  {
+   "module": "M13",
+   "subLesson": "Steps",
+   "missing": "No video on provisioning a remote VM with nginx and Let's Encrypt, connecting to several backends, or the Settings > Agent ACP preset flow. New recording needed."
+  },
+  {
+   "module": "M13",
+   "subLesson": "Best practices",
+   "missing": "Securing a remote machine before exposing ports is not covered by any verified video; new recording needed."
+  },
+  {
+   "module": "M13",
+   "subLesson": "Common mistakes",
+   "missing": "No video covers exposing an unauthenticated server, per-backend settings or Pi/OpenCode on Cloud."
+  },
+  {
+   "module": "M13",
+   "subLesson": "Check your understanding",
+   "missing": "Assessment; no video needed."
+  },
+  {
+   "module": "M13",
+   "subLesson": "Sources",
+   "missing": "Reference list; no video needed."
+  },
+  {
+   "module": "M13",
+   "subLesson": "To verify",
+   "missing": "Gentoo and Cursor via Custom ACP cannot be answered by video."
+  }
+ ],
+ "articleVideos": {
+  "ovX-zk8eC_E": [
+   [
+    "The OpenHands Vulnerability Fixer: Automated Security Remediation with AI Agents",
+    "https://www.openhands.dev/blog/20260303-vulnerability-fixer"
+   ]
+  ],
+  "uc2P-7E0ZwE": [
+   [
+    "Building a Provably Versatile Agent",
+    "https://www.openhands.dev/blog/building-a-provably-versatile-agent"
+   ]
+  ],
+  "oV9tAkS2Xic": [
+   [
+    "Devstral: A new state-of-the-art open model for coding agents",
+    "https://www.openhands.dev/blog/devstral-a-new-state-of-the-art-open-model-for-coding-agents"
+   ]
+  ],
+  "PQU9o_5rHC4": [
+   [
+    "How to Evaluate Agent Skills (And Why You Should)",
+    "https://www.openhands.dev/blog/evaluating-agent-skills"
+   ]
+  ],
+  "z13qTHR3tS0": [
+   [
+    "Host Your Own Coding Agents with OpenHands using NVIDIA DGX Spark",
+    "https://www.openhands.dev/blog/host-your-own-coding-agents-with-openhands-using-nvidia-dgx-spark"
+   ]
+  ],
+  "4ukm7XK27ms": [
+   [
+    "Host Your Own Coding Agents with OpenHands using NVIDIA DGX Spark",
+    "https://www.openhands.dev/blog/host-your-own-coding-agents-with-openhands-using-nvidia-dgx-spark"
+   ]
+  ],
+  "oB4JR98KRAA": [
+   [
+    "Introducing the OpenHands Cloud",
+    "https://www.openhands.dev/blog/introducing-the-openhands-cloud"
+   ]
+  ],
+  "TQAdEjmpVfc": [
+   [
+    "Simple, In-conversation Model Choice in OpenHands",
+    "https://www.openhands.dev/blog/model-choice-llm-profiles"
+   ]
+  ],
+  "M2Qnz-cqARU": [
+   [
+    "OpenHands in September: Scoped Agents, Isolated Runtimes, Persistent Workflows",
+    "https://www.openhands.dev/blog/new-in-agent-canvas-september-2026"
+   ]
+  ],
+  "hbloGmfZsJ4": [
+   [
+    "OpenHands Meets Slack: AI-Powered Development in Your Workspace",
+    "https://www.openhands.dev/blog/openhands-meets-slack-ai-powered-development-in-your-workspace"
+   ]
+  ],
+  "PfvIx4y8h7w": [
+   [
+    "The OpenHands CLI: AI-Powered Development in Your Terminal",
+    "https://www.openhands.dev/blog/the-openhands-cli-ai-powered-development-in-your-terminal"
+   ]
+  ]
+ },
+ "channelUploads": [
+  {
+   "id": "Sxn5rAoOZ2I",
+   "title": "From Coding Assistants to AI Software Factories",
+   "duration": 521,
+   "views": 1813,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Sxn5rAoOZ2I",
+   "date": "20261020",
+   "license": "NA"
+  },
+  {
+   "id": "BtZTeuEPnNA",
+   "title": "Building an Open-Source AI Company: The Tradeoffs Nobody Talks About",
+   "duration": 448,
+   "views": 660,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=BtZTeuEPnNA",
+   "date": "20261020",
+   "license": "NA"
+  },
+  {
+   "id": "Omk9szFLQcA",
+   "title": "One AI Agent, Multiple LLMs: Automatic Model Routing in OpenHands",
+   "duration": 1142,
+   "views": 1498,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Omk9szFLQcA",
+   "date": "20261015",
+   "license": "NA"
+  },
+  {
+   "id": "BbN67-78VjE",
+   "title": "Will AI Coding Agents Have a Kubernetes Moment?",
+   "duration": 586,
+   "views": 458,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=BbN67-78VjE",
+   "date": "20261015",
+   "license": "NA"
+  },
+  {
+   "id": "M2Qnz-cqARU",
+   "title": "Build A Kanban Board For Agent Workflows",
+   "duration": 384,
+   "views": 1137,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=M2Qnz-cqARU",
+   "date": "20260929",
+   "license": "NA"
+  },
+  {
+   "id": "3FzRrT3HH3w",
+   "title": "Automate Repetitive Tasks with Agent Canvas",
+   "duration": 169,
+   "views": 760,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=3FzRrT3HH3w",
+   "date": "20260929",
+   "license": "NA"
+  },
+  {
+   "id": "CO756YKg9ac",
+   "title": "OpenHands, Open source, and open models",
+   "duration": 687,
+   "views": 2055,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=CO756YKg9ac",
+   "date": "20260910",
+   "license": "NA"
+  },
+  {
+   "id": "1USXbQyJk3w",
+   "title": "OpenHands & Grayswan: How AI is Transforming Cybersecurity",
+   "duration": 2478,
+   "views": 1383,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=1USXbQyJk3w",
+   "date": "20260901",
+   "license": "NA"
+  },
+  {
+   "id": "S_wap45Iq8U",
+   "title": "Performing Your Daily Workflow with AI Agents",
+   "duration": 690,
+   "views": 3605,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=S_wap45Iq8U",
+   "date": "20260807",
+   "license": "NA"
+  },
+  {
+   "id": "iOnvLwxECP0",
+   "title": "The Best AI Coding Models Right Now (OpenHands Index Update)",
+   "duration": 334,
+   "views": 1723,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=iOnvLwxECP0",
+   "date": "20260709",
+   "license": "NA"
+  },
+  {
+   "id": "6c6QWRGJ8vs",
+   "title": "Agent Canvas Is Production Ready: Run & Automate AI Coding Agents",
+   "duration": 528,
+   "views": 2640,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=6c6QWRGJ8vs",
+   "date": "20260707",
+   "license": "NA"
+  },
+  {
+   "id": "Vmqxr65baAE",
+   "title": "Agent Canvas Windows Docker Install Guide + First AI Agent Chat",
+   "duration": 555,
+   "views": 724,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Vmqxr65baAE",
+   "date": "20260626",
+   "license": "NA"
+  },
+  {
+   "id": "MLoJsKLKXXo",
+   "title": "Agent Canvas Windows Install Guide (NPM, No Docker) + First AI Agent Chat",
+   "duration": 509,
+   "views": 336,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=MLoJsKLKXXo",
+   "date": "20260625",
+   "license": "NA"
+  },
+  {
+   "id": "-z__jyDoOv4",
+   "title": "Agent Canvas Mac Docker Install Guide + Slack, GitHub & Automations",
+   "duration": 512,
+   "views": 364,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=-z__jyDoOv4",
+   "date": "20260624",
+   "license": "NA"
+  },
+  {
+   "id": "dz6zgOK0_7Q",
+   "title": "Agent Canvas in under 10 Minutes: Mac Setup (No Docker) + First AI Agent Chat",
+   "duration": 662,
+   "views": 680,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=dz6zgOK0_7Q",
+   "date": "20260622",
+   "license": "NA"
+  },
+  {
+   "id": "ZeqmkbICrrg",
+   "title": "Agent Canvas Is Officially Production Ready \u2014 Local AI Agents, Automations & Parallel Workflows",
+   "duration": 2882,
+   "views": 3498,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ZeqmkbICrrg",
+   "date": "20260618",
+   "license": "NA"
+  },
+  {
+   "id": "vhpM_pfhwf0",
+   "title": "How to Perform Agent Agnostic Automated Software Engineering with the Agent Canvas",
+   "duration": 329,
+   "views": 1767,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=vhpM_pfhwf0",
+   "date": "20260617",
+   "license": "NA"
+  },
+  {
+   "id": "FpO-4bbM8Ko",
+   "title": "\ud83d\ude80 Agent Canvas v1 Is Live! Complete Setup & Getting Started Guide",
+   "duration": 720,
+   "views": 3576,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=FpO-4bbM8Ko",
+   "date": "20260616",
+   "license": "NA"
+  },
+  {
+   "id": "6DA57LRtJ6I",
+   "title": "OpenHands Community Call: Agent Canvas Beta Launch + Community Demos",
+   "duration": 2712,
+   "views": 539,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=6DA57LRtJ6I",
+   "date": "20260604",
+   "license": "NA"
+  },
+  {
+   "id": "PvIDa_U2Uc8",
+   "title": "Previewing Agent Canvas \u2014 Open Source AI Coding Platform",
+   "duration": 214,
+   "views": 1856,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=PvIDa_U2Uc8",
+   "date": "20260528",
+   "license": "NA"
+  },
+  {
+   "id": "TQAdEjmpVfc",
+   "title": "Flexibly Choose your Coding Model with OpenHands LLM Profiles",
+   "duration": 193,
+   "views": 7287,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=TQAdEjmpVfc",
+   "date": "20260527",
+   "license": "NA"
+  },
+  {
+   "id": "r_AS63moJiA",
+   "title": "The BEST AI Models Right Now (Save MONEY & Get BETTER Results)",
+   "duration": 481,
+   "views": 326,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=r_AS63moJiA",
+   "date": "20260526",
+   "license": "NA"
+  },
+  {
+   "id": "lbY9kNTdWec",
+   "title": "OpenHands Community Update: Agent Canvas, GPT-5.5 & LLM Profiles",
+   "duration": 1967,
+   "views": 479,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=lbY9kNTdWec",
+   "date": "20260522",
+   "license": "NA"
+  },
+  {
+   "id": "BenkkQmmFCg",
+   "title": "Run OpenHands Agent Canvas on Mac!",
+   "duration": 99,
+   "views": 851,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=BenkkQmmFCg",
+   "date": "20260513",
+   "license": "NA"
+  },
+  {
+   "id": "WAxf_RRIrB8",
+   "title": "OpenHands runs natively on Windows! Learn about Agent Canvas!",
+   "duration": 118,
+   "views": 1060,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=WAxf_RRIrB8",
+   "date": "20260512",
+   "license": "NA"
+  },
+  {
+   "id": "hgY_-3Pbmqw",
+   "title": "OpenHands' Agent Canvas: Exclusive Preview for the Community to Test!",
+   "duration": 257,
+   "views": 537,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=hgY_-3Pbmqw",
+   "date": "20260512",
+   "license": "NA"
+  },
+  {
+   "id": "20HNd4cb2vA",
+   "title": "OpenHands Community Call: Agent Control Plane, Async AI Engineering & What\u2019s Next",
+   "duration": 1033,
+   "views": 463,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=20HNd4cb2vA",
+   "date": "20260508",
+   "license": "NA"
+  },
+  {
+   "id": "G3h6ecOPc4g",
+   "title": "OpenHands Enterprise - Agent Control Plane",
+   "duration": 631,
+   "views": 461,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=G3h6ecOPc4g",
+   "date": "20260507",
+   "license": "NA"
+  },
+  {
+   "id": "cC7eFod-27Y",
+   "title": "Ray's RALPH.md",
+   "duration": 72,
+   "views": 442,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=cC7eFod-27Y",
+   "date": "20260505",
+   "license": "NA"
+  },
+  {
+   "id": "_IQ08vPFc7I",
+   "title": "Is Ralph multi-agent?",
+   "duration": 72,
+   "views": 137,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=_IQ08vPFc7I",
+   "date": "20260505",
+   "license": "NA"
+  },
+  {
+   "id": "V0nSeMcITqE",
+   "title": "What's next for OpenHands?",
+   "duration": 256,
+   "views": 362,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=V0nSeMcITqE",
+   "date": "20260504",
+   "license": "NA"
+  },
+  {
+   "id": "ZwKfvRyfOlw",
+   "title": "Using AI models to determine agent quality",
+   "duration": 294,
+   "views": 87,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ZwKfvRyfOlw",
+   "date": "20260504",
+   "license": "NA"
+  },
+  {
+   "id": "C0kz3ps8RSk",
+   "title": "The Two Worlds of AI Coding",
+   "duration": 110,
+   "views": 179,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=C0kz3ps8RSk",
+   "date": "20260501",
+   "license": "NA"
+  },
+  {
+   "id": "J3PU_Nm0f7w",
+   "title": "OpenHands GUI Update: New features",
+   "duration": 214,
+   "views": 654,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=J3PU_Nm0f7w",
+   "date": "20260501",
+   "license": "NA"
+  },
+  {
+   "id": "RQJGBQsipQE",
+   "title": "OpenHands Roadmap: What\u2019s coming next",
+   "duration": 302,
+   "views": 318,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=RQJGBQsipQE",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "5YdYv6XJWxY",
+   "title": "Ralph Wiggum: The next Swiss Army Knife of AI Coding?",
+   "duration": 205,
+   "views": 133,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=5YdYv6XJWxY",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "CSGoTBzEiPI",
+   "title": "What agent should I use to do the Ralph Wiggum technique?",
+   "duration": 121,
+   "views": 44,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=CSGoTBzEiPI",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "W29N0Ad7yUY",
+   "title": "How do you handle Context Management with an agent?",
+   "duration": 166,
+   "views": 66,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=W29N0Ad7yUY",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "snVmEhWYkAI",
+   "title": "What can Ralph teach us?",
+   "duration": 95,
+   "views": 33,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=snVmEhWYkAI",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "H8wIK1_0zNU",
+   "title": "We Removed 30,000 Lines of Code... Here's What Happened",
+   "duration": 2456,
+   "views": 167,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=H8wIK1_0zNU",
+   "date": "20260428",
+   "license": "NA"
+  },
+  {
+   "id": "E1JhEyWic0Y",
+   "title": "What are the risks of running autonomous AI?",
+   "duration": 56,
+   "views": 168,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=E1JhEyWic0Y",
+   "date": "20260423",
+   "license": "NA"
+  },
+  {
+   "id": "zV1PYhuZwFY",
+   "title": "Trusting Legacy Codebase Migrations: the Snapshot Tests Strategy",
+   "duration": 146,
+   "views": 171,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=zV1PYhuZwFY",
+   "date": "20260417",
+   "license": "NA"
+  },
+  {
+   "id": "vQZ20Xiy8fE",
+   "title": "The Ralph Wiggum Phenomenon: This \u201cMeme\u201d Is Changing How We Use AI Agents",
+   "duration": 255,
+   "views": 237,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=vQZ20Xiy8fE",
+   "date": "20260417",
+   "license": "NA"
+  },
+  {
+   "id": "NNqhqlk87TY",
+   "title": "Exploring concrete scoring for the critic agent (Full)",
+   "duration": 204,
+   "views": 50,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=NNqhqlk87TY",
+   "date": "20260417",
+   "license": "NA"
+  },
+  {
+   "id": "ydfs36Ol1tA",
+   "title": "Intro to the Ralph Wiggum Method: \"Just enough orchestration\"",
+   "duration": 182,
+   "views": 97,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ydfs36Ol1tA",
+   "date": "20260415",
+   "license": "NA"
+  },
+  {
+   "id": "F7XIZzlU1KQ",
+   "title": "Exploring concrete scoring for the critic agent (Part 2)",
+   "duration": 103,
+   "views": 47,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=F7XIZzlU1KQ",
+   "date": "20260415",
+   "license": "NA"
+  },
+  {
+   "id": "IJhCmXi34JM",
+   "title": "Exploring concrete scoring for the Critic agent (Part 1)",
+   "duration": 101,
+   "views": 44,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=IJhCmXi34JM",
+   "date": "20260414",
+   "license": "NA"
+  },
+  {
+   "id": "nW-dXKPQR4o",
+   "title": "Discussion about Ralph.md",
+   "duration": 182.0,
+   "views": null,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=nW-dXKPQR4o"
+  },
+  {
+   "id": "jQ2ft0RKhsY",
+   "title": "How to Get Started with OpenHands (CLI, Cloud & SDK Explained)",
+   "duration": 1429,
+   "views": 5045,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=jQ2ft0RKhsY",
+   "date": "20260410",
+   "license": "NA"
+  },
+  {
+   "id": "H9qp7gHwJsQ",
+   "title": "What OpenHands Needs Most Right Now (Community Call Breakdown)",
+   "duration": 1986,
+   "views": 100,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=H9qp7gHwJsQ",
+   "date": "20260410",
+   "license": "NA"
+  },
+  {
+   "id": "H4Y_GD7AiJU",
+   "title": "What would an optimized implementation of OpenHands look like?",
+   "duration": 93,
+   "views": 106,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=H4Y_GD7AiJU",
+   "date": "20260408",
+   "license": "NA"
+  },
+  {
+   "id": "zsnigI_rKUA",
+   "title": "Why linking migrated code with comments is important",
+   "duration": 118,
+   "views": 100,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=zsnigI_rKUA",
+   "date": "20260408",
+   "license": "NA"
+  },
+  {
+   "id": "J6gTJPcck1U",
+   "title": "How important is benchmarking and testing different LLMs?",
+   "duration": 100,
+   "views": 198,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=J6gTJPcck1U",
+   "date": "20260407",
+   "license": "NA"
+  },
+  {
+   "id": "5dO6L75oF5o",
+   "title": "Ralph Wiggum Presentation",
+   "duration": 232,
+   "views": 100,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=5dO6L75oF5o",
+   "date": "20260407",
+   "license": "NA"
+  },
+  {
+   "id": "Z0Rc6UGb098",
+   "title": "Engineering the COBOL Workflow (Full)",
+   "duration": 183,
+   "views": 162,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Z0Rc6UGb098",
+   "date": "20260403",
+   "license": "NA"
+  },
+  {
+   "id": "WDeZZah9aqM",
+   "title": "Is AI replacing junior developers?",
+   "duration": 66,
+   "views": 1566,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=WDeZZah9aqM",
+   "date": "20260403",
+   "license": "NA"
+  },
+  {
+   "id": "TsGG2dtUYf4",
+   "title": "Open Hands Cloud Updates",
+   "duration": 72,
+   "views": 63,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=TsGG2dtUYf4",
+   "date": "20260402",
+   "license": "NA"
+  },
+  {
+   "id": "raSOOE2prY0",
+   "title": "Engineering the COBOL Workflow (Part 2)",
+   "duration": 68,
+   "views": 46,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=raSOOE2prY0",
+   "date": "20260402",
+   "license": "NA"
+  },
+  {
+   "id": "Cck0vVSdGhM",
+   "title": "Where is AI in software development headed?",
+   "duration": 98,
+   "views": 115,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Cck0vVSdGhM",
+   "date": "20260331",
+   "license": "NA"
+  },
+  {
+   "id": "y60vYnBAvBI",
+   "title": "Stop Shipping Slop: The Future of AI Code Is Quality",
+   "duration": 3422,
+   "views": 1016,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=y60vYnBAvBI",
+   "date": "20260331",
+   "license": "NA"
+  },
+  {
+   "id": "UCd5CNOvX-8",
+   "title": "Engineering the COBOL Workflow (Part 1)",
+   "duration": 116,
+   "views": 62,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=UCd5CNOvX-8",
+   "date": "20260331",
+   "license": "NA"
+  },
+  {
+   "id": "0cvtEbq1VwY",
+   "title": "Configuring the OpenHands CLI",
+   "duration": 156,
+   "views": 578,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=0cvtEbq1VwY",
+   "date": "20260330",
+   "license": "NA"
+  },
+  {
+   "id": "k-L0z97QWHs",
+   "title": "Your AI Agent Skills Might Be Hurting Performance?! And, how to fix it!",
+   "duration": 2291,
+   "views": 311,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=k-L0z97QWHs",
+   "date": "20260327",
+   "license": "NA"
+  },
+  {
+   "id": "sk4adNQjS_g",
+   "title": "Quick intro to Ralph",
+   "duration": 47,
+   "views": 196,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=sk4adNQjS_g",
+   "date": "20260327",
+   "license": "NA"
+  },
+  {
+   "id": "RXFbC1s6lyA",
+   "title": "How is OpenHands different from other tools?",
+   "duration": 130,
+   "views": 4268,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=RXFbC1s6lyA",
+   "date": "20260326",
+   "license": "NA"
+  },
+  {
+   "id": "sZp1ZJwTbwg",
+   "title": "What new developments are on the roadmap for OpenHands?",
+   "duration": 93,
+   "views": 152,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=sZp1ZJwTbwg",
+   "date": "20260324",
+   "license": "NA"
+  },
+  {
+   "id": "G_Q8JWfX9IQ",
+   "title": "Why the two-phase approach works (Full)",
+   "duration": 159,
+   "views": 185,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=G_Q8JWfX9IQ",
+   "date": "20260319",
+   "license": "NA"
+  },
+  {
+   "id": "hGm1XVwwIVk",
+   "title": "OpenHands Roadmap Reveal: Plugins, Sub-Agents, Verification, and More",
+   "duration": 2474,
+   "views": 608,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=hGm1XVwwIVk",
+   "date": "20260316",
+   "license": "NA"
+  },
+  {
+   "id": "J3XE2aPt_ow",
+   "title": "How important is it to have a human in the CVE fix process?",
+   "duration": 43,
+   "views": 280,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=J3XE2aPt_ow",
+   "date": "20260310",
+   "license": "NA"
+  },
+  {
+   "id": "Qqo6Gs9ty3w",
+   "title": "Why the two-phase approach works (Part 2)",
+   "duration": 97,
+   "views": 221,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Qqo6Gs9ty3w",
+   "date": "20260309",
+   "license": "NA"
+  },
+  {
+   "id": "NV_NQ-N_M9M",
+   "title": "How does OpenHands resolve security problems?",
+   "duration": 169,
+   "views": 323,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=NV_NQ-N_M9M",
+   "date": "20260303",
+   "license": "NA"
+  },
+  {
+   "id": "G0J6vVFl3JE",
+   "title": "Why the two-phase approach works (Part 1)",
+   "duration": 63,
+   "views": 161,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=G0J6vVFl3JE",
+   "date": "20260302",
+   "license": "NA"
+  },
+  {
+   "id": "f8j58qNvMe0",
+   "title": "MiniMax Is Now Free on OpenHands + Benchmark Fixes & AI Dev Workstation Demo",
+   "duration": 1559,
+   "views": 980,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=f8j58qNvMe0",
+   "date": "20260227",
+   "license": "NA"
+  },
+  {
+   "id": "5syeNjq2ZCU",
+   "title": "The Ralph Wiggum Phenomenon: Evolving Agentic Coding",
+   "duration": 3323,
+   "views": 620,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=5syeNjq2ZCU",
+   "date": "20260227",
+   "license": "NA"
+  },
+  {
+   "id": "3r2_vHRlIjQ",
+   "title": "How does OpenHands account for security while automating?",
+   "duration": 153,
+   "views": 89,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=3r2_vHRlIjQ",
+   "date": "20260226",
+   "license": "NA"
+  },
+  {
+   "id": "ET2OKt8xNwQ",
+   "title": "How does \"The Loop\" work?",
+   "duration": 80,
+   "views": 238,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ET2OKt8xNwQ",
+   "date": "20260225",
+   "license": "NA"
+  },
+  {
+   "id": "HPi8g2vRFpg",
+   "title": "How does OpenHands help ease bottlenecks in the software dev life cycle?",
+   "duration": 138,
+   "views": 115,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=HPi8g2vRFpg",
+   "date": "20260224",
+   "license": "NA"
+  },
+  {
+   "id": "feZUOys4Aik",
+   "title": "The two-phase solution to the COBOL problem",
+   "duration": 106,
+   "views": 92,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=feZUOys4Aik",
+   "date": "20260223",
+   "license": "NA"
+  },
+  {
+   "id": "ovX-zk8eC_E",
+   "title": "OpenHands Vulnerability Fixer - Dispatch Agents to Secure Your Code",
+   "duration": 217,
+   "views": 1476,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ovX-zk8eC_E",
+   "date": "20260223",
+   "license": "NA"
+  },
+  {
+   "id": "XDIe6EEoRvI",
+   "title": "How do you keep AI on track when doing refactors?",
+   "duration": 90,
+   "views": 93,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=XDIe6EEoRvI",
+   "date": "20260219",
+   "license": "NA"
+  },
+  {
+   "id": "FRqzNYlPNb8",
+   "title": "How OpenHands solves the COBOL problem (Part 2)",
+   "duration": 49,
+   "views": 77,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=FRqzNYlPNb8",
+   "date": "20260218",
+   "license": "NA"
+  },
+  {
+   "id": "7xjHHe0P3W4",
+   "title": "How does OpenHands look at using AI to refactor codebases?",
+   "duration": 75,
+   "views": 1003,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=7xjHHe0P3W4",
+   "date": "20260217",
+   "license": "NA"
+  },
+  {
+   "id": "J_dmfpCGZa4",
+   "title": "How OpenHands solves the COBOL problem (Part 1)",
+   "duration": 57,
+   "views": 113,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=J_dmfpCGZa4",
+   "date": "20260216",
+   "license": "NA"
+  },
+  {
+   "id": "bLL3Q5P1Vn4",
+   "title": "Where OpenHands is best fit",
+   "duration": 88,
+   "views": 2049,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=bLL3Q5P1Vn4",
+   "date": "20260212",
+   "license": "NA"
+  },
+  {
+   "id": "GoSFDD07hHs",
+   "title": "Exploring the COBOL problem (Full)",
+   "duration": 248,
+   "views": 943,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=GoSFDD07hHs",
+   "date": "20260211",
+   "license": "NA"
+  },
+  {
+   "id": "m3IyhQFQU5A",
+   "title": "How was OpenHands founded?",
+   "duration": 81,
+   "views": 1026,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=m3IyhQFQU5A",
+   "date": "20260210",
+   "license": "NA"
+  },
+  {
+   "id": "FUWN-1jfQ4Y",
+   "title": "Exploring the COBOL problem (Part 2)",
+   "duration": 91,
+   "views": 117,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=FUWN-1jfQ4Y",
+   "date": "20260209",
+   "license": "NA"
+  },
+  {
+   "id": "NKPwFRu_CgA",
+   "title": "OpenHands Index Explained in Community Call plus AMD and Share Convos",
+   "duration": 1926,
+   "views": 218,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=NKPwFRu_CgA",
+   "date": "20260206",
+   "license": "NA"
+  },
+  {
+   "id": "29Efj7jwH8Q",
+   "title": "Introducing OpenHands' CEO Robert Brennan",
+   "duration": 26,
+   "views": 249,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=29Efj7jwH8Q",
+   "date": "20260204",
+   "license": "NA"
+  },
+  {
+   "id": "qVbgw-YGuNg",
+   "title": "Exploring the COBOL problem (Part 1)",
+   "duration": 157,
+   "views": 221,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=qVbgw-YGuNg",
+   "date": "20260203",
+   "license": "NA"
+  },
+  {
+   "id": "6XXJ7crUIgA",
+   "title": "What is OpenHands?",
+   "duration": 29,
+   "views": 3234,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=6XXJ7crUIgA",
+   "date": "20260202",
+   "license": "NA"
+  },
+  {
+   "id": "gMQ4JRdsyy0",
+   "title": "The OpenHands Index: Benchmarking LLMs as Software Engineering Agents",
+   "duration": 284,
+   "views": 1474,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=gMQ4JRdsyy0",
+   "date": "20260129",
+   "license": "NA"
+  },
+  {
+   "id": "JgzwwLP8jL8",
+   "title": "OpenHands Critic is Here to Roast Your Code (CLI Demo + Ralph Wiggum + Community Updates)",
+   "duration": 1450,
+   "views": 432,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=JgzwwLP8jL8",
+   "date": "20260123",
+   "license": "NA"
+  },
+  {
+   "id": "4LUtguF160A",
+   "title": "Refactoring COBOL to Java with Agentic AI  with an Iterative Refinement Workflow",
+   "duration": 3404,
+   "views": 1259,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=4LUtguF160A",
+   "date": "20260123",
+   "license": "NA"
+  },
+  {
+   "id": "tzgXm8WkAiY",
+   "title": "OpenHands CLI Update: Cloud Sync, Web Mode, Real-Time Events",
+   "duration": 429,
+   "views": 228,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=tzgXm8WkAiY",
+   "date": "20260115",
+   "license": "NA"
+  },
+  {
+   "id": "IAAQYygnfSI",
+   "title": "OpenHands CLI Gets a Major Glow-Up (Web UI, Cloud Sync & More)",
+   "duration": 1363,
+   "views": 848,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=IAAQYygnfSI",
+   "date": "20260109",
+   "license": "NA"
+  },
+  {
+   "id": "SjAJYB0Nrl4",
+   "title": "A New OpenHands CLI: Experimental UI and Power Features",
+   "duration": 298,
+   "views": 1895,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=SjAJYB0Nrl4",
+   "date": "20251229",
+   "license": "NA"
+  },
+  {
+   "id": "DtYBYt2w43g",
+   "title": "OpenHands V1 Lands: Faster Agents, New SDK, What\u2019s Next",
+   "duration": 169,
+   "views": 762,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=DtYBYt2w43g",
+   "date": "20251226",
+   "license": "NA"
+  },
+  {
+   "id": "ItnMgC5sc40",
+   "title": "OpenHands x Toad Partnership: Agent Client Protocol (ACP)",
+   "duration": 170,
+   "views": 465,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ItnMgC5sc40",
+   "date": "20251223",
+   "license": "NA"
+  },
+  {
+   "id": "WbF5BvGYWP4",
+   "title": "OpenHands migrates COBOL to Java and Toad Integration!",
+   "duration": 2840,
+   "views": 179,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=WbF5BvGYWP4",
+   "date": "20251219",
+   "license": "NA"
+  },
+  {
+   "id": "jVJ79HfWIRM",
+   "title": "Running OpenHands with ACP, AMD, & More",
+   "duration": 1296,
+   "views": 285,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=jVJ79HfWIRM",
+   "date": "20251205",
+   "license": "NA"
+  },
+  {
+   "id": "MKrPPa6lE0s",
+   "title": "Automating Massive Refactors with OpenHands Agents Working in Parallel",
+   "duration": 3301,
+   "views": 1795,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=MKrPPa6lE0s",
+   "date": "20251205",
+   "license": "NA"
+  },
+  {
+   "id": "g627Apd9zvY",
+   "title": "Can AI Do Test-Driven Development? With Emily Bache",
+   "duration": 1516,
+   "views": 1265,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=g627Apd9zvY",
+   "date": "20251117",
+   "license": "NA"
+  },
+  {
+   "id": "PGiS__JFq5c",
+   "title": "OpenHands Free, Open Source Agent SDK is HERE",
+   "duration": 1565,
+   "views": 995,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=PGiS__JFq5c",
+   "date": "20251114",
+   "license": "NA"
+  },
+  {
+   "id": "5ZsBbbtQCrA",
+   "title": "Debugging Production Issues with AI Agents",
+   "duration": 787,
+   "views": 2354,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=5ZsBbbtQCrA",
+   "date": "20251110",
+   "license": "NA"
+  },
+  {
+   "id": "4ukm7XK27ms",
+   "title": "Using a Local Agentic Coding LLM through Slack or GitHub with OpenHands",
+   "duration": 200,
+   "views": 2601,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=4ukm7XK27ms",
+   "date": "20251105",
+   "license": "NA"
+  },
+  {
+   "id": "Gu3fJ6czzno",
+   "title": "You Ship, We Listen: OpenHands Community Q&A",
+   "duration": 3035,
+   "views": 112,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Gu3fJ6czzno",
+   "date": "20251031",
+   "license": "NA"
+  },
+  {
+   "id": "ztn-JFS8AAA",
+   "title": "Goodbye V0 CLI. Hello V1.",
+   "duration": 823,
+   "views": 251,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ztn-JFS8AAA",
+   "date": "20251031",
+   "license": "NA"
+  },
+  {
+   "id": "vDv1AQW3cfY",
+   "title": "OpenHands + MCPs in Action: Figma and Context7 Demos",
+   "duration": 2425,
+   "views": 941,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=vDv1AQW3cfY",
+   "date": "20251020",
+   "license": "NA"
+  },
+  {
+   "id": "dOK_Xa5-MQI",
+   "title": "NVIDIA DGX Spark is available with OpenHands \ud83e\udd29",
+   "duration": 1583,
+   "views": 309,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=dOK_Xa5-MQI",
+   "date": "20251017",
+   "license": "NA"
+  },
+  {
+   "id": "Kzvy-FGHcYk",
+   "title": "OpenHands v1 CLI Is Here! Setup with WSL in 90 seconds",
+   "duration": 96,
+   "views": 677,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Kzvy-FGHcYk",
+   "date": "20251014",
+   "license": "NA"
+  },
+  {
+   "id": "z13qTHR3tS0",
+   "title": "OpenHands Running Local LMs on the DGX Spark",
+   "duration": 38,
+   "views": 649,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=z13qTHR3tS0",
+   "date": "20251014",
+   "license": "NA"
+  },
+  {
+   "id": "ToROEkRwLU8",
+   "title": "Claude 4.5 Arrives! OpenHands Updates, SDK Progress & Hackathon Highlights (Oct 2025",
+   "duration": 754,
+   "views": 276,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=ToROEkRwLU8",
+   "date": "20251004",
+   "license": "NA"
+  },
+  {
+   "id": "6TDEkLvDkqg",
+   "title": "OpenHands Community Call - September 18th",
+   "duration": 1102,
+   "views": 210,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=6TDEkLvDkqg",
+   "date": "20250919",
+   "license": "NA"
+  },
+  {
+   "id": "6lk5_rBE6Qo",
+   "title": "OpenHands v1: Our Biggest Release Yet (Coming Soon)",
+   "duration": 639,
+   "views": 654,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=6lk5_rBE6Qo",
+   "date": "20250916",
+   "license": "NA"
+  },
+  {
+   "id": "NcJYr1VaIXI",
+   "title": "Prompt Injection Security for AI Agents Webinar by OpenHands",
+   "duration": 1922,
+   "views": 306,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=NcJYr1VaIXI",
+   "date": "20250912",
+   "license": "NA"
+  },
+  {
+   "id": "Y_8vYxept4A",
+   "title": "How to use the OpenHands CLI with your OpenHands Cloud LLM Key",
+   "duration": 214,
+   "views": 1286,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Y_8vYxept4A",
+   "date": "20250908",
+   "license": "NA"
+  },
+  {
+   "id": "Xn-HiWYvLck",
+   "title": "OpenHands Community Call - September 5, 2025",
+   "duration": 1472,
+   "views": 278,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Xn-HiWYvLck",
+   "date": "20250905",
+   "license": "NA"
+  },
+  {
+   "id": "UMixeoja4-w",
+   "title": "OpenHands Community Call - August 22, 2025",
+   "duration": 1628,
+   "views": 155,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=UMixeoja4-w",
+   "date": "20250822",
+   "license": "NA"
+  },
+  {
+   "id": "Kp40Qqz4ZPw",
+   "title": "Run OpenHands Locally on Windows 11 Home | Full Setup with Docker, UV & CLI",
+   "duration": 453,
+   "views": 6284,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=Kp40Qqz4ZPw",
+   "date": "20250820",
+   "license": "NA"
+  },
+  {
+   "id": "QlK71nSsGH8",
+   "title": "Implementing Figma Designs with OpenHands CLI",
+   "duration": 193,
+   "views": 526,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=QlK71nSsGH8",
+   "date": "20250818",
+   "license": "NA"
+  },
+  {
+   "id": "rtvrKlUGH2c",
+   "title": "Fixing Real Issues with OpenHands: Live from the Backlog",
+   "duration": 2768,
+   "views": 535,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=rtvrKlUGH2c",
+   "date": "20250812",
+   "license": "NA"
+  },
+  {
+   "id": "jMyTCXpEz10",
+   "title": "OpenHands Visual Debugging",
+   "duration": 228,
+   "views": 1155,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=jMyTCXpEz10",
+   "date": "20250721",
+   "license": "NA"
+  },
+  {
+   "id": "CLpwray59-k",
+   "title": "How We Build OpenHands with OpenHands (Webinar)",
+   "duration": 3444,
+   "views": 2053,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=CLpwray59-k",
+   "date": "20250717",
+   "license": "NA"
+  },
+  {
+   "id": "UoxjPQ2dvK4",
+   "title": "What will software development look like in 2026?",
+   "duration": 2568,
+   "views": 3011,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=UoxjPQ2dvK4",
+   "date": "20250630",
+   "license": "NA"
+  },
+  {
+   "id": "hbloGmfZsJ4",
+   "title": "OpenHands Slack Integration",
+   "duration": 227,
+   "views": 957,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=hbloGmfZsJ4",
+   "date": "20250625",
+   "license": "NA"
+  },
+  {
+   "id": "_rltvykJV4E",
+   "title": "AI Coding Agents: What Works and What Doesn't (Webinar)",
+   "duration": 2714,
+   "views": 1652,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=_rltvykJV4E",
+   "date": "20250624",
+   "license": "NA"
+  },
+  {
+   "id": "PfvIx4y8h7w",
+   "title": "OpenHands CLI Demo",
+   "duration": 118,
+   "views": 9509,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=PfvIx4y8h7w",
+   "date": "20250617",
+   "license": "NA"
+  },
+  {
+   "id": "FYMy-_8LCTk",
+   "title": "Researching and Implementing a Web Site w/ OpenHands",
+   "duration": 330,
+   "views": 798,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=FYMy-_8LCTk",
+   "date": "20250605",
+   "license": "NA"
+  },
+  {
+   "id": "uc2P-7E0ZwE",
+   "title": "VersaBench and OpenHands Versa: Building More Versatile Agents",
+   "duration": 281,
+   "views": 695,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=uc2P-7E0ZwE",
+   "date": "20250605",
+   "license": "NA"
+  },
+  {
+   "id": "oV9tAkS2Xic",
+   "title": "OpenHands + Devstral = A Fully Local Coding Agent",
+   "duration": 489,
+   "views": 33688,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=oV9tAkS2Xic",
+   "date": "20250521",
+   "license": "NA"
+  },
+  {
+   "id": "5JoYrjWIoMI",
+   "title": "AI Coding Your First Product with Bethany Crystal",
+   "duration": 2000,
+   "views": 563,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=5JoYrjWIoMI",
+   "date": "20250505",
+   "license": "NA"
+  },
+  {
+   "id": "oB4JR98KRAA",
+   "title": "OpenHands: Open-source AI Software Development Agents",
+   "duration": 133,
+   "views": 36324,
+   "tab": "videos",
+   "url": "https://www.youtube.com/watch?v=oB4JR98KRAA",
+   "date": "20250326",
+   "license": "NA"
+  },
+  {
+   "id": "JWtXRYO0jB4",
+   "title": "OpenHand Software Development Agent Meetup, March 2025",
+   "duration": 7401,
+   "views": 668,
+   "tab": "streams",
+   "url": "https://www.youtube.com/watch?v=JWtXRYO0jB4",
+   "date": "20250327",
+   "license": "NA"
+  },
+  {
+   "id": "aHc8vsdbY7c",
+   "title": "How does the incremental method work?",
+   "duration": 91,
+   "views": 293,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=aHc8vsdbY7c",
+   "date": "20260504",
+   "license": "NA"
+  },
+  {
+   "id": "tWwiZnW2McI",
+   "title": "Testing strategy and increments",
+   "duration": 72,
+   "views": 309,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=tWwiZnW2McI",
+   "date": "20260501",
+   "license": "NA"
+  },
+  {
+   "id": "-3mgj-wq1Is",
+   "title": "Who's Ray Myers and what he's up to?",
+   "duration": 28,
+   "views": 671,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=-3mgj-wq1Is",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "vNQZPBQXMm8",
+   "title": "Are there certain languages better suited for AI?",
+   "duration": 102,
+   "views": 688,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=vNQZPBQXMm8",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "z8bUDAua5Eo",
+   "title": "Where is software dev heading?",
+   "duration": 113,
+   "views": 1018,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=z8bUDAua5Eo",
+   "date": "20260430",
+   "license": "NA"
+  },
+  {
+   "id": "B2rqmGCs4Dg",
+   "title": "Preparing for large-scale refactoring",
+   "duration": 37,
+   "views": 1477,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=B2rqmGCs4Dg",
+   "date": "20260423",
+   "license": "NA"
+  },
+  {
+   "id": "6_Smtxb_afw",
+   "title": "Ray Myers: \"Velocity Is Dead.\"",
+   "duration": 31,
+   "views": 1412,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=6_Smtxb_afw",
+   "date": "20260417",
+   "license": "NA"
+  },
+  {
+   "id": "KTXKNHIJyzU",
+   "title": "The Ralph Wiggum Phenomenon",
+   "duration": 23,
+   "views": 1017,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=KTXKNHIJyzU",
+   "date": "20260415",
+   "license": "NA"
+  },
+  {
+   "id": "XDsd8i8bPds",
+   "title": "What would an optimized implementation of OpenHands look like?",
+   "duration": 83,
+   "views": 121,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=XDsd8i8bPds",
+   "date": "20260408",
+   "license": "NA"
+  },
+  {
+   "id": "cEugXkov4IA",
+   "title": "How important is benchmarking and testing different LLMs?",
+   "duration": 98,
+   "views": 736,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=cEugXkov4IA",
+   "date": "20260407",
+   "license": "NA"
+  },
+  {
+   "id": "zuLllcoSzLU",
+   "title": "Is AI replacing junior developers?",
+   "duration": 63,
+   "views": 1269,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=zuLllcoSzLU",
+   "date": "20260403",
+   "license": "NA"
+  },
+  {
+   "id": "tgRalEcgX24",
+   "title": "Where is AI in software development headed?",
+   "duration": 80,
+   "views": 458,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=tgRalEcgX24",
+   "date": "20260331",
+   "license": "NA"
+  },
+  {
+   "id": "CyGtqqzc1Ow",
+   "title": "How is OpenHands different from other tools?",
+   "duration": 130,
+   "views": 1898,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=CyGtqqzc1Ow",
+   "date": "20260326",
+   "license": "NA"
+  },
+  {
+   "id": "8hXqDnR4jXU",
+   "title": "What new developments are on the roadmap for OpenHands?",
+   "duration": 90,
+   "views": 406,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=8hXqDnR4jXU",
+   "date": "20260326",
+   "license": "NA"
+  },
+  {
+   "id": "EHO5rzHt1a4",
+   "title": "How important is it to have a human in the CVE fix process?",
+   "duration": 42,
+   "views": 1085,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=EHO5rzHt1a4",
+   "date": "20260310",
+   "license": "NA"
+  },
+  {
+   "id": "4CKeTWjUobU",
+   "title": "How does OpenHands resolve security problems? (Part 2)",
+   "duration": 57,
+   "views": 287,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=4CKeTWjUobU",
+   "date": "20260304",
+   "license": "NA"
+  },
+  {
+   "id": "zacr_wKgIwg",
+   "title": "How does OpenHands resolve security problems? (Part 1)",
+   "duration": 54,
+   "views": 345,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=zacr_wKgIwg",
+   "date": "20260304",
+   "license": "NA"
+  },
+  {
+   "id": "9tuGbS0sZtI",
+   "title": "How does OpenHands account for security while automating?",
+   "duration": 88,
+   "views": 1001,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=9tuGbS0sZtI",
+   "date": "20260226",
+   "license": "NA"
+  },
+  {
+   "id": "Lnz14S3zEcs",
+   "title": "How does OpenHands help ease bottlenecks in the software dev life cycle?",
+   "duration": 84,
+   "views": 917,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=Lnz14S3zEcs",
+   "date": "20260224",
+   "license": "NA"
+  },
+  {
+   "id": "o0_BmRhW5e8",
+   "title": "How do you keep AI on track when doing refactors?",
+   "duration": 80,
+   "views": 890,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=o0_BmRhW5e8",
+   "date": "20260219",
+   "license": "NA"
+  },
+  {
+   "id": "enJbefPdg4U",
+   "title": "How does OpenHands look at using AI to refactor codebases?",
+   "duration": 70,
+   "views": 1097,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=enJbefPdg4U",
+   "date": "20260217",
+   "license": "NA"
+  },
+  {
+   "id": "9SpKIDM6IaU",
+   "title": "Where OpenHands is best fit",
+   "duration": 43,
+   "views": 680,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=9SpKIDM6IaU",
+   "date": "20260212",
+   "license": "NA"
+  },
+  {
+   "id": "ie5WF-Giub0",
+   "title": "How was OpenHands founded?",
+   "duration": 81,
+   "views": 108,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=ie5WF-Giub0",
+   "date": "20260210",
+   "license": "NA"
+  },
+  {
+   "id": "zTjane8WyPM",
+   "title": "Introducing OpenHands' CEO  Robert Brennan",
+   "duration": 26,
+   "views": 1330,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=zTjane8WyPM",
+   "date": "20260204",
+   "license": "NA"
+  },
+  {
+   "id": "cvbfx84Omrw",
+   "title": "What is OpenHands?",
+   "duration": 29,
+   "views": 7101,
+   "tab": "shorts",
+   "url": "https://www.youtube.com/watch?v=cvbfx84Omrw",
+   "date": "20260202",
+   "license": "NA"
+  }
+ ]
+}
