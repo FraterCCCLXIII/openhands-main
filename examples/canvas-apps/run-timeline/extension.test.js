@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, ageShort, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
+import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, activePreset, ageShort, applyNav, DEFAULT_NAV, displayTags, groupByWorkspace, tagFacets, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
 
 const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
 const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
@@ -222,6 +222,81 @@ describe("info note", () => {
   });
 });
 
+describe("conversation list sorting and filtering", () => {
+  const now = Date.parse("2026-10-29T12:00:00Z");
+  const c = (id, over = {}) => ({ id, title: id, created_at: "2026-10-01T00:00:00Z", updated_at: "2026-10-28T00:00:00Z", execution_status: "finished", tags: {}, ...over });
+  const list = [
+    c("old", { updated_at: "2026-09-01T00:00:00Z", created_at: "2026-10-10T00:00:00Z", execution_status: "paused" }),
+    c("new", { updated_at: "2026-10-28T00:00:00Z", created_at: "2026-10-02T00:00:00Z", tags: { workspace: "/work/web", team: "growth", clientsource: "agentcanvas" } }),
+    c("auto", { updated_at: "2026-10-27T00:00:00Z", created_at: "2026-10-05T00:00:00Z", tags: { automationname: "nightly", workspace: "/work/api" } }),
+  ];
+  const ids = (nav, q) => applyNav(list, { ...DEFAULT_NAV, ...nav }, q, now).rows.map((x) => x.id);
+
+  it("sorts by updated or created, newest first", () => {
+    expect(ids({ sort: "updated" })).toEqual(["new", "auto", "old"]);
+    expect(ids({ sort: "created" })).toEqual(["old", "auto", "new"]);
+  });
+
+  it("filters to active threads, hides older ones by cutoff, and filters automations", () => {
+    expect(ids({ scope: "relevant" })).toEqual(["new", "auto"]);
+    expect(ids({ showOlder: false, cutoff: "7d" })).toEqual(["new", "auto"]);
+    expect(ids({ automations: "hide-automations" })).toEqual(["new", "old"]);
+    expect(ids({ automations: "only-automations" })).toEqual(["auto"]);
+  });
+
+  it("filters by tag, ignoring machine tags, and by search text", () => {
+    expect(displayTags(list[1].tags)).toEqual([["team", "growth"]]);
+    expect(tagFacets(list)).toEqual(["team=growth"]);
+    expect(ids({ tags: ["team=growth"] })).toEqual(["new"]);
+    expect(ids({}, "AUT")).toEqual(["auto"]);
+  });
+
+  it("groups by workspace folder with unassigned last, and reads presets", () => {
+    const groups = groupByWorkspace(applyNav(list, DEFAULT_NAV, "", now).rows);
+    expect(groups.map((g) => g.label)).toEqual(["web", "api", "No workspace"]);
+    expect(activePreset(DEFAULT_NAV).id).toBe("recent");
+    expect(activePreset({ ...DEFAULT_NAV, organize: "grouped" }).id).toBe("workspace");
+    expect(activePreset({ ...DEFAULT_NAV, sort: "created" })).toBeNull();
+  });
+});
+
+describe("conversation list menu", () => {
+  it("opens the view menu and applies a sort that survives re-rendering", async () => {
+    let mount;
+    const c = document.createElement("div");
+    document.body.append(c);
+    window.localStorage.clear();
+    const items = [{ id: "a", title: "Alpha", created_at: "2026-10-20T00:00:00Z", updated_at: "2026-10-28T00:00:00Z", execution_status: "finished" }, { id: "b", title: "Beta", created_at: "2026-10-25T00:00:00Z", updated_at: "2026-10-21T00:00:00Z", execution_status: "finished" }];
+    activate({ apiVersion: "1", navigate() {}, registerPage: (_, m) => { mount = m; return () => {}; }, agentServer: { request: vi.fn(({ path }) => Promise.resolve(path.startsWith("/api/conversations/search") ? { items } : { items: [] })) } });
+    mount({ container: c });
+    await vi.waitFor(() => expect(c.querySelectorAll('[data-testid="rt-conv"]')).toHaveLength(2));
+    expect([...c.querySelectorAll('[data-testid="rt-conv"] .nm')].map((n) => n.textContent)).toEqual(["Alpha", "Beta"]);
+
+    c.querySelector('[data-testid="rt-nav-menu-toggle"]').click();
+    [...c.querySelectorAll('[data-testid="rt-nav-menu"] .mrow')].find((r) => r.textContent.includes("Created")).click();
+    expect([...c.querySelectorAll('[data-testid="rt-conv"] .nm')].map((n) => n.textContent)).toEqual(["Beta", "Alpha"]);
+    expect(JSON.parse(window.localStorage.getItem("run-timeline:nav")).sort).toBe("created");
+    c.remove();
+  });
+});
+
+describe("about page", () => {
+  it("is one click from the conversation list and leaves for the timeline when one is chosen", async () => {
+    let mount;
+    const c = document.createElement("div");
+    document.body.append(c);
+    activate({ apiVersion: "1", navigate() {}, registerPage: (_, m) => { mount = m; return () => {}; }, agentServer: { request: vi.fn(({ path }) => Promise.resolve(path.startsWith("/api/conversations/search") ? { items: [{ id: "c1", title: "Fix build", execution_status: "finished", updated_at: "2026-10-29T10:05:00Z" }] } : { items: [] })) } });
+    mount({ container: c });
+    await vi.waitFor(() => expect(c.querySelectorAll('[data-testid="rt-conv"]')).toHaveLength(1));
+    [...c.querySelectorAll(".linkbtn")].find((b) => b.textContent === "About").click();
+    expect(c.querySelector('[data-testid="rt-about"]').textContent).toContain("Reading the waterfall");
+    expect(c.querySelector('[data-testid="rt-about"]').textContent).toContain("Runward");
+    c.querySelector('[data-testid="rt-conv"]').click();
+    await vi.waitFor(() => expect(c.querySelector('[data-testid="rt-about"]')).toBeNull());
+    c.remove();
+  });
+});
+
 describe("page", () => {
   let container;
   beforeEach(() => { container = document.createElement("div"); document.body.append(container); });
@@ -264,7 +339,7 @@ describe("page", () => {
     await vi.waitFor(() => expect(container.querySelectorAll('[data-testid="rt-conv"]')).toHaveLength(1));
     expect(container.querySelector('[data-testid="rt-conv"]').textContent).toContain("Fix build");
 
-    container.querySelector('[data-testid="rt-conv"]').click();
+    // The newest conversation opens by itself: the page never starts empty.
     await vi.waitFor(() => expect(container.querySelector('[data-testid="rt-waterfall"]')).not.toBeNull());
     expect(container.querySelectorAll('[data-testid="rt-row"]')).toHaveLength(2);
     expect(container.textContent).toContain("terminal");

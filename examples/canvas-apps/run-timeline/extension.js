@@ -494,6 +494,46 @@ const STYLE = `
 .rt .conv .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rt .conv .age { color: var(--rt-muted); font-size: 11px; flex: none; font-weight: 400; }
 @media (max-width: 900px) { .rt .shell { grid-template-columns: 1fr; } .rt .nav { position: static; max-height: 240px; } }
+.rt .navhead { display: flex; align-items: center; justify-content: space-between; padding: 0 6px; }
+.rt .navhead h2 { padding: 0; }
+.rt .navtools { display: flex; align-items: center; gap: 4px; position: relative; }
+.rt .iconbtn { background: none; border: 0; padding: 4px; border-radius: 6px; color: var(--rt-muted); display: inline-flex; cursor: pointer; }
+.rt .iconbtn:hover, .rt .iconbtn[aria-expanded="true"] { color: var(--rt-contrast); background: var(--rt-raised); }
+.rt .menu { position: absolute; top: 100%; right: 0; margin-top: 6px; z-index: 45; width: 270px; max-height: 70vh; overflow-y: auto; background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 12px; padding: 6px; box-shadow: 0 10px 28px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
+.rt .menu h3 { margin: 8px 8px 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--rt-muted); font-weight: 500; }
+.rt .menu hr { border: 0; border-top: 1px solid var(--rt-border); margin: 4px 0; }
+.rt .mrow { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 6px 8px; color: var(--rt-text); cursor: pointer; }
+.rt .mrow:hover { background: var(--rt-raised); }
+.rt .mrow .ck { width: 14px; flex: none; color: var(--rt-primary); }
+.rt .mrow select { margin-left: auto; padding: 2px 6px; }
+.rt .strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 0 6px; font-size: 12px; color: var(--rt-muted); }
+.rt .gh { padding: 8px 8px 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--rt-muted); }
+.rt .tagrow { display: flex; gap: 4px; flex-wrap: wrap; }
+.rt .tagchip { font-size: 10px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--rt-border); color: var(--rt-muted); }
+.rt .conv.two { flex-wrap: wrap; row-gap: 2px; }
+.rt .conv.two .tagrow { flex-basis: 100%; padding-left: 22px; }
+.rt .linkbtn { background: none; border: 0; padding: 2px 4px; color: var(--rt-muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: 13px; }
+.rt .linkbtn:hover, .rt .linkbtn[aria-current="page"] { color: var(--rt-contrast); }
+.rt .about { display: flex; flex-direction: column; gap: 20px; max-width: 980px; }
+.rt .hero { background: linear-gradient(135deg, color-mix(in srgb, var(--rt-primary) 14%, var(--rt-panel)), var(--rt-panel)); border: 1px solid var(--rt-border); border-radius: 16px; padding: 24px 28px; display: grid; gap: 18px; }
+.rt .hero h1 { font-size: 26px; }
+.rt .hero p { font-size: 15px; color: var(--rt-text); max-width: 62ch; }
+.rt .demo { background: var(--rt-bg); border: 1px solid var(--rt-border); border-radius: 12px; overflow: hidden; }
+.rt .demo .drow { display: grid; grid-template-columns: 170px 1fr; border-bottom: 1px solid var(--rt-border); min-height: 30px; align-items: center; }
+.rt .demo .drow:last-child { border-bottom: 0; }
+.rt .demo .dl { padding: 4px 10px; font-size: 12px; color: var(--rt-muted); border-right: 1px solid var(--rt-border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt .demo .dt { position: relative; height: 30px; }
+.rt .demo .gap { position: absolute; top: 14px; height: 2px; background: var(--rt-border); }
+.rt .gridcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.rt .gridcards .card { display: flex; flex-direction: column; gap: 8px; }
+.rt .gridcards h2 { display: flex; gap: 8px; align-items: center; }
+.rt .gridcards .ic { width: 26px; height: 26px; border-radius: 8px; background: var(--rt-raised); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex: none; }
+.rt .gridcards ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--rt-text); }
+.rt .legend { display: flex; flex-direction: column; gap: 6px; }
+.rt .legend div { display: flex; gap: 10px; align-items: center; }
+.rt .legend .sw { width: 22px; height: 10px; border-radius: 3px; border: 1px solid var(--c); background: color-mix(in srgb, var(--c) 45%, transparent); flex: none; }
+.rt .legend .sw.open { border-style: dashed; background: transparent; }
+.rt .legend .sw.pt { width: 10px; border-radius: 50%; background: var(--c); }
 .rt .titlerow { display: flex; align-items: center; gap: 8px; position: relative; }
 .rt .info { background: none; border: 0; padding: 2px; border-radius: 50%; color: var(--rt-muted); display: inline-flex; cursor: help; }
 .rt .info:hover, .rt .info:focus-visible, .rt .info[aria-expanded="true"] { color: var(--rt-contrast); }
@@ -624,6 +664,74 @@ export function ageShort(iso, now = Date.now()) {
   return `${Math.round(m / 1440)}d`;
 }
 
+
+// ─── Conversation list: the same sorting and filtering the app's sidebar offers ───
+
+export const DEFAULT_NAV = { organize: "chronological", sort: "updated", scope: "all", showOlder: true, cutoff: "7d", automations: "all", tags: [], showTags: true, showAge: true };
+export const CUTOFF_MS = { "1h": 3_600_000, "1d": 86_400_000, "7d": 604_800_000, "30d": 2_592_000_000 };
+export const NAV_PRESETS = [
+  { id: "recent", label: "Recent", set: {} },
+  { id: "workspace", label: "By workspace", set: { organize: "grouped" } },
+  { id: "active", label: "Active", set: { scope: "relevant", showOlder: false } },
+  { id: "compact", label: "Compact", set: { scope: "relevant", showOlder: false, showTags: false, showAge: false } },
+];
+const PRESET_KEYS = ["organize", "sort", "scope", "showOlder", "showTags", "showAge"];
+
+/** Which preset the settings equal, or null for a custom view. */
+export function activePreset(nav) {
+  return NAV_PRESETS.find((pr) => PRESET_KEYS.every((k) => nav[k] === { ...DEFAULT_NAV, ...pr.set }[k])) ?? null;
+}
+
+const AUTOMATION_KEYS = ["automationtrigger", "automationid", "automationname", "automationrunid"];
+const RESERVED_TAGS = new Set(["acpserver", "clientsource", ...AUTOMATION_KEYS, "automationdraftid", "automationmaterializeddraftid", "automationeditid", "title", "git_provider", "repo_name", "repo", "repository", "selected_branch", "branch", "archiveworkspacepath", "workspace", "working_dir", "localplannerparent"]);
+const ACTIVE = new Set(["idle", "running", "waiting_for_confirmation", "finished"]);
+
+const timeOf = (iso) => { const t = Date.parse(iso); return Number.isNaN(t) ? 0 : t; };
+
+/** Tags a person set, minus the machine ones, as [key, value] sorted A to Z. */
+export function displayTags(tags) {
+  if (!isObj(tags)) return [];
+  return Object.entries(tags).filter(([k, v]) => !RESERVED_TAGS.has(k.trim().toLowerCase()) && typeof v === "string").sort(([a], [b]) => a.localeCompare(b));
+}
+export const tagFacets = (convs) => [...new Set(convs.flatMap((c) => displayTags(c.tags).map(([k, v]) => (v ? `${k}=${v}` : k))))].sort((a, b) => a.localeCompare(b));
+export const isAutomation = (c) => c.trigger === "automation" || (isObj(c.tags) && AUTOMATION_KEYS.some((k) => Boolean(c.tags[k])));
+export const workspaceOf = (c) => (isObj(c.tags) && typeof c.tags.workspace === "string" ? c.tags.workspace.trim().replace(/\/+$/, "") : "");
+
+export function sortConversations(items, field) {
+  const key = field === "created" ? "created_at" : "updated_at";
+  return [...items].sort((a, b) => timeOf(b[key]) - timeOf(a[key]));
+}
+
+/** Applies the view settings. Returns the rows to show and how many each narrowing hid. */
+export function applyNav(convs, nav, query = "", now = Date.now()) {
+  const q = query.trim().toLowerCase();
+  let rows = convs.filter((c) => !q || `${c.title ?? ""} ${c.id}`.toLowerCase().includes(q));
+  const hidden = { automations: 0, scope: 0, older: 0 };
+  const cut = (pred, key) => { const before = rows.length; rows = rows.filter(pred); hidden[key] = before - rows.length; };
+  if (nav.automations === "hide-automations") cut((c) => !isAutomation(c), "automations");
+  if (nav.automations === "only-automations") cut(isAutomation, "automations");
+  if (nav.tags.length) rows = rows.filter((c) => displayTags(c.tags).some(([k, v]) => nav.tags.includes(v ? `${k}=${v}` : k)));
+  if (nav.scope === "relevant") cut((c) => ACTIVE.has(c.execution_status), "scope");
+  if (!nav.showOlder) cut((c) => !(timeOf(c.updated_at) && timeOf(c.updated_at) < now - CUTOFF_MS[nav.cutoff]), "older");
+  rows = sortConversations(rows, nav.sort);
+  return { rows, hidden };
+}
+
+/** Groups rows by workspace folder, newest group first, with the unassigned ones last. */
+export function groupByWorkspace(rows, field = "updated") {
+  const key = field === "created" ? "created_at" : "updated_at";
+  const groups = new Map();
+  rows.forEach((c) => {
+    const ws = workspaceOf(c);
+    const id = ws || "__none";
+    const g = groups.get(id) ?? { id, label: ws ? ws.split("/").filter(Boolean).pop() ?? ws : "No workspace", items: [] };
+    g.items.push(c);
+    groups.set(id, g);
+  });
+  const newest = (g) => Math.max(...g.items.map((c) => timeOf(c[key])));
+  return [...groups.values()].sort((a, b) => (a.id === "__none") - (b.id === "__none") || newest(b) - newest(a));
+}
+
 const STATUS_MARK = { finished: ["✓", "ok"], running: ["●", "run"], error: ["●", "err"], stuck: ["●", "err"] };
 
 const INFO_TEXT = "Intervals are between the timestamps the events carry. A step with no result is shown as open: no result was observed, which does not mean the tool is still running. Time between steps includes model and orchestration time and is not split further. Logs are not scrubbed: avoid sharing raw ones.";
@@ -659,6 +767,68 @@ function infoIcon(text) {
   return wrap;
 }
 
+
+function aboutPage(onOpen, onPrices) {
+  const page = el("div", "about");
+  page.setAttribute("data-testid", "rt-about");
+
+  const hero = el("div", "hero");
+  hero.append(el("h1", "", "About Run Timeline"), el("p", "", "A waterfall of an OpenHands run. It shows what the agent did, how long each step took, what it cost, and how much of the run was spent waiting between steps, so you can see where the time and the money went."));
+  const demo = el("div", "demo");
+  const drow = (label, build) => {
+    const r = el("div", "drow");
+    const t = el("div", "dt");
+    build(t);
+    r.append(el("div", "dl", label), t);
+    demo.append(r);
+  };
+  const bar = (t, left, width, cls, open) => { const b = el("div", `bar ${cls}${open ? " open" : ""}`); b.style.left = `${left}%`; b.style.width = `${width}%`; t.append(b); };
+  const dot = (t, left, cls) => { const d = el("div", `dot ${cls}`); d.style.left = `${left}%`; t.append(d); };
+  drow("You: fix the failing test", (t) => dot(t, 2, "k-message"));
+  drow("Run the tests", (t) => bar(t, 12, 14, "s-error"));
+  drow("Read the parser", (t) => bar(t, 40, 3, "s-ok"));
+  drow("Edit the file", (t) => bar(t, 55, 3, "s-ok"));
+  drow("Re-run the tests", (t) => bar(t, 66, 16, "s-ok"));
+  drow("Push the fix", (t) => bar(t, 90, 2, "s-open", true));
+  hero.append(demo, el("p", "muted small", "An example. Each bar is one step: it starts when the agent asks for the action and ends when the result comes back. The gaps between bars are the agent thinking."));
+  page.append(hero);
+
+  const cards = el("div", "gridcards");
+  const card = (icon, title, body) => {
+    const c = el("div", "card");
+    const h = el("h2");
+    h.append(el("span", "ic", icon), document.createTextNode(title));
+    c.append(h, ...body);
+    cards.append(c);
+    return c;
+  };
+  const para = (t) => el("p", "muted", t);
+  const list = (items) => { const u = el("ul"); items.forEach((i) => u.append(el("li", "", i))); return u; };
+
+  const read = card("◧", "Reading the waterfall", []);
+  const legend = el("div", "legend");
+  [["sw s-ok", "A step that finished"], ["sw s-error", "A step that failed: an error flag, a nonzero exit code, or a rejection"], ["sw s-open open", "Open: the action has no result. No result was observed, which does not mean it is still running"], ["sw pt k-message", "A message from you or the agent"], ["sw pt k-error", "An error"]].forEach(([cls, text]) => { const d = el("div"); d.append(el("span", cls), el("span", "small", text)); legend.append(d); });
+  read.append(legend, para("The pinned column on the right shows the lines each step changed and its cost, with run totals at the top."));
+
+  card("⏱", "Time inside and between steps", [para("Time inside steps is when a tool was running, with overlaps merged. Time between steps is everything else: the model deciding, plus orchestration. They are kept separate on purpose, and the second is not split further, because the events do not say which part is the model."), para("In most runs the tools are fast and the gaps dominate.")]);
+
+  card("◎", "Hover for the details", [para("Point at any row for a card with the step and the run:"), list(["Tool, duration, status and lines changed", "Model, tokens and cost for that call", "Tickets, pull requests and repositories mentioned", "Conversation, workspace, tags, agent and models", "Run totals for lines, tokens and cost"])]);
+
+  const cost = card("$", "Cost, two ways", [para("Cost is shown as the server reported it, or estimated from list prices. Switch between them with the Cost menu. The estimate prices cached tokens at the cache rate and the rest of the prompt at the input rate."), el("p", "muted", "A model without its own price is priced as its family, and marked with an asterisk.")]);
+  cost.append(button("Open the price matrix", onPrices, ""));
+
+  card("↧", "Where the data comes from", [list(["A live conversation: its events are read from the Agent Server, and refresh every 10 seconds while it runs.", "An imported file: an OpenHands CLI JSONL stream, or SDK event JSON. It is read in your browser and never uploaded."]), para("Imported events with no timezone need a capture time beside them (runwardObservedAt); otherwise they are skipped and counted in a warning.")]);
+
+  card("✓", "What it will not claim", [list(["Message text never decides success or failure", "A result with no matching action creates no interval", "Per-step cost is the change in the server's running totals just before the step, so it is approximate; run totals are solid", "Lines changed counts file edits only, not what a command or git changed"])]);
+  page.append(cards);
+
+  const foot = el("div", "card");
+  foot.append(el("h2", "", "Credits"), para("The evidence rules follow Runward (MIT), a local timeline viewer that reads the same OpenHands formats offline: github.com/K-kiron/runward. No Runward code is included. Logs are not scrubbed, so avoid sharing raw ones."), el("div", "row"));
+  foot.lastChild.append(button("Back to the latest run", onOpen, "primary"));
+  page.append(foot);
+  return page;
+}
+
 // ─── Mount ────────────────────────────────────────────────────────────────
 
 function mountTimeline(host, { container }) {
@@ -668,8 +838,9 @@ function mountTimeline(host, { container }) {
   const root = el("div", "rt");
   container.append(root);
 
+  const readNav = () => { try { return { ...DEFAULT_NAV, ...JSON.parse(window.localStorage.getItem("run-timeline:nav") ?? "{}") }; } catch { return { ...DEFAULT_NAV }; } };
   const readMode = () => { try { return window.localStorage.getItem("run-timeline:cost") === "estimated" ? "estimated" : "reported"; } catch { return "reported"; } };
-  const ui = { costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All", priceSort: null };
+  const ui = { nav: readNav(), menuOpen: false, tagsOpen: false, costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All", priceSort: null };
   let disposed = false;
   let pollTimer = null;
   let loadToken = 0;
@@ -683,10 +854,13 @@ function mountTimeline(host, { container }) {
       ui.convError = e instanceof Error ? e.message : String(e);
     }
     if (!disposed) render();
+    // Open the newest conversation so the page never starts empty.
+    if (!disposed && !ui.source && ui.convs.length) loadLive(ui.convs[0].id);
   }
 
   async function loadLive(id, { quiet = false } = {}) {
     const token = (loadToken += 1);
+    if (!quiet) ui.view = "timeline";
     const conv = ui.convs.find((c) => c.id === id);
     if (!quiet) { ui.loading = true; ui.error = null; ui.source = { type: "live", id, title: conv?.title || id, status: conv?.execution_status ?? null, conv }; render(); }
     try {
@@ -950,6 +1124,73 @@ function mountTimeline(host, { container }) {
     return wrap;
   }
 
+  function navMenu(setNav) {
+    const m = el("div", "menu");
+    m.setAttribute("role", "menu");
+    m.setAttribute("data-testid", "rt-nav-menu");
+    const n = ui.nav;
+    const heading = (t) => m.append(el("h3", "", t));
+    const choice = (label, on, apply) => {
+      const r = el("button", "mrow");
+      r.type = "button";
+      r.setAttribute("role", "menuitemradio");
+      r.setAttribute("aria-checked", String(on));
+      r.append(el("span", "ck", on ? "✓" : ""), el("span", "", label));
+      r.addEventListener("click", apply);
+      m.append(r);
+    };
+    const toggle = (label, on, apply) => {
+      const r = el("button", "mrow");
+      r.type = "button";
+      r.setAttribute("role", "menuitemcheckbox");
+      r.setAttribute("aria-checked", String(on));
+      r.append(el("span", "ck", on ? "✓" : ""), el("span", "", label));
+      r.addEventListener("click", apply);
+      m.append(r);
+      return r;
+    };
+    const current = activePreset(n);
+    heading(`View${current ? "" : " · Custom"}`);
+    NAV_PRESETS.forEach((pr) => choice(pr.label, current?.id === pr.id, () => setNav({ ...DEFAULT_NAV, tags: n.tags, automations: n.automations, cutoff: n.cutoff, ...pr.set })));
+    m.append(el("hr"));
+    heading("Organize");
+    choice("By date", n.organize === "chronological", () => setNav({ organize: "chronological" }));
+    choice("By workspace", n.organize === "grouped", () => setNav({ organize: "grouped" }));
+    heading("Sort by");
+    choice("Updated", n.sort === "updated", () => setNav({ sort: "updated" }));
+    choice("Created", n.sort === "created", () => setNav({ sort: "created" }));
+    heading("Threads");
+    choice("All threads", n.scope === "all", () => setNav({ scope: "all" }));
+    choice("Active only", n.scope === "relevant", () => setNav({ scope: "relevant" }));
+    heading("Additional");
+    const older = toggle("Show older conversations", n.showOlder, () => setNav({ showOlder: !n.showOlder }));
+    if (!n.showOlder) {
+      older.append(select([["1h", "1 hour"], ["1d", "1 day"], ["7d", "7 days"], ["30d", "30 days"]], n.cutoff, (v) => setNav({ cutoff: v }), "Hide conversations older than"));
+      older.querySelector("select").addEventListener("click", (ev) => ev.stopPropagation());
+    }
+    heading("Automations");
+    choice("Shown with all", n.automations === "all", () => setNav({ automations: "all" }));
+    choice("Hide automation runs", n.automations === "hide-automations", () => setNav({ automations: "hide-automations" }));
+    choice("Only automation runs", n.automations === "only-automations", () => setNav({ automations: "only-automations" }));
+    const facets = tagFacets(ui.convs);
+    const tagHead = el("button", "mrow");
+    tagHead.type = "button";
+    tagHead.setAttribute("aria-expanded", String(ui.tagsOpen));
+    tagHead.append(el("span", "ck", ui.tagsOpen ? "▾" : "▸"), el("span", "", `Filter by tags${n.tags.length ? ` (${n.tags.length})` : ""}`));
+    tagHead.addEventListener("click", () => { ui.tagsOpen = !ui.tagsOpen; render(); });
+    m.append(el("hr"), tagHead);
+    if (ui.tagsOpen) {
+      if (!facets.length) m.append(el("p", "muted small", "No tags yet"));
+      facets.forEach((f) => toggle(f, n.tags.includes(f), () => setNav({ tags: n.tags.includes(f) ? n.tags.filter((x) => x !== f) : [...n.tags, f] })));
+    }
+    m.append(el("hr"));
+    heading("Metadata");
+    toggle("Show tags", n.showTags, () => setNav({ showTags: !n.showTags }));
+    toggle("Show ages", n.showAge, () => setNav({ showAge: !n.showAge }));
+    m.addEventListener("keydown", (ev) => { if (ev.key === "Escape") { ui.menuOpen = false; render(); } });
+    return m;
+  }
+
   function render() {
     if (disposed) return;
     tip = null;
@@ -961,13 +1202,39 @@ function mountTimeline(host, { container }) {
     shell.append(nav, main);
     root.append(shell);
 
-    nav.append(el("h2", "", `Conversations${ui.convs.length ? ` (${ui.convs.length})` : ""}`));
+    const navHead = el("div", "navhead");
+    const aboutBtn = button("About", () => { ui.view = "about"; ui.menuOpen = false; render(); }, "linkbtn");
+    aboutBtn.setAttribute("aria-current", ui.view === "about" ? "page" : "false");
+    const tools = el("div", "navtools");
+    const setNav = (patch) => {
+      ui.nav = { ...ui.nav, ...patch };
+      try { window.localStorage.setItem("run-timeline:nav", JSON.stringify(ui.nav)); } catch { /* storage unavailable */ }
+      render();
+    };
+    const menuBtn = el("button", "iconbtn");
+    menuBtn.type = "button";
+    menuBtn.setAttribute("aria-label", "View: organize, sort and filter");
+    menuBtn.setAttribute("aria-haspopup", "menu");
+    menuBtn.setAttribute("aria-expanded", String(ui.menuOpen));
+    menuBtn.setAttribute("data-testid", "rt-nav-menu-toggle");
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    [["width", 16], ["height", 16], ["viewBox", "0 0 24 24"], ["fill", "none"], ["stroke", "currentColor"], ["stroke-width", 2], ["stroke-linecap", "round"], ["stroke-linejoin", "round"], ["aria-hidden", "true"]].forEach(([k, v]) => icon.setAttribute(k, String(v)));
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M22 3H2l8 9.46V19l4 2v-8.54L22 3z");
+    icon.append(path);
+    menuBtn.append(icon);
+    menuBtn.addEventListener("click", () => { ui.menuOpen = !ui.menuOpen; render(); });
+    tools.append(menuBtn, aboutBtn);
+    if (ui.menuOpen) tools.append(navMenu(setNav));
+    navHead.append(el("h2", "", `Conversations${ui.convs.length ? ` (${ui.convs.length})` : ""}`), tools);
+    nav.append(navHead);
     const search = el("input");
     search.type = "search"; search.placeholder = "Search conversations"; search.value = ui.navQ; search.setAttribute("aria-label", "Search conversations");
+    const strip = el("div", "strip");
     const navList = el("div", "navlist");
     const fillNav = () => {
-      const q = ui.navQ.trim().toLowerCase();
       navList.replaceChildren();
+      strip.replaceChildren();
       if (ui.source?.type === "file") {
         const f = el("button", "conv");
         f.type = "button";
@@ -975,22 +1242,37 @@ function mountTimeline(host, { container }) {
         f.append(el("span", "mk idle", "↥"), el("span", "nm", `Imported: ${ui.source.name}`));
         navList.append(f);
       }
-      ui.convs.filter((c) => !q || `${c.title ?? ""} ${c.id}`.toLowerCase().includes(q)).forEach((c) => {
+      const { rows, hidden } = applyNav(ui.convs, ui.nav, ui.navQ);
+      const row = (c) => {
         const [glyph, tone] = STATUS_MARK[c.execution_status] ?? ["●", "idle"];
-        const row = el("button", "conv");
-        row.type = "button";
-        row.setAttribute("data-testid", "rt-conv");
-        row.setAttribute("aria-current", String(ui.source?.type === "live" && ui.source.id === c.id));
-        row.title = c.title || c.id;
-        row.append(el("span", `mk ${tone}`, glyph), el("span", "nm", c.title || c.id), el("span", "age", ageShort(c.updated_at)));
-        row.addEventListener("click", () => loadLive(c.id));
-        navList.append(row);
-      });
-      if (!navList.children.length) navList.append(el("p", "muted small", ui.convError ? `Could not list conversations: ${ui.convError}` : "No conversations."));
+        const tags = ui.nav.showTags ? displayTags(c.tags).slice(0, 3) : [];
+        const r = el("button", `conv${tags.length ? " two" : ""}`);
+        r.type = "button";
+        r.setAttribute("data-testid", "rt-conv");
+        r.setAttribute("aria-current", String(ui.source?.type === "live" && ui.source.id === c.id));
+        r.title = c.title || c.id;
+        r.append(el("span", `mk ${tone}`, glyph), el("span", "nm", c.title || c.id));
+        if (ui.nav.showAge) r.append(el("span", "age", ageShort(ui.nav.sort === "created" ? c.created_at : c.updated_at)));
+        if (tags.length) { const tr = el("div", "tagrow"); tags.forEach(([k, v]) => tr.append(el("span", "tagchip", v ? `${k}=${v}` : k))); r.append(tr); }
+        r.addEventListener("click", () => loadLive(c.id));
+        return r;
+      };
+      if (ui.nav.organize === "grouped") {
+        groupByWorkspace(rows, ui.nav.sort).forEach((g) => { navList.append(el("div", "gh", `${g.label} (${g.items.length})`)); g.items.forEach((c) => navList.append(row(c))); });
+      } else rows.forEach((c) => navList.append(row(c)));
+      const notes = [];
+      if (hidden.scope) notes.push(`${hidden.scope} not active`);
+      if (hidden.older) notes.push(`${hidden.older} older than ${ui.nav.cutoff}`);
+      if (hidden.automations) notes.push(`${hidden.automations} by the automation filter`);
+      if (ui.nav.tags.length) notes.push(`tags: ${ui.nav.tags.join(", ")}`);
+      if (notes.length) {
+        strip.append(el("span", "", `Hidden or narrowed: ${notes.join(" · ")}`), button("Reset", () => setNav({ scope: "all", showOlder: true, automations: "all", tags: [] }), "linkbtn"));
+      }
+      if (!navList.children.length) navList.append(el("p", "muted small", ui.convError ? `Could not list conversations: ${ui.convError}` : "No conversations match."));
     };
     search.addEventListener("input", () => { ui.navQ = search.value; fillNav(); });
     fillNav();
-    nav.append(search, navList);
+    nav.append(search, strip, navList);
     const top = el("div", "top");
     const left = el("div");
     left.style.cssText = "display:flex;flex-direction:column;gap:6px;align-items:flex-start;";
@@ -1016,6 +1298,7 @@ function mountTimeline(host, { container }) {
     });
     left.append(seg);
     main.append(top);
+    if (ui.view === "about") { main.append(aboutPage(() => { ui.view = "timeline"; if (!ui.source && ui.convs.length) loadLive(ui.convs[0].id); else render(); }, () => { ui.view = "prices"; render(); })); return; }
     if (ui.view === "prices") { main.append(viewPrices()); return; }
 
     if (ui.convError) main.append(el("p", "warn small", `Could not list conversations: ${ui.convError}`));
@@ -1082,6 +1365,7 @@ function mountTimeline(host, { container }) {
     main.append(stack);
   }
 
+  root.addEventListener("click", (ev) => { if (ui.menuOpen && !ev.target.closest(".navtools")) { ui.menuOpen = false; render(); } });
   render();
   loadConversations();
   return () => {
