@@ -633,7 +633,8 @@ const STYLE = `
 .mp .chip.s-planned { color: var(--mp-info); } .mp .chip.s-in_progress { color: var(--mp-primary); }
 .mp .chip.s-at_risk { color: var(--mp-danger); } .mp .chip.s-shipped { color: var(--mp-success); }
 /* timeline */
-.mp, .mp .sheet { scrollbar-color: var(--mp-border) var(--mp-panel); }
+.mp, .mp .sheet { overscroll-behavior-x: contain; }
+.mp .sheet { scrollbar-color: var(--mp-border) var(--mp-panel); }
 .mp .sheet { background: var(--mp-panel); border: 1px solid var(--mp-border); border-radius: 12px; overflow-x: auto; position: relative; }
 .mp .grid { display: grid; grid-template-columns: ${LABEL_W}px auto; min-width: max-content; }
 .mp .labels { position: sticky; left: 0; z-index: 4; background: var(--mp-panel); border-right: 1px solid var(--mp-border); }
