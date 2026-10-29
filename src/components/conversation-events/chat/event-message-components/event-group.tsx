@@ -20,6 +20,8 @@ import { TokenMeter } from "#/components/shared/token-meter";
 import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
 import {
   getActionDetails,
+  getStepContext,
+  indexSteps,
   outcomeOf,
   resultText,
   type FeedUpdateDetails,
@@ -165,21 +167,33 @@ export function EventGroup({
   // AgentErrorEvent resolved it: that event carries no action id and renders
   // on its own, so it never replaces the action it answers.
   const lookupSource = allEvents ?? events;
-  const steps = events.flatMap((e) => {
-    const action = isActionEvent(e)
-      ? e
-      : lookupSource.find(
-          (candidate): candidate is ActionEvent =>
-            isActionEvent(candidate) &&
-            "action_id" in e &&
-            candidate.id === e.action_id,
-        );
-    if (!action) return [];
-    const details = getActionDetails(action, outcomeOf(e), resultText(e));
-    return [
-      { id: e.id, label: action.summary?.trim() || action.tool_name, details },
-    ];
-  });
+  const buildSteps = () => {
+    const index = indexSteps(lookupSource);
+    return events.flatMap((e) => {
+      const action = isActionEvent(e)
+        ? e
+        : lookupSource.find(
+            (candidate): candidate is ActionEvent =>
+              isActionEvent(candidate) &&
+              "action_id" in e &&
+              candidate.id === e.action_id,
+          );
+      if (!action) return [];
+      const details = getActionDetails(
+        action,
+        outcomeOf(e),
+        resultText(e),
+        getStepContext(lookupSource, index, action),
+      );
+      return [
+        {
+          id: e.id,
+          label: action.summary?.trim() || action.tool_name,
+          details,
+        },
+      ];
+    });
+  };
   const unreplacedActions = events.filter(isActionEvent);
   const erroredToolCallIds =
     unreplacedActions.length > 0
@@ -240,7 +254,7 @@ export function EventGroup({
       </button>
       {showDetails ? (
         <ul data-testid="event-group-details" className="flex flex-col gap-2">
-          {steps.map((step) => (
+          {buildSteps().map((step) => (
             <li key={step.id}>
               <p className="text-xs font-medium text-foreground">
                 {step.label}

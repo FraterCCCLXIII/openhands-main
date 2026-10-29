@@ -14,7 +14,12 @@ import {
 } from "../event-thought-helpers";
 import { Info } from "lucide-react";
 import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
-import { getMessageDetails, resultText } from "#/utils/feed-updates";
+import {
+  getMessageDetails,
+  getTurnContext,
+  resultText,
+} from "#/utils/feed-updates";
+import { AgentContextSection } from "#/components/shared/agent-context-section";
 import { isCorrectiveNudge } from "../event-content-helpers/should-render-event";
 import { useEventStore } from "#/stores/use-event-store";
 import {
@@ -204,7 +209,12 @@ function UserAssistantEventMessageComponent({
       {showDetails && canShowDetails ? (
         <div className="mb-1 w-full pl-1">
           <TurnDetailsPanel
-            details={getMessageDetails(event, turnEvidence(event.id))}
+            details={getMessageDetails(
+              event,
+              turnEvidence(event.id),
+              getTurnContext(useEventStore.getState().events, event.id),
+            )}
+            footer={<AgentContextSection />}
           />
         </div>
       ) : null}
