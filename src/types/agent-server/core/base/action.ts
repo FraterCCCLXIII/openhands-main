@@ -319,9 +319,11 @@ export interface SwitchLLMAction extends ActionBase<"SwitchLLMAction"> {
 export interface CanvasUIAction extends ActionBase<
   "CanvasUIAction" | typeof CANVAS_UI_CLIENT_ACTION_KIND
 > {
-  command: "navigate_to_file" | "open_tab" | "show_preview";
+  command: "navigate_to_file" | "open_tab" | "show_preview" | "open_url";
   path?: string | null;
   tab?: string | null;
+  /** URL to open in the webview tab (used with command="open_url"). */
+  url?: string | null;
 }
 
 /**

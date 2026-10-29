@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "research-hub",
+  "display_name": "Research hub",
+  "version": "0.1.0",
+  "description": "OpenHands article findings and OpenHands Index benchmark results, bundled as a static snapshot.",
+  "entrypoint": "extension.js",
+  "contributes": {
+    "pages": [
+      {
+        "id": "research",
+        "title": "Research hub",
+        "path": "/research",
+        "nav_label": "Research"
+      }
+    ]
+  }
+}

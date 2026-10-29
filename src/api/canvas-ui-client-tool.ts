@@ -19,7 +19,7 @@ export interface ClientToolSpec {
   };
 }
 
-const CANVAS_UI_DESCRIPTION = `The user is interacting with you inside Agent Canvas — a web UI with a chat panel on the left and a tabbed right-side panel (files, terminal, browser, vscode, planner, tasklist). This tool lets you drive that right-side panel so the user sees what you just produced.
+const CANVAS_UI_DESCRIPTION = `The user is interacting with you inside Agent Canvas — a web UI with a chat panel on the left and a tabbed right-side panel (files, terminal, browser, webview, vscode, planner, tasklist). This tool lets you drive that right-side panel so the user sees what you just produced.
 
 They will NOT see the files you wrote, the terminal output, or the browser
 unless you call this tool to switch the right-side panel to the relevant
@@ -52,6 +52,11 @@ When to call (pick the most specific option that matches your last action):
     (browser_navigate alone only updates the URL; without browser_get_state,
     the Browser tab will open without a screenshot.)
 
+* You want to show a live, interactive web page (not a screenshot) →
+    command="open_url", url=<the URL to display>
+    This opens the URL in the Webview tab as a live iframe where the user
+    can interact with the page directly (click links, fill forms, etc.)
+
 Call this BEFORE writing your chat-message summary of the change, so the
 artifact is visible while the user reads what you did. One canvas_ui_control
 call per logical step is enough — don't repeat it for the same file or tab in
@@ -66,7 +71,7 @@ export const CANVAS_UI_CLIENT_TOOL: ClientToolSpec = {
     properties: {
       command: {
         type: "string",
-        enum: ["navigate_to_file", "open_tab", "show_preview"],
+        enum: ["navigate_to_file", "open_tab", "show_preview", "open_url"],
         description: "UI command to dispatch.",
       },
       path: {
@@ -76,8 +81,21 @@ export const CANVAS_UI_CLIENT_TOOL: ClientToolSpec = {
       },
       tab: {
         type: "string",
-        enum: ["files", "browser", "vscode", "terminal", "planner", "tasklist"],
+        enum: [
+          "files",
+          "browser",
+          "webview",
+          "vscode",
+          "terminal",
+          "planner",
+          "tasklist",
+        ],
         description: "Tab to open. Required for open_tab; ignored otherwise.",
+      },
+      url: {
+        type: "string",
+        description:
+          "URL to open in the webview tab. Required for open_url; ignored otherwise.",
       },
     },
     required: ["command"],

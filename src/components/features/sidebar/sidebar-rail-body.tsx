@@ -2,6 +2,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
+  ChevronRight,
+  Newspaper,
+  KanbanSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -55,7 +58,12 @@ import type { Backend } from "#/api/backend-registry/types";
 import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
+const FEED_PATH = "/feed";
+const TEAM_PATH = "/team";
 const ICON_SIZE = 18;
+const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
+const PLANNING_PATH = "/planning";
+const EXTENSION_ICON_SIZE = 22;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 
@@ -240,6 +248,13 @@ export function SidebarRailBody({
           trailing={<SidebarCreateMenu />}
         />
         <SidebarNavLink
+          to={FEED_PATH}
+          label={t(I18nKey.FEED$TITLE)}
+          testId="sidebar-feed-link"
+          collapsed={collapsed}
+          icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
+        />
+        <SidebarNavLink
           to={CUSTOMIZE_PATH}
           label={t(I18nKey.NAV$CUSTOMIZE)}
           testId="sidebar-skills-link"
@@ -268,7 +283,7 @@ export function SidebarRailBody({
             icon={
               <CanvasExtensionIcon
                 extension={page.extension}
-                size={ICON_SIZE}
+                size={EXTENSION_ICON_SIZE}
               />
             }
           />

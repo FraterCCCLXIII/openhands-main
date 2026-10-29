@@ -4,6 +4,7 @@ import {
   useConversationStore,
 } from "#/stores/conversation-store";
 import { useFilesTabStore } from "#/stores/files-tab-store";
+import { useWebviewStore } from "#/stores/webview-store";
 import type { CanvasUIAction } from "#/types/agent-server/core";
 import { setConversationState } from "#/utils/conversation-local-storage";
 import { toFilesTabPath } from "#/utils/path-utils";
@@ -11,6 +12,7 @@ import { toFilesTabPath } from "#/utils/path-utils";
 const VALID_TABS: ReadonlySet<ConversationTab> = new Set<ConversationTab>([
   "files",
   "browser",
+  "webview",
   "terminal",
   "planner",
   "tasklist",
@@ -83,6 +85,19 @@ export function openWorkspaceFile(
   );
 }
 
+/**
+ * Open a URL in the webview tab. Sets the URL in the webview store and
+ * navigates to the webview tab, revealing the right panel if collapsed.
+ */
+export function openUrlInWebview(
+  url: string,
+  conversationId?: string | null,
+): void {
+  const conversation = ConversationService.getCurrentConversation();
+  useWebviewStore.getState().setUrl(url);
+  navigateToTab("webview", conversationId ?? conversation?.id ?? null);
+}
+
 export function handleCanvasUIAction(
   action: CanvasUIAction,
   conversationId: string | null = null,
@@ -116,6 +131,11 @@ export function handleCanvasUIAction(
         console.warn(
           `[canvas_ui] Ignoring open_tab with unknown tab: ${action.tab}`,
         );
+      }
+      return;
+    case "open_url":
+      if (action.url) {
+        openUrlInWebview(action.url, conversationId);
       }
       return;
   }

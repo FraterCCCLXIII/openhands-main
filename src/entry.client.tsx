@@ -15,6 +15,14 @@ import { installMarsWebBridge } from "./api/mars/mars-web-bridge";
 import { waitForI18n } from "./i18n";
 import { shouldStartMockWorker } from "./mocks/should-start-mock-worker";
 
+// Install HMR overlay early so it catches all updates, including during
+// initial load. Must be synchronous to register listeners before HMR fires.
+if (import.meta.env.DEV && import.meta.hot) {
+  import("./dev/hmr-updating-overlay").then(({ installHmrUpdatingOverlay }) => {
+    installHmrUpdatingOverlay();
+  });
+}
+
 async function prepareApp() {
   // DigitalOcean Managed Agents in the browser: present only when the server
   // this page came from hosts the MARS bridge (scripts/mars-web-bridge.mjs).

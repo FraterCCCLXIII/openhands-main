@@ -475,6 +475,11 @@ export default defineConfig(({ mode }) => {
       watch: {
         ignored: ["**/node_modules/**", "**/.git/**"],
       },
+      hmr: {
+        // Disable Vite's default error overlay; we show a branded
+        // "OpenHands is Updating" overlay instead (see src/dev/hmr-updating-overlay.ts).
+        overlay: false,
+      },
     },
     ssr: {
       noExternal: ["react-syntax-highlighter"],
@@ -493,6 +498,9 @@ export default defineConfig(({ mode }) => {
             exclude: [
               ...configDefaults.exclude,
               "tests",
+              // usage-insights is a self-contained upstream App with its own
+              // package.json and test runner, verified from its directory.
+              "examples/canvas-apps/usage-insights/**",
               ...NODE_ENV_PILOT_TESTS,
             ],
           },

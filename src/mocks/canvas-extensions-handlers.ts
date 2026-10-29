@@ -4,12 +4,12 @@ import type {
   InstallCanvasExtensionRequest,
   InstalledCanvasExtensionInfo,
 } from "#/types/canvas-extension";
-import demoManifestSource from "#/fixtures/canvas-extensions/demo-page/canvas-extension.json?raw";
+import demoManifestSource from "#/fixtures/canvas-extensions/research-hub/canvas-extension.json?raw";
 // eslint-disable-next-line import-x/extensions -- Vite requires the real filename before ?raw.
-import demoBundle from "#/fixtures/canvas-extensions/demo-page/extension.js?raw";
+import demoBundle from "#/fixtures/canvas-extensions/research-hub/extension.js?raw";
 
 export const CANVAS_EXTENSION_DEMO_SOURCE =
-  "src/fixtures/canvas-extensions/demo-page";
+  "src/fixtures/canvas-extensions/research-hub";
 
 const demoManifest = JSON.parse(demoManifestSource) as CanvasExtensionManifest;
 
@@ -32,7 +32,7 @@ const DEFAULT_INSTALLED_EXTENSION: InstalledCanvasExtensionInfo = {
   enabled: true,
   source: CANVAS_EXTENSION_DEMO_SOURCE,
   installed_at: "2026-10-01T09:00:00Z",
-  install_path: "~/.openhands/canvas-extensions/demo-page",
+  install_path: "~/.openhands/canvas-extensions/research-hub",
   manifest: demoManifest,
 };
 
