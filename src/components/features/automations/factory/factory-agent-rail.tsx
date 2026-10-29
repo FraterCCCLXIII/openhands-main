@@ -1,4 +1,4 @@
-import { Activity, Pencil, Plus } from "lucide-react";
+import { Activity, Info, Pencil, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FeedRoleBadge } from "#/components/features/feed/feed-role-badge";
 import { I18nKey } from "#/i18n/declaration";
@@ -43,11 +43,17 @@ function AgentButton({
         aria-pressed={selected}
         onClick={onSelect}
         className={cn(
-          "flex w-full flex-col items-center gap-2 rounded-lg px-3 py-3 text-center hover:bg-surface-raised",
-          selected && "bg-surface-raised ring-1 ring-focus",
+          "flex w-full flex-col items-center gap-2 rounded-lg px-1 py-3 text-center",
         )}
       >
-        <span className={cn("shrink-0", large ? "size-12" : "size-10")}>
+        <span
+          className={cn(
+            "shrink-0 rounded-xl",
+            large ? "size-12" : "size-10",
+            selected &&
+              "ring-2 ring-focus ring-offset-2 ring-offset-canvas-base",
+          )}
+        >
           <FeedIconTile className={agent.className}>
             <Icon size={large ? 24 : 20} />
           </FeedIconTile>
@@ -109,14 +115,27 @@ export function FactoryAgentRail({
     >
       <section
         data-testid="factory-coordinator-spot"
-        className="shrink-0 md:w-64"
+        className="shrink-0 md:w-44"
       >
-        <h2 className="text-xs font-semibold uppercase text-muted">
-          {t(I18nKey.FACTORY$COORDINATOR)}
-        </h2>
-        <p className="mt-0.5 text-xs text-muted">
-          {t(I18nKey.FACTORY$COORDINATOR_HINT)}
-        </p>
+        <div className="flex items-center gap-1">
+          <h2 className="text-xs font-semibold uppercase text-muted">
+            {t(I18nKey.FACTORY$COORDINATOR)}
+          </h2>
+          <StyledTooltip
+            content={t(I18nKey.FACTORY$COORDINATOR_HINT)}
+            placement="bottom"
+          >
+            <span
+              data-testid="factory-coordinator-info"
+              role="img"
+              tabIndex={0}
+              aria-label={t(I18nKey.FACTORY$COORDINATOR_HINT)}
+              className="flex text-muted hover:text-contrast"
+            >
+              <Info size={12} aria-hidden />
+            </span>
+          </StyledTooltip>
+        </div>
         <div className="mt-2">
           <AgentButton
             large
@@ -149,7 +168,7 @@ export function FactoryAgentRail({
         ) : (
           <ul className="custom-scrollbar flex gap-2 overflow-x-auto pb-1">
             {others.map((entry) => (
-              <li key={entry.agent.name} className="w-56 shrink-0">
+              <li key={entry.agent.name} className="w-40 shrink-0">
                 <AgentButton
                   entry={entry}
                   selected={isTargeted(entry.agent.name)}
