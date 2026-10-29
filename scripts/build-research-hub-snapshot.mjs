@@ -46,6 +46,8 @@ function loadEntries(root, kind) {
         openness: m.openness ?? null,
         country: m.country ?? null,
         release_date: m.release_date ?? null,
+        parameter_count_b: m.parameter_count_b ?? null,
+        active_parameter_count_b: m.active_parameter_count_b ?? null,
         input_price: m.input_price ?? null,
         output_price: m.output_price ?? null,
         scores: readJson(scores).map((s) => ({
