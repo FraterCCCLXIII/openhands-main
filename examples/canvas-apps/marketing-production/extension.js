@@ -61,6 +61,7 @@ const VIEWS = [
   ["map", "Map"],
   ["assets", "Assets"],
   ["templates", "Templates"],
+  ["ads", "Ad spend"],
   ["costs", "Costs"],
   ["connections", "Connectors"],
 ];
@@ -267,7 +268,7 @@ function seedState() {
   ];
   return {
     items, assets, releases: RELEASE_SNAPSHOT.map((r) => ({ ...r })), releasesFetchedAt: null,
-    settings: { rates: { image2d: 0.05, model3d: 1, video: 0.4 }, tools: { image2d: "Image generation", model3d: "3D generation", video: "Seedance" } },
+    settings: { value: { ...DEFAULT_VALUE }, rates: { image2d: 0.05, model3d: 1, video: 0.4 }, tools: { image2d: "Image generation", model3d: "3D generation", video: "Seedance" } },
     log: [],
   };
 }
@@ -277,7 +278,10 @@ function loadState() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const s = JSON.parse(raw);
-      if (s && Array.isArray(s.items) && Array.isArray(s.releases)) return { ...seedState(), ...s };
+      if (s && Array.isArray(s.items) && Array.isArray(s.releases)) {
+        const seed = seedState();
+        return { ...seed, ...s, settings: { ...seed.settings, ...s.settings, value: { ...DEFAULT_VALUE, ...s.settings?.value } } };
+      }
     }
   } catch { /* fall back to the sample plan */ }
   return seedState();
@@ -368,6 +372,195 @@ export function itemsOnDay(items, t) {
   return items.filter((it) => toT(it.start) <= t && toT(it.end) >= t);
 }
 
+
+// ─── Ad spend, growth and forecasts (sample data until connectors exist) ──
+
+export const SITES = [
+  { id: "web", name: "openhands.dev", goal: "Signup clicks" },
+  { id: "docs", name: "docs.openhands.dev", goal: "Quickstart starts" },
+  { id: "app", name: "app.all-hands.dev", goal: "Cloud signups" },
+  { id: "github", name: "GitHub", goal: "Stars" },
+];
+export const AD_NETWORKS = [
+  { id: "google", name: "Google Ads" },
+  { id: "linkedin", name: "LinkedIn Ads" },
+  { id: "reddit", name: "Reddit Ads" },
+  { id: "x", name: "X Ads" },
+  { id: "spotify", name: "Spotify Ads" },
+];
+export const GROWTH_METRICS = [
+  { id: "visitors", label: "Visitors", organic: 26000, trend: 0.03, perDollar: 1 },
+  { id: "signups", label: "Signups", organic: 620, trend: 0.025, perDollar: 0.032 },
+  { id: "activated", label: "Activated users", organic: 260, trend: 0.022, perDollar: 0.012 },
+  { id: "wau", label: "Weekly active users", organic: 5200, trend: 0.02, perDollar: 0.14 },
+  { id: "paid", label: "Paid conversions", organic: 40, trend: 0.018, perDollar: 0.0014 },
+];
+export const AD_WEEKS = 12;
+export const FORECAST_WEEKS = 12;
+// [weekly spend, cost per conversion] for each site and network. Placeholder numbers.
+const AD_BASE = {
+  web: { google: [1800, 22], linkedin: [2400, 48], reddit: [600, 30], x: [500, 55], spotify: [700, 90] },
+  docs: { google: [900, 12], reddit: [300, 15] },
+  app: { google: [2200, 38], linkedin: [1800, 62], x: [400, 80] },
+  github: { reddit: [500, 2.4], x: [350, 3.1], linkedin: [250, 4] },
+};
+const DEFAULT_VALUE = { web: 15, docs: 6, app: 40, github: 4 };
+
+/** A small deterministic random source, so the sample data is stable. */
+export function seeded(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return () => {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const mondayOf = (t) => t - ((new Date(t).getUTCDay() + 6) % 7) * DAY;
+
+/** Twelve weeks of sample spend and conversions per site and ad network. */
+export function sampleAds(now = todayT()) {
+  const last = mondayOf(now);
+  const weeks = Array.from({ length: AD_WEEKS }, (_, i) => toIso(last - (AD_WEEKS - 1 - i) * 7 * DAY));
+  const cells = [];
+  Object.entries(AD_BASE).forEach(([site, nets]) => {
+    Object.entries(nets).forEach(([network, [base, cpa]]) => {
+      const rnd = seeded(`${site}:${network}`);
+      const spend = [];
+      const conv = [];
+      weeks.forEach((_, i) => {
+        const s = base * (1 + 0.015 * i) * (0.85 + 0.3 * rnd());
+        spend.push(Math.round(s));
+        conv.push(Math.max(0, Math.round((s / cpa) * (0.85 + 0.3 * rnd()))));
+      });
+      cells.push({ site, network, spend, conv });
+    });
+  });
+  return { weeks, cells };
+}
+
+const sum = (a) => a.reduce((x, y) => x + y, 0);
+const mean = (a) => (a.length ? sum(a) / a.length : 0);
+
+/** Spend, conversions, CPA and ROAS per network and site over the last `weeks` weeks. */
+export function adMatrix(ads, value = DEFAULT_VALUE, weeks = 4) {
+  const cell = (cells) => {
+    const spend = sum(cells.map((c) => sum(c.spend.slice(-weeks))));
+    const conv = sum(cells.map((c) => sum(c.conv.slice(-weeks))));
+    const worth = sum(cells.map((c) => sum(c.conv.slice(-weeks)) * (value[c.site] ?? 0)));
+    return { spend, conv, cpa: conv ? spend / conv : null, roas: spend ? worth / spend : null, worth };
+  };
+  const at = {};
+  AD_NETWORKS.forEach((n) => SITES.forEach((s) => {
+    const cells = ads.cells.filter((c) => c.network === n.id && c.site === s.id);
+    at[`${n.id}|${s.id}`] = cells.length ? cell(cells) : null;
+  }));
+  return {
+    at,
+    rows: Object.fromEntries(AD_NETWORKS.map((n) => [n.id, cell(ads.cells.filter((c) => c.network === n.id))])),
+    cols: Object.fromEntries(SITES.map((s) => [s.id, cell(ads.cells.filter((c) => c.site === s.id))])),
+    total: cell(ads.cells),
+  };
+}
+
+/** Weekly total ad spend across every site and network. */
+export const weeklySpend = (ads) => ads.weeks.map((_, i) => sum(ads.cells.map((c) => c.spend[i])));
+
+/** Weekly growth metrics: an organic trend plus an effect of that week's ad spend. */
+export function sampleGrowth(ads) {
+  const spend = weeklySpend(ads);
+  const out = {};
+  GROWTH_METRICS.forEach((m) => {
+    const rnd = seeded(`growth:${m.id}`);
+    out[m.id] = spend.map((s, i) => Math.round((m.organic * (1 + m.trend) ** i + m.perDollar * s) * (0.96 + 0.08 * rnd())));
+  });
+  return out;
+}
+
+/** Ordinary least squares: solves (XtX) b = Xty. Returns coefficients and the residual spread. */
+export function olsFit(X, y) {
+  const p = X[0].length;
+  const A = Array.from({ length: p }, (_, i) => Array.from({ length: p + 1 }, (_, j) => (j < p ? sum(X.map((r) => r[i] * r[j])) : sum(X.map((r, k) => r[i] * y[k])))));
+  for (let c = 0; c < p; c += 1) {
+    let best = c;
+    for (let r = c + 1; r < p; r += 1) if (Math.abs(A[r][c]) > Math.abs(A[best][c])) best = r;
+    [A[c], A[best]] = [A[best], A[c]];
+    if (Math.abs(A[c][c]) < 1e-12) throw new Error("The data cannot be fitted.");
+    for (let r = 0; r < p; r += 1) {
+      if (r === c) continue;
+      const f = A[r][c] / A[c][c];
+      for (let k = c; k <= p; k += 1) A[r][k] -= f * A[c][k];
+    }
+  }
+  const beta = A.map((row, i) => row[p] / row[i]);
+  const resid = X.map((r, k) => y[k] - sum(r.map((v, i) => v * beta[i])));
+  const sigma = Math.sqrt(sum(resid.map((e) => e * e)) / Math.max(1, X.length - p));
+  return { beta, sigma };
+}
+
+/**
+ * Fits metric ~ intercept + trend + weekly ad spend, then projects it forward at
+ * the given future weekly spend. A rough statistical projection, not a promise.
+ */
+export function forecastMetric(series, spend, futureSpend) {
+  const n = series.length;
+  const { beta, sigma } = olsFit(series.map((_, t) => [1, t, spend[t]]), series);
+  const future = futureSpend.map((s, k) => {
+    const value = beta[0] + beta[1] * (n + k) + beta[2] * s;
+    const band = 1.64 * sigma * Math.sqrt(1 + (k + 1) / n);
+    return { value: Math.max(0, value), lo: Math.max(0, value - band), hi: value + band };
+  });
+  return { beta, sigma, future };
+}
+
+export const SPEND_SCENARIOS = [
+  { id: "hold", label: "Hold ad spend", factor: 1 },
+  { id: "up25", label: "Raise ad spend 25%", factor: 1.25 },
+  { id: "up50", label: "Raise ad spend 50%", factor: 1.5 },
+  { id: "down25", label: "Cut ad spend 25%", factor: 0.75 },
+];
+
+/** Growth matrix rows: recent level, change, ad impact and the projection under a spend scenario. */
+export function growthMatrix(ads, growth, factor = 1) {
+  const spend = weeklySpend(ads);
+  const base = mean(spend.slice(-4));
+  const hold = Array.from({ length: FORECAST_WEEKS }, () => base);
+  const plan = hold.map((s) => s * factor);
+  return GROWTH_METRICS.map((m) => {
+    const y = growth[m.id];
+    const f = forecastMetric(y, spend, plan);
+    const h = forecastMetric(y, spend, hold);
+    const last4 = mean(y.slice(-4));
+    const prev4 = mean(y.slice(-8, -4));
+    const perDollar = Math.max(0, f.beta[2]);
+    return {
+      id: m.id, label: m.label, series: y, last4,
+      change: prev4 ? last4 / prev4 - 1 : null,
+      adShare: last4 ? Math.min(1, (perDollar * base) / last4) : null,
+      per1k: perDollar * 1000,
+      future: f.future, hold: h.future,
+      at4: f.future[3].value, at12: f.future[FORECAST_WEEKS - 1].value,
+      lift12: f.future[FORECAST_WEEKS - 1].value - h.future[FORECAST_WEEKS - 1].value,
+    };
+  });
+}
+
+/** Where a shift of weekly spend from the weakest to the strongest cell would help, at observed rates. */
+export function reallocationHint(matrix, shareMoved = 0.2) {
+  const cells = Object.entries(matrix.at).filter(([, c]) => c && c.roas !== null && c.spend > 0).map(([key, c]) => ({ key, ...c }));
+  if (cells.length < 2) return null;
+  const sorted = [...cells].sort((a, b) => a.roas - b.roas);
+  const low = sorted[0];
+  const high = sorted.at(-1);
+  const moved = (low.spend / 4) * shareMoved;
+  const lowRate = low.spend ? low.conv / low.spend : 0;
+  const highRate = high.spend ? high.conv / high.spend : 0;
+  return { from: low.key, to: high.key, moved, extraConversions: moved * (highRate - lowRate) };
+}
+
 // ─── Agent prompts ────────────────────────────────────────────────────────
 
 const PLAN_FORMAT = `Reply with one fenced \`json\` block shaped like this, plus a short rationale:
@@ -390,6 +583,12 @@ export function planPrompt(state, goal) {
 export function itemPrompt(state, item) {
   const links = state.items.filter((x) => item.links.includes(x.id));
   return `Draft a brief for "${item.title}" (${item.lane}, ${item.start} to ${item.end}, status ${item.status}).\n\nChannels: ${item.channels.join(", ") || "none yet"}.\nLinked launches: ${links.map((l) => `${l.title} (${l.end})`).join("; ") || "none"}.\nNext releases: ${projectReleases(state.releases, 3).map((r) => `${r.tag} ${r.date}`).join(", ")}.\n\n${PLAN_FORMAT}`;
+}
+
+export function adPrompt(ads, value) {
+  const m = adMatrix(ads, value);
+  const cells = Object.entries(m.at).filter(([, c]) => c).map(([k, c]) => ({ cell: k, spend4w: Math.round(c.spend), conversions4w: c.conv, cpa: c.cpa && +c.cpa.toFixed(2), roas: c.roas && +c.roas.toFixed(2) }));
+  return `Review ad spend efficiency across our sites and ad networks. Sites: ${SITES.map((s) => `${s.name} (${s.goal})`).join(", ")}. Value per conversion (USD): ${JSON.stringify(value)}.\n\nLast four weeks by network|site:\n${JSON.stringify(cells)}\n\nSay where spend is least and most efficient, what to shift, and what to test next. Note any cell too small to trust. This data is sample data until the ad connectors are live.`;
 }
 
 export function templatePrompt(state, template, context) {
@@ -500,6 +699,17 @@ const STYLE = `
 .mp .node.mod { background: var(--mp-panel); }
 .mp .node.mod.on { box-shadow: 0 0 0 2px var(--mp-primary); }
 .mp .map .colhead { position: absolute; top: -22px; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+.mp .matrix th, .mp .matrix td { text-align: center; }
+.mp .matrix th:first-child { text-align: left; }
+.mp .cellv { font-variant-numeric: tabular-nums; }
+.mp .cellv.total { font-weight: 600; background: var(--mp-bg); }
+.mp .cellv.good2 { background: color-mix(in srgb, var(--mp-success) 38%, transparent); }
+.mp .cellv.good1 { background: color-mix(in srgb, var(--mp-success) 16%, transparent); }
+.mp .cellv.bad1 { background: color-mix(in srgb, var(--mp-danger) 16%, transparent); }
+.mp .cellv.bad2 { background: color-mix(in srgb, var(--mp-danger) 38%, transparent); }
+.mp .spark .past { fill: none; stroke: var(--mp-contrast); stroke-width: 1.5; }
+.mp .spark .proj { fill: none; stroke: var(--mp-primary); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.mp .spark .band { fill: var(--mp-primary); opacity: .15; }
 @media (prefers-reduced-motion: no-preference) { .mp .bar, .mp .kcard { transition: background .15s ease; } }
 `;
 
@@ -568,7 +778,9 @@ function mountProduction(host, { container }) {
   container.append(root);
 
   const st = loadState();
-  const ui = { view: "timeline", zoom: "quarter", editing: null, dialog: null, toast: null, calMonth: toIso(todayT()).slice(0, 7), mapSel: null, lane: "all", status: "all", search: "", assetCampaign: "all", scrolled: false, busy: false };
+  const ads = sampleAds();
+  const growth = sampleGrowth(ads);
+  const ui = { view: "timeline", zoom: "quarter", editing: null, dialog: null, toast: null, calMonth: toIso(todayT()).slice(0, 7), mapSel: null, scenario: "hold", adMode: "roas", lane: "all", status: "all", search: "", assetCampaign: "all", scrolled: false, busy: false };
   let toastTimer = null;
   let disposed = false;
 
@@ -623,6 +835,122 @@ function mountProduction(host, { container }) {
       t.append(el("span", "muted small", label), el("b", "", value), el("span", "muted small", detail));
       wrap.append(t);
     });
+    return wrap;
+  }
+
+  const num = (n, d = 0) => (n === null || n === undefined || Number.isNaN(n) ? "n/a" : n.toLocaleString(undefined, { maximumFractionDigits: d }));
+  const pct = (n) => (n === null || n === undefined ? "n/a" : `${n >= 0 ? "+" : ""}${(n * 100).toFixed(1)}%`);
+
+  function sparkline(row) {
+    const W = 180;
+    const H = 38;
+    const all = [...row.series, ...row.future.map((f) => f.hi)];
+    const lo = Math.min(...row.series, ...row.future.map((f) => f.lo));
+    const hi = Math.max(...all);
+    const n = row.series.length + row.future.length;
+    const x = (i) => (i / (n - 1)) * (W - 4) + 2;
+    const y = (v) => H - 3 - ((v - lo) / (hi - lo || 1)) * (H - 6);
+    const box = svg("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, class: "spark", role: "img" });
+    box.setAttribute("aria-label", `${row.label}: last ${row.series.length} weeks and a ${row.future.length}-week projection`);
+    const off = row.series.length;
+    const band = [...row.future.map((f, k) => `${x(off + k)},${y(f.hi)}`), ...row.future.map((f, k) => `${x(off + row.future.length - 1 - k)},${y(row.future[row.future.length - 1 - k].lo)}`)].join(" ");
+    box.append(svg("polygon", { points: band, class: "band" }));
+    box.append(svg("polyline", { points: row.series.map((v, i) => `${x(i)},${y(v)}`).join(" "), class: "past" }));
+    box.append(svg("polyline", { points: [[off - 1, row.series.at(-1)], ...row.future.map((f, k) => [off + k, f.value])].map(([i, v]) => `${x(i)},${y(v)}`).join(" "), class: "proj" }));
+    return box;
+  }
+
+  function growthSection() {
+    const sc = SPEND_SCENARIOS.find((x) => x.id === ui.scenario) ?? SPEND_SCENARIOS[0];
+    const rows = growthMatrix(ads, growth, sc.factor);
+    const card = el("div", "card stack");
+    card.setAttribute("data-testid", "mp-growth");
+    const head = el("div", "row");
+    head.append(el("h2", "", "User growth and ad impact"), select(SPEND_SCENARIOS.map((x) => [x.id, x.label]), sc.id, (v) => { ui.scenario = v; render(); }),
+      button("Ask an agent", () => { ui.dialog = { type: "agent", prompt: adPrompt(ads, st.settings.value), kind: "growth" }; render(); }, "ghost"));
+    const table = el("table");
+    const hr = el("tr");
+    ["Metric", "Last 12 weeks and projection", "Last 4 weeks (per week)", "4-week change", "From ad spend", "Per $1,000 of spend", "In 4 weeks", "In 12 weeks", "12 weeks vs holding spend"].forEach((h) => hr.append(el("th", "", h)));
+    table.append(hr);
+    rows.forEach((r) => {
+      const tr = el("tr");
+      const c2 = el("td"); c2.append(sparkline(r));
+      tr.append(el("td", "", r.label), c2, el("td", "", num(r.last4)), el("td", r.change >= 0 ? "" : "warn", pct(r.change)), el("td", "", r.adShare === null ? "n/a" : `${Math.round(r.adShare * 100)}%`), el("td", "", num(r.per1k, 1)),
+        el("td", "", num(r.at4)), el("td", "", num(r.at12)), el("td", r.lift12 >= 0 ? "" : "warn", `${r.lift12 >= 0 ? "+" : ""}${num(r.lift12)}`));
+      table.append(tr);
+    });
+    const sheet = el("div", "sheet"); sheet.append(table);
+    card.append(head, sheet, el("p", "muted small", "Each metric is fitted to a weekly trend plus that week's total ad spend, then projected 12 weeks at the chosen spend. The shaded band is a rough 90% range. This is sample data and a simple model: it does not know about launches, seasonality or diminishing returns, so treat it as a direction."));
+    return card;
+  }
+
+  function viewAds() {
+    const wrap = el("div", "stack");
+    const m = adMatrix(ads, st.settings.value);
+    const modes = [["roas", "Return on ad spend"], ["cpa", "Cost per conversion"], ["spend", "Spend"], ["conv", "Conversions"]];
+    const bar = el("div", "row");
+    bar.append(select(modes, ui.adMode, (v) => { ui.adMode = v; render(); }), el("span", "muted small", "Last four weeks. Sample data until the ad connectors are live. Green is more efficient than the portfolio average."),
+      button("Ask an agent to review", () => { ui.dialog = { type: "agent", prompt: adPrompt(ads, st.settings.value), kind: "ads" }; render(); }, "ghost"));
+    const show = (c) => {
+      if (!c) return null;
+      return { spend: `$${num(c.spend)}`, conv: num(c.conv), cpa: c.cpa === null ? "n/a" : `$${num(c.cpa, 2)}`, roas: c.roas === null ? "n/a" : `${num(c.roas, 2)}x` }[ui.adMode];
+    };
+    const tone = (c) => {
+      if (!c) return "";
+      const r = ui.adMode === "roas" ? (c.roas ?? 0) / (m.total.roas || 1) : ui.adMode === "cpa" ? (c.cpa ? (m.total.cpa || 1) / c.cpa : 0) : 1;
+      if (ui.adMode === "spend" || ui.adMode === "conv") return "";
+      return r >= 1.25 ? "good2" : r >= 1 ? "good1" : r >= 0.75 ? "bad1" : "bad2";
+    };
+    const table = el("table", "matrix");
+    table.setAttribute("data-testid", "mp-ad-matrix");
+    const hr = el("tr");
+    hr.append(el("th", "", "Ad network"));
+    SITES.forEach((s) => { const th = el("th", "", s.name); th.title = s.goal; hr.append(th); });
+    hr.append(el("th", "", "All sites"));
+    table.append(hr);
+    AD_NETWORKS.forEach((n) => {
+      const tr = el("tr");
+      tr.append(el("th", "", n.name));
+      SITES.forEach((s) => {
+        const c = m.at[`${n.id}|${s.id}`];
+        const td = el("td", `cellv ${tone(c)}`, show(c) ?? "-");
+        if (c) td.title = `${n.name} on ${s.name}: $${num(c.spend)} spend, ${num(c.conv)} ${s.goal.toLowerCase()}`;
+        tr.append(td);
+      });
+      tr.append(el("td", `cellv total ${tone(m.rows[n.id])}`, show(m.rows[n.id])));
+      table.append(tr);
+    });
+    const tot = el("tr");
+    tot.append(el("th", "", "All networks"));
+    SITES.forEach((s) => tot.append(el("td", `cellv total ${tone(m.cols[s.id])}`, show(m.cols[s.id]))));
+    tot.append(el("td", "cellv total", show(m.total)));
+    table.append(tot);
+    const sheet = el("div", "sheet"); sheet.append(table);
+
+    const notes = el("div", "cols");
+    const ranked = Object.entries(m.at).filter(([, c]) => c && c.roas !== null && c.spend >= 400).sort((a, b) => b[1].roas - a[1].roas);
+    const label = (key) => { const [n, s] = key.split("|"); return `${AD_NETWORKS.find((x) => x.id === n).name} on ${SITES.find((x) => x.id === s).name}`; };
+    const best = el("div", "card stack");
+    best.append(el("h2", "", "Most and least efficient"));
+    if (ranked.length >= 2) {
+      best.append(el("span", "small", `Best: ${label(ranked[0][0])}, ${num(ranked[0][1].roas, 2)}x return`), el("span", "small warn", `Weakest: ${label(ranked.at(-1)[0])}, ${num(ranked.at(-1)[1].roas, 2)}x return`));
+    }
+    const hint = reallocationHint(m);
+    const shift = el("div", "card stack");
+    shift.append(el("h2", "", "Reallocation hint"));
+    shift.append(el("span", "small", hint ? `Moving 20% of the weakest cell's weekly spend ($${num(hint.moved)}) to the strongest (${label(hint.to)}) would add about ${num(hint.extraConversions)} conversions a week at observed rates.` : "Not enough data."), el("span", "muted small", "Assumes returns stay linear. Real returns fall as spend rises, so test in steps."));
+    notes.append(best, shift);
+
+    const values = el("div", "card stack");
+    values.append(el("h2", "", "Value per conversion"), el("span", "muted small", "Used for return on ad spend. Placeholder values: set what a conversion on each site is worth."));
+    const form = el("div", "form");
+    SITES.forEach((s) => {
+      const input = el("input"); input.type = "number"; input.min = "0"; input.step = "0.5"; input.value = String(st.settings.value[s.id]);
+      input.addEventListener("change", () => { st.settings.value[s.id] = Math.max(0, Number(input.value) || 0); change(); });
+      form.append(field(`${s.name}: ${s.goal} (USD)`, input));
+    });
+    values.append(form);
+    wrap.append(bar, sheet, notes, values);
     return wrap;
   }
 
@@ -756,7 +1084,7 @@ function mountProduction(host, { container }) {
     bar.append(el("span", "muted small", "Zoom"), select([["month", "Month"], ["quarter", "Quarter"], ["year", "Year"]], ui.zoom, (v) => { ui.zoom = v; ui.scrolled = false; render(); }));
     bar.append(el("span", "muted small", "Dashed lines link a campaign to the feature launches it supports. Hollow diamonds are projected weekly releases."));
     const wrap = el("div", "stack");
-    wrap.append(bar, sheet);
+    wrap.append(bar, sheet, growthSection());
     return wrap;
   }
 
@@ -1225,7 +1553,7 @@ function mountProduction(host, { container }) {
   }
 
   // ── Render ──
-  const bodies = { timeline: viewTimeline, board: viewBoard, calendar: viewCalendar, list: viewList, campaigns: viewCampaigns, map: viewMap, assets: viewAssets, templates: viewTemplates, costs: viewCosts, connections: viewConnections };
+  const bodies = { timeline: viewTimeline, board: viewBoard, calendar: viewCalendar, list: viewList, campaigns: viewCampaigns, map: viewMap, ads: viewAds, assets: viewAssets, templates: viewTemplates, costs: viewCosts, connections: viewConnections };
   let bodyHost = null;
 
   function renderBody() {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  activate, applyPlan, assetCost, launchLead, projectReleases, quarterCoverage, releaseItems, TEMPLATES, toT, validateItem,
+  activate, adMatrix, applyPlan, assetCost, forecastMetric, growthMatrix, olsFit, sampleAds, sampleGrowth, SITES, weeklySpend, launchLead, projectReleases, quarterCoverage, releaseItems, TEMPLATES, toT, validateItem,
 } from "./extension.js";
 
 const DAY = 86_400_000;
@@ -68,6 +68,35 @@ describe("plan logic", () => {
   });
 });
 
+describe("ad efficiency and growth", () => {
+  const now = Date.parse("2026-10-29T00:00:00Z");
+
+  it("recovers a trend and a spend effect exactly from clean data", () => {
+    const spend = [100, 200, 150, 300, 250, 400];
+    const y = spend.map((s, t) => 10 + 2 * t + 0.5 * s);
+    const { beta } = olsFit(spend.map((s, t) => [1, t, s]), y);
+    expect(beta.map((b) => Math.round(b * 1000) / 1000)).toEqual([10, 2, 0.5]);
+    expect(forecastMetric(y, spend, [500]).future[0].value).toBeCloseTo(10 + 2 * 6 + 250, 3);
+  });
+
+  it("projects more growth when ad spend is raised", () => {
+    const ads = sampleAds(now);
+    const growth = sampleGrowth(ads);
+    const hold = growthMatrix(ads, growth, 1);
+    const more = growthMatrix(ads, growth, 1.5);
+    hold.forEach((row, i) => expect(more[i].at12).toBeGreaterThan(row.at12));
+  });
+
+  it("is stable and its totals add up", () => {
+    const a = sampleAds(now);
+    expect(sampleAds(now)).toEqual(a);
+    const m = adMatrix(a);
+    const bySite = SITES.reduce((s, site) => s + m.cols[site.id].spend, 0);
+    expect(Math.round(bySite)).toBe(Math.round(m.total.spend));
+    expect(weeklySpend(a)).toHaveLength(12);
+  });
+});
+
 describe("page", () => {
   let container;
   beforeEach(() => { window.localStorage.clear(); container = document.createElement("div"); document.body.append(container); });
@@ -80,7 +109,7 @@ describe("page", () => {
 
     expect(container.textContent).toContain("Release train");
     expect(container.textContent).toContain("Quarterly campaigns");
-    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(10);
+    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(11);
     expect(container.querySelectorAll(".links line").length).toBeGreaterThan(0);
     cleanup();
     expect(container.querySelector(".mp")).toBeNull();
@@ -134,5 +163,18 @@ describe("page", () => {
     const off = [...container.querySelectorAll(".node.con:not(.on)")][0];
     click(off);
     expect(container.querySelectorAll(".node.con.on").length).toBe(before + 1);
+  });
+
+  it("shows the growth matrix under the timeline and the ad efficiency matrix", () => {
+    let mount;
+    activate(hostWith((_, m) => { mount = m; }));
+    mount({ container });
+    expect(container.querySelector('[data-testid="mp-growth"]').textContent).toContain("Weekly active users");
+
+    [...container.querySelectorAll('[role="tab"]')].find((t) => t.textContent === "Ad spend").click();
+    const matrix = container.querySelector('[data-testid="mp-ad-matrix"]');
+    expect(matrix.textContent).toContain("openhands.dev");
+    expect(matrix.textContent).toContain("Spotify Ads");
+    expect(matrix.textContent).toContain("All networks");
   });
 });
