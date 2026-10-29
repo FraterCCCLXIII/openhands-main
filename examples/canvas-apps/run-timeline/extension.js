@@ -467,6 +467,9 @@ const STYLE = `
 .rt .chip[aria-pressed="true"] { background: var(--rt-primary); color: var(--oh-accent-foreground, #0B0E14); border-color: transparent; }
 .rt .pm { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
 .rt .pm th { position: sticky; top: 0; z-index: 3; background: var(--rt-panel); text-align: right; font-weight: 500; color: var(--rt-muted); font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--rt-border); white-space: nowrap; }
+.rt .pm th button { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; border-radius: 4px; }
+.rt .pm th button:hover { color: var(--rt-contrast); }
+.rt .pm th[aria-sort="ascending"] button, .rt .pm th[aria-sort="descending"] button { color: var(--rt-contrast); }
 .rt .pm th:first-child, .rt .pm td:first-child { text-align: left; position: sticky; left: 0; z-index: 2; background: var(--rt-panel); }
 .rt .pm th:first-child { z-index: 4; }
 .rt .pm td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--rt-border); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -630,7 +633,7 @@ function mountTimeline(host, { container }) {
   container.append(root);
 
   const readMode = () => { try { return window.localStorage.getItem("run-timeline:cost") === "estimated" ? "estimated" : "reported"; } catch { return "reported"; } };
-  const ui = { costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All" };
+  const ui = { costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All", priceSort: null };
   let disposed = false;
   let pollTimer = null;
   let loadToken = 0;
@@ -844,14 +847,47 @@ function mountTimeline(host, { container }) {
       const scale = (v, k) => (v > 0 ? Math.max(4, (Math.log10(1 + v) / Math.log10(1 + maxOf(k))) * 100) : 0);
       const table = el("table", "pm");
       table.setAttribute("data-testid", "rt-price-matrix");
+      const hasRun = Boolean(tl?.calls?.length);
+      const cols = [["Model", "name"], ["Context", "context"], ["Input", "input"], ["Output", "output"], ["Cache read", "cacheRead"], ["Cache write", "cacheWrite"], ["Long context", "longInput"], ...(hasRun ? [["This run on it", "run"]] : []), ["Source", "source"]];
       const hr = el("tr");
-      ["Model", "Context", "Input", "Output", "Cache read", "Cache write", "Long context", ...(tl?.calls?.length ? ["This run on it"] : []), "Source"].forEach((h) => hr.append(el("th", "", h)));
+      cols.forEach(([label, key]) => {
+        const th = el("th");
+        const active = ui.priceSort?.key === key;
+        th.setAttribute("aria-sort", active ? (ui.priceSort.dir === "asc" ? "ascending" : "descending") : "none");
+        const b = el("button", "", `${label}${active ? (ui.priceSort.dir === "asc" ? " ▲" : " ▼") : ""}`);
+        b.type = "button";
+        b.title = `Sort by ${label.toLowerCase()}`;
+        b.addEventListener("click", () => {
+          // First click sorts one way, second the other, third goes back to the grouped list.
+          const first = key === "name" || key === "source" ? "asc" : "desc";
+          const other = first === "asc" ? "desc" : "asc";
+          ui.priceSort = !active ? { key, dir: first } : ui.priceSort.dir === first ? { key, dir: other } : null;
+          fill();
+        });
+        th.append(b);
+        hr.append(th);
+      });
       table.append(hr);
+      const value = (r, key) => (key === "name" ? r.name.toLowerCase() : key === "source" ? `${r.source} ${r.asOf}` : key === "run" ? repriceRun(tl, r) : r[key] ?? null);
+      const flat = Boolean(ui.priceSort);
+      if (flat) {
+        const { key, dir } = ui.priceSort;
+        const sign = dir === "asc" ? 1 : -1;
+        // Rows without a value stay at the bottom either way.
+        rows.sort((a, b) => {
+          const x = value(a, key);
+          const y = value(b, key);
+          if (x === null && y === null) return 0;
+          if (x === null) return 1;
+          if (y === null) return -1;
+          return (typeof x === "string" ? x.localeCompare(y) : x - y) * sign;
+        });
+      }
       let last = null;
       const m = (v) => (v === null || v === undefined ? "-" : `$${v < 1 ? v.toFixed(v < 0.1 ? 3 : 2) : v.toFixed(2).replace(/\.00$/, "")}`);
       const baseCost = tl?.calls?.length ? runCost(tl).estimate : null;
       rows.forEach((r) => {
-        if (r.provider !== last) { last = r.provider; const g = el("tr", "grp"); const td = el("td", "", r.provider); td.colSpan = hr.children.length; g.append(td); table.append(g); }
+        if (!flat && r.provider !== last) { last = r.provider; const g = el("tr", "grp"); const td = el("td", "", r.provider); td.colSpan = hr.children.length; g.append(td); table.append(g); }
         const tr = el("tr", usedIds.has(r.id) ? "used" : "");
         const first = el("td");
         first.append(el("span", "id", r.name));

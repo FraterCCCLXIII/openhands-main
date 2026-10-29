@@ -216,6 +216,19 @@ describe("page", () => {
     expect(table.textContent).toContain("Claude Opus 5.5");
     expect(table.textContent).toContain("claude-opus-4-5");
     expect(container.querySelectorAll(".chip").length).toBeGreaterThan(5);
+
+    // Sorting by output price, high to low, flattens the list.
+    const header = [...container.querySelectorAll(".pm th button")].find((b) => b.textContent.startsWith("Output"));
+    header.click();
+    const outputs = [...container.querySelectorAll(".pm tr:not(.grp)")].slice(1, 6).map((tr) => Number(tr.children[3].textContent.replace(/[$,]/g, "")));
+    expect(container.querySelector(".pm tr.grp")).toBeNull();
+    expect(container.querySelector('.pm th[aria-sort="descending"]').textContent).toContain("Output");
+    expect(outputs).toEqual([...outputs].sort((a, b) => b - a));
+    // A second click reverses it; a third restores the grouped list.
+    [...container.querySelectorAll(".pm th button")].find((b) => b.textContent.startsWith("Output")).click();
+    expect(container.querySelector('.pm th[aria-sort="ascending"]')).not.toBeNull();
+    [...container.querySelectorAll(".pm th button")].find((b) => b.textContent.startsWith("Output")).click();
+    expect(container.querySelector(".pm tr.grp")).not.toBeNull();
   });
 
   it("lists conversations, loads one's events and draws the waterfall", async () => {
