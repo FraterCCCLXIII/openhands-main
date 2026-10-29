@@ -8,9 +8,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const [findingsDir, indexDir] = process.argv.slice(2);
+const [findingsDir, indexDir, datapointsDir] = process.argv.slice(2);
 if (!findingsDir || !indexDir) {
-  console.error("usage: build-research-hub-snapshot.mjs <findingsDir> <indexResultsRepoDir>");
+  console.error(
+    "usage: build-research-hub-snapshot.mjs <findingsDir> <indexResultsRepoDir> [datapointsDir]",
+  );
   process.exit(1);
 }
 
@@ -26,6 +28,39 @@ const articles = fs
   .filter((f) => f.endsWith(".json"))
   .map((f) => readJson(path.join(findingsDir, f)))
   .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+// Numeric datapoints extracted from the article text: <slug>.json holding
+// {slug, datapoints:[{metric, unit, entity, value, baseline, baseline_label, note, ...}]}.
+// Joined with article title/url/date and de-duplicated so charts can cite sources.
+const bySlug = new Map(articles.map((a) => [a.slug, a]));
+const datapoints = [];
+if (datapointsDir) {
+  const seen = new Set();
+  for (const f of fs.readdirSync(datapointsDir).filter((n) => n.endsWith(".json"))) {
+    const { slug, datapoints: dps } = readJson(path.join(datapointsDir, f));
+    const article = bySlug.get(slug);
+    if (!article) continue;
+    for (const d of dps) {
+      if (typeof d.value !== "number" || !Number.isFinite(d.value)) continue;
+      const key = [d.metric, d.entity, d.value, slug].join("|");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      datapoints.push({
+        metric: d.metric,
+        unit: d.unit,
+        entity: d.entity,
+        value: d.value,
+        baseline: d.baseline ?? null,
+        baseline_label: d.baseline_label ?? null,
+        note: d.note ?? "",
+        slug,
+        title: article.title,
+        url: article.url,
+        date: article.date,
+      });
+    }
+  }
+}
 
 // Index results: results/<model>/{metadata,scores}.json plus alternative agents
 // at alternative_agents/<agent>/<model>/.
@@ -81,6 +116,7 @@ const data = {
     index_results: "https://github.com/OpenHands/openhands-index-results",
   },
   articles,
+  datapoints,
   index: { benchmarks, entries },
 };
 
