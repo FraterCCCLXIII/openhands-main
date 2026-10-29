@@ -10,10 +10,11 @@ const CONFIG = __CONFIG__;
 // iframe element. The `[hidden]` rule comes from the claude.ai page skeleton;
 // without it the page's own `display` rules show its closed drawer and
 // popover. The Ask Claude drawer stays hidden until it is wired to OpenHands'
-// own LLM routing.
+// own LLM routing. The page fills the frame, so the document's default 8px
+// body margin goes too.
 const PAGE_PRELUDE =
   "<script>window.claude = window.frameElement && window.frameElement.hubClaude;</script>" +
-  "<style>[hidden]{display:none!important}#ask-btn{display:none!important}</style>";
+  "<style>html,body{margin:0}[hidden]{display:none!important}#ask-btn{display:none!important}</style>";
 
 // Files relative to the hub dir, through the Agent Server's file API.
 function agentServerStorage(host, dataDir) {
