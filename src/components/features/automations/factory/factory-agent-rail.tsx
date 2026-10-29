@@ -2,7 +2,8 @@ import { Activity, Info, Pencil, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FeedRoleBadge } from "#/components/features/feed/feed-role-badge";
 import { I18nKey } from "#/i18n/declaration";
-import { getDemoAgentRole } from "#/utils/feed-agent-role";
+import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
+import { applyAgentConfig, getDemoAgentRole } from "#/utils/feed-agent-role";
 import type { FactoryTarget } from "#/utils/factory-routing";
 import { cn } from "#/utils/utils";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
@@ -33,6 +34,7 @@ function AgentButton({
 }) {
   const { t } = useTranslation("openhands");
   const { agent, live } = entry;
+  const config = useFeedAgentConfigStore((state) => state.configs[agent.name]);
   const { Icon } = agent;
   return (
     <div className="group relative">
@@ -61,7 +63,9 @@ function AgentButton({
         <span className="truncate text-sm font-medium text-foreground">
           {agent.name}
         </span>
-        <FeedRoleBadge role={getDemoAgentRole(agent)} />
+        <FeedRoleBadge
+          role={applyAgentConfig(getDemoAgentRole(agent), config)}
+        />
         <StyledTooltip
           content={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
           placement="bottom"

@@ -146,6 +146,32 @@ export function IconAppearancePanel({
 
   return (
     <>
+      {/* Preview and clear */}
+      <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted">Preview:</span>
+          <StyledIcon
+            size={28}
+            background={selectedBackground}
+            emoji={value.emoji}
+            lucideIcon={value.lucide_icon}
+          >
+            <LucideIcons.Image
+              width={16}
+              height={16}
+              className="text-white/60"
+            />
+          </StyledIcon>
+        </div>
+        <button
+          type="button"
+          onClick={handleClear}
+          className="text-xs text-muted hover:text-danger"
+        >
+          Clear
+        </button>
+      </div>
+
       {/* Color palette */}
       <div className="flex flex-col gap-2">
         <span className="text-xs font-medium text-muted">Background Color</span>
@@ -202,7 +228,7 @@ export function IconAppearancePanel({
       </div>
 
       {/* Icon/Emoji grid */}
-      <div className="flex max-h-48 flex-wrap gap-1 overflow-y-auto">
+      <div className="custom-scrollbar flex max-h-48 flex-wrap gap-1 overflow-y-auto">
         {activeTab === "emoji"
           ? COMMON_EMOJIS.map((emoji) => {
               const isSelected = value.emoji === emoji;
@@ -241,32 +267,6 @@ export function IconAppearancePanel({
                 </button>
               );
             })}
-      </div>
-
-      {/* Preview and clear */}
-      <div className="flex items-center justify-between border-t border-border pt-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted">Preview:</span>
-          <StyledIcon
-            size={28}
-            background={selectedBackground}
-            emoji={value.emoji}
-            lucideIcon={value.lucide_icon}
-          >
-            <LucideIcons.Image
-              width={16}
-              height={16}
-              className="text-white/60"
-            />
-          </StyledIcon>
-        </div>
-        <button
-          type="button"
-          onClick={handleClear}
-          className="text-xs text-muted hover:text-danger"
-        >
-          Clear
-        </button>
       </div>
     </>
   );

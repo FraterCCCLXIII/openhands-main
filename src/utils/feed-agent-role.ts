@@ -83,6 +83,25 @@ export function getDemoAgentRole(demo: FeedDemoAgent): FeedAgentRole {
   };
 }
 
+export const FEED_AGENT_ROLE_KEYS = ROLE_KEYS;
+
+/** The model family a tier maps to. */
+export const FEED_TIER_MODELS: Readonly<Record<FeedAgentTier, string>> =
+  TIER_MODEL;
+
+/** A persona's role with the person's edits (role, model tier) applied. */
+export function applyAgentConfig(
+  base: FeedAgentRole,
+  config: { role?: FeedAgentRoleKey; tier?: FeedAgentTier | null } | undefined,
+): FeedAgentRole {
+  const tier = config?.tier === undefined ? base.tier : config.tier;
+  return {
+    role: config?.role ?? base.role,
+    tier,
+    model: tier ? TIER_MODEL[tier] : null,
+  };
+}
+
 /**
  * The role and tier a conversation's agent runs as. An explicit `role` / `tier`
  * tag wins; otherwise a conversation that manages subagents reads as the
