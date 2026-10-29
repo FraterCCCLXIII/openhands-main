@@ -58410,22 +58410,22 @@
     "id": "Agent-server {{version}}"
   },
   "BACKEND$DETECTED_UNVERIFIED": {
-    "en": "Something is listening here",
-    "ja": "ここで何かが待機中です",
-    "zh-CN": "此处有服务在监听",
-    "zh-TW": "此處有服務在監聽",
-    "ko-KR": "이곳에서 무언가 수신 중입니다",
-    "no": "Noe lytter her",
-    "ar": "هناك خدمة تستمع هنا",
-    "de": "Hier lauscht etwas",
-    "fr": "Un service écoute ici",
-    "it": "Qualcosa è in ascolto qui",
-    "pt": "Algo está escutando aqui",
-    "es": "Algo está escuchando aquí",
-    "ca": "Alguna cosa escolta aquí",
-    "tr": "Burada bir şey dinliyor",
-    "uk": "Тут щось слухає",
-    "id": "Ada yang mendengarkan di sini"
+    "en": "Can't connect from here: not an agent server, or it blocks this page",
+    "ja": "ここからは接続できません: エージェントサーバーではないか、このページをブロックしています",
+    "zh-CN": "无法从此处连接：不是代理服务器，或它阻止了此页面",
+    "zh-TW": "無法從此處連線：不是代理伺服器，或它封鎖了此頁面",
+    "ko-KR": "여기서 연결할 수 없음: 에이전트 서버가 아니거나 이 페이지를 차단합니다",
+    "no": "Kan ikke koble til herfra: ikke en agentserver, eller den blokkerer denne siden",
+    "ar": "لا يمكن الاتصال من هنا: ليس خادم وكيل أو أنه يحظر هذه الصفحة",
+    "de": "Von hier nicht erreichbar: kein Agent-Server oder er blockiert diese Seite",
+    "fr": "Connexion impossible d'ici : ce n'est pas un serveur d'agents, ou il bloque cette page",
+    "it": "Impossibile connettersi da qui: non è un agent-server oppure blocca questa pagina",
+    "pt": "Não é possível conectar daqui: não é um servidor de agentes ou bloqueia esta página",
+    "es": "No se puede conectar desde aquí: no es un servidor de agentes o bloquea esta página",
+    "ca": "No es pot connectar des d'aquí: no és un servidor d'agents o bloqueja aquesta pàgina",
+    "tr": "Buradan bağlanılamıyor: ajan sunucusu değil veya bu sayfayı engelliyor",
+    "uk": "Звідси не вдається підключитися: це не сервер агентів або він блокує цю сторінку",
+    "id": "Tidak dapat terhubung dari sini: bukan agent-server, atau memblokir halaman ini"
   },
   "BACKEND$DETECTED_DEFAULT_NAME": {
     "en": "Local",
@@ -58444,5 +58444,23 @@
     "tr": "Yerel",
     "uk": "Локальний",
     "id": "Lokal"
+  },
+  "BACKEND$DETECTED_KEY_REQUIRED": {
+    "en": "API key required",
+    "ja": "APIキーが必要",
+    "zh-CN": "需要 API 密钥",
+    "zh-TW": "需要 API 金鑰",
+    "ko-KR": "API 키 필요",
+    "no": "API-nøkkel kreves",
+    "ar": "مفتاح API مطلوب",
+    "de": "API-Schlüssel erforderlich",
+    "fr": "Clé API requise",
+    "it": "Chiave API richiesta",
+    "pt": "Chave de API necessária",
+    "es": "Clave de API requerida",
+    "ca": "Clau d'API necessària",
+    "tr": "API anahtarı gerekli",
+    "uk": "Потрібен ключ API",
+    "id": "Kunci API diperlukan"
   }
 }

@@ -11,6 +11,11 @@ export interface DetectedBackend {
   /** Agent Server version when the server identified itself, else null. */
   version: string | null;
   /**
+   * Whether the server rejects requests without an API key: true on a 401 or
+   * 403, false when it answers openly, null when that is unknown.
+   */
+  requiresApiKey: boolean | null;
+  /**
    * True when `/server_info` answered like an Agent Server. False means
    * something is listening but the browser could not read its reply (for
    * example, cross-origin access is blocked), so it may or may not be one.
@@ -40,6 +45,22 @@ const looksLikeServerInfo = (value: unknown): value is AgentServerInfo =>
   typeof value === "object" &&
   ("version" in value || "sdk_version" in value);
 
+/** Asks an authenticated endpoint for settings without a key. */
+async function needsApiKey(
+  host: string,
+  fetchFn: typeof fetch,
+): Promise<boolean | null> {
+  try {
+    const response = await fetchFn(`${host}/api/settings`, {
+      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+    });
+    if (response.status === 401 || response.status === 403) return true;
+    return response.ok ? false : null;
+  } catch {
+    return null;
+  }
+}
+
 async function probe(
   port: number,
   fetchFn: typeof fetch,
@@ -59,6 +80,7 @@ async function probe(
       host,
       port,
       version: getDisplayAgentServerVersion(info),
+      requiresApiKey: await needsApiKey(host, fetchFn),
       identified: true,
     };
   } catch {
@@ -66,7 +88,13 @@ async function probe(
     // request settles only when something is listening.
     try {
       await fetchFn(host, { mode: "no-cors", signal: timeout() });
-      return { host, port, version: null, identified: false };
+      return {
+        host,
+        port,
+        version: null,
+        requiresApiKey: null,
+        identified: false,
+      };
     } catch {
       return null;
     }

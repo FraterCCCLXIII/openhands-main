@@ -880,6 +880,16 @@ function ManualConnectionColumn({
             setHost(backend.host);
             if (!name.trim()) setName(t(I18nKey.BACKEND$DETECTED_DEFAULT_NAME));
             setConnectionError(null);
+            // The server named its host; the key is the one thing left to enter.
+            if (backend.requiresApiKey) {
+              requestAnimationFrame(() =>
+                document
+                  .querySelector<HTMLInputElement>(
+                    `[name="${testIdRoot}-api-key"]`,
+                  )
+                  ?.focus(),
+              );
+            }
           }}
         />
       ) : null}
