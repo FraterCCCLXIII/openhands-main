@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, activePreset, ageShort, applyNav, DEFAULT_NAV, displayTags, groupByWorkspace, tagFacets, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
+import { activate, buildTimeline, costShort, costText, PRICES, repriceRun, activePreset, ageShort, fleetStats, guessHome, toolStats, applyNav, DEFAULT_NAV, displayTags, groupByWorkspace, tagFacets, describeRow, estimateCost, extractRefs, priceFor, runCost, fmtDuration, linesOf, parseImport, parseTime, summarize } from "./extension.js";
 
 const action = (id, ts, over = {}) => ({ id, timestamp: ts, source: "agent", tool_name: "terminal", tool_call_id: `call-${id}`, action: { kind: "TerminalAction", command: "ls" }, security_risk: "LOW", ...over });
 const obs = (id, actionId, ts, over = {}) => ({ id, timestamp: ts, source: "environment", action_id: actionId, tool_name: "terminal", observation: { kind: "TerminalObservation", content: [{ type: "text", text: "ok" }], exit_code: 0, is_error: false, ...over } });
@@ -189,6 +189,41 @@ describe("cost from our prices", () => {
     const rc = runCost(tl);
     expect(rc.reported).toBe(0);
     expect(rc.estimate).toBeCloseTo((2000 * 2 + 500 * 10) / 1e6);
+  });
+});
+
+describe("tools, system events and the fleet summary", () => {
+  it("counts calls, time, failures and thinking per tool, and keeps system events as markers", () => {
+    const tl = buildTimeline([
+      action("a1", "2026-10-29T10:00:00Z", { reasoning_content: "why", thought: [{ type: "text", text: "hm" }] }), obs("o1", "a1", "2026-10-29T10:00:02Z"),
+      action("a2", "2026-10-29T10:00:03Z"), obs("o2", "a2", "2026-10-29T10:00:04Z", { exit_code: 1 }),
+      action("a3", "2026-10-29T10:00:05Z", { tool_name: "file_editor" }), obs("o3", "a3", "2026-10-29T10:00:06Z"),
+      { id: "h1", timestamp: "2026-10-29T10:00:07Z", source: "environment", kind: "HookExecutionEvent", hook_event_type: "PreToolUse", blocked: true, hook_command: "check.sh" },
+      { id: "c1", timestamp: "2026-10-29T10:00:08Z", source: "environment", kind: "Condensation", forgotten_event_ids: ["x", "y"], summary: "earlier work" },
+    ]);
+    const st = toolStats(tl);
+    const terminal = st.tools.find((t) => t.tool === "terminal");
+    expect(terminal).toMatchObject({ calls: 2, errors: 1, thinking: 1, thought: 1 });
+    expect(terminal.ms).toBe(3000);
+    expect(st.calls).toBe(3);
+    expect(st.system.map((i) => i.label)).toEqual(["Hook: PreToolUse (blocked)", "Condensation"]);
+    expect(st.system[1].text).toContain("Forgot 2 events");
+  });
+
+  it("totals the fleet summary and reads the settings the runs used", () => {
+    const fs = fleetStats({ conversations: [
+      { id: "a", actions: 3, thinking: 1, events: 10, maxIterations: 500, confirmation: "NeverConfirm", tools: { terminal: { calls: 3, errors: 1, ms: 50 } }, agentErrors: { rate_limit: 1 }, usage: { prompt: 100, completion: 10, cost: 0.5, models: ["m"] } },
+      { id: "b", actions: 0, events: 2, maxIterations: 500, confirmation: "NeverConfirm", tools: {}, agentErrors: {} },
+    ] });
+    expect(fs).toMatchObject({ conversations: 2, actions: 3, thinking: 1, errors: 1, cost: 0.5, tokens: 110 });
+    expect(fs.settings.maxIterations).toEqual({ 500: 2 });
+    expect(fs.hist.find((h) => h.label === "2-3").n).toBe(1);
+    expect(fs.errorKinds).toEqual({ rate_limit: 1 });
+  });
+
+  it("finds the home folder from a conversation workspace", () => {
+    expect(guessHome([{ workspace: { working_dir: "/Users/ada/workspace/x" } }])).toBe("/Users/ada");
+    expect(guessHome([{ workspace: null }])).toBeNull();
   });
 });
 

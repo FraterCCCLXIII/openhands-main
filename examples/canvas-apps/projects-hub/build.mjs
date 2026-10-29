@@ -18,18 +18,18 @@ const opt = (name) => {
 const manifest = {
   schema_version: 1,
   name: "projects-hub",
-  display_name: "Projects",
+  display_name: "Projector",
   version: "0.1.0",
   description: "Schedule, board, pipeline, agents, costs and history for every repo in the hub, by organization and project.",
   entrypoint: "extension.js",
   icon: "icon.svg",
   contributes: {
-    pages: [{ id: "projects", title: "Projects", path: "/projects", nav_label: "Projects" }],
+    pages: [{ id: "projects", title: "Projector", path: "/projects", nav_label: "Projector" }],
   },
 };
 const config = {
   pageId: "projects",
-  title: "Projects",
+  title: "Projector",
   dataDir: resolve(opt("--data-dir") ?? DEFAULT_HUB_DIR),
   pollMs: Number(opt("--poll-ms") ?? 30000),
 };

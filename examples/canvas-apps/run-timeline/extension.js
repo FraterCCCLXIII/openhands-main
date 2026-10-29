@@ -1,4 +1,4 @@
-/* Run Timeline — a Canvas App that shows where the time went in an OpenHands run.
+/* Runner — a Canvas App that shows where the time went in an OpenHands run.
  *
  * It pairs each action with its observation into a span, lays the spans out as a
  * waterfall next to messages and errors, and reads either a live conversation
@@ -260,6 +260,10 @@ const classify = (e) => {
   if (isObj(e.llm_message)) return "message";
   if (e.kind === "ConversationErrorEvent" || e.kind === "ServerErrorEvent") return "error";
   if (e.kind === "ConversationStateUpdateEvent" && (e.key === "stats" || e.key === "full_state")) return "stats";
+  if (e.kind === "HookExecutionEvent") return "hook";
+  if (e.kind === "Condensation") return "condensation";
+  if (e.kind === "InterruptEvent") return "interrupt";
+  if (e.kind === "PauseEvent") return "pause";
   return null;
 };
 
@@ -296,6 +300,7 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
         kind: "span", id, label: (typeof e.summary === "string" && e.summary.trim()) || e.tool_name, tool: e.tool_name,
         start: time.t, end: null, status: "open", args: argsText(e.action), result: "", risk: e.security_risk ?? null,
         basis: time.basis, callId: e.tool_call_id ?? null, loc: linesOf(e.action), usage: null,
+        thinking: Boolean(e.reasoning_content) || (Array.isArray(e.thinking_blocks) && e.thinking_blocks.length > 0), thought: Array.isArray(e.thought) && e.thought.some((x) => isObj(x) && typeof x.text === "string" && x.text.trim()),
       };
       spans.set(id, span);
       if (span.callId) byCall.set(span.callId, span);
@@ -318,9 +323,18 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
         span.end = Math.max(time.t, span.start);
         span.status = "error";
         span.result = clip(String(e.error));
+        span.errorKind = isObj(e.classification) ? e.classification.kind ?? null : typeof e.classification === "string" ? e.classification : null;
       } else {
         instants.push({ kind: "error", id, t: time.t, label: "Agent error", text: clip(String(e.error)), basis: time.basis });
       }
+    } else if (kind === "hook" || kind === "condensation" || kind === "interrupt" || kind === "pause") {
+      const sys = {
+        hook: [`Hook: ${e.hook_event_type ?? "run"}${e.blocked ? " (blocked)" : e.success === false ? " (failed)" : ""}`, [e.hook_command, e.stderr, e.stdout].filter((x) => typeof x === "string" && x.trim()).join("\n")],
+        condensation: ["Condensation", `Forgot ${Array.isArray(e.forgotten_event_ids) ? e.forgotten_event_ids.length : 0} events.${typeof e.summary === "string" && e.summary ? ` ${e.summary}` : ""}`],
+        interrupt: ["Interrupted", "The run was interrupted."],
+        pause: ["Paused", "The run was paused."],
+      }[kind];
+      instants.push({ kind: "system", sub: kind, id, t: time.t, label: sys[0], text: clip(sys[1] || sys[0]), basis: time.basis });
     } else if (kind === "message") {
       const role = e.llm_message.role === "user" ? "user" : "agent";
       const text = contentText(e.llm_message.content);
@@ -354,6 +368,36 @@ export function buildTimeline(rawEvents, { assumeUtc = false } = {}) {
   const lines = list.reduce((acc, sp) => ({ added: acc.added + (sp.loc?.added ?? 0), removed: acc.removed + (sp.loc?.removed ?? 0) }), { added: 0, removed: 0 });
   const all = [...list.map((s) => s.start), ...list.map((s) => s.end).filter((t) => t !== null), ...instants.map((i) => i.t)];
   return { spans: list, instants, warnings, ignored, usage, calls, lines, refs: Object.fromEntries(Object.entries(refs).map(([k, v]) => [k, [...v]])), t0: all.length ? Math.min(...all) : null, t1: all.length ? Math.max(...all) : null };
+}
+
+
+/** Per-tool counts for a run: calls, time inside, errors, and how often the model thought first. */
+export function toolStats(tl) {
+  const by = new Map();
+  tl.spans.forEach((sp) => {
+    const t = by.get(sp.tool) ?? { tool: sp.tool, calls: 0, ms: 0, errors: 0, thinking: 0, thought: 0, open: 0 };
+    t.calls += 1;
+    if (sp.end !== null) t.ms += sp.end - sp.start; else t.open += 1;
+    if (sp.status === "error" || sp.status === "rejected") t.errors += 1;
+    if (sp.thinking) t.thinking += 1;
+    if (sp.thought) t.thought += 1;
+    by.set(sp.tool, t);
+  });
+  const tools = [...by.values()].sort((a, b) => b.calls - a.calls || a.tool.localeCompare(b.tool));
+  const calls = tl.spans.length;
+  const risks = {};
+  tl.spans.forEach((sp) => { const r = sp.risk && sp.risk !== "UNKNOWN" ? sp.risk : "UNKNOWN"; risks[r] = (risks[r] ?? 0) + 1; });
+  const buckets = new Array(24).fill(0);
+  if (tl.t0 !== null && tl.t1 > tl.t0) tl.spans.forEach((sp) => { buckets[Math.min(23, Math.floor(((sp.start - tl.t0) / (tl.t1 - tl.t0)) * 24))] += 1; });
+  else if (calls) buckets[0] = calls;
+  return {
+    tools, calls, distinct: tools.length, risks, buckets,
+    thinking: tl.spans.filter((x) => x.thinking).length,
+    thoughts: tl.spans.filter((x) => x.thought).length,
+    errors: tools.reduce((n, t) => n + t.errors, 0),
+    system: tl.instants.filter((i) => i.kind === "system" || i.kind === "error"),
+    errorKinds: tl.spans.reduce((acc, x) => (x.errorKind ? { ...acc, [x.errorKind]: (acc[x.errorKind] ?? 0) + 1 } : acc), {}),
+  };
 }
 
 /** Totals for a timeline: time inside steps (overlaps merged), time between them, and the extremes. */
@@ -459,6 +503,18 @@ const STYLE = `
 .rt .tip .sec { display: grid; grid-template-columns: max-content 1fr; gap: 1px 10px; }
 .rt .tip .sec .k { color: var(--rt-muted); } .rt .tip .sec .v { word-break: break-word; }
 .rt .tip .sech { color: var(--rt-muted); text-transform: uppercase; letter-spacing: .06em; font-size: 10px; margin-top: 2px; }
+.rt tr.clickrow { cursor: pointer; } .rt tr.clickrow:hover td { background: var(--rt-raised); }
+.rt .mixbar { height: 10px; border-radius: 3px; background: color-mix(in srgb, var(--rt-primary) 55%, transparent); min-width: 4px; }
+.rt .cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.rt .cols { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
+.rt .cols .col { flex: 1; background: color-mix(in srgb, var(--rt-primary) 55%, transparent); border-radius: 2px 2px 0 0; min-height: 2px; }
+.rt .sysrow { display: grid; grid-template-columns: max-content 1fr max-content; gap: 10px; align-items: center; }
+.rt .chip.risk-low { color: var(--rt-success); border-color: var(--rt-success); } .rt .chip.risk-medium { color: var(--rt-warn); border-color: var(--rt-warn); } .rt .chip.risk-high { color: var(--rt-danger); border-color: var(--rt-danger); }
+.rt .k-system { --c: var(--rt-warn); }
+.rt .card table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rt .card th { text-align: left; color: var(--rt-muted); font-weight: 500; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--rt-border); }
+.rt .card td { padding: 6px 8px; border-bottom: 1px solid var(--rt-border); font-variant-numeric: tabular-nums; }
+.rt .card td:nth-child(3) { width: 30%; }
 .rt .seg { display: inline-flex; border: 1px solid var(--rt-border); border-radius: 8px; overflow: hidden; }
 .rt .seg button { border: 0; border-radius: 0; background: transparent; padding: 5px 14px; }
 .rt .seg button[aria-pressed="true"] { background: var(--rt-raised); color: var(--rt-contrast); font-weight: 600; }
@@ -654,6 +710,54 @@ export function describeRow(item, tl, conv, mode = "reported") {
   return sections;
 }
 
+
+// ─── Fleet: the summary written by scan-conversations.mjs ───
+
+export const HISTOGRAM = [["0", 0, 0], ["1", 1, 1], ["2-3", 2, 3], ["4-9", 4, 9], ["10-24", 10, 24], ["25-99", 25, 99], ["100+", 100, Infinity]];
+
+/** Totals across every summarized conversation. */
+export function fleetStats(summary) {
+  const convs = Array.isArray(summary?.conversations) ? summary.conversations : [];
+  const tools = new Map();
+  const settings = { maxIterations: {}, confirmation: {}, securityAnalyzer: {}, agentProfile: {} };
+  const errorKinds = {};
+  const models = {};
+  const bump = (o, k) => { const key = String(k ?? "not set"); o[key] = (o[key] ?? 0) + 1; };
+  const t = { conversations: convs.length, events: 0, actions: 0, thinking: 0, thought: 0, errors: 0, hooks: 0, condensations: 0, interrupts: 0, cost: 0, tokens: 0 };
+  convs.forEach((c) => {
+    t.events += c.events ?? 0; t.actions += c.actions ?? 0; t.thinking += c.thinking ?? 0; t.thought += c.thought ?? 0;
+    t.hooks += c.hooks ?? 0; t.condensations += c.condensations ?? 0; t.interrupts += c.interrupts ?? 0;
+    t.errors += (c.conversationErrors ?? 0) + Object.values(c.agentErrors ?? {}).reduce((a, b) => a + b, 0);
+    Object.entries(c.tools ?? {}).forEach(([name, v]) => {
+      const x = tools.get(name) ?? { tool: name, calls: 0, errors: 0, ms: 0, conversations: 0 };
+      x.calls += v.calls; x.errors += v.errors; x.ms += v.ms; x.conversations += 1;
+      tools.set(name, x);
+    });
+    Object.entries(c.agentErrors ?? {}).forEach(([k, n]) => { errorKinds[k] = (errorKinds[k] ?? 0) + n; });
+    ["maxIterations", "confirmation", "securityAnalyzer", "agentProfile"].forEach((k) => bump(settings[k], c[k]));
+    if (c.usage) {
+      t.cost += c.usage.cost ?? 0;
+      t.tokens += (c.usage.prompt ?? 0) + (c.usage.completion ?? 0);
+      (c.usage.models ?? []).forEach((m) => bump(models, m));
+    }
+  });
+  const hist = HISTOGRAM.map(([label, lo, hi]) => ({ label, n: convs.filter((c) => (c.actions ?? 0) >= lo && (c.actions ?? 0) <= hi).length }));
+  const sorted = [...convs].sort((a, b) => (a.actions ?? 0) - (b.actions ?? 0));
+  return { ...t, tools: [...tools.values()].sort((a, b) => b.calls - a.calls), settings, errorKinds, models, hist, median: sorted.length ? sorted[Math.floor(sorted.length / 2)].actions ?? 0 : 0 };
+}
+
+/** The user's home folder on the Agent Server machine, read from conversation workspace paths. */
+export function guessHome(convs) {
+  for (const c of convs) {
+    const dir = isObj(c.workspace) ? c.workspace.working_dir ?? "" : "";
+    const m = /^(\/Users\/[^/]+|\/home\/[^/]+)/.exec(`${dir} ${isObj(c.tags) ? c.tags.workspace ?? "" : ""}`);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+export const normId = (id) => String(id).replace(/-/g, "");
+
 /** A short age like the sidebar shows: 5m, 3h, 5d. */
 export function ageShort(iso, now = Date.now()) {
   const t = Date.parse(iso);
@@ -773,7 +877,7 @@ function aboutPage(onOpen, onPrices) {
   page.setAttribute("data-testid", "rt-about");
 
   const hero = el("div", "hero");
-  hero.append(el("h1", "", "About Run Timeline"), el("p", "", "A waterfall of an OpenHands run. It shows what the agent did, how long each step took, what it cost, and how much of the run was spent waiting between steps, so you can see where the time and the money went."));
+  hero.append(el("h1", "", "About Runner"), el("p", "", "A waterfall of an OpenHands run. It shows what the agent did, how long each step took, what it cost, and how much of the run was spent waiting between steps, so you can see where the time and the money went."));
   const demo = el("div", "demo");
   const drow = (label, build) => {
     const r = el("div", "drow");
@@ -840,7 +944,7 @@ function mountTimeline(host, { container }) {
 
   const readNav = () => { try { return { ...DEFAULT_NAV, ...JSON.parse(window.localStorage.getItem("run-timeline:nav") ?? "{}") }; } catch { return { ...DEFAULT_NAV }; } };
   const readMode = () => { try { return window.localStorage.getItem("run-timeline:cost") === "estimated" ? "estimated" : "reported"; } catch { return "reported"; } };
-  const ui = { nav: readNav(), menuOpen: false, tagsOpen: false, costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All", priceSort: null };
+  const ui = { nav: readNav(), menuOpen: false, tagsOpen: false, costMode: readMode(), convs: [], convError: null, source: null, tl: null, warnings: [], loading: false, error: null, showMessages: true, showSystem: true, fleet: { state: "idle", data: null, error: null, path: (() => { try { return window.localStorage.getItem("run-timeline:summary-path") ?? ""; } catch { return ""; } })() }, fleetSort: { key: "actions", dir: "desc" }, minMs: 0, pick: null, navQ: "", view: "timeline", priceQ: "", priceProvider: "All", priceSort: null };
   let disposed = false;
   let pollTimer = null;
   let loadToken = 0;
@@ -938,7 +1042,7 @@ function mountTimeline(host, { container }) {
     const total = Math.max(1, tl.t1 - tl.t0);
     const rows = [
       ...tl.spans.filter((s) => s.end === null || s.end - s.start >= ui.minMs).map((s) => ({ t: s.start, span: s })),
-      ...tl.instants.filter((i) => i.kind === "error" || ui.showMessages).map((i) => ({ t: i.t, inst: i })),
+      ...tl.instants.filter((i) => i.kind === "error" || (i.kind === "system" ? ui.showSystem : ui.showMessages)).map((i) => ({ t: i.t, inst: i })),
     ].sort((a, b) => a.t - b.t);
     const pct = (t) => ((t - tl.t0) / total) * 100;
     const wrap = el("div", "wf");
@@ -1012,6 +1116,8 @@ function mountTimeline(host, { container }) {
       add("Duration", fmtDuration(span.end === null ? null : span.end - span.start));
       add("Status", span.status === "open" ? "open: no result was observed" : span.status);
       add("Exit code", span.exit);
+      add("Error kind", span.errorKind);
+      add("Thinking", span.thinking ? "reasoning attached" : span.thought ? "short thought only" : "none");
       add("Risk", span.risk && span.risk !== "UNKNOWN" ? span.risk : null);
     }
     add("Time basis", { producer: "the event's own timestamp", observed: "the capture helper's receipt time", "assumed-utc": "the Agent Server's timestamp, read as UTC" }[item.basis]);
@@ -1028,6 +1134,192 @@ function mountTimeline(host, { container }) {
     const body = span ? span.result : inst.text;
     if (body) { card.append(el("span", "muted small", span ? "Result" : "Text")); card.append(el("pre", "", body)); }
     return card;
+  }
+
+  async function loadFleet(force = false) {
+    if (ui.fleet.state === "loading" || (ui.fleet.data && !force)) return;
+    ui.fleet = { ...ui.fleet, state: "loading", error: null };
+    render();
+    try {
+      const home = guessHome(ui.convs);
+      const path = ui.fleet.path || (home ? `${home}/.openhands/run-timeline/summary.json` : "");
+      if (!path) throw new Error("Could not work out the home folder. Enter the summary file path below.");
+      let body = await host.agentServer.request({ path: `/api/file/download?path=${encodeURIComponent(path)}&t=${Date.now()}` });
+      if (body instanceof Blob) body = await body.text();
+      else if (body instanceof ArrayBuffer) body = new TextDecoder().decode(body);
+      const data = typeof body === "string" ? JSON.parse(body) : body;
+      if (!data || !Array.isArray(data.conversations)) throw new Error("That file is not a Runner summary.");
+      ui.fleet = { ...ui.fleet, state: "ready", data, path, error: null };
+    } catch (e) {
+      const missing = e && e.status === 404;
+      ui.fleet = { ...ui.fleet, state: "error", data: null, error: missing ? "No summary file yet. Run the scan, then reload." : e instanceof Error ? e.message : String(e) };
+    }
+    if (!disposed) render();
+  }
+
+  function viewFleet() {
+    const wrap = el("div", "stack");
+    const f = ui.fleet;
+    if (!f.data && f.state === "idle") loadFleet();
+    const bar = el("div", "row");
+    const input = el("input");
+    input.value = f.path; input.placeholder = "Summary file path (default: ~/.openhands/run-timeline/summary.json)"; input.setAttribute("aria-label", "Summary file path");
+    input.style.cssText = "background:var(--rt-bg);border:1px solid var(--rt-border);border-radius:8px;padding:5px 10px;min-width:340px;flex:1;";
+    input.addEventListener("change", () => { ui.fleet = { ...ui.fleet, path: input.value.trim() }; try { window.localStorage.setItem("run-timeline:summary-path", input.value.trim()); } catch { /* storage unavailable */ } });
+    bar.append(input, button("Reload", () => { ui.fleet = { ...ui.fleet, data: null }; loadFleet(true); }, "primary"));
+    wrap.append(bar);
+    if (f.state === "loading") wrap.append(el("p", "muted", "Loading the summary…"));
+    if (f.error) {
+      const c = el("div", "card stack");
+      c.append(el("p", "warn", f.error), el("span", "muted small", "Create or refresh it on the machine that runs the Agent Server:"), el("pre", "", "node examples/canvas-apps/run-timeline/scan-conversations.mjs"));
+      wrap.append(c);
+    }
+    if (!f.data) return wrap;
+    const fs = fleetStats(f.data);
+    const tiles = el("div", "tiles");
+    [["Conversations", String(fs.conversations), `${num(fs.events)} events · median ${fs.median} tool calls`],
+      ["Tool calls", num(fs.actions), `${fs.tools.length} different tools`],
+      ["Thinking", fs.actions ? `${Math.round((fs.thinking / fs.actions) * 100)}%` : "n/a", `${num(fs.thinking)} calls carry reasoning`],
+      ["Errors", String(fs.errors), `${fs.hooks} hook runs · ${fs.condensations} condensations`],
+      ["Reported cost", money(fs.cost), `${num(fs.tokens)} tokens`]].forEach(([k, v, d]) => {
+      const t = el("div", "tile");
+      t.append(el("span", "muted small", k), el("b", "", v), el("span", "muted small", d));
+      tiles.append(t);
+    });
+    wrap.append(tiles);
+
+    const mix = el("div", "card stack");
+    mix.append(el("h2", "", "Tool usage across all conversations"));
+    const max = Math.max(1, ...fs.tools.map((x) => x.calls));
+    const table = el("table");
+    table.setAttribute("data-testid", "rt-fleet-tools");
+    const hr = el("tr");
+    ["Tool", "Calls", "", "In conversations", "Failed", "Time inside"].forEach((h) => hr.append(el("th", "", h)));
+    table.append(hr);
+    fs.tools.slice(0, 14).forEach((x) => {
+      const tr = el("tr");
+      const bt = el("td"); const bar2 = el("div", "mixbar"); bar2.style.width = `${Math.max(2, (x.calls / max) * 100)}%`; bt.append(bar2);
+      tr.append(el("td", "", x.tool), el("td", "", num(x.calls)), bt, el("td", "", String(x.conversations)), el("td", x.errors ? "warn" : "", String(x.errors)), el("td", "", fmtDuration(x.ms)));
+      table.append(tr);
+    });
+    mix.append(table);
+
+    const side = el("div", "cols2");
+    const dist = el("div", "card stack");
+    dist.append(el("h2", "", "Tool calls per conversation"));
+    const cols = el("div", "cols");
+    const top = Math.max(1, ...fs.hist.map((h) => h.n));
+    fs.hist.forEach((h) => { const c = el("div", "col"); c.style.height = `${Math.max(2, (h.n / top) * 100)}%`; c.title = `${h.label}: ${h.n} conversations`; cols.append(c); });
+    const labels = el("div", "row small muted");
+    fs.hist.forEach((h) => labels.append(el("span", "", `${h.label} (${h.n})`)));
+    dist.append(cols, labels);
+    const setc = el("div", "card stack");
+    setc.append(el("h2", "", "Run settings"));
+    [["Max iterations", fs.settings.maxIterations], ["Confirmation", fs.settings.confirmation], ["Security analyzer", fs.settings.securityAnalyzer], ["Agent profile", fs.settings.agentProfile]].forEach(([label, counts]) => {
+      const row = el("div", "chips");
+      row.append(el("span", "muted small", `${label}:`));
+      Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([k, n]) => row.append(el("span", "chip", `${k} · ${n}`)));
+      setc.append(row);
+    });
+    Object.entries(fs.errorKinds).forEach(([k, n]) => setc.append(el("span", "small warn", `Agent error ${k}: ${n}`)));
+    side.append(dist, setc);
+
+    const list = el("div", "card stack");
+    list.append(el("h2", "", "Conversations"));
+    const sort = ui.fleetSort;
+    const cols2 = [["Title", "title"], ["Tool calls", "actions"], ["Thinking", "thinkRate"], ["Failed", "failed"], ["Run length", "length"], ["Cost", "cost"]];
+    const rows = f.data.conversations.map((c) => ({ c, title: c.title ?? c.id, actions: c.actions ?? 0, thinkRate: c.actions ? (c.thinking ?? 0) / c.actions : 0, failed: Object.values(c.tools ?? {}).reduce((n, x) => n + x.errors, 0), length: c.startedAt && c.endedAt ? c.endedAt - c.startedAt : 0, cost: c.usage?.cost ?? 0 }));
+    rows.sort((a, b) => (typeof a[sort.key] === "string" ? a[sort.key].localeCompare(b[sort.key]) : a[sort.key] - b[sort.key]) * (sort.dir === "asc" ? 1 : -1));
+    const lt = el("table");
+    lt.setAttribute("data-testid", "rt-fleet-list");
+    const lh = el("tr");
+    cols2.forEach(([label, key]) => {
+      const th = el("th");
+      const active = sort.key === key;
+      th.setAttribute("aria-sort", active ? (sort.dir === "asc" ? "ascending" : "descending") : "none");
+      const b = el("button", "", `${label}${active ? (sort.dir === "asc" ? " ▲" : " ▼") : ""}`);
+      b.type = "button";
+      b.style.cssText = "background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;";
+      b.addEventListener("click", () => { ui.fleetSort = { key, dir: active && sort.dir === "desc" ? "asc" : "desc" }; render(); });
+      th.append(b);
+      lh.append(th);
+    });
+    lt.append(lh);
+    rows.slice(0, 60).forEach((r) => {
+      const tr = el("tr", "clickrow");
+      tr.tabIndex = 0;
+      const open = () => { const live = ui.convs.find((x) => normId(x.id) === normId(r.c.id)); if (live) loadLive(live.id); };
+      tr.addEventListener("click", open);
+      tr.addEventListener("keydown", (ev) => { if (ev.key === "Enter") open(); });
+      tr.append(el("td", "", r.title), el("td", "", String(r.actions)), el("td", "", `${Math.round(r.thinkRate * 100)}%`), el("td", r.failed ? "warn" : "", String(r.failed)), el("td", "", r.length ? fmtDuration(r.length) : "n/a"), el("td", "", r.cost ? money(r.cost) : "n/a"));
+      lt.append(tr);
+    });
+    list.append(lt, el("span", "muted small", `Showing ${Math.min(60, rows.length)} of ${rows.length}. Summary made ${f.data.generatedAt ?? "at an unknown time"}.`));
+    wrap.append(mix, side, list);
+    return wrap;
+  }
+
+  function viewTools() {
+    const tl = ui.tl;
+    const wrap = el("div", "stack");
+    if (!tl || tl.t0 === null) { wrap.append(el("p", "muted", "Open a conversation to see its tool usage.")); return wrap; }
+    const st = toolStats(tl);
+    const tiles = el("div", "tiles");
+    [["Tool calls", String(st.calls), `${st.distinct} different tools`],
+      ["Thinking", st.calls ? `${Math.round((st.thinking / st.calls) * 100)}%` : "n/a", `${st.thinking} of ${st.calls} calls carry reasoning`],
+      ["Short thoughts", st.calls ? `${Math.round((st.thoughts / st.calls) * 100)}%` : "n/a", `${st.thoughts} calls`],
+      ["Failed calls", String(st.errors), st.calls ? `${Math.round((st.errors / st.calls) * 100)}% of calls` : ""],
+      ["System events", String(st.system.length), "hooks, condensation, interrupts, errors"]].forEach(([k, v, d]) => {
+      const t = el("div", "tile");
+      t.append(el("span", "muted small", k), el("b", "", v), el("span", "muted small", d));
+      tiles.append(t);
+    });
+    const mix = el("div", "card stack");
+    mix.append(el("h2", "", "Tool mix"));
+    const max = Math.max(1, ...st.tools.map((t) => t.calls));
+    const table = el("table");
+    table.setAttribute("data-testid", "rt-tool-mix");
+    const hr = el("tr");
+    ["Tool", "Calls", "", "Time inside", "Average", "Thinking", "Failed"].forEach((h) => hr.append(el("th", "", h)));
+    table.append(hr);
+    st.tools.forEach((t) => {
+      const tr = el("tr");
+      const barTd = el("td");
+      const bar = el("div", "mixbar");
+      bar.style.width = `${Math.max(2, (t.calls / max) * 100)}%`;
+      barTd.append(bar);
+      tr.append(el("td", "", t.tool), el("td", "", String(t.calls)), barTd, el("td", "", fmtDuration(t.ms)), el("td", "", t.calls - t.open ? fmtDuration(t.ms / (t.calls - t.open)) : "n/a"), el("td", "", `${Math.round((t.thinking / t.calls) * 100)}%`), el("td", t.errors ? "warn" : "", String(t.errors)));
+      table.append(tr);
+    });
+    mix.append(table);
+
+    const side = el("div", "cols2");
+    const risk = el("div", "card stack");
+    risk.append(el("h2", "", "Risk mix"));
+    const chips = el("div", "chips");
+    ["LOW", "MEDIUM", "HIGH", "UNKNOWN"].filter((r) => st.risks[r]).forEach((r) => chips.append(el("span", `chip risk-${r.toLowerCase()}`, `${r.toLowerCase()} ${st.risks[r]}`)));
+    risk.append(chips, el("span", "muted small", "UNKNOWN means no risk analyzer scored the call."));
+    Object.entries(st.errorKinds).forEach(([k, n]) => risk.append(el("span", "small warn", `${k}: ${n}`)));
+    const over = el("div", "card stack");
+    over.append(el("h2", "", "Calls over the run"));
+    const cols = el("div", "cols");
+    const top = Math.max(1, ...st.buckets);
+    st.buckets.forEach((n) => { const c = el("div", "col"); c.style.height = `${Math.max(2, (n / top) * 100)}%`; c.title = `${n} calls`; cols.append(c); });
+    over.append(cols, el("span", "muted small", `${fmtDuration(tl.t1 - tl.t0)} in 24 slices`));
+    side.append(risk, over);
+
+    wrap.append(tiles, mix, side);
+    if (st.system.length) {
+      const sys = el("div", "card stack");
+      sys.append(el("h2", "", "System events and errors"));
+      st.system.slice(0, 40).forEach((i) => {
+        const r = el("div", "sysrow");
+        r.append(el("span", `chip ${i.kind === "error" ? "risk-high" : ""}`, i.label), el("span", "small", i.text.split("\n")[0].slice(0, 140)), el("span", "muted small", `+${fmtDuration(i.t - tl.t0)}`));
+        sys.append(r);
+      });
+      wrap.append(sys);
+    }
+    return wrap;
   }
 
   function viewPrices() {
@@ -1277,7 +1569,7 @@ function mountTimeline(host, { container }) {
     const left = el("div");
     left.style.cssText = "display:flex;flex-direction:column;gap:6px;align-items:flex-start;";
     const title = el("div", "titlerow");
-    title.append(el("h1", "", "Run Timeline"), infoIcon(INFO_TEXT));
+    title.append(el("h1", "", "Runner"), infoIcon(INFO_TEXT));
     left.append(title, el("span", "muted", "Where the time went in an agent run"));
     const bar = el("div", "row");
     const refresh = button("Refresh", () => { if (ui.source?.type === "live") loadLive(ui.source.id); else loadConversations(); }, "");
@@ -1289,7 +1581,7 @@ function mountTimeline(host, { container }) {
     bar.append(refresh, button("Import log", () => input.click(), "primary"), input);
     top.append(left, bar);
     const seg = el("div", "seg");
-    [["timeline", "Timeline"], ["prices", "Prices"]].forEach(([v, label]) => {
+    [["timeline", "Timeline"], ["tools", "Tools"], ["fleet", "Fleet"], ["prices", "Prices"]].forEach(([v, label]) => {
       const b = el("button", "", label);
       b.type = "button";
       b.setAttribute("aria-pressed", String(ui.view === v));
@@ -1299,6 +1591,8 @@ function mountTimeline(host, { container }) {
     left.append(seg);
     main.append(top);
     if (ui.view === "about") { main.append(aboutPage(() => { ui.view = "timeline"; if (!ui.source && ui.convs.length) loadLive(ui.convs[0].id); else render(); }, () => { ui.view = "prices"; render(); })); return; }
+    if (ui.view === "tools") { main.append(viewTools()); return; }
+    if (ui.view === "fleet") { main.append(viewFleet()); return; }
     if (ui.view === "prices") { main.append(viewPrices()); return; }
 
     if (ui.convError) main.append(el("p", "warn small", `Could not list conversations: ${ui.convError}`));
@@ -1341,12 +1635,16 @@ function mountTimeline(host, { container }) {
     const cb = el("input"); cb.type = "checkbox"; cb.checked = ui.showMessages;
     cb.addEventListener("change", () => { ui.showMessages = cb.checked; render(); });
     chk.append(cb, el("span", "", "Show messages"));
+    const chk2 = el("label", "chk");
+    const cb2 = el("input"); cb2.type = "checkbox"; cb2.checked = ui.showSystem;
+    cb2.addEventListener("change", () => { ui.showSystem = cb2.checked; render(); });
+    chk2.append(cb2, el("span", "", "Show system events"));
     const costSel = select([["reported", "Cost: as reported by the server"], ["estimated", "Cost: estimated from our prices"]], ui.costMode, (v) => {
       ui.costMode = v;
       try { window.localStorage.setItem("run-timeline:cost", v); } catch { /* storage unavailable */ }
       render();
     }, "How cost is calculated");
-    filters.append(chk, costSel, el("span", "muted small", "Hide steps shorter than"), select([["0", "Nothing"], ["100", "100 ms"], ["1000", "1 s"], ["10000", "10 s"]], String(ui.minMs), (v) => { ui.minMs = Number(v); render(); }, "Minimum step length"));
+    filters.append(chk, chk2, costSel, el("span", "muted small", "Hide steps shorter than"), select([["0", "Nothing"], ["100", "100 ms"], ["1000", "1 s"], ["10000", "10 s"]], String(ui.minMs), (v) => { ui.minMs = Number(v); render(); }, "Minimum step length"));
     const sheet = el("div", "sheet");
     sheet.append(waterfall(tl, sum));
     const stack = el("div", "stack");
@@ -1377,6 +1675,6 @@ function mountTimeline(host, { container }) {
 }
 
 export function activate(host) {
-  if (host.apiVersion !== "1") throw new Error("Run Timeline requires Canvas host API 1.");
+  if (host.apiVersion !== "1") throw new Error("Runner requires Canvas host API 1.");
   return host.registerPage("timeline", (context) => mountTimeline(host, context));
 }

@@ -1,6 +1,6 @@
-# Run Timeline
+# Runner
 
-A Canvas App that shows where the time went in an OpenHands run. It adds a routed **Run Timeline** page at `/extensions/run-timeline/timeline`.
+A Canvas App that shows where the time went in an OpenHands run. It adds a routed **Runner** page at `/extensions/run-timeline/timeline`.
 
 It pairs each action with its observation into a span and lays the spans out as a waterfall, next to messages and errors. Click a row for the arguments, result, exit code, risk and event id.
 
@@ -29,3 +29,16 @@ Dependency-free Canvas Extension, manifest schema 1, host API 1, entrypoint `ext
 ```sh
 npx vitest run examples/canvas-apps/run-timeline/extension.test.js --environment jsdom
 ```
+
+## Tools and Fleet
+
+- **Tools** shows the loaded run's tool mix (calls, time inside, average, thinking share, failures), a risk mix, calls over the run, and the system events and errors, including hooks, condensations, interrupts and pauses. The timeline shows those events as markers (toggle **Show system events**).
+- **Fleet** reads a summary of every local conversation. Make it on the machine that runs the Agent Server:
+
+  ```sh
+  node examples/canvas-apps/run-timeline/scan-conversations.mjs
+  ```
+
+  It reads each conversation's `events/` folder under `~/.openhands/agent-canvas/{conversations,dev_conversations}` and a short allow-list of `meta.json` fields, and writes `~/.openhands/run-timeline/summary.json`. It never opens `base_state.json`, the key files beside the conversations, or the secrets in `meta.json`, and the summary holds counts, names and times, not message text. The page reads it through the Agent Server file API and shows tool usage across all conversations, calls per conversation, the run settings used (max iterations, confirmation, security analyzer), agent error kinds and a sortable list.
+
+The page is named Runner in the sidebar; its package name, `run-timeline`, is unchanged so installs and links keep working.

@@ -1,4 +1,4 @@
-# Projects (Canvas App)
+# Projector (Canvas App)
 
 The Kosmos Roadmap page, generalized to every repository you work on, grouped by organization and project. It has the same views: Schedule, Board, List, Calendar, Pipeline, Agents, Costs, History and Decisions, plus the floating composer. A scope menu in the top bar picks **All projects**, one organization, or one project.
 
@@ -70,7 +70,7 @@ node build.mjs
 
 `add` reads the org and repo from the `origin` remote. `--adapter`, `--org`, `--repo`, `--name`, `--branch` and `--usage`/`--no-usage` override it. `hub-sync.mjs list` shows each project's last sync. `--only <org/repo>` refreshes some projects. `--offline` skips `gh`. A snapshot that breaks the contract is not written: the old one stays, and `lastSync` records the error.
 
-To install, open **Customize > Apps > Add app** and enter the absolute path of `dist/`. Enable the app. **Projects** appears in the sidebar at `/extensions/projects-hub/projects`. After a rebuild, choose **Update** on the app's card. `build.mjs --data-dir <dir>` and `hub-sync.mjs --hub <dir>` move the hub; use the same directory for both.
+To install, open **Customize > Apps > Add app** and enter the absolute path of `dist/`. Enable the app. **Projector** appears in the sidebar at `/extensions/projects-hub/projects`. After a rebuild, choose **Update** on the app's card. `build.mjs --data-dir <dir>` and `hub-sync.mjs --hub <dir>` move the hub; use the same directory for both.
 
 ## Scope and rollups
 
