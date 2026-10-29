@@ -22,6 +22,10 @@ interface FeedFactoriesState {
   assignments: Record<string, ConversationAssignment>;
   /** The pipeline template each factory uses, by factory id. */
   templates: Record<string, string>;
+  /** Agents added to a factory by hand, by factory id (agent names). */
+  addedAgents: Record<string, string[]>;
+  /** The agent that coordinates a factory, when it is not the default. */
+  coordinators: Record<string, string>;
 }
 
 interface FeedFactoriesActions {
@@ -31,6 +35,9 @@ interface FeedFactoriesActions {
     assignment: ConversationAssignment,
   ) => void;
   setTemplate: (factoryId: string, templateId: string) => void;
+  addAgent: (factoryId: string, agentName: string) => void;
+  removeAgent: (factoryId: string, agentName: string) => void;
+  setCoordinator: (factoryId: string, agentName: string) => void;
 }
 
 /** Owns the factories people add; every factory list reads from here. */
@@ -42,6 +49,32 @@ export const useFeedFactoriesStore = create<
       custom: [],
       assignments: {},
       templates: {},
+      addedAgents: {},
+      coordinators: {},
+      addAgent: (factoryId, agentName) =>
+        set((state) => {
+          const current = state.addedAgents[factoryId] ?? [];
+          if (current.includes(agentName)) return state;
+          return {
+            addedAgents: {
+              ...state.addedAgents,
+              [factoryId]: [...current, agentName],
+            },
+          };
+        }),
+      removeAgent: (factoryId, agentName) =>
+        set((state) => ({
+          addedAgents: {
+            ...state.addedAgents,
+            [factoryId]: (state.addedAgents[factoryId] ?? []).filter(
+              (name) => name !== agentName,
+            ),
+          },
+        })),
+      setCoordinator: (factoryId, agentName) =>
+        set((state) => ({
+          coordinators: { ...state.coordinators, [factoryId]: agentName },
+        })),
       setTemplate: (factoryId, templateId) =>
         set((state) => ({
           templates: { ...state.templates, [factoryId]: templateId },

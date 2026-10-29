@@ -22,6 +22,8 @@ interface ManifestSubpageLayoutProps {
   items: SubPageNavItem[];
   /** Width limit of the content column; wide pages, such as a graph, lift it. */
   contentClassName?: string;
+  /** Docked under the scrolling content, at the bottom of the screen (a composer). */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -60,6 +62,7 @@ export function ManifestSubpageLayout({
   navTestIdBase,
   items,
   contentClassName = "max-w-200",
+  footer,
   children,
 }: ManifestSubpageLayoutProps) {
   return (
@@ -77,24 +80,42 @@ export function ManifestSubpageLayout({
           ))}
         </div>
       </aside>
-      <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
-        <div
-          className={cn(
-            "mx-auto flex w-full min-w-0 flex-col gap-6",
-            contentClassName,
-          )}
-        >
-          <nav
-            data-testid={`${navTestIdBase}-mobile`}
-            className="lg:hidden flex gap-1 overflow-x-auto border-b border-border pb-2"
-          >
-            {items.map((item) => (
-              <SubPageNavLink key={item.to} item={item} />
-            ))}
-          </nav>
-          {children}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
+            <div
+              className={cn(
+                "mx-auto flex w-full min-w-0 flex-col gap-6",
+                contentClassName,
+              )}
+            >
+              <nav
+                data-testid={`${navTestIdBase}-mobile`}
+                className="lg:hidden flex gap-1 overflow-x-auto border-b border-border pb-2"
+              >
+                {items.map((item) => (
+                  <SubPageNavLink key={item.to} item={item} />
+                ))}
+              </nav>
+              {children}
+            </div>
+          </main>
+          {footer ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 bg-linear-to-t from-canvas-base to-transparent"
+            />
+          ) : null}
         </div>
-      </main>
+        {footer ? (
+          <div
+            data-testid="manifest-subpage-footer"
+            className="shrink-0 px-4 pb-4 pt-2 lg:pr-3.5"
+          >
+            <div className="mx-auto w-full max-w-[680px]">{footer}</div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

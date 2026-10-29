@@ -24,6 +24,8 @@ export interface CustomChatInputProps {
    * it off for composers that must not share the Home draft.
    */
   persistDraft?: boolean;
+  /** Extra controls rendered first in the toolbar, before the add-file button. */
+  toolbarLeading?: React.ReactNode;
   onSubmit: (message: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
@@ -42,6 +44,7 @@ export function CustomChatInput({
   showButton = true,
   placeholder,
   persistDraft = true,
+  toolbarLeading,
   onSubmit,
   onFocus,
   onBlur,
@@ -192,6 +195,7 @@ export function CustomChatInput({
           buttonClassName={buttonClassName}
           chatInputRef={chatInputRef}
           placeholder={placeholder}
+          toolbarLeading={toolbarLeading}
           handleFileIconClick={handleFileIconClick}
           handleSubmit={handleSubmitAndSync}
           onDragOver={handleDragOver}

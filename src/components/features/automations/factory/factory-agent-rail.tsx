@@ -1,3 +1,4 @@
+import { Pencil, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FeedRoleBadge } from "#/components/features/feed/feed-role-badge";
 import { I18nKey } from "#/i18n/declaration";
@@ -12,60 +13,75 @@ interface FactoryAgentRailProps {
   others: RosterAgent[];
   target: FactoryTarget;
   onTarget: (target: FactoryTarget) => void;
+  onAdd: () => void;
+  onEdit: (agentName: string) => void;
 }
 
 function AgentButton({
   entry,
   selected,
   onSelect,
+  onEdit,
   large = false,
 }: {
   entry: RosterAgent;
   selected: boolean;
   onSelect: () => void;
+  onEdit: () => void;
   large?: boolean;
 }) {
   const { t } = useTranslation("openhands");
   const { agent, conversations, live } = entry;
   const { Icon } = agent;
   return (
-    <button
-      type="button"
-      data-testid={large ? "factory-coordinator" : "factory-agent"}
-      data-agent={agent.name}
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-raised",
-        !large && "border border-border",
-        selected && "bg-surface-raised ring-1 ring-focus",
-      )}
-    >
-      <span className={cn("shrink-0", large ? "size-11" : "size-8")}>
-        <FeedIconTile className={agent.className}>
-          <Icon size={large ? 22 : 16} />
-        </FeedIconTile>
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-foreground">
-            {agent.name}
-          </span>
-          {live > 0 ? (
-            <span
-              aria-label={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
-              className="size-1.5 shrink-0 rounded-full bg-success"
-            />
-          ) : null}
+    <div className="group relative">
+      <button
+        type="button"
+        data-testid={large ? "factory-coordinator" : "factory-agent"}
+        data-agent={agent.name}
+        aria-pressed={selected}
+        onClick={onSelect}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-raised",
+          !large && "border border-border",
+          selected && "bg-surface-raised ring-1 ring-focus",
+        )}
+      >
+        <span className={cn("shrink-0", large ? "size-11" : "size-8")}>
+          <FeedIconTile className={agent.className}>
+            <Icon size={large ? 22 : 16} />
+          </FeedIconTile>
         </span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
-          <FeedRoleBadge role={getDemoAgentRole(agent)} />
-          <span>
-            {t(I18nKey.FEED$FACTORY_CONVERSATIONS, { count: conversations })}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-medium text-foreground">
+              {agent.name}
+            </span>
+            {live > 0 ? (
+              <span
+                aria-label={t(I18nKey.FEED$FACTORY_LIVE, { count: live })}
+                className="size-1.5 shrink-0 rounded-full bg-success"
+              />
+            ) : null}
+          </span>
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+            <FeedRoleBadge role={getDemoAgentRole(agent)} />
+            <span>
+              {t(I18nKey.FEED$FACTORY_CONVERSATIONS, { count: conversations })}
+            </span>
           </span>
         </span>
-      </span>
-    </button>
+      </button>
+      <button
+        type="button"
+        data-testid="factory-edit-agent"
+        aria-label={t(I18nKey.FACTORY$EDIT_AGENT)}
+        onClick={onEdit}
+        className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md text-muted opacity-0 hover:bg-base-secondary hover:text-contrast focus-visible:opacity-100 group-hover:opacity-100"
+      >
+        <Pencil size={12} aria-hidden />
+      </button>
+    </div>
   );
 }
 
@@ -78,6 +94,8 @@ export function FactoryAgentRail({
   others,
   target,
   onTarget,
+  onAdd,
+  onEdit,
 }: FactoryAgentRailProps) {
   const { t } = useTranslation("openhands");
   const isTargeted = (name: string) =>
@@ -104,13 +122,25 @@ export function FactoryAgentRail({
             entry={coordinator}
             selected={target.kind === "inbox"}
             onSelect={() => onTarget({ kind: "inbox" })}
+            onEdit={() => onEdit(coordinator.agent.name)}
           />
         </div>
       </section>
       <section className="flex min-w-0 flex-1 flex-col">
-        <h2 className="mb-1 px-1 text-xs font-semibold uppercase text-muted">
-          {t(I18nKey.FEED$AGENTS)}
-        </h2>
+        <div className="mb-1 flex items-center justify-between px-1">
+          <h2 className="text-xs font-semibold uppercase text-muted">
+            {t(I18nKey.FEED$AGENTS)}
+          </h2>
+          <button
+            type="button"
+            data-testid="factory-add-agent"
+            onClick={onAdd}
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs text-muted hover:bg-surface-raised hover:text-contrast"
+          >
+            <Plus size={12} aria-hidden />
+            {t(I18nKey.FACTORY$ADD_AGENT)}
+          </button>
+        </div>
         {others.length === 0 ? (
           <p className="px-1 text-xs text-muted">
             {t(I18nKey.AUTOMATE$FACTORY_EMPTY)}
@@ -125,6 +155,7 @@ export function FactoryAgentRail({
                   onSelect={() =>
                     onTarget({ kind: "agent", agentName: entry.agent.name })
                   }
+                  onEdit={() => onEdit(entry.agent.name)}
                 />
               </li>
             ))}

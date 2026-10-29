@@ -19,11 +19,26 @@ export interface RosterAgent {
   live: number;
 }
 
-/** The coordinator first, then every other agent working in the factory. */
-export function buildRoster(data: FactoryData): {
+export interface Roster {
   coordinator: RosterAgent;
   others: RosterAgent[];
-} {
+}
+
+/**
+ * The coordinator first, then every other agent in the factory: those working
+ * in its conversations and those added by hand. `coordinatorName` overrides
+ * the default coordinator.
+ */
+export function buildRoster(
+  data: FactoryData,
+  addedNames: readonly string[] = [],
+  coordinatorName?: string,
+): Roster {
+  const byName = (name: string) =>
+    FEED_DEMO_AGENTS.find((agent) => agent.name === name);
+  const coordinatorAgent =
+    (coordinatorName ? byName(coordinatorName) : undefined) ??
+    FACTORY_COORDINATOR;
   const find = (name: string) =>
     data.agents.find((entry) => entry.agent.name === name);
   const toRoster = (agent: FeedDemoAgent): RosterAgent => ({
@@ -31,11 +46,20 @@ export function buildRoster(data: FactoryData): {
     conversations: find(agent.name)?.conversations ?? 0,
     live: find(agent.name)?.live ?? 0,
   });
+
+  const members = new Map<string, FeedDemoAgent>();
+  data.agents.forEach(({ agent }) => members.set(agent.name, agent));
+  addedNames.forEach((name) => {
+    const agent = byName(name);
+    if (agent) members.set(name, agent);
+  });
+  // A replaced default coordinator stays on the roster as an ordinary agent.
+  members.set(FACTORY_COORDINATOR.name, FACTORY_COORDINATOR);
+  members.delete(coordinatorAgent.name);
+
   return {
-    coordinator: toRoster(FACTORY_COORDINATOR),
-    others: data.agents
-      .filter((entry) => entry.agent.name !== FACTORY_COORDINATOR.name)
-      .map(({ agent }) => toRoster(agent)),
+    coordinator: toRoster(coordinatorAgent),
+    others: [...members.values()].map(toRoster),
   };
 }
 
@@ -55,8 +79,10 @@ const toCandidate = (conversation: AppConversation): RouteCandidate => {
 };
 
 /** What the router needs to know about a factory. */
-export function buildRouteContext(data: FactoryData): RouteContext {
-  const { coordinator, others } = buildRoster(data);
+export function buildRouteContext(
+  data: FactoryData,
+  { coordinator, others }: Roster,
+): RouteContext {
   return {
     candidates: data.conversations.map(toCandidate),
     coordinator: { name: coordinator.agent.name, role: coordinator.agent.role },

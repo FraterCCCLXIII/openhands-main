@@ -6,13 +6,14 @@ import {
   GitPullRequest,
   Inbox,
   MessageSquare,
-  SendHorizontal,
 } from "lucide-react";
 import type { TFunction } from "i18next";
+import { CustomChatInput } from "#/components/features/chat/custom-chat-input";
 import { ContextMenuListItem } from "#/components/features/context-menu/context-menu-list-item";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
+import { useFactoryRoster } from "#/hooks/use-factory-roster";
 import { I18nKey } from "#/i18n/declaration";
 import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
 import { ContextMenu } from "#/ui/context-menu";
@@ -24,7 +25,7 @@ import {
 } from "#/utils/factory-routing";
 import type { FeedFactory } from "#/utils/feed-team-demo";
 import { cn } from "#/utils/utils";
-import { buildRouteContext, buildRoster } from "./factory-routing-context";
+import { buildRouteContext } from "./factory-routing-context";
 import type { FactoryData } from "./use-factory-data";
 import { useFactoryDispatch } from "./use-factory-dispatch";
 
@@ -71,7 +72,6 @@ export function FactoryComposer({
   const { t } = useTranslation("openhands");
   const backendScopedPath = useBackendScopedPath();
   const dispatch = useFactoryDispatch();
-  const [text, setText] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -85,8 +85,12 @@ export function FactoryComposer({
     .slice(-RECENT_INBOX_ITEMS)
     .reverse();
 
-  const context = useMemo(() => buildRouteContext(data), [data]);
-  const { coordinator, others } = useMemo(() => buildRoster(data), [data]);
+  const roster = useFactoryRoster(factory.id, data);
+  const { coordinator, others } = roster;
+  const context = useMemo(
+    () => buildRouteContext(data, roster),
+    [data, roster],
+  );
   const titles = useMemo(
     () => new Map(data.conversations.map((c) => [c.id, c.title ?? ""])),
     [data.conversations],
@@ -106,31 +110,22 @@ export function FactoryComposer({
     return t(I18nKey.FACTORY$INBOX);
   })();
 
-  const trimmed = text.trim();
-  const decision: RouteDecision | null = trimmed
-    ? routeFactoryRequest(trimmed, target, context)
-    : null;
-  const where = decision
-    ? decision.kind === "existing" && decision.conversationId
-      ? `${decision.agentName} · ${titles.get(decision.conversationId) ?? ""}`
-      : t(I18nKey.FACTORY$NEW_CONVERSATION, { name: decision.agentName })
-    : "";
-
-  const send = async () => {
-    if (!decision || sending) return;
+  const send = async (message: string) => {
+    const text = message.trim();
+    if (!text || sending) return;
+    const decision: RouteDecision = routeFactoryRequest(text, target, context);
     setSending(true);
     try {
       await dispatch({
         factoryId: factory.id,
         factoryName: factory.name,
-        text: trimmed,
+        text,
         targetLabel,
         decision,
         conversationTitle: decision.conversationId
           ? (titles.get(decision.conversationId) ?? null)
           : null,
       });
-      setText("");
     } finally {
       setSending(false);
     }
@@ -142,10 +137,7 @@ export function FactoryComposer({
   };
 
   return (
-    <div
-      data-testid="factory-composer"
-      className="sticky bottom-0 z-10 -mx-1 mt-auto flex flex-col gap-2 bg-linear-to-t from-canvas-base from-70% to-transparent px-1 pb-4 pt-8"
-    >
+    <div data-testid="factory-composer" className="flex w-full flex-col gap-2">
       {recent.length > 0 ? (
         <ul data-testid="factory-inbox-log" className="flex flex-col gap-1.5">
           {recent.map((item) => (
@@ -198,163 +190,131 @@ export function FactoryComposer({
         </ul>
       ) : null}
 
-      {decision ? (
-        <p
-          data-testid="factory-route-preview"
-          className="px-1 text-xs text-muted"
-        >
-          {t(I18nKey.FACTORY$LIKELY, { where })}
-          {decision.reasons[0]
-            ? ` · ${describeReason(t, decision.reasons[0])}`
-            : ""}
-        </p>
-      ) : null}
-
-      <form
-        className="flex items-end gap-2 rounded-2xl border border-border bg-surface-raised p-2 shadow-lg"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void send();
-        }}
-      >
-        <div ref={triggerRef} className="relative shrink-0">
-          <button
-            type="button"
-            data-testid="factory-target-trigger"
-            aria-label={t(I18nKey.FACTORY$TARGET_LABEL)}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-            className="flex max-w-56 items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-xs text-contrast hover:bg-base-secondary"
-          >
-            {target.kind === "pr" ? (
-              <GitPullRequest size={14} aria-hidden />
-            ) : target.kind === "conversation" ? (
-              <MessageSquare size={14} aria-hidden />
-            ) : target.kind === "agent" ? (
-              <Bot size={14} aria-hidden />
-            ) : (
-              <Inbox size={14} aria-hidden />
-            )}
-            <span className="truncate">{targetLabel}</span>
-            <ChevronDown size={14} aria-hidden className="shrink-0" />
-          </button>
-          {menuOpen ? (
-            <ContextMenu
-              ref={menuRef}
-              testId="factory-target-menu"
-              alignment="left"
-              position="top"
-              className="z-20 max-h-80 w-80 overflow-y-auto"
+      <CustomChatInput
+        onSubmit={(message) => void send(message)}
+        disabled={sending}
+        persistDraft={false}
+        placeholder={t(I18nKey.FACTORY$COMPOSER_PLACEHOLDER, {
+          target: targetLabel,
+        })}
+        toolbarLeading={
+          <div ref={triggerRef} className="relative shrink-0">
+            <button
+              type="button"
+              data-testid="factory-target-trigger"
+              aria-label={t(I18nKey.FACTORY$TARGET_LABEL)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="flex max-w-56 items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-xs text-contrast hover:bg-base-secondary"
             >
-              <ContextMenuListItem
-                testId="factory-target-inbox"
-                onClick={() => pick({ kind: "inbox" })}
+              {target.kind === "pr" ? (
+                <GitPullRequest size={14} aria-hidden />
+              ) : target.kind === "conversation" ? (
+                <MessageSquare size={14} aria-hidden />
+              ) : target.kind === "agent" ? (
+                <Bot size={14} aria-hidden />
+              ) : (
+                <Inbox size={14} aria-hidden />
+              )}
+              <span className="truncate">{targetLabel}</span>
+              <ChevronDown size={14} aria-hidden className="shrink-0" />
+            </button>
+            {menuOpen ? (
+              <ContextMenu
+                ref={menuRef}
+                testId="factory-target-menu"
+                alignment="left"
+                position="top"
+                className="z-20 max-h-80 w-80 overflow-y-auto"
               >
-                <span className="flex items-center gap-2">
-                  <Inbox size={14} aria-hidden />
-                  <span className="flex flex-col text-left">
-                    <span>{t(I18nKey.FACTORY$INBOX)}</span>
-                    <span className="text-xs text-muted">
-                      {t(I18nKey.FACTORY$COORDINATOR)} ·{" "}
-                      {coordinator.agent.name}
-                    </span>
-                  </span>
-                </span>
-              </ContextMenuListItem>
-              <p className="px-2 pt-2 text-xs text-muted">
-                {t(I18nKey.FEED$AGENTS)}
-              </p>
-              {others.map(({ agent }) => (
                 <ContextMenuListItem
-                  key={agent.name}
-                  testId="factory-target-agent"
-                  onClick={() => pick({ kind: "agent", agentName: agent.name })}
+                  testId="factory-target-inbox"
+                  onClick={() => pick({ kind: "inbox" })}
                 >
                   <span className="flex items-center gap-2">
-                    <Bot size={14} aria-hidden />
-                    {t(I18nKey.FACTORY$TARGET_AGENT_INBOX, {
-                      name: agent.name,
-                    })}
-                  </span>
-                </ContextMenuListItem>
-              ))}
-              {context.candidates.length > 0 ? (
-                <p className="px-2 pt-2 text-xs text-muted">
-                  {t(I18nKey.FACTORY$TARGET_CONVERSATIONS)}
-                </p>
-              ) : null}
-              {context.candidates.slice(0, MENU_CONVERSATIONS).map((c) => (
-                <ContextMenuListItem
-                  key={c.id}
-                  testId="factory-target-conversation"
-                  onClick={() =>
-                    pick({ kind: "conversation", conversationId: c.id })
-                  }
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <MessageSquare size={14} aria-hidden className="shrink-0" />
-                    <span className="truncate">
-                      {c.agentName} › {c.title || t(I18nKey.FEED$UNTITLED)}
+                    <Inbox size={14} aria-hidden />
+                    <span className="flex flex-col text-left">
+                      <span>{t(I18nKey.FACTORY$INBOX)}</span>
+                      <span className="text-xs text-muted">
+                        {t(I18nKey.FACTORY$COORDINATOR)} ·{" "}
+                        {coordinator.agent.name}
+                      </span>
                     </span>
                   </span>
                 </ContextMenuListItem>
-              ))}
-              {prOptions.length > 0 ? (
                 <p className="px-2 pt-2 text-xs text-muted">
-                  {t(I18nKey.FACTORY$TARGET_PRS)}
+                  {t(I18nKey.FEED$AGENTS)}
                 </p>
-              ) : null}
-              {prOptions.map(({ pr, candidate }) => (
-                <ContextMenuListItem
-                  key={`${candidate.id}-${pr}`}
-                  testId="factory-target-pr"
-                  onClick={() => pick({ kind: "pr", prNumber: pr })}
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <GitPullRequest
-                      size={14}
-                      aria-hidden
-                      className="shrink-0"
-                    />
-                    <span className="truncate">
-                      #{pr} · {candidate.title}
+                {others.map(({ agent }) => (
+                  <ContextMenuListItem
+                    key={agent.name}
+                    testId="factory-target-agent"
+                    onClick={() =>
+                      pick({ kind: "agent", agentName: agent.name })
+                    }
+                  >
+                    <span className="flex items-center gap-2">
+                      <Bot size={14} aria-hidden />
+                      {t(I18nKey.FACTORY$TARGET_AGENT_INBOX, {
+                        name: agent.name,
+                      })}
                     </span>
-                  </span>
-                </ContextMenuListItem>
-              ))}
-            </ContextMenu>
-          ) : null}
-        </div>
-        <textarea
-          data-testid="factory-composer-input"
-          rows={1}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
-              event.preventDefault();
-              void send();
-            }
-          }}
-          placeholder={t(I18nKey.FACTORY$COMPOSER_PLACEHOLDER, {
-            target: targetLabel,
-          })}
-          aria-label={t(I18nKey.FACTORY$COMPOSER_PLACEHOLDER, {
-            target: targetLabel,
-          })}
-          className="max-h-40 min-h-9 min-w-0 flex-1 resize-none bg-transparent px-1 py-2 text-sm text-contrast outline-none placeholder:text-muted"
-        />
-        <button
-          type="submit"
-          data-testid="factory-composer-send"
-          aria-label={t(I18nKey.FEED$SEND)}
-          disabled={!trimmed || sending}
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-contrast text-contrast-foreground disabled:opacity-40"
-        >
-          <SendHorizontal size={16} />
-        </button>
-      </form>
+                  </ContextMenuListItem>
+                ))}
+                {context.candidates.length > 0 ? (
+                  <p className="px-2 pt-2 text-xs text-muted">
+                    {t(I18nKey.FACTORY$TARGET_CONVERSATIONS)}
+                  </p>
+                ) : null}
+                {context.candidates.slice(0, MENU_CONVERSATIONS).map((c) => (
+                  <ContextMenuListItem
+                    key={c.id}
+                    testId="factory-target-conversation"
+                    onClick={() =>
+                      pick({ kind: "conversation", conversationId: c.id })
+                    }
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <MessageSquare
+                        size={14}
+                        aria-hidden
+                        className="shrink-0"
+                      />
+                      <span className="truncate">
+                        {c.agentName} › {c.title || t(I18nKey.FEED$UNTITLED)}
+                      </span>
+                    </span>
+                  </ContextMenuListItem>
+                ))}
+                {prOptions.length > 0 ? (
+                  <p className="px-2 pt-2 text-xs text-muted">
+                    {t(I18nKey.FACTORY$TARGET_PRS)}
+                  </p>
+                ) : null}
+                {prOptions.map(({ pr, candidate }) => (
+                  <ContextMenuListItem
+                    key={`${candidate.id}-${pr}`}
+                    testId="factory-target-pr"
+                    onClick={() => pick({ kind: "pr", prNumber: pr })}
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <GitPullRequest
+                        size={14}
+                        aria-hidden
+                        className="shrink-0"
+                      />
+                      <span className="truncate">
+                        #{pr} · {candidate.title}
+                      </span>
+                    </span>
+                  </ContextMenuListItem>
+                ))}
+              </ContextMenu>
+            ) : null}
+          </div>
+        }
+      />
     </div>
   );
 }

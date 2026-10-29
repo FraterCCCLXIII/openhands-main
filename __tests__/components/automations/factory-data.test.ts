@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
-import { summarizeFactory } from "#/components/features/automations/factory/use-factory-data";
+import {
+  buildRoster,
+  FACTORY_COORDINATOR,
+} from "#/components/features/automations/factory/factory-routing-context";
+import {
+  summarizeFactory,
+  type FactoryData,
+} from "#/components/features/automations/factory/use-factory-data";
 import { ExecutionStatus } from "#/types/agent-server/core";
 import { FEED_FACTORIES, getFeedFactory } from "#/utils/feed-team-demo";
 
@@ -65,5 +72,18 @@ describe("summarizeFactory", () => {
       projects: [],
       lastActivity: null,
     });
+  });
+});
+
+describe("buildRoster", () => {
+  const data = { agents: [] } as unknown as FactoryData;
+
+  it("adds hand-picked agents and lets another agent take over coordination", () => {
+    const roster = buildRoster(data, ["Nova"], "Nova");
+
+    expect(roster.coordinator.agent.name).toBe("Nova");
+    expect(roster.others.map(({ agent }) => agent.name)).toEqual([
+      FACTORY_COORDINATOR.name,
+    ]);
   });
 });

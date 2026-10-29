@@ -44,7 +44,12 @@ import { useFactoryData, type FactoryData } from "./use-factory-data";
 import { FactoryAgentRail } from "./factory-agent-rail";
 import { PipelinePage } from "./pipeline-page";
 import { FactoryComposer } from "./factory-composer";
-import { buildRoster } from "./factory-routing-context";
+import { useFactoryRoster } from "#/hooks/use-factory-roster";
+import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
+import {
+  FactoryAddAgentModal,
+  FactoryEditAgentModal,
+} from "./factory-agent-modals";
 import type { FactoryTarget } from "#/utils/factory-routing";
 
 type FactorySection =
@@ -246,6 +251,15 @@ export function FactoryPage() {
   const factory = factories.find((candidate) => candidate.id === factoryId);
   const data = useFactoryData(factoryId);
   const [target, setTarget] = useState<FactoryTarget>({ kind: "inbox" });
+  const roster = useFactoryRoster(factoryId, data);
+  const addedNames = useFeedFactoriesStore(
+    (state) => state.addedAgents[factoryId],
+  );
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const editingEntry = [roster.coordinator, ...roster.others].find(
+    ({ agent }) => agent.name === editing,
+  );
   const section: FactorySection = SECTIONS.includes(
     sectionParam as FactorySection,
   )
@@ -294,7 +308,7 @@ export function FactoryPage() {
     {
       key: "agents",
       label: t(I18nKey.FEED$AGENTS),
-      value: String(data.agents.length),
+      value: String(roster.others.length + 1),
       detail: "",
       Icon: Bot,
     },
@@ -314,6 +328,16 @@ export function FactoryPage() {
       items={items}
       // A node map needs room; the other sections read best in a narrow column.
       contentClassName={section === "pipeline" ? "max-w-none" : undefined}
+      footer={
+        factory && section === "overview" ? (
+          <FactoryComposer
+            factory={factory}
+            data={data}
+            target={target}
+            onTarget={setTarget}
+          />
+        ) : undefined
+      }
     >
       <NavigationLink
         to={backendScopedPath("/automations")}
@@ -334,9 +358,11 @@ export function FactoryPage() {
                 tiles={tiles}
               />
               <FactoryAgentRail
-                {...buildRoster(data)}
+                {...roster}
                 target={target}
                 onTarget={setTarget}
+                onAdd={() => setAdding(true)}
+                onEdit={setEditing}
               />
               <section>
                 <h2 className="mb-3 text-base font-semibold text-foreground">
@@ -357,12 +383,20 @@ export function FactoryPage() {
               <SectionBody section={section} data={data} />
             </section>
           )}
-          {section === "overview" ? (
-            <FactoryComposer
-              factory={factory}
-              data={data}
-              target={target}
-              onTarget={setTarget}
+          {adding ? (
+            <FactoryAddAgentModal
+              factoryId={factory.id}
+              roster={roster}
+              onClose={() => setAdding(false)}
+            />
+          ) : null}
+          {editingEntry ? (
+            <FactoryEditAgentModal
+              factoryId={factory.id}
+              entry={editingEntry}
+              isCoordinator={editingEntry === roster.coordinator}
+              isAdded={Boolean(addedNames?.includes(editingEntry.agent.name))}
+              onClose={() => setEditing(null)}
             />
           ) : null}
         </>

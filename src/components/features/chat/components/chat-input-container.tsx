@@ -20,6 +20,7 @@ interface ChatInputContainerProps {
   buttonClassName: string;
   chatInputRef: React.RefObject<HTMLDivElement | null>;
   placeholder?: string;
+  toolbarLeading?: React.ReactNode;
   handleFileIconClick: (isDisabled: boolean) => void;
   handleSubmit: () => void;
   onDragOver: (e: React.DragEvent, isDisabled: boolean) => void;
@@ -47,6 +48,7 @@ export function ChatInputContainer({
   buttonClassName,
   chatInputRef,
   placeholder,
+  toolbarLeading,
   handleFileIconClick,
   handleSubmit,
   onDragOver,
@@ -117,6 +119,7 @@ export function ChatInputContainer({
           insertTextAtCaret(chatInputRef.current, text)
         }
         isDictationDisabled={isNewConversationPending}
+        toolbarLeading={toolbarLeading}
       />
     </div>
   );

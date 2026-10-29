@@ -50,6 +50,7 @@ interface ChatInputActionsProps {
   onDictationTranscript?: (text: string) => void;
   /** Tracks the text field's editability, not submit availability. */
   isDictationDisabled?: boolean;
+  toolbarLeading?: React.ReactNode;
 }
 
 export function ChatInputActions({
@@ -62,6 +63,7 @@ export function ChatInputActions({
   handleSubmit = () => {},
   onDictationTranscript,
   isDictationDisabled = false,
+  toolbarLeading,
 }: ChatInputActionsProps) {
   const { t } = useTranslation("openhands");
   const isComposerDockedMinimal = useComposerDockedMinimal();
@@ -399,6 +401,7 @@ export function ChatInputActions({
     >
       <div className="flex min-w-0 items-center gap-1">
         <div className="flex min-w-0 items-center gap-3">
+          {toolbarLeading}
           <div ref={addFileRef} className={cn(!showAddFileInline && "hidden")}>
             <ChatAddFileButton
               disabled={disabled}
