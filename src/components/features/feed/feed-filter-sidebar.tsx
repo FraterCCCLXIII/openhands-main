@@ -12,7 +12,6 @@ import {
   type FeedFilter,
 } from "#/utils/feed-filters";
 import {
-  FEED_FACTORIES,
   FEED_ME_ID,
   feedProfilePath,
   getFeedFactory,
@@ -28,6 +27,7 @@ import {
   personIconKey,
 } from "#/utils/feed-icon-keys";
 import { FeedProjectRow } from "./feed-project-row";
+import { useFeedFactories } from "#/hooks/use-feed-factories";
 import { FeedRowStats } from "./feed-row-stats";
 import {
   FEED_DEMO_AGENTS,
@@ -57,6 +57,7 @@ export function FeedFilterSidebar({
   const projects = countFeedProjects(conversations);
   const profileCounts = countFeedAgentProfiles(conversations);
   const backendScopedPath = useBackendScopedPath();
+  const factories = useFeedFactories();
   const teamDemo = isFeedTeamDemoEnabled(window.location.search);
   const stats = (group: AppConversation[]) =>
     teamDemo ? <FeedRowStats conversations={group} /> : undefined;
@@ -108,7 +109,7 @@ export function FeedFilterSidebar({
               selected={filter.factoryId === null}
               onSelect={() => onChange({ ...filter, factoryId: null })}
             />
-            {FEED_FACTORIES.map(({ id, name, Icon, className }) => (
+            {factories.map(({ id, name, Icon, className }) => (
               <FeedFilterRow
                 key={id}
                 testId="feed-filter-factory"

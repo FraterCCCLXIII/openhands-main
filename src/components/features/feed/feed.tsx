@@ -19,7 +19,7 @@ import { FeedNotificationCard } from "./feed-notification-card";
 import { FeedComposer } from "./feed-composer";
 import { FeedColumns } from "./feed-columns";
 import { FeedFactoryHeader } from "./feed-factory-header";
-import { FEED_FACTORIES } from "#/utils/feed-team-demo";
+import { useFeedFactories } from "#/hooks/use-feed-factories";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { FeedSortMenu } from "./feed-sort-menu";
 import { FeedViewTabs, type FeedView } from "./feed-view-tabs";
@@ -132,7 +132,8 @@ export function Feed() {
       : ordered.map(renderCard);
   }
 
-  const factory = FEED_FACTORIES.find((f) => f.id === filter.factoryId);
+  const factories = useFeedFactories();
+  const factory = factories.find((f) => f.id === filter.factoryId);
 
   return (
     <FeedColumns

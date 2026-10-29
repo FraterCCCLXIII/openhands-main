@@ -58372,5 +58372,23 @@
     "tr": "Fabrika bulunamadı.",
     "uk": "Фабрику не знайдено.",
     "id": "Pabrik tidak ditemukan."
+  },
+  "AUTOMATE$ADD_FACTORY": {
+    "en": "Add Factory",
+    "ja": "ファクトリーを追加",
+    "zh-CN": "添加工厂",
+    "zh-TW": "新增工廠",
+    "ko-KR": "팩토리 추가",
+    "no": "Legg til fabrikk",
+    "ar": "إضافة مصنع",
+    "de": "Fabrik hinzufügen",
+    "fr": "Ajouter une usine",
+    "it": "Aggiungi fabbrica",
+    "pt": "Adicionar fábrica",
+    "es": "Añadir fábrica",
+    "ca": "Afegeix una fàbrica",
+    "tr": "Fabrika ekle",
+    "uk": "Додати фабрику",
+    "id": "Tambah pabrik"
   }
 }

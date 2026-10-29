@@ -23,10 +23,10 @@ import {
 } from "#/components/features/manifest/manifest-subpage-layout";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
+import { useFeedFactories } from "#/hooks/use-feed-factories";
 import { I18nKey } from "#/i18n/declaration";
 import { factoryIconKey } from "#/utils/feed-icon-keys";
 import {
-  FEED_FACTORIES,
   feedProfilePath,
   getFeedPerson,
   type FeedFactory,
@@ -229,9 +229,8 @@ export function FactoryPage() {
   const { t, i18n } = useTranslation("openhands");
   const { factoryId = "", section: sectionParam } = useParams();
   const backendScopedPath = useBackendScopedPath();
-  const factory = FEED_FACTORIES.find(
-    (candidate) => candidate.id === factoryId,
-  );
+  const factories = useFeedFactories();
+  const factory = factories.find((candidate) => candidate.id === factoryId);
   const data = useFactoryData(factoryId);
   const section: FactorySection = SECTIONS.includes(
     sectionParam as FactorySection,
