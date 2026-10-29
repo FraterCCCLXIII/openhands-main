@@ -14,6 +14,49 @@ vi.mock("react-i18next", () => ({
 
 const base: FeedUpdateDetails = { redacted: false };
 
+const usage = (model: string, cost: number) => ({
+  model,
+  promptTokens: 28979,
+  completionTokens: 100,
+  reasoningTokens: 0,
+  cacheReadTokens: 0,
+  contextTokens: 29079,
+  contextWindow: 0,
+  cost,
+  shared: false,
+});
+
+describe("TurnDetailsPanel cost", () => {
+  it("always shows a cost: the reported price, free for a local model, else not reported", () => {
+    const { rerender } = render(
+      <TurnDetailsPanel
+        details={{ ...base, usage: usage("anthropic/claude-sonnet", 0.0123) }}
+      />,
+    );
+    expect(screen.getByTestId("turn-details-chip-cost")).toHaveTextContent(
+      "$0.0123",
+    );
+
+    rerender(
+      <TurnDetailsPanel
+        details={{ ...base, usage: usage("ollama_chat/gpt-oss:20b", 0) }}
+      />,
+    );
+    expect(screen.getByTestId("turn-details-chip-cost")).toHaveTextContent(
+      "FEED$DETAILS_COST_LOCAL",
+    );
+
+    rerender(
+      <TurnDetailsPanel
+        details={{ ...base, usage: usage("some/unpriced-model", 0) }}
+      />,
+    );
+    expect(screen.getByTestId("turn-details-chip-cost")).toHaveTextContent(
+      "FEED$DETAILS_COST_NOT_REPORTED",
+    );
+  });
+});
+
 describe("TurnDetailsPanel", () => {
   it("shows header chips for risk, duration and exit code", () => {
     render(

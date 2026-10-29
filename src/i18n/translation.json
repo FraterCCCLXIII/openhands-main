@@ -60154,5 +60154,41 @@
     "tr": "Yoğunlaştırma",
     "uk": "Стиснення",
     "id": "Pemadatan"
+  },
+  "FEED$DETAILS_COST_NOT_REPORTED": {
+    "en": "Not reported",
+    "ja": "未報告",
+    "zh-CN": "未报告",
+    "zh-TW": "未回報",
+    "ko-KR": "보고되지 않음",
+    "no": "Ikke rapportert",
+    "ar": "غير مُبلَّغ",
+    "de": "Nicht gemeldet",
+    "fr": "Non communiqué",
+    "it": "Non riportato",
+    "pt": "Não informado",
+    "es": "No informado",
+    "ca": "No informat",
+    "tr": "Bildirilmedi",
+    "uk": "Не повідомлено",
+    "id": "Tidak dilaporkan"
+  },
+  "FEED$DETAILS_COST_LOCAL": {
+    "en": "Free (local model)",
+    "ja": "無料(ローカルモデル)",
+    "zh-CN": "免费(本地模型)",
+    "zh-TW": "免費(本機模型)",
+    "ko-KR": "무료(로컬 모델)",
+    "no": "Gratis (lokal modell)",
+    "ar": "مجاني (نموذج محلي)",
+    "de": "Kostenlos (lokales Modell)",
+    "fr": "Gratuit (modèle local)",
+    "it": "Gratis (modello locale)",
+    "pt": "Grátis (modelo local)",
+    "es": "Gratis (modelo local)",
+    "ca": "Gratuït (model local)",
+    "tr": "Ücretsiz (yerel model)",
+    "uk": "Безкоштовно (локальна модель)",
+    "id": "Gratis (model lokal)"
   }
 }

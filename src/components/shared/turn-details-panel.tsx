@@ -77,6 +77,18 @@ function EvidenceItem({ label, result }: { label: string; result: string }) {
   );
 }
 
+/** Local runtimes report no price because they cost nothing per token. */
+const LOCAL_MODEL = /^(ollama|ollama_chat|lm_studio|llamafile|llama_cpp)\b/i;
+
+/** A call's cost, always: what the server reported, free for a local model, or not reported. */
+function costLabel(usage: StepUsage, t: (key: I18nKey) => string): string {
+  if (usage.cost > 0) return `$${usage.cost.toFixed(4)}`;
+  if (usage.model && LOCAL_MODEL.test(usage.model)) {
+    return t(I18nKey.FEED$DETAILS_COST_LOCAL);
+  }
+  return t(I18nKey.FEED$DETAILS_COST_NOT_REPORTED);
+}
+
 function UsageStats({ usage }: { usage: StepUsage }) {
   const { t } = useTranslation("openhands");
   const stats = [
@@ -100,12 +112,6 @@ function UsageStats({ usage }: { usage: StepUsage }) {
           value: formatNumber(usage.cacheReadTokens),
         }
       : null,
-    usage.cost > 0
-      ? {
-          label: t(I18nKey.FEED$DETAILS_STAT_COST),
-          value: `$${usage.cost.toFixed(4)}`,
-        }
-      : null,
     usage.contextTokens > 0
       ? {
           label: t(I18nKey.FEED$DETAILS_STAT_CONTEXT),
@@ -115,7 +121,15 @@ function UsageStats({ usage }: { usage: StepUsage }) {
               : formatNumber(usage.contextTokens),
         }
       : null,
-  ].filter((stat): stat is { label: string; value: string } => stat !== null);
+    {
+      label: t(I18nKey.FEED$DETAILS_STAT_COST),
+      value: costLabel(usage, t),
+      end: true,
+    },
+  ].filter(
+    (stat): stat is { label: string; value: string; end?: boolean } =>
+      stat !== null,
+  );
   const pct =
     usage.contextWindow > 0 && usage.contextTokens > 0
       ? Math.min(100, (usage.contextTokens / usage.contextWindow) * 100)
@@ -221,10 +235,10 @@ function HeaderChips({ details }: { details: FeedUpdateDetails }) {
       </Chip>,
     );
   }
-  if (usage && usage.cost > 0) {
+  if (usage && usage.promptTokens + usage.completionTokens > 0) {
     chips.push(
       <Chip key="cost" testId="turn-details-chip-cost" icon={<Coins />}>
-        {`$${usage.cost.toFixed(4)}`}
+        {costLabel(usage, t)}
       </Chip>,
     );
   }
