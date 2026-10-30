@@ -6314,7 +6314,8 @@
     "tr": "Mobil",
     "de": "Mobil",
     "uk": "Мобільний",
-    "ca": "Mòbil"
+    "ca": "Mòbil",
+    "id": "Seluler"
   },
   "SETTINGS$PAGE_MOBILE_SUBLINE": {
     "en": "Pair a phone over the internet, without the same Wi-Fi.",
@@ -6331,7 +6332,8 @@
     "tr": "Aynı Wi-Fi olmadan internet üzerinden bir telefon eşleyin.",
     "de": "Koppeln Sie ein Telefon über das Internet, ohne dasselbe WLAN.",
     "uk": "Підключіть телефон через інтернет без тієї самої Wi-Fi.",
-    "ca": "Vincula un telèfon per internet, sense el mateix Wi-Fi."
+    "ca": "Vincula un telèfon per internet, sense el mateix Wi-Fi.",
+    "id": "Pasangkan ponsel melalui internet, tanpa perlu Wi-Fi yang sama."
   },
   "SETTINGS$MOBILE_INTRO": {
     "en": "Scan this QR code in the OpenHands mobile app. The phone can be on any network; it uses a short-lived public link to this computer.",
@@ -6348,7 +6350,8 @@
     "tr": "Bu QR kodunu OpenHands mobil uygulamasında tarayın. Telefon herhangi bir ağda olabilir; bu bilgisayara giden kısa ömürlü bir genel bağlantı kullanır.",
     "de": "Scannen Sie diesen QR-Code in der OpenHands-App. Das Telefon kann in jedem Netz sein; es nutzt einen kurzlebigen öffentlichen Link zu diesem Computer.",
     "uk": "Відскануйте цей QR-код у мобільному застосунку OpenHands. Телефон може бути в будь-якій мережі; він використовує короткочасне публічне посилання на цей комп’ютер.",
-    "ca": "Escanegeu aquest codi QR a l’app mòbil d’OpenHands. El telèfon pot ser a qualsevol xarxa; fa servir un enllaç públic temporal cap a aquest ordinador."
+    "ca": "Escanegeu aquest codi QR a l’app mòbil d’OpenHands. El telèfon pot ser a qualsevol xarxa; fa servir un enllaç públic temporal cap a aquest ordinador.",
+    "id": "Pindai kode QR ini di aplikasi seluler OpenHands. Ponsel dapat berada di jaringan mana pun; ponsel memakai tautan publik berumur pendek ke komputer ini."
   },
   "SETTINGS$MOBILE_HOST_LABEL": {
     "en": "Host the phone will use",
@@ -6365,7 +6368,8 @@
     "tr": "Telefonun kullanacağı ana bilgisayar",
     "de": "Host, den das Telefon verwendet",
     "uk": "Хост, який використовуватиме телефон",
-    "ca": "Amfitrió que farà servir el telèfon"
+    "ca": "Amfitrió que farà servir el telèfon",
+    "id": "Host yang akan dipakai ponsel"
   },
   "SETTINGS$MOBILE_HOST_HELP": {
     "en": "This is a public internet link to this computer. Refresh it if the phone cannot connect.",
@@ -6382,7 +6386,8 @@
     "tr": "Bu, bu bilgisayara giden genel bir internet bağlantısıdır. Telefon bağlanamazsa yenileyin.",
     "de": "Dies ist ein öffentlicher Internet-Link zu diesem Computer. Aktualisieren Sie ihn, wenn das Telefon nicht verbindet.",
     "uk": "Це публічне інтернет-посилання на цей комп’ютер. Оновіть його, якщо телефон не з’єднується.",
-    "ca": "Aquest és un enllaç d’internet públic a aquest ordinador. Actualitzeu-lo si el telèfon no es connecta."
+    "ca": "Aquest és un enllaç d’internet públic a aquest ordinador. Actualitzeu-lo si el telèfon no es connecta.",
+    "id": "Ini adalah tautan internet publik ke komputer ini. Segarkan jika ponsel tidak dapat terhubung."
   },
   "SETTINGS$MOBILE_HOST_LOOPBACK": {
     "en": "This address only works on this computer. Enter a host the phone can reach, or open Agent Canvas from this machine’s LAN IP.",
@@ -6399,7 +6404,8 @@
     "tr": "Bu adres yalnızca bu bilgisayarda çalışır. Telefonun ulaşabileceği bir ana bilgisayar girin veya Agent Canvas’ı bu makinenin LAN IP’sinden açın.",
     "de": "Diese Adresse funktioniert nur auf diesem Computer. Geben Sie einen Host ein, den das Telefon erreicht, oder öffnen Sie Agent Canvas über die LAN-IP dieses Rechners.",
     "uk": "Ця адреса працює лише на цьому комп’ютері. Введіть хост, доступний з телефона, або відкрийте Agent Canvas з LAN IP цієї машини.",
-    "ca": "Aquesta adreça només funciona en aquest ordinador. Introduïu un amfitrió que el telèfon pugui assolir o obriu Agent Canvas des de la IP LAN d’aquesta màquina."
+    "ca": "Aquesta adreça només funciona en aquest ordinador. Introduïu un amfitrió que el telèfon pugui assolir o obriu Agent Canvas des de la IP LAN d’aquesta màquina.",
+    "id": "Alamat ini hanya berfungsi di komputer ini. Masukkan host yang dapat dijangkau ponsel, atau buka Agent Canvas dari IP LAN mesin ini."
   },
   "SETTINGS$MOBILE_SHOW_QR": {
     "en": "Show pairing QR code",
@@ -6416,7 +6422,8 @@
     "tr": "Eşleme QR kodunu göster",
     "de": "Kopplungs-QR-Code anzeigen",
     "uk": "Показати QR-код підключення",
-    "ca": "Mostra el codi QR de vinculació"
+    "ca": "Mostra el codi QR de vinculació",
+    "id": "Tampilkan kode QR pemasangan"
   },
   "SETTINGS$MOBILE_NO_KEY": {
     "en": "This backend has no session API key to share. Use a local backend with a key, or enter the host on the phone.",
@@ -6433,7 +6440,8 @@
     "tr": "Bu uçbirimin paylaşılacak bir oturum API anahtarı yok. Anahtarlı yerel bir uçbirim kullanın veya ana bilgisayarı telefona girin.",
     "de": "Dieses Backend hat keinen Sitzungs-API-Schlüssel zum Teilen. Nutzen Sie ein lokales Backend mit Schlüssel oder geben Sie den Host am Telefon ein.",
     "uk": "У цього бекенда немає ключа API сеансу для спільного використання. Скористайтеся локальним бекендом із ключем або введіть хост на телефоні.",
-    "ca": "Aquest backend no té cap clau API de sessió per compartir. Feu servir un backend local amb clau o introduïu l’amfitrió al telèfon."
+    "ca": "Aquest backend no té cap clau API de sessió per compartir. Feu servir un backend local amb clau o introduïu l’amfitrió al telèfon.",
+    "id": "Backend ini tidak memiliki kunci API sesi untuk dibagikan. Gunakan backend lokal dengan kunci, atau masukkan host di ponsel."
   },
   "SETTINGS$MOBILE_QR_ALT": {
     "en": "Pairing QR code for OpenHands mobile",
@@ -6450,7 +6458,8 @@
     "tr": "OpenHands mobil eşleme QR kodu",
     "de": "Kopplungs-QR-Code für OpenHands Mobile",
     "uk": "QR-код підключення OpenHands mobile",
-    "ca": "Codi QR de vinculació d’OpenHands mòbil"
+    "ca": "Codi QR de vinculació d’OpenHands mòbil",
+    "id": "Kode QR pemasangan untuk OpenHands seluler"
   },
   "SETTINGS$MOBILE_QR_HINT": {
     "en": "Anyone who can see this screen can connect with your session key.",
@@ -6467,7 +6476,8 @@
     "tr": "Bu ekranı gören herkes oturum anahtarınızla bağlanabilir.",
     "de": "Jede Person, die diesen Bildschirm sieht, kann sich mit Ihrem Sitzungsschlüssel verbinden.",
     "uk": "Будь-хто, хто бачить цей екран, може підключитися з вашим ключем сеансу.",
-    "ca": "Qualsevol que vegi aquesta pantalla pot connectar-se amb la vostra clau de sessió."
+    "ca": "Qualsevol que vegi aquesta pantalla pot connectar-se amb la vostra clau de sessió.",
+    "id": "Siapa pun yang dapat melihat layar ini dapat terhubung dengan kunci sesi Anda."
   },
   "SETTINGS$MOBILE_QR_ERROR": {
     "en": "Could not create the pairing QR code.",
@@ -6484,7 +6494,8 @@
     "tr": "Eşleme QR kodu oluşturulamadı.",
     "de": "Der Kopplungs-QR-Code konnte nicht erstellt werden.",
     "uk": "Не вдалося створити QR-код підключення.",
-    "ca": "No s’ha pogut crear el codi QR de vinculació."
+    "ca": "No s’ha pogut crear el codi QR de vinculació.",
+    "id": "Tidak dapat membuat kode QR pemasangan."
   },
   "SETTINGS$MOBILE_CREATE_LINK": {
     "en": "Refresh internet link",
@@ -6501,7 +6512,8 @@
     "tr": "İnternet bağlantısını yenile",
     "de": "Internet-Link aktualisieren",
     "uk": "Оновити інтернет-посилання",
-    "ca": "Actualitza l’enllaç d’internet"
+    "ca": "Actualitza l’enllaç d’internet",
+    "id": "Segarkan tautan internet"
   },
   "SETTINGS$MOBILE_CREATING_LINK": {
     "en": "Creating a link…",
@@ -6518,7 +6530,8 @@
     "tr": "Bağlantı oluşturuluyor…",
     "de": "Link wird erstellt…",
     "uk": "Створення посилання…",
-    "ca": "S’està creant l’enllaç…"
+    "ca": "S’està creant l’enllaç…",
+    "id": "Membuat tautan…"
   },
   "SETTINGS$MOBILE_CREATE_LINK_ERROR": {
     "en": "Could not create a phone-reachable link.",
@@ -6535,7 +6548,8 @@
     "tr": "Telefonun ulaşabileceği bir bağlantı oluşturulamadı.",
     "de": "Es konnte kein vom Telefon erreichbarer Link erstellt werden.",
     "uk": "Не вдалося створити посилання, доступне з телефона.",
-    "ca": "No s’ha pogut crear un enllaç que el telèfon pugui assolir."
+    "ca": "No s’ha pogut crear un enllaç que el telèfon pugui assolir.",
+    "id": "Tidak dapat membuat tautan yang dapat dijangkau ponsel."
   },
   "SETTINGS$NAV_API_KEYS": {
     "en": "API Keys",
@@ -58556,42 +58570,6 @@
     "zh-CN": "未找到匹配的模板 — 请稍后再来查看。",
     "zh-TW": "找不到符合的範本 — 請稍後再回來查看。",
     "id": "Tidak ada templat yang cocok — periksa kembali nanti."
-  },
-  "AUTOMATION_SETUP_CHOICE$MCP_TAB": {
-    "en": "MCP Server",
-    "ja": "MCPサーバー",
-    "zh-CN": "MCP 服务器",
-    "zh-TW": "MCP 伺服器",
-    "ko-KR": "MCP 서버",
-    "no": "MCP-server",
-    "it": "Server MCP",
-    "pt": "Servidor MCP",
-    "es": "Servidor MCP",
-    "ar": "خادم MCP",
-    "fr": "Serveur MCP",
-    "tr": "MCP Sunucusu",
-    "de": "MCP-Server",
-    "uk": "Сервер MCP",
-    "ca": "Servidor MCP",
-    "id": "Server MCP"
-  },
-  "AUTOMATION_SETUP_CHOICE$BUILT_IN_TAB": {
-    "en": "Native Integration",
-    "ja": "ネイティブ連携",
-    "zh-CN": "原生集成",
-    "zh-TW": "原生整合",
-    "ko-KR": "네이티브 통합",
-    "no": "Innebygd integrasjon",
-    "it": "Integrazione nativa",
-    "pt": "Integração nativa",
-    "es": "Integración nativa",
-    "ar": "التكامل الأصلي",
-    "fr": "Intégration native",
-    "tr": "Yerel entegrasyon",
-    "de": "Native Integration",
-    "uk": "Нативна інтеграція",
-    "ca": "Integració nativa",
-    "id": "Integrasi Bawaan"
   },
   "AUTOMATION_SETUP_CHOICE$CONNECT_ACTION": {
     "ar": "الاتصال بـ {{name}}",
