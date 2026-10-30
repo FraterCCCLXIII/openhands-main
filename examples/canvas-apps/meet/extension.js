@@ -317,9 +317,13 @@ const CSS = `
   --mt-muted: var(--oh-muted, #9a9a9a); --mt-border: var(--oh-border-subtle, #3a3a3a); --mt-contrast: var(--oh-contrast, #fff); --mt-danger: #ef4444; --mt-ok: #34d399;
   box-sizing: border-box; color: var(--mt-text); background: var(--mt-bg); font: 14px/1.45 system-ui, sans-serif; height: 100dvh; min-height: 480px; overflow: hidden; display: flex; }
 .mt .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.mt .nav { width: 260px; flex: none; border-right: 1px solid var(--mt-border); display: flex; flex-direction: column; min-height: 0; }
-.mt .navtop { padding: 12px 10px 8px; display: grid; gap: 8px; border-bottom: 1px solid var(--mt-border); }
-.mt .navhead { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; font-weight: 400; color: var(--mt-contrast); }
+.mt .nav { width: 260px; flex: none; background: var(--mt-panel); display: flex; flex-direction: column; min-height: 0; }
+.mt .navtop { padding: 14px 12px 10px; display: grid; gap: 10px; }
+.mt .navhead { display: flex; gap: 6px; align-items: center; font-weight: 400; color: var(--mt-contrast); }
+.mt .newroom { flex: 1; min-width: 0; height: 34px; border: 0; border-radius: 10px; background: var(--mt-primary, #fff); color: var(--mt-on-primary, #111); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.mt .navicon { flex: none; width: 34px; height: 34px; border: 0; border-radius: 10px; background: transparent; color: var(--mt-muted); display: grid; place-items: center; cursor: pointer; }
+.mt .navicon:hover, .mt .navicon[aria-pressed="true"] { background: var(--mt-raised, rgba(255,255,255,.08)); color: var(--mt-contrast); }
+.mt .navicon svg { width: 18px; height: 18px; }
 .mt .clist { flex: 1; overflow: auto; padding: 6px; }
 .mt .cgroup { margin: 10px 6px 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--mt-muted); }
 .mt .contact { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; border: 0; background: transparent; border-radius: 10px; padding: 6px; cursor: pointer; }
@@ -367,6 +371,12 @@ const CSS = `
 .mt button { font: inherit; color: inherit; }
 .mt .lobby { margin: auto; width: min(420px, 92%); display: grid; gap: 10px; }
 .mt .lobby h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; letter-spacing: -.01em; color: var(--mt-contrast); }
+.mt .lobbystage { margin: auto; display: flex; align-items: center; justify-content: center; gap: 56px; padding: 24px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+.mt .lobbystage .lobby { margin: 0; flex: 0 1 420px; }
+.mt .lobbyart { flex: 0 1 340px; display: grid; gap: 14px; justify-items: center; }
+.mt .lobbyart .callart { width: 100%; height: auto; display: block; }
+.mt .lobbyart .fluxkamiji { width: 160px; height: 160px; margin-top: -26px; }
+@media (max-width: 900px) { .mt .lobbyart { display: none; } }
 .mt label { display: grid; gap: 4px; font-size: 12px; color: var(--mt-muted); }
 .mt input { padding: 8px 12px; border-radius: 10px; font-size: 14px; border: 1px solid var(--mt-border); background: var(--mt-panel); color: var(--mt-text); font: inherit; }
 .mt .primary { border: 0; border-radius: 10px; background: var(--mt-contrast); color: var(--mt-bg); padding: 10px 16px; font-weight: 600; cursor: pointer; }
@@ -396,6 +406,116 @@ const CSS = `
 .mt .ctl.leave { background: var(--mt-danger); border-color: var(--mt-danger); color: #fff; }
 @media (max-width: 560px) { .mt .meeting { grid-template-columns: minmax(0, 1fr); } .mt .chat { display: none; } }
 `;
+
+// ─── The lobby picture: a call in progress, and a Flux Kamiji looking on ──
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function svgEl(parent, tag, attrs) {
+  const n = document.createElementNS(SVG_NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
+  parent.append(n);
+  return n;
+}
+
+/** A conference call as a picture: four video tiles with a character in each, and the call controls. */
+function callGraphic() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 320 220");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "A video call with four people");
+  svg.setAttribute("class", "callart");
+  svgEl(svg, "rect", { x: 1, y: 1, width: 318, height: 218, rx: 18, fill: "#1b1b1f", stroke: "#34343a" });
+  const tiles = [
+    [14, 14, "#8B5CF6", true], [164, 14, "#2FBF71", false],
+    [14, 88, "#EC4899", false], [164, 88, "#2D9CF0", false],
+  ];
+  tiles.forEach(([x, y, fill, speaking]) => {
+    svgEl(svg, "rect", { x, y, width: 142, height: 66, rx: 12, fill: "#26262c", stroke: speaking ? "#a78bfa" : "#2f2f36", "stroke-width": speaking ? 2 : 1 });
+    svgEl(svg, "rect", { x: x + 53, y: y + 11, width: 36, height: 38, rx: 13, fill });
+    svgEl(svg, "rect", { x: x + 62, y: y + 22, width: 5, height: 13, rx: 2.5, fill: "#1a0f33" });
+    svgEl(svg, "rect", { x: x + 75, y: y + 22, width: 5, height: 13, rx: 2.5, fill: "#1a0f33" });
+  });
+  // a person sharing a screen along the bottom
+  svgEl(svg, "rect", { x: 14, y: 162, width: 292, height: 8, rx: 4, fill: "#2f2f36" });
+  svgEl(svg, "rect", { x: 14, y: 162, width: 168, height: 8, rx: 4, fill: "#a78bfa", opacity: 0.7 });
+  // controls: mic, camera, screen, leave
+  [[112, "#3a3a42"], [142, "#3a3a42"], [172, "#3a3a42"], [208, "#ef4444"]].forEach(([cx, fill]) => {
+    svgEl(svg, "circle", { cx, cy: 196, r: 11, fill });
+  });
+  svgEl(svg, "rect", { x: 108, y: 189, width: 8, height: 12, rx: 4, fill: "none", stroke: "#e5e5e5", "stroke-width": 1.5 });
+  svgEl(svg, "rect", { x: 136, y: 191, width: 12, height: 9, rx: 2, fill: "none", stroke: "#e5e5e5", "stroke-width": 1.5 });
+  svgEl(svg, "rect", { x: 166, y: 190, width: 12, height: 9, rx: 1.5, fill: "none", stroke: "#e5e5e5", "stroke-width": 1.5 });
+  svgEl(svg, "path", { d: "M203 198h10", stroke: "#fff", "stroke-width": 2, "stroke-linecap": "round" });
+  return svg;
+}
+
+/** A small living Flux: a wobbling body whose colours drift, with pill eyes that blink. */
+function fluxKamiji() {
+  const canvas = document.createElement("canvas");
+  canvas.className = "fluxkamiji";
+  canvas.width = 240;
+  canvas.height = 240;
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", "A Flux Kamiji");
+  const ctx = canvas.getContext ? canvas.getContext("2d") : null;
+  if (!ctx) return canvas;
+  const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const W = 240;
+  const draw = (ms) => {
+    const t = ms / 1000;
+    ctx.clearRect(0, 0, W, W);
+    const R = 76 + Math.sin(t * 1.4) * 3;
+    const hue = 250 + Math.sin(t * 0.5) * 70;
+    const g = ctx.createRadialGradient(W / 2 - 24, W / 2 - 30, 10, W / 2, W / 2, R + 30);
+    g.addColorStop(0, `hsl(${hue + 80} 90% 68%)`);
+    g.addColorStop(0.55, `hsl(${hue} 85% 60%)`);
+    g.addColorStop(1, `hsl(${hue - 60} 80% 52%)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    for (let i = 0; i <= 72; i += 1) {
+      const a = (i / 72) * Math.PI * 2;
+      const r = R + Math.sin(a * 3 + t * 1.7) * 5 + Math.sin(a * 5 - t * 1.2) * 3;
+      const x = W / 2 + Math.cos(a) * r;
+      const y = W / 2 + Math.sin(a) * r;
+      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.fill();
+    // two motes that drift out and back
+    [0, 1].forEach((k) => {
+      const a = t * 0.6 + k * 3.1;
+      const d = R + 22 + Math.sin(t * 0.9 + k) * 10;
+      ctx.fillStyle = `hsl(${hue + 140 + k * 70} 85% 65%)`;
+      ctx.beginPath();
+      ctx.arc(W / 2 + Math.cos(a) * d, W / 2 + Math.sin(a) * d, 7 - k * 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    // pill eyes, looking a little toward the call, blinking now and then
+    const blink = Math.sin(t * 0.8) > 0.985 ? 0.12 : 1;
+    const look = Math.sin(t * 0.7) * 6;
+    ctx.fillStyle = "#1a0f33";
+    [-24, 24].forEach((dx) => {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(W / 2 + dx + look - 8, W / 2 - 26, 16, 46 * blink, 8);
+      else ctx.rect(W / 2 + dx + look - 8, W / 2 - 26, 16, 46 * blink);
+      ctx.fill();
+    });
+  };
+  const frame = (ms) => {
+    if (!canvas.isConnected && ms > 200) return;
+    draw(ms);
+    if (!still) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  return canvas;
+}
+
+/** The lobby: the form, with the call picture and a Flux Kamiji beside it. */
+function lobbyArt() {
+  const art = el("div", "lobbyart");
+  art.setAttribute("aria-hidden", "true");
+  art.append(callGraphic(), fluxKamiji());
+  return art;
+}
 
 export function activate(host) {
   if (host.apiVersion !== "1") throw new Error("Meet requires Canvas host API 1.");
@@ -575,18 +695,33 @@ function mount(container, host) {
     const nav = el("div", "nav");
     const top = el("div", "navtop");
     const head = el("div", "navhead");
-    const make = el("button", "mini", "+ New room");
+    const make = el("button", "newroom", "+ New room");
     make.type = "button";
     make.addEventListener("click", createRoom);
     head.append(make);
-    const gear = el("button", "mini", "Settings");
-    gear.type = "button";
-    gear.addEventListener("click", () => { state.settings = true; render(); if (!Object.keys(state.checks).length) runChecks(); });
-    head.append(gear);
-    const imp = el("button", "mini", state.importing ? "Close" : "Import contacts");
-    imp.type = "button";
-    imp.addEventListener("click", () => { state.importing = !state.importing; render(); });
-    head.append(imp);
+    const icon = (title, paths, onClick, pressed) => {
+      const b = el("button", "navicon");
+      b.type = "button";
+      b.title = title;
+      b.setAttribute("aria-label", title);
+      if (pressed !== undefined) b.setAttribute("aria-pressed", String(pressed));
+      const svg = document.createElementNS(SVG_NS, "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "currentColor");
+      svg.setAttribute("stroke-width", "1.8");
+      svg.setAttribute("stroke-linecap", "round");
+      svg.setAttribute("stroke-linejoin", "round");
+      svg.setAttribute("aria-hidden", "true");
+      paths.forEach((d) => svgEl(svg, "path", { d }));
+      b.append(svg);
+      b.addEventListener("click", onClick);
+      return b;
+    };
+    head.append(
+      icon(state.importing ? "Close import" : "Import contacts", ["M12 4v11", "m7 10 5 5 5-5", "M5 20h14"], () => { state.importing = !state.importing; render(); }, state.importing),
+      icon("Settings", ["M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z", "M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"], () => { state.settings = true; render(); if (!Object.keys(state.checks).length) runChecks(); }),
+    );
     const search = el("input");
     search.type = "search";
     search.placeholder = "Search contacts";
@@ -937,7 +1072,11 @@ function mount(container, host) {
       renderStage();
       renderChat();
     } else {
-      main.append(lobby());
+      {
+        const stage = el("div", "lobbystage");
+        stage.append(lobby(), lobbyArt());
+        main.append(stage);
+      }
     }
     renderNav();
     if (state.settings) root.append(settingsModal());
