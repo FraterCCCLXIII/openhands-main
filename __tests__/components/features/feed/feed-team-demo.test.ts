@@ -32,9 +32,10 @@ const conv = (id: string, overrides: Partial<AppConversation> = {}) =>
   }) as unknown as AppConversation;
 
 describe("feed team demo", () => {
-  it("is on unless ?demoTeam=off", () => {
-    expect(isFeedTeamDemoEnabled("")).toBe(true);
+  it("is off unless ?demoTeam=on", () => {
+    expect(isFeedTeamDemoEnabled("")).toBe(false);
     expect(isFeedTeamDemoEnabled("?demoTeam=off")).toBe(false);
+    expect(isFeedTeamDemoEnabled("?demoTeam=on")).toBe(true);
   });
 
   it("builds the same nested thread for a conversation every time", () => {
@@ -157,5 +158,7 @@ describe("feed icons store", () => {
 });
 
 // These cover the simulated team, which is opt-in.
-vitestDemoOn.beforeEach(() => window.history.pushState({}, "", "/?demoTeam=on"));
+vitestDemoOn.beforeEach(() =>
+  window.history.pushState({}, "", "/?demoTeam=on"),
+);
 vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));

@@ -47,9 +47,9 @@ describe("buildAutomationMetadataPills", () => {
       "linear",
     );
     expect(screen.getByTestId("pill-event-source")).toHaveTextContent("Linear");
-    expect(screen.getByTestId("pill-event-source").firstElementChild).toHaveClass(
-      "py-0.5",
-    );
+    expect(
+      screen.getByTestId("pill-event-source").firstElementChild,
+    ).toHaveClass("py-0.5");
     expect(screen.getByTestId("automation-source-logo")).toBeInTheDocument();
   });
 

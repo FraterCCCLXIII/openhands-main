@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { ALL_FEED_FILTER, matchesFeedFilter } from "#/utils/feed-filters";
-import { getConversationFactory } from "#/utils/feed-team-demo";
+import {
+  getConversationFactory,
+  type FactoryResolver,
+} from "#/utils/feed-team-demo";
 
 const conv = (id: string, profileId?: string) =>
   ({
@@ -55,8 +58,7 @@ describe("matchesFeedFilter by factory", () => {
   it("keeps only the conversations of the selected factory", () => {
     useFeedFactoriesStore.getState().addAgent("f1", "scout");
     const filter = { ...ALL_FEED_FILTER, factoryId: "f1" };
-    const resolve = (c: { id: string; launched_agent_profile?: never }) =>
-      getConversationFactory(c, names);
+    const resolve: FactoryResolver = (c) => getConversationFactory(c, names);
 
     expect(matchesFeedFilter(conv("a", "p1"), filter, resolve)).toBe(true);
     expect(matchesFeedFilter(conv("b"), filter, resolve)).toBe(false);

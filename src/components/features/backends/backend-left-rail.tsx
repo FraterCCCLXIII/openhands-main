@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router";
 import {
   Boxes,
   FolderKanban,
@@ -10,6 +11,8 @@ import {
 } from "lucide-react";
 import { getLockedCloudHost } from "#/api/agent-server-config";
 import { isNoBackend } from "#/api/backend-registry/active-store";
+import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/canvas-extension-icon";
+import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { useActiveBackendContext } from "#/contexts/active-backend-context";
 import { I18nKey } from "#/i18n/declaration";
 import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
@@ -30,29 +33,92 @@ import {
   useSelectBackendOption,
 } from "./backend-selector";
 
-interface RailExampleApp {
+interface RailApp {
   id: string;
-  label: string;
-  icon: LucideIcon;
-  /** Tile fill; omit for the default neutral tile. */
-  background?: string;
+  /** Name of the Canvas extension this slot opens. */
+  extensionName: string;
+  /** Label used only while the extension is not installed. */
+  fallbackLabel: string;
+  /** Glyph shown only while the extension is not installed. */
+  fallbackIcon: LucideIcon;
 }
 
 /**
- * Example app tiles shown under the accounts. They are placeholders for the
- * apps and admin surfaces an account can expose; they do not navigate yet.
+ * App slots under the accounts. Each opens a real Canvas extension page; the
+ * name, icon and route come from the installed extension registry, so a slot
+ * whose app is missing is disabled and says how to install it.
  */
-const RAIL_EXAMPLE_APPS: readonly RailExampleApp[] = [
+const RAIL_APPS: readonly RailApp[] = [
   {
-    id: "superadmin",
-    label: "Superadmin",
-    icon: ShieldCheck,
-    background: "#7f1d1d",
+    id: "run-timeline",
+    extensionName: "run-timeline",
+    fallbackLabel: "Runner",
+    fallbackIcon: ShieldCheck,
   },
-  { id: "planning", label: "Planning", icon: KanbanSquare },
-  { id: "projects-hub", label: "Projects hub", icon: FolderKanban },
-  { id: "work-inventory", label: "Work inventory", icon: Boxes },
+  {
+    id: "kosmos-roadmap",
+    extensionName: "kosmos-roadmap",
+    fallbackLabel: "Kosmos Roadmap",
+    fallbackIcon: KanbanSquare,
+  },
+  {
+    id: "projects-hub",
+    extensionName: "projects-hub",
+    fallbackLabel: "Projector",
+    fallbackIcon: FolderKanban,
+  },
+  {
+    id: "work-inventory",
+    extensionName: "work-inventory",
+    fallbackLabel: "Work inventory",
+    fallbackIcon: Boxes,
+  },
 ];
+
+function RailAppButton({ app }: { app: RailApp }) {
+  const { t } = useTranslation("openhands");
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { pages } = useCanvasExtensionsRuntime();
+  const page = pages.find((p) => p.extension.name === app.extensionName);
+  const FallbackIcon = app.fallbackIcon;
+  const label = page
+    ? (page.contribution.nav_label ?? page.contribution.title)
+    : app.fallbackLabel;
+  const hint = t(I18nKey.BACKEND$RAIL_APP_NOT_INSTALLED, { app: label });
+  const isActive = page
+    ? pathname === page.href || pathname.startsWith(`${page.href}/`)
+    : false;
+
+  return (
+    <button
+      type="button"
+      data-testid={`backend-rail-app-${app.id}`}
+      aria-label={page ? label : `${label}. ${hint}`}
+      aria-current={isActive ? "page" : undefined}
+      aria-disabled={page ? undefined : true}
+      title={page ? label : hint}
+      onClick={page ? () => navigate(page.href) : undefined}
+      className={cn(
+        "relative inline-flex size-10 shrink-0 items-center justify-center rounded-xl border-2 transition-colors",
+        page
+          ? "cursor-pointer hover:bg-surface-raised"
+          : "cursor-not-allowed opacity-50",
+        isActive ? "border-contrast" : "border-transparent",
+      )}
+    >
+      {page ? (
+        <CanvasExtensionIcon extension={page.extension} size={32} />
+      ) : (
+        <BackendIdentityTile
+          fallback={<FallbackIcon aria-hidden className="size-4.5" />}
+          size="md"
+          className="bg-surface-raised text-muted"
+        />
+      )}
+    </button>
+  );
+}
 
 /**
  * A narrow rail down the left edge with one tile per account, so switching
@@ -141,22 +207,8 @@ export function BackendLeftRail() {
           aria-orientation="horizontal"
           className="my-1 h-px w-6 shrink-0 bg-border"
         />
-        {RAIL_EXAMPLE_APPS.map(({ id, label, icon: Icon, background }) => (
-          <button
-            key={id}
-            type="button"
-            data-testid={`backend-rail-app-${id}`}
-            aria-label={label}
-            title={label}
-            className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border-2 border-transparent transition-colors hover:bg-surface-raised"
-          >
-            <BackendIdentityTile
-              fallback={<Icon aria-hidden className="size-4.5" />}
-              background={background}
-              size="md"
-              className="text-white"
-            />
-          </button>
+        {RAIL_APPS.map((app) => (
+          <RailAppButton key={app.id} app={app} />
         ))}
       </nav>
       {addModalOpen ? (

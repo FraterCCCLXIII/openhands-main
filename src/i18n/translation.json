@@ -34973,6 +34973,24 @@
     "ca": "Barra esquerra",
     "id": "Rel kiri"
   },
+  "BACKEND$RAIL_APP_NOT_INSTALLED": {
+    "en": "{{app}} is not installed. Install it from Customize > Apps.",
+    "ja": "{{app}} はインストールされていません。「カスタマイズ」>「アプリ」からインストールしてください。",
+    "zh-CN": "未安装 {{app}}。请在“自定义”>“应用”中安装。",
+    "zh-TW": "尚未安裝 {{app}}。請在「自訂」>「應用程式」中安裝。",
+    "ko-KR": "{{app}}이(가) 설치되어 있지 않습니다. 사용자 지정 > 앱에서 설치하세요.",
+    "no": "{{app}} er ikke installert. Installer den fra Tilpass > Apper.",
+    "it": "{{app}} non è installata. Installala da Personalizza > App.",
+    "pt": "{{app}} não está instalado. Instale-o em Personalizar > Apps.",
+    "es": "{{app}} no está instalada. Instálala desde Personalizar > Apps.",
+    "ar": "{{app}} غير مثبت. ثبّته من تخصيص > التطبيقات.",
+    "fr": "{{app}} n'est pas installée. Installez-la depuis Personnaliser > Applications.",
+    "tr": "{{app}} yüklü değil. Özelleştir > Uygulamalar bölümünden yükleyin.",
+    "de": "{{app}} ist nicht installiert. Installiere sie unter Anpassen > Apps.",
+    "uk": "{{app}} не встановлено. Встановіть її в розділі Налаштування > Застосунки.",
+    "ca": "{{app}} no està instal·lada. Instal·la-la des de Personalitza > Aplicacions.",
+    "id": "{{app}} belum terpasang. Pasang dari Sesuaikan > Aplikasi."
+  },
   "BACKEND$MANAGE_TITLE": {
     "en": "Manage backends",
     "ja": "バックエンドを管理",

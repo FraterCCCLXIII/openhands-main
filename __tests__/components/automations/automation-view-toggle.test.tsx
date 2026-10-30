@@ -28,9 +28,7 @@ describe("AutomationViewToggle", () => {
     // Arrange
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <AutomationViewToggle view="grid" onChange={onChange} disabled />,
-    );
+    render(<AutomationViewToggle view="grid" onChange={onChange} disabled />);
     const trigger = screen.getByTestId("automations-view-toggle");
 
     // Act — try to open the menu

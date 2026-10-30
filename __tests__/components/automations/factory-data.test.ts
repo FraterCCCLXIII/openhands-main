@@ -90,5 +90,7 @@ describe("buildRoster", () => {
 });
 
 // These cover the simulated team, which is opt-in.
-vitestDemoOn.beforeEach(() => window.history.pushState({}, "", "/?demoTeam=on"));
+vitestDemoOn.beforeEach(() =>
+  window.history.pushState({}, "", "/?demoTeam=on"),
+);
 vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));

@@ -73,6 +73,11 @@ export function buildRoster(
     (knownAgents.includes(FACTORY_COORDINATOR)
       ? FACTORY_COORDINATOR
       : DEFAULT_COORDINATOR);
+  // In the team demo the default coordinator stays on the roster as an
+  // ordinary agent once another agent takes over.
+  if (knownAgents.includes(FACTORY_COORDINATOR)) {
+    members.set(FACTORY_COORDINATOR.name, FACTORY_COORDINATOR);
+  }
   members.delete(coordinatorAgent.name);
 
   return {
