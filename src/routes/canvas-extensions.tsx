@@ -1,10 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, ShieldCheck, X } from "lucide-react";
-import {
-  ExtensionsNavigation,
-  ExtensionsCompactNavigation,
-} from "#/components/features/skills/extensions-navigation";
 import { AddCanvasExtensionModal } from "#/components/features/canvas-extensions/add-canvas-extension-modal";
 import { CanvasExtensionCard } from "#/components/features/canvas-extensions/canvas-extension-card";
 import { BrandButton } from "#/components/features/settings/brand-button";
@@ -30,6 +26,29 @@ import {
 } from "#/utils/extension-module-card-classes";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 
+type AppSort = "name" | "enabled" | "newest";
+
+const sortApps = (
+  list: InstalledCanvasExtensionInfo[],
+  sort: AppSort,
+): InstalledCanvasExtensionInfo[] => {
+  const label = (e: InstalledCanvasExtensionInfo) =>
+    e.manifest?.display_name || e.name;
+  const byName = (
+    a: InstalledCanvasExtensionInfo,
+    b: InstalledCanvasExtensionInfo,
+  ) => label(a).localeCompare(label(b));
+  return [...list].sort((a, b) => {
+    if (sort === "enabled" && a.enabled !== b.enabled)
+      return a.enabled ? -1 : 1;
+    if (sort === "newest") {
+      const diff = Date.parse(b.installed_at) - Date.parse(a.installed_at);
+      if (diff) return diff;
+    }
+    return byName(a, b);
+  });
+};
+
 type PendingAction =
   | { type: "enable"; extension: InstalledCanvasExtensionInfo }
   | { type: "uninstall"; extension: InstalledCanvasExtensionInfo };
@@ -44,6 +63,7 @@ export default function CanvasExtensionsScreen() {
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [isTrustNoticeDismissed, setIsTrustNoticeDismissed] =
     React.useState(false);
+  const [sort, setSort] = React.useState<AppSort>("name");
   const [pendingAction, setPendingAction] =
     React.useState<PendingAction | null>(null);
   const query = useCanvasExtensions();
@@ -91,10 +111,8 @@ export default function CanvasExtensionsScreen() {
       data-testid="canvas-extensions-screen"
       className="flex h-full gap-4 md:gap-6 md:pl-8 lg:gap-10 lg:pl-10"
     >
-      <ExtensionsNavigation />
       <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
         <div className="mx-auto flex w-full min-w-0 max-w-200 flex-col gap-6">
-          <ExtensionsCompactNavigation />
           <div className="flex min-w-0 items-start justify-between gap-4">
             <div className="min-w-0 space-y-1">
               <h2 className="text-xl font-semibold leading-6 text-foreground">
@@ -149,9 +167,30 @@ export default function CanvasExtensionsScreen() {
             </div>
           )}
 
-          <h3 className="text-lg font-bold text-contrast">
-            {t(I18nKey.SETTINGS$APPS_INSTALLED)}
-          </h3>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-lg font-bold text-contrast">
+              {t(I18nKey.SETTINGS$APPS_INSTALLED)}
+            </h3>
+            <label className="flex items-center gap-2 text-sm text-tertiary-light">
+              {t(I18nKey.SETTINGS$APPS_SORT_LABEL)}
+              <select
+                data-testid="canvas-extensions-sort"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as AppSort)}
+                className="rounded-md border border-border bg-base-secondary px-2 py-1 text-sm text-contrast"
+              >
+                <option value="name">
+                  {t(I18nKey.SETTINGS$APPS_SORT_NAME)}
+                </option>
+                <option value="enabled">
+                  {t(I18nKey.SETTINGS$APPS_SORT_ENABLED)}
+                </option>
+                <option value="newest">
+                  {t(I18nKey.SETTINGS$APPS_SORT_NEWEST)}
+                </option>
+              </select>
+            </label>
+          </div>
 
           {unsupported ? (
             <div className={extensionModuleEmptyStateClassName}>
@@ -196,7 +235,7 @@ export default function CanvasExtensionsScreen() {
           ) : query.data?.length ? (
             <div className={extensionModuleCardGridContainerClassName}>
               <div className="grid min-w-0 grid-cols-1 gap-5 @min-[560px]:grid-cols-2">
-                {query.data.map((extension) => (
+                {sortApps(query.data, sort).map((extension) => (
                   <CanvasExtensionCard
                     key={extension.name}
                     extension={extension}

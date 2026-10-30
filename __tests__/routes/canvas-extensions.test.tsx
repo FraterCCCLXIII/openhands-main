@@ -141,4 +141,49 @@ describe("CanvasExtensionsScreen", () => {
     await user.keyboard(" ");
     expect(screen.getByTestId("confirmation-modal")).toBeInTheDocument();
   });
+
+  it("sorts apps by name, enabled first, or newest", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([
+      buildExtension({
+        name: "bravo",
+        enabled: false,
+        installed_at: "2026-01-02T00:00:00Z",
+      }),
+      buildExtension({
+        name: "alpha",
+        enabled: false,
+        installed_at: "2026-01-01T00:00:00Z",
+      }),
+      buildExtension({
+        name: "charlie",
+        enabled: true,
+        installed_at: "2026-01-03T00:00:00Z",
+      }),
+    ]);
+    renderAppsScreen();
+
+    const order = () =>
+      screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    await screen.findByText("alpha");
+    expect(
+      order().filter((n) => ["alpha", "bravo", "charlie"].includes(n ?? "")),
+    ).toEqual(["alpha", "bravo", "charlie"]);
+
+    await user.selectOptions(
+      screen.getByTestId("canvas-extensions-sort"),
+      "enabled",
+    );
+    expect(
+      order().filter((n) => ["alpha", "bravo", "charlie"].includes(n ?? "")),
+    ).toEqual(["charlie", "alpha", "bravo"]);
+
+    await user.selectOptions(
+      screen.getByTestId("canvas-extensions-sort"),
+      "newest",
+    );
+    expect(
+      order().filter((n) => ["alpha", "bravo", "charlie"].includes(n ?? "")),
+    ).toEqual(["charlie", "bravo", "alpha"]);
+  });
 });
