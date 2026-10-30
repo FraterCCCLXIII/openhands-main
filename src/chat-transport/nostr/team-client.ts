@@ -1,3 +1,4 @@
+import type { FeedAgentRole } from "#/utils/feed-agent-role";
 import { signEvent, tagValue, tagValues, type NostrEvent } from "./event";
 import {
   accountFromSecret,
@@ -28,6 +29,10 @@ export interface TeamMember {
   kind: "person" | "agent";
   /** For an agent, the person who runs it. */
   owner?: string;
+  /** For an agent, its orchestration role and model tier, when known. */
+  agentRole?: FeedAgentRole;
+  /** Whether the person is around right now, when known. */
+  online?: boolean;
 }
 
 export interface TeamMessage {

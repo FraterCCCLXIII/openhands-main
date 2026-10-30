@@ -6,9 +6,11 @@ import {
   TeamChooser,
 } from "#/components/features/team-chat/team-chat-gate";
 import {
+  SampleNotice,
   TeamChatWorkspace,
   Workspace,
 } from "#/components/features/team-chat/team-chat-workspace";
+import { TeamChatWelcome } from "#/components/features/team-chat/team-chat-welcome";
 import { createSampleTeam } from "#/chat-transport/nostr/demo-client";
 import { I18nKey } from "#/i18n/declaration";
 import {
@@ -17,13 +19,15 @@ import {
 } from "#/stores/team-chat-store";
 import { TeamChatStoreProvider } from "#/stores/team-chat-store-context";
 
+type Stage = "welcome" | "dialog" | "sample";
+
 /**
- * Before you are in a team, the real team screen shows behind the dialog with a sample
- * team in it. Close the dialog to look around; nothing there is sent or saved.
+ * Before you are in a team: a welcome screen first, then the real team screen showing a sample team,
+ * with the sign-in dialog over it. Close the dialog to look around; nothing there is sent or saved.
  */
-function SampleBehindDialog({ children }: { children: React.ReactNode }) {
+function SignedOutTeamChat({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation("openhands");
-  const [open, setOpen] = useState(true);
+  const [stage, setStage] = useState<Stage>("welcome");
   const sample = useMemo(() => createSampleTeam(), []);
   const store = useMemo(
     () =>
@@ -36,49 +40,49 @@ function SampleBehindDialog({ children }: { children: React.ReactNode }) {
     [sample],
   );
   useEffect(() => {
-    if (!open) return undefined;
+    if (stage !== "dialog") return undefined;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setStage("sample");
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [stage]);
+
+  if (stage === "welcome") {
+    return (
+      <TeamChatWelcome
+        onStart={() => setStage("dialog")}
+        onExplore={() => setStage("sample")}
+      />
+    );
+  }
+  const dialog = stage === "dialog";
   return (
     <div className="relative flex h-full flex-col">
-      {open ? null : (
-        <div
-          data-testid="team-chat-sample-banner"
-          className="flex flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-2 text-xs text-muted"
-        >
-          <span className="rounded-full bg-surface-raised px-2 py-0.5 font-medium text-contrast">
-            {t(I18nKey.TEAM_CHAT$SAMPLE_BADGE)}
-          </span>
-          <span>{t(I18nKey.TEAM_CHAT$SAMPLE_BANNER)}</span>
-          <button
-            type="button"
-            data-testid="team-chat-sample-open"
-            className="ml-auto rounded-lg bg-contrast px-3 py-1 font-medium text-contrast-foreground hover:opacity-90"
-            onClick={() => setOpen(true)}
-          >
-            {t(I18nKey.TEAM_CHAT$SAMPLE_OPEN)}
-          </button>
-        </div>
-      )}
       <div
-        className="min-h-0 flex-1"
-        aria-hidden={open}
-        inert={open ? true : undefined}
+        className="isolate min-h-0 flex-1"
+        aria-hidden={dialog}
+        inert={dialog ? true : undefined}
       >
         <TeamChatStoreProvider value={store}>
-          <Workspace client={sample.client} sample />
+          <Workspace
+            client={sample.client}
+            sample
+            sampleNotice={
+              <SampleNotice
+                onStart={() => setStage("dialog")}
+                onWelcome={() => setStage("welcome")}
+              />
+            }
+          />
         </TeamChatStoreProvider>
       </div>
-      {open ? (
+      {dialog ? (
         <div
           data-testid="team-chat-overlay"
-          className="absolute inset-0 z-10 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
+            if (e.target === e.currentTarget) setStage("sample");
           }}
         >
           <div
@@ -92,7 +96,7 @@ function SampleBehindDialog({ children }: { children: React.ReactNode }) {
               data-testid="team-chat-dismiss"
               aria-label={t(I18nKey.BUTTON$CLOSE)}
               className="absolute right-3 top-3 rounded-full p-1.5 text-muted hover:bg-surface-raised hover:text-contrast"
-              onClick={() => setOpen(false)}
+              onClick={() => setStage("sample")}
             >
               <X size={16} aria-hidden />
             </button>
@@ -102,7 +106,7 @@ function SampleBehindDialog({ children }: { children: React.ReactNode }) {
                 type="button"
                 data-testid="team-chat-explore"
                 className="text-sm text-muted underline-offset-2 hover:text-contrast hover:underline"
-                onClick={() => setOpen(false)}
+                onClick={() => setStage("sample")}
               >
                 {t(I18nKey.TEAM_CHAT$EXPLORE_SAMPLE)}
               </button>
@@ -118,15 +122,15 @@ function TeamChatScreen() {
   const account = useTeamChatStore((s) => s.account);
   const groupId = useTeamChatStore((s) => s.groupId);
   let body = (
-    <SampleBehindDialog>
+    <SignedOutTeamChat>
       <TeamChatGate />
-    </SampleBehindDialog>
+    </SignedOutTeamChat>
   );
   if (account && !groupId) {
     body = (
-      <SampleBehindDialog>
+      <SignedOutTeamChat>
         <TeamChooser account={account} />
-      </SampleBehindDialog>
+      </SignedOutTeamChat>
     );
   }
   if (account && groupId) body = <TeamChatWorkspace />;

@@ -1,6 +1,7 @@
 import type { Account } from "./keys";
 import { generateAccount } from "./keys";
 import type { TeamClient, TeamMember, TeamMessage } from "./team-client";
+import type { FeedAgentRole } from "#/utils/feed-agent-role";
 import type { RequestProgress } from "#/stores/team-chat-store";
 
 type Listener = () => void;
@@ -180,27 +181,36 @@ export function createSampleTeam(): SampleTeam {
     ownerPubkey: lena.pubkey,
   });
   const client = new DemoTeamClient(me);
-  const person = (a: Account, roles: string[]): TeamMember => ({
+  const person = (
+    a: Account,
+    roles: string[],
+    online: boolean,
+  ): TeamMember => ({
     pubkey: a.pubkey,
     npub: a.npub,
     name: a.name,
     roles,
     kind: "person",
+    online,
   });
-  const agent = (a: Account): TeamMember => ({
+  const agent = (a: Account, agentRole: FeedAgentRole): TeamMember => ({
     pubkey: a.pubkey,
     npub: a.npub,
     name: a.name,
     roles: ["member"],
     kind: "agent",
     owner: a.ownerPubkey,
+    agentRole,
   });
-  client.seedMember(person(me, ["admin", "member"]));
-  client.seedMember(person(dev, ["member"]));
-  client.seedMember(person(lena, ["member"]));
-  client.seedMember(agent(atlas), atlas);
-  client.seedMember(agent(forge));
-  client.seedMember(agent(sage));
+  client.seedMember(person(me, ["admin", "member"], true));
+  client.seedMember(person(dev, ["member"], true));
+  client.seedMember(person(lena, ["member"], false));
+  client.seedMember(
+    agent(atlas, { role: "conductor", tier: 4, model: "Fable" }),
+    atlas,
+  );
+  client.seedMember(agent(forge, { role: "worker", tier: 3, model: "Opus" }));
+  client.seedMember(agent(sage, { role: "janitor", tier: 1, model: "Haiku" }));
   const first = client.seedMessage(
     dev.pubkey,
     "Morning all. Is Thursday still the target for the website release?",

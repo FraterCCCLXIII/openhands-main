@@ -4,15 +4,17 @@ import type { TeamClient, TeamMember } from "#/chat-transport/nostr";
 import { shortNpub } from "#/chat-transport/nostr/keys";
 import { I18nKey } from "#/i18n/declaration";
 import { useTeamClient } from "#/hooks/team-chat/use-team-client";
+import { cn } from "#/utils/utils";
 import { selectMyAgents, useTeamChatStore } from "#/stores/team-chat-store";
 import { useTeamStore } from "#/stores/team-chat-store-context";
 import { AddMemberModal } from "./add-member-modal";
+import { MemberAvatar } from "./member-avatar";
+import { TeamMemberProfile } from "./team-chat-profile";
 import { AgentInbox, ReplyModeSwitch, useAgentRequests } from "./agent-inbox";
 import { TeamChatThread } from "./team-chat-thread";
 import {
   CopyField,
   ErrorNote,
-  Initials,
   inputClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
@@ -31,33 +33,50 @@ function Badge({ children }: { children: React.ReactNode }) {
 function MemberRow({
   member,
   client,
+  selected,
+  onOpen,
 }: {
   member: TeamMember;
   client: TeamClient;
+  selected: boolean;
+  onOpen: (pubkey: string) => void;
 }) {
   const { t } = useTranslation("openhands");
   const isMe = member.pubkey === client.account.pubkey;
   return (
-    <li data-testid="team-member" className="flex items-center gap-2">
-      <Initials name={member.name} agent={member.kind === "agent"} />
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="truncate text-sm text-contrast">{member.name}</span>
-          {isMe && <Badge>{t(I18nKey.TEAM_CHAT$YOU)}</Badge>}
-          {member.roles.includes("admin") && (
-            <Badge>{t(I18nKey.TEAM_CHAT$ADMIN)}</Badge>
-          )}
-          {member.kind === "agent" && (
-            <Badge>{t(I18nKey.TEAM_CHAT$AGENT)}</Badge>
-          )}
+    <li data-testid="team-member">
+      <button
+        type="button"
+        data-testid="team-member-open"
+        aria-pressed={selected}
+        onClick={() => onOpen(member.pubkey)}
+        className={cn(
+          "flex w-full items-center gap-2 rounded-lg p-1.5 text-left hover:bg-surface",
+          selected && "bg-surface",
+        )}
+      >
+        <MemberAvatar member={member} />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="truncate text-sm text-contrast">
+              {member.name}
+            </span>
+            {isMe && <Badge>{t(I18nKey.TEAM_CHAT$YOU)}</Badge>}
+            {member.roles.includes("admin") && (
+              <Badge>{t(I18nKey.TEAM_CHAT$ADMIN)}</Badge>
+            )}
+            {member.kind === "agent" && (
+              <Badge>{t(I18nKey.TEAM_CHAT$AGENT)}</Badge>
+            )}
+          </div>
+          <p className="truncate font-mono text-xs text-muted">
+            {shortNpub(member.pubkey)}
+            {member.kind === "agent" && member.owner
+              ? ` · ${t(I18nKey.TEAM_CHAT$RUNS_FOR, { owner: client.nameOf(member.owner) })}`
+              : ""}
+          </p>
         </div>
-        <p className="truncate font-mono text-xs text-muted">
-          {shortNpub(member.pubkey)}
-          {member.kind === "agent" && member.owner
-            ? ` · ${t(I18nKey.TEAM_CHAT$RUNS_FOR, { owner: client.nameOf(member.owner) })}`
-            : ""}
-        </p>
-      </div>
+      </button>
     </li>
   );
 }
@@ -189,17 +208,62 @@ function SignOutDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** The note at the top of the left bar while looking at the sample team, with ways out of it. */
+export function SampleNotice({
+  onStart,
+  onWelcome,
+}: {
+  onStart: () => void;
+  onWelcome: () => void;
+}) {
+  const { t } = useTranslation("openhands");
+  return (
+    <div
+      data-testid="team-chat-sample-notice"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3"
+    >
+      <div className="flex items-center gap-2">
+        <span className="rounded-full bg-surface-raised px-2 py-0.5 text-xs font-medium text-contrast">
+          {t(I18nKey.TEAM_CHAT$SAMPLE_BADGE)}
+        </span>
+        <span className="text-xs text-muted">
+          {t(I18nKey.TEAM_CHAT$SAMPLE_BANNER)}
+        </span>
+      </div>
+      <button
+        type="button"
+        data-testid="team-chat-sample-open"
+        className={primaryButtonClassName}
+        onClick={onStart}
+      >
+        {t(I18nKey.TEAM_CHAT$SAMPLE_OPEN)}
+      </button>
+      <button
+        type="button"
+        data-testid="team-chat-sample-welcome"
+        className="text-xs text-muted underline-offset-2 hover:text-contrast hover:underline"
+        onClick={onWelcome}
+      >
+        {t(I18nKey.TEAM_CHAT$WELCOME_BACK)}
+      </button>
+    </div>
+  );
+}
+
 /** The team screen for a connected team, or for the in-memory sample team when `sample` is set. */
 export function Workspace({
   client,
   sample = false,
+  sampleNotice = null,
 }: {
   client: TeamClient;
   sample?: boolean;
+  sampleNotice?: React.ReactNode;
 }) {
   const { t } = useTranslation("openhands");
   const [adding, setAdding] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [profileOf, setProfileOf] = useState<string | null>(null);
   const pending = useAgentRequests(client);
   const waiting = pending.reduce<Record<string, number>>((acc, r) => {
     acc[r.agent.pubkey] = (acc[r.agent.pubkey] ?? 0) + 1;
@@ -208,6 +272,7 @@ export function Workspace({
   return (
     <div data-testid="team-chat-workspace" className="flex h-full">
       <aside className="custom-scrollbar flex w-72 shrink-0 flex-col gap-5 overflow-y-auto border-r border-border p-4">
+        {sampleNotice}
         <h1 className="text-lg font-medium text-contrast">{client.name}</h1>
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -224,7 +289,13 @@ export function Workspace({
           </div>
           <ul className="flex flex-col gap-2">
             {client.members().map((m) => (
-              <MemberRow key={m.pubkey} member={m} client={client} />
+              <MemberRow
+                key={m.pubkey}
+                member={m}
+                client={client}
+                selected={profileOf === m.pubkey}
+                onOpen={(pk) => setProfileOf((cur) => (cur === pk ? null : pk))}
+              />
             ))}
           </ul>
         </section>
@@ -240,7 +311,15 @@ export function Workspace({
           </button>
         )}
       </aside>
-      <TeamChatThread client={client} />
+      <TeamChatThread client={client} onOpenProfile={setProfileOf} />
+      {profileOf ? (
+        <TeamMemberProfile
+          client={client}
+          pubkey={profileOf}
+          onClose={() => setProfileOf(null)}
+          onOpen={setProfileOf}
+        />
+      ) : null}
       {adding && (
         <AddMemberModal client={client} onClose={() => setAdding(false)} />
       )}

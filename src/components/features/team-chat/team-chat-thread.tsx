@@ -1,11 +1,20 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TeamClient, TeamMessage } from "#/chat-transport/nostr";
 import { CustomChatInput } from "#/components/features/chat/custom-chat-input";
 import { I18nKey } from "#/i18n/declaration";
 import { mentionedPubkeys } from "#/utils/team-chat-inbox";
 import { cn } from "#/utils/utils";
+import { FeedMentionText } from "#/components/features/feed/feed-mention-text";
+import { FeedRoleBadge } from "#/components/features/feed/feed-role-badge";
+import { MarkdownRenderer } from "#/components/features/markdown/markdown-renderer";
+import { useTeamChatUiStore } from "#/stores/team-chat-ui-store";
+import { MemberAvatar } from "./member-avatar";
 import { ErrorNote, Initials } from "./team-chat-ui";
+
+/** Whether a message uses markdown worth rendering; plain text keeps its @mention chips instead. */
+const LOOKS_LIKE_MARKDOWN =
+  /(\*\*|__|`|^\s*([-*+]|\d+\.)\s|^#{1,4}\s|^>\s|\|.*\|)/m;
 
 const MAX_INDENT = 3;
 const MENTION_AT_END = /(^|\s)@([^\s@]*)$/;
@@ -16,12 +25,14 @@ function MessageRow({
   depth,
   replies,
   onReply,
+  onOpenProfile,
 }: {
   message: TeamMessage;
   client: TeamClient;
   depth: number;
   replies: Map<string, TeamMessage[]>;
   onReply: (m: TeamMessage) => void;
+  onOpenProfile: (pubkey: string) => void;
 }) {
   const { t } = useTranslation("openhands");
   const author = client.members().find((m) => m.pubkey === message.pubkey);
@@ -29,24 +40,50 @@ function MessageRow({
   return (
     <li className={cn(depth > 0 && depth <= MAX_INDENT && "ml-8")}>
       <div data-testid="team-message" className="flex gap-3 py-2">
-        <Initials name={client.nameOf(message.pubkey)} agent={isAgent} />
+        <button
+          type="button"
+          aria-label={client.nameOf(message.pubkey)}
+          data-testid="team-message-avatar"
+          className="self-start"
+          onClick={() => onOpenProfile(message.pubkey)}
+        >
+          {author ? (
+            <MemberAvatar member={author} />
+          ) : (
+            <Initials name={client.nameOf(message.pubkey)} agent={isAgent} />
+          )}
+        </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-xs text-muted">
-            <span className="text-sm font-medium text-contrast">
+            <button
+              type="button"
+              data-testid="team-message-author"
+              className="text-sm font-medium text-contrast hover:underline"
+              onClick={() => onOpenProfile(message.pubkey)}
+            >
               {client.nameOf(message.pubkey)}
-            </span>
+            </button>
             {isAgent && (
               <span className="rounded-full bg-surface-raised px-2 py-0.5">
                 {t(I18nKey.TEAM_CHAT$AGENT)}
               </span>
             )}
+            {author?.agentRole ? (
+              <FeedRoleBadge role={author.agentRole} />
+            ) : null}
             <time>
               {new Date(message.createdAt * 1000).toLocaleTimeString()}
             </time>
           </div>
-          <p className="whitespace-pre-wrap break-words text-sm text-foreground">
-            {message.text}
-          </p>
+          {LOOKS_LIKE_MARKDOWN.test(message.text) ? (
+            <div className="text-sm text-foreground">
+              <MarkdownRenderer>{message.text}</MarkdownRenderer>
+            </div>
+          ) : (
+            <p className="whitespace-pre-wrap break-words text-sm text-foreground">
+              <FeedMentionText text={message.text} />
+            </p>
+          )}
           <button
             type="button"
             className="text-xs text-muted hover:text-contrast"
@@ -66,6 +103,7 @@ function MessageRow({
               depth={depth + 1}
               replies={replies}
               onReply={onReply}
+              onOpenProfile={onOpenProfile}
             />
           ))}
         </ul>
@@ -149,6 +187,24 @@ function TeamComposer({
     setQuery(null);
   };
 
+  const mention = useTeamChatUiStore((st) => st.mention);
+  const clearMention = useTeamChatUiStore((st) => st.clearMention);
+  useEffect(() => {
+    if (!mention) return;
+    const el = editor();
+    if (el) {
+      el.innerText = `${el.innerText.trim()} @${mention.name} `.trimStart();
+      el.dispatchEvent(new InputEvent("input", { bubbles: true }));
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      window.getSelection()?.removeAllRanges();
+      window.getSelection()?.addRange(range);
+      el.focus();
+    }
+    clearMention();
+  }, [mention, clearMention]);
+
   const submit = (message: string) => {
     const text = message.trim();
     if (!text) return;
@@ -163,7 +219,7 @@ function TeamComposer({
   };
 
   return (
-    <div className="border-t border-border px-4 py-3">
+    <div className="px-4 py-3">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
         {replyTo && (
           <div className="flex items-center gap-2 text-xs text-muted">
@@ -197,7 +253,13 @@ function TeamComposer({
   );
 }
 
-export function TeamChatThread({ client }: { client: TeamClient }) {
+export function TeamChatThread({
+  client,
+  onOpenProfile = () => undefined,
+}: {
+  client: TeamClient;
+  onOpenProfile?: (pubkey: string) => void;
+}) {
   const { t } = useTranslation("openhands");
   const [replyTo, setReplyTo] = useState<TeamMessage | null>(null);
   const messages = client.messages();
@@ -236,6 +298,7 @@ export function TeamChatThread({ client }: { client: TeamClient }) {
                   depth={0}
                   replies={replyMap}
                   onReply={setReplyTo}
+                  onOpenProfile={onOpenProfile}
                 />
               ))}
             </ul>
