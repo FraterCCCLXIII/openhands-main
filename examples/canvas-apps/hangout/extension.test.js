@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, TEAM_HUMANS, humansOnAgent, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -139,12 +139,200 @@ describe("team in the drawer", () => {
     if (welcome) welcome.click();
     expect(container.querySelector(".tab[aria-selected='true']").textContent).toBe("Team");
     expect(humansOnAgent("chief").map((h) => h.name)).toEqual(["Maya Chen"]);
-    const here = [...container.querySelectorAll(".person.here .pname")].map((n) => n.textContent);
+    const here = [...container.querySelectorAll(".person.here:not(.agentrow) .pname")].map((n) => n.textContent);
     expect(here).toEqual(["Maya Chen"]);
-    expect(container.querySelectorAll(".person").length).toBe(1 + TEAM_HUMANS.length);
+    const humanRows = [...container.querySelectorAll(".person:not(.agentrow)")];
+    expect(humanRows.length).toBe(1 + TEAM_HUMANS.length);
+    const agentRows = [...container.querySelectorAll(".agentrow")];
+    expect(agentRows.length).toBe(6);
+    expect(agentRows[0].classList.contains("here")).toBe(true);
+    expect(container.querySelector(".psec:last-of-type, .pane .psec:nth-last-of-type(1)").textContent).toContain("AI agents");
     [...container.querySelectorAll(".person")].find((r) => r.textContent.includes("Omar")).querySelector("button").click();
     expect(container.querySelector(".field").value).toBe("@Omar ");
     dispose();
+  });
+});
+
+describe("welcome from the rail", () => {
+  it("reopens the welcome screen from the bottom of the rail and returns on sign in", async () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    expect(container.querySelector(".welcome .wpowered").textContent).toBe("Powered byKamijiandKosmos");
+    container.querySelector(".wgo").click();
+    expect(container.querySelector(".welcome")).toBeNull();
+    expect(container.querySelector(".list .lpowered").textContent).toContain("Kosmos");
+    const buttons = [...container.querySelectorAll(".rail .rbtn")];
+    expect(buttons.at(-1).getAttribute("aria-label")).toBe("Welcome");
+    buttons.at(-1).click();
+    expect(container.querySelector(".welcome .wcanvas")).toBeTruthy();
+    container.querySelector(".wgo").click();
+    expect(container.querySelector(".shell")).toBeTruthy();
+    dispose();
+  });
+});
+
+describe("blob eyes", () => {
+  const scene = () => createBlobScene(1200, 800, seededRandom(5));
+  const width = (pts) => Math.max(...pts.map((p) => p.x)) - Math.min(...pts.map((p) => p.x));
+  const height = (pts) => Math.max(...pts.map((p) => p.y)) - Math.min(...pts.map((p) => p.y));
+
+  it("draws two pill-shaped eyes that sit on the blob", () => {
+    const s = scene();
+    const [left, right] = eyesOf(s);
+    expect(left.length).toBeGreaterThan(20);
+    expect(height(left)).toBeGreaterThan(width(left) * 2);
+    expect(Math.abs(width(left) - width(right))).toBeLessThan(2);
+    expect(blobField(s.balls, (Math.min(...left.map((p) => p.x)) + Math.max(...right.map((p) => p.x))) / 2, s.fy)).toBeGreaterThan(1);
+  });
+
+  it("bends onto a sphere: an eye turned toward the edge narrows and curves", () => {
+    const s = scene();
+    const front = eyeOutline(s, 0, 0);
+    const turned = eyeOutline(s, 0.8, 0);
+    expect(width(turned)).toBeLessThan(width(front) * 0.85);
+    const top = turned.slice(0, 15).map((p) => p.y);
+    expect(Math.max(...top) - Math.min(...top)).toBeGreaterThan(1);
+  });
+
+  it("blinks and looks around over time, always staying on the front of the sphere", () => {
+    const s = scene();
+    let sawBlink = false, minYaw = 0, maxYaw = 0;
+    for (let t = 0; t < 30; t += 0.02) {
+      stepBlobScene(s, 0.02);
+      if (s.eyes.closed > 0.9) sawBlink = true;
+      minYaw = Math.min(minYaw, s.eyes.yaw); maxYaw = Math.max(maxYaw, s.eyes.yaw);
+      expect(Math.abs(s.eyes.yaw)).toBeLessThan(1.2);
+    }
+    expect(sawBlink).toBe(true);
+    expect(maxYaw - minYaw).toBeGreaterThan(0.4);
+  });
+
+  it("centres the eye sphere on the mass itself, however lopsided it gets", () => {
+    const s = scene();
+    for (let t = 0; t < 30; t += 0.05) {
+      stepBlobScene(s, 0.05);
+      if (Math.round(t * 20) % 20 === 0) {
+        const mass = s.balls.slice(0, 7);
+        let sx = 0, sy = 0, n = 0;
+        for (let y = 0; y < 800; y += 4) for (let x = 0; x < 1200; x += 4) if (blobField(mass, x, y) >= 1) { sx += x; sy += y; n += 1; }
+        expect(Math.abs(sx / n - s.fx)).toBeLessThan(s.eyeR * 0.08);
+        expect(Math.abs(sy / n - s.fy)).toBeLessThan(s.eyeR * 0.08);
+      }
+    }
+  });
+
+  it("keeps both eyes inside the blob as it jiggles and they look around", () => {
+    const s = scene();
+    let worst = Infinity;
+    for (let t = 0; t < 40; t += 0.05) {
+      stepBlobScene(s, 0.05);
+      if (Math.round(t * 20) % 8 === 0) {
+        eyesOf(s).flat().forEach((p) => { worst = Math.min(worst, blobField(s.balls.slice(0, 7), p.x, p.y)); });
+      }
+    }
+    expect(worst).toBeGreaterThan(0.85);
+  });
+
+  it("shuts the eyes to a slit in a blink, and follows the pointer", () => {
+    const s = scene();
+    stepBlobScene(s, 0.02);
+    const open = height(eyesOf(s)[0]);
+    s.eyes.closed = 1;
+    expect(height(eyesOf(s)[0])).toBeLessThan(open * 0.35);
+    s.eyes.closed = 0;
+    s.eyes.pointer = { x: s.fx + 400, y: s.fy, at: s.t };
+    for (let t = 0; t < 1; t += 0.02) stepBlobScene(s, 0.02);
+    expect(s.eyes.yaw).toBeGreaterThan(0.3);
+  });
+});
+
+describe("welcome blob", () => {
+  const run = (seconds, seed = 3) => {
+    const scene = createBlobScene(1200, 800, seededRandom(seed));
+    for (let t = 0; t < seconds; t += 0.05) stepBlobScene(scene, 0.05);
+    return scene;
+  };
+
+  it("is one solid mass in the middle with empty space around it", () => {
+    const scene = run(4);
+    expect(blobField(scene.balls, 600, 400)).toBeGreaterThan(1);
+    expect(blobField(scene.balls, 4, 4)).toBeLessThan(1);
+    expect(scene.balls.length).toBeGreaterThanOrEqual(7);
+  });
+
+  it("sheds small blobs and melts them back in, never piling up", () => {
+    const scene = run(40);
+    expect(scene.shed).toBeGreaterThan(20);
+    expect(scene.melted).toBeGreaterThan(10);
+    expect(scene.minis.length).toBeLessThanOrEqual(16);
+    expect(scene.minis.every((m) => Number.isFinite(m.x) && Number.isFinite(m.y) && m.r > 0)).toBe(true);
+  });
+
+  it("gives the small blobs their own hues away from the mass, and the mass one violet", () => {
+    const s = createBlobScene(1200, 800, seededRandom(9));
+    const seen = new Set();
+    let wasViolet = false;
+    for (let t = 0; t < 40; t += 0.05) {
+      stepBlobScene(s, 0.05);
+      s.minis.forEach((m) => { if (m.rgb && m.rgb.join() !== "139,92,246") seen.add(m.rgb.join()); });
+      if (s.minis.some((m) => m.rgb && m.rgb.join() === "139,92,246")) wasViolet = true;
+    }
+    expect(seen.size).toBeGreaterThan(8);
+    expect(wasViolet).toBe(true);
+    expect(blobColorAt(s.balls, s.fx, s.fy)).toEqual([139, 92, 246]);
+  });
+
+  it("colours a point by the blob that supplies it", () => {
+    const balls = [{ x: 0, y: 0, r: 10, rgb: [0, 0, 0] }, { x: 100, y: 0, r: 10, rgb: [200, 100, 50] }];
+    expect(blobColorAt(balls, 1, 0)).toEqual([0, 0, 0].map((v, i) => blobColorAt(balls, 1, 0)[i]));
+    expect(blobColorAt(balls, 99, 0)[0]).toBeGreaterThan(190);
+    expect(blobColorAt(balls, 1, 0)[0]).toBeLessThan(10);
+    expect(blobColorAt([], 0, 0)).toEqual([139, 92, 246]);
+  });
+
+  it("is a smaller mass that fills only the middle of the screen", () => {
+    const scene = run(6);
+    const area = (() => { let n = 0; for (let y = 0; y < 800; y += 8) for (let x = 0; x < 1200; x += 8) if (blobField(scene.balls, x, y) > 1) n += 1; return n / ((800 / 8) * (1200 / 8)); })();
+    expect(area).toBeGreaterThan(0.01);
+    expect(area).toBeLessThan(0.16);
+  });
+
+  it("plays back the same way for the same seed", () => {
+    expect(run(10).balls.map((b) => Math.round(b.x))).toEqual(run(10).balls.map((b) => Math.round(b.x)));
+  });
+
+  it("shows the blob and a Smooth/Voxel choice instead of hands, and remembers the choice", async () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    expect(container.querySelector(".wcanvas")).toBeTruthy();
+    expect(container.querySelector(".wblob")).toBeNull();
+    [...container.querySelectorAll(".wmode")].find((b) => b.textContent === "Voxel").click();
+    expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeStyle).toBe("voxel");
+    expect([...container.querySelectorAll(".wmode")].find((b) => b.textContent === "Voxel").getAttribute("aria-pressed")).toBe("true");
+    dispose();
+  });
+});
+
+describe("agents in the team list", () => {
+  const mk = (id, factory, run, name = id) => ({ id, name, factory, work: { run } });
+  it("puts the selected agent's factory first, then working before idle", () => {
+    const all = [mk("a", "x", "idle"), mk("b", "y", "running"), mk("c", "y", "idle"), mk("d", "x", "running")];
+    expect(teamAgents(all, mk("sel", "y", "idle")).map((a) => a.id)).toEqual(["b", "c", "d", "a"]);
+  });
+
+  it("names who runs a sample agent", () => {
+    expect(ownerOf("chief").name).toBe("Maya Chen");
+    expect(ownerOf("nobody")).toBeUndefined();
   });
 });
 

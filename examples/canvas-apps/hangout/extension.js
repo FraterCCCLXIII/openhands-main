@@ -692,6 +692,15 @@ export const TEAM_HUMANS = [
 
 /** The humans in the loop on one agent: those who run or review it. */
 export const humansOnAgent = (agentId) => TEAM_HUMANS.filter((h) => h.agents.includes(agentId));
+/** The human who runs a sample agent, if any. */
+export const ownerOf = (agentId) => TEAM_HUMANS.find((h) => h.agents.includes(agentId));
+
+/** The agents for the Team tab: the selected agent's factory first, running ones before idle, then by name. */
+export function teamAgents(all, selected) {
+  const rank = (a) => (a.factory === selected?.factory ? 0 : 1) * 4 + (a.work?.run === "running" ? 0 : a.work?.run === "waiting" ? 1 : 2);
+  return [...all].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+}
+
 export const initialsOf = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
 export const DRAWER_TABS = [["team", "Team"], ["cards", "Cards"], ["screen", "Screen"], ["files", "Files"], ["terminal", "Terminal"], ["browser", "Browser"], ["webview", "Webview"], ["vscode", "VS Code"], ["planner", "Planner"], ["tasks", "Tasks"]];
@@ -1056,6 +1065,246 @@ export function plainText(source) {
     .trim();
 }
 
+
+// ─── The welcome blob: one flat-colour mass that jiggles, sheds small blobs and melts them back in ──
+
+/** A small seeded random source, so the scene can be replayed in tests. */
+export function seededRandom(seed = 7) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+
+// ─── Pill eyes on the blob: they blink, look around and curve with a sphere ──
+
+const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function createEyes(rand) {
+  return { yaw: 0, pitch: 0, vy: 0, vp: 0, ty: 0, tp: 0, look: 0.6, blinkAt: 1.5 + rand() * 2, blinkP: -1, again: false, closed: 0, pointer: null };
+}
+
+/** Moves the gaze toward its target, picks new glances, and runs blinks (a quick close and open, sometimes twice). */
+function stepEyes(s, dt) {
+  const e = s.eyes;
+  const { rand, t } = s;
+  const fresh = e.pointer && t - e.pointer.at < 2.5;
+  if (fresh) {
+    const R = s.eyeR;
+    e.ty = clampN(((e.pointer.x - s.fx) / R) * 1.1, -0.55, 0.55);
+    e.tp = clampN(((e.pointer.y - s.fy) / R) * 0.9, -0.38, 0.38);
+  } else {
+    e.look -= dt;
+    if (e.look <= 0) {
+      e.look = 0.9 + rand() * 2.4;
+      e.ty = (rand() - 0.5) * 1.0;
+      e.tp = (rand() - 0.5) * 0.6;
+      if (rand() < 0.3) { e.ty = 0; e.tp = 0; }
+    }
+  }
+  // A spring with damping: the eyes arrive quickly and settle without snapping.
+  e.vy += (e.ty - e.yaw) * 90 * dt; e.vp += (e.tp - e.pitch) * 90 * dt;
+  const damp = Math.max(0, 1 - 11 * dt);
+  e.vy *= damp; e.vp *= damp;
+  e.yaw += e.vy * dt; e.pitch += e.vp * dt;
+  e.blinkAt -= dt;
+  if (e.blinkP < 0 && e.blinkAt <= 0) { e.blinkP = 0; e.again = rand() < 0.2; }
+  if (e.blinkP >= 0) {
+    e.blinkP += dt / 0.18;
+    e.closed = Math.sin(Math.PI * Math.min(1, e.blinkP));
+    if (e.blinkP >= 1) {
+      e.blinkP = -1; e.closed = 0;
+      e.blinkAt = e.again ? 0.12 : 2 + rand() * 3.5;
+      e.again = false;
+    }
+  }
+}
+
+/** The outline of one pill eye, bent onto the sphere: [{x, y}], for an eye centred at (yaw, pitch). */
+export function eyeOutline(s, yaw, pitch, squash = 1) {
+  const R = s.eyeR;
+  const a = 0.1, b = 0.27;
+  const pts = [];
+  const N = 14;
+  const add = (u, v) => {
+    const lat = pitch + v * squash;
+    const lon = yaw + u / Math.max(0.3, Math.cos(pitch));
+    pts.push({ x: s.fx + R * Math.sin(lon) * Math.cos(lat), y: s.fy + R * Math.sin(lat) });
+  };
+  for (let k = 0; k <= N; k += 1) { const f = (Math.PI * k) / N; add(a * Math.cos(f), -(b - a) - a * Math.sin(f)); }
+  for (let k = 0; k <= N; k += 1) { const f = (Math.PI * k) / N; add(-a * Math.cos(f), b - a + a * Math.sin(f)); }
+  return pts;
+}
+
+/** Both eyes for the current gaze and blink. */
+export function eyesOf(s) {
+  const e = s.eyes;
+  const squash = 1 - e.closed * 0.92;
+  return [-0.3, 0.3].map((dx) => eyeOutline(s, e.yaw + dx, e.pitch, squash));
+}
+
+export function drawEyes(ctx, s, color = "#1a0f33") {
+  ctx.fillStyle = color;
+  eyesOf(s).forEach((pts) => {
+    ctx.beginPath();
+    pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
+export function createBlobScene(w, h, rand = Math.random) {
+  const base = Math.min(w, h) * 0.105;
+  const lobes = Array.from({ length: 6 }, (_, i) => ({ a: (i / 6) * Math.PI * 2, d: base * 0.4, r: base * (0.58 + 0.14 * (i % 3)), sp: 0.45 + i * 0.12, ph: i * 1.7 }));
+  const scene = { w, h, base, rand, t: 0, lobes, minis: [], next: 0.6, bump: 0, balls: [], melted: 0, shed: 0, eyes: createEyes(rand), fx: w / 2, fy: h * 0.4, eyeR: base * 2 };
+  stepBlobScene(scene, 0);
+  return scene;
+}
+
+const MAX_MINIS = 16;
+const BLOB_RGB = [139, 92, 246];
+const MINI_HUES = [[244, 114, 182], [52, 211, 153], [251, 191, 36], [56, 189, 248], [251, 113, 133], [163, 230, 53], [34, 211, 238], [249, 115, 22]];
+const mixRgb = (a, b, t) => [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * t));
+
+/** Advances the scene by dt seconds: the mass wobbles, small blobs leave it or approach it, and melt when they arrive. */
+export function stepBlobScene(s, dt) {
+  s.t += dt;
+  const { t, base, w, h, rand } = s;
+  const cx = w / 2 + Math.sin(t * 0.7) * base * 0.1;
+  const cy = h * 0.4 + Math.cos(t * 0.55) * base * 0.08;
+  s.fx = cx; s.fy = cy;
+  stepEyes(s, dt);
+  s.bump = Math.max(0, s.bump - dt * 0.35);
+  s.next -= dt;
+  if (s.next <= 0 && s.minis.length < MAX_MINIS) {
+    s.next = 0.5 + rand() * 0.8;
+    if (rand() < 0.78) {
+      // Shed: a small blob pinches off the edge and drifts away. Sometimes two or three leave together.
+      const burst = rand() < 0.35 ? 2 + Math.floor(rand() * 2) : 1;
+      const a0 = rand() * Math.PI * 2;
+      for (let k = 0; k < burst && s.minis.length < MAX_MINIS; k += 1) {
+        const a = a0 + (k - (burst - 1) / 2) * 0.55 + (rand() - 0.5) * 0.3;
+        const sp = 75 + rand() * 80;
+        s.minis.push({ x: cx + Math.cos(a) * base * 0.95, y: cy + Math.sin(a) * base * 0.95, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: base * (0.13 + rand() * 0.2), state: "out", age: 0, ttl: 2.4 + rand() * 3, ph: rand() * 6, hue: MINI_HUES[Math.floor(rand() * MINI_HUES.length)] });
+        s.shed += 1;
+      }
+    } else {
+      const a = rand() * Math.PI * 2;
+      const far = Math.max(w, h) * 0.5;
+      s.minis.push({ x: cx + Math.cos(a) * far, y: cy + Math.sin(a) * far * 0.7, vx: 0, vy: 0, r: base * (0.13 + rand() * 0.2), state: "in", age: 0, ttl: 0, ph: rand() * 6, hue: MINI_HUES[Math.floor(rand() * MINI_HUES.length)] });
+    }
+  }
+  s.minis.forEach((m) => {
+    m.age += dt;
+    if (m.state === "out") {
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      const drag = Math.max(0, 1 - 0.45 * dt);
+      m.vx *= drag; m.vy *= drag;
+      if (m.age > m.ttl) m.state = "in";
+    } else {
+      const dx = cx - m.x, dy = cy - m.y;
+      const d = Math.hypot(dx, dy) || 1;
+      m.vx += (dx / d) * 170 * dt; m.vy += (dy / d) * 170 * dt;
+      const drag = Math.max(0, 1 - 0.8 * dt);
+      m.vx *= drag; m.vy *= drag;
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (d < base * 0.62) {
+        const before = m.r;
+        m.r *= Math.max(0, 1 - 2.4 * dt);
+        s.bump = Math.min(0.4, s.bump + (before - m.r) / base);
+      }
+    }
+  });
+  const gone = s.minis.filter((m) => m.state === "in" && m.r < base * 0.035).length;
+  s.melted += gone;
+  s.minis = s.minis.filter((m) => !(m.state === "in" && m.r < base * 0.035));
+  const grow = 1 + s.bump * 0.3;
+  const balls = [{ x: cx, y: cy, r: base * grow * (1 + 0.05 * Math.sin(t * 1.9)), rgb: BLOB_RGB }];
+  s.lobes.forEach((l) => {
+    const reach = l.d * (1 + 0.28 * Math.sin(t * 1.3 + l.ph)) * grow;
+    balls.push({ x: cx + Math.cos(l.a + t * l.sp) * reach, y: cy + Math.sin(l.a + t * l.sp * 0.9) * reach, r: l.r * (1 + 0.14 * Math.sin(t * 2.1 + l.ph)), rgb: BLOB_RGB });
+  });
+  s.minis.forEach((m) => {
+    // Violet at the surface, its own hue once it is clear of the mass, violet again as it melts back in.
+    const away = clampN((Math.hypot(m.x - cx, m.y - cy) - s.eyeR * 1.15) / (s.eyeR * 0.7), 0, 1);
+    m.rgb = mixRgb(BLOB_RGB, m.hue || BLOB_RGB, away);
+    balls.push({ x: m.x, y: m.y, r: m.r * (1 + 0.1 * Math.sin(t * 3 + m.ph)), rgb: m.rgb });
+  });
+  s.balls = balls;
+  // The eyes live on a sphere that is the mass itself: centred on the mass's real centroid, with its radius measured from there.
+  const mass = balls.slice(0, 1 + s.lobes.length);
+  let sx = 0, sy = 0, n = 0;
+  const grid = base * 0.2, span = base * 4;
+  for (let y = cy - span; y <= cy + span; y += grid) {
+    for (let x = cx - span; x <= cx + span; x += grid) {
+      if (blobField(mass, x, y) >= 1) { sx += x; sy += y; n += 1; }
+    }
+  }
+  if (n) { s.fx = sx / n; s.fy = sy / n; }
+  let sum = 0;
+  for (let k = 0; k < 12; k += 1) {
+    const ang = (k / 12) * Math.PI * 2;
+    let r = base * 0.4;
+    while (r < base * 5 && blobField(mass, s.fx + Math.cos(ang) * r, s.fy + Math.sin(ang) * r) >= 1) r += base * 0.04;
+    sum += r;
+  }
+  s.eyeR += (sum / 12 * 0.9 - s.eyeR) * Math.min(1, dt * 8 + (dt === 0 ? 1 : 0));
+}
+
+/** The blob field at a point: 1 or more is inside the mass. */
+export function blobField(balls, x, y) {
+  let f = 0;
+  for (let i = 0; i < balls.length; i += 1) {
+    const b = balls[i];
+    const dx = x - b.x, dy = y - b.y;
+    f += (b.r * b.r) / (dx * dx + dy * dy + 1);
+  }
+  return f;
+}
+
+/** The flat colour at a point: each blob's colour weighted by how much of the field it supplies there. */
+export function blobColorAt(balls, x, y, fallback = BLOB_RGB) {
+  let f = 0, r = 0, g = 0, b = 0;
+  for (let i = 0; i < balls.length; i += 1) {
+    const ball = balls[i];
+    const dx = x - ball.x, dy = y - ball.y;
+    const c = (ball.r * ball.r) / (dx * dx + dy * dy + 1);
+    const rgb = ball.rgb || fallback;
+    f += c; r += c * rgb[0]; g += c * rgb[1]; b += c * rgb[2];
+  }
+  return f ? [Math.round(r / f), Math.round(g / f), Math.round(b / f)] : fallback;
+}
+
+/** Draws the scene in one flat colour per blob. Smooth mode softens the edge; voxel mode keeps hard square cells. */
+export function drawBlobScene(ctx, off, scene, mode, rgb) {
+  const voxel = mode === "voxel";
+  const cell = voxel ? 14 : 4;
+  const gw = Math.ceil(scene.w / cell), gh = Math.ceil(scene.h / cell);
+  if (off.width !== gw || off.height !== gh) { off.width = gw; off.height = gh; }
+  const octx = off.getContext("2d");
+  const img = octx.createImageData(gw, gh);
+  for (let gy = 0; gy < gh; gy += 1) {
+    for (let gx = 0; gx < gw; gx += 1) {
+      const f = blobField(scene.balls, (gx + 0.5) * cell, (gy + 0.5) * cell);
+      const a = voxel ? (f > 1 ? 255 : 0) : Math.max(0, Math.min(1, (f - 0.9) / 0.18)) * 255;
+      if (a) {
+        const i = (gy * gw + gx) * 4;
+        const c = blobColorAt(scene.balls, (gx + 0.5) * cell, (gy + 0.5) * cell, rgb);
+        img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2]; img.data[i + 3] = a;
+      }
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  ctx.clearRect(0, 0, scene.w, scene.h);
+  ctx.imageSmoothingEnabled = !voxel;
+  ctx.drawImage(off, 0, 0, gw * cell, gh * cell);
+}
+
 const CSS = `
 .hg { --hg-bg: var(--oh-color-base, #171717); --hg-panel: var(--oh-color-base-secondary, #212121); --hg-raised: var(--oh-surface-raised, #2a2a2a);
   --hg-text: var(--oh-foreground, #eee); --hg-contrast: var(--oh-contrast, #fff); --hg-muted: var(--oh-muted, #9a9a9a);
@@ -1074,6 +1323,7 @@ const CSS = `
 .hg .rbtn[aria-pressed="true"]::before { content: ""; position: absolute; left: -8px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--hg-primary); }
 .hg .rlabel { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); z-index: 9; padding: 3px 8px; border-radius: 8px; background: var(--hg-contrast); color: var(--hg-bg); font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; }
 .hg .rbtn:hover .rlabel, .hg .rbtn:focus-visible .rlabel { opacity: 1; }
+.hg .rspacer { flex: 1; }
 .hg .rsep { width: 24px; height: 1px; background: var(--hg-border); margin: 6px 0; }
 .hg .shell.nodrawer { grid-template-columns: 56px 320px minmax(0, 1fr); }
 .hg .shell.view-studio { grid-template-columns: 56px minmax(0, 1fr); }
@@ -1089,6 +1339,9 @@ const CSS = `
 .hg .sreset { border: 1px solid var(--hg-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hg .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
 .hg .powered b { color: var(--hg-text); font-weight: 600; }
+.hg .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: rgba(255,255,255,.62); }
+.hg .welcome .wpowered b { color: #fff; }
+.hg .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hg-border); background: var(--hg-bg); }
 .hg .poweredmark { width: 18px; height: 18px; display: inline-block; }
 .hg .poweredmark svg { width: 100%; height: 100%; }
 .hg .kosmos { letter-spacing: .06em; }
@@ -1195,10 +1448,11 @@ const CSS = `
 .hg .seg button[aria-pressed="true"] { background: var(--hg-primary); color: var(--hg-on-primary); border-color: var(--hg-primary); }
 .hg .rows { flex: 1; min-height: 0; overflow: auto; padding: 6px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
 .hg .group { margin: 10px 4px 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--hg-muted); display: flex; justify-content: space-between; }
+.hg .twist.empty { visibility: hidden; }
 .hg .row, .hg .frow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 8px; border: 0; border-radius: 12px; background: transparent; text-align: left; cursor: pointer; }
 .hg .row:hover, .hg .frow:hover { background: var(--hg-panel); }
 .hg .row[aria-current="true"], .hg .frow[aria-current="true"] { background: var(--hg-raised); }
-.hg .twist { flex: none; width: 18px; height: 18px; border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; padding: 0; }
+.hg .twist { flex: none; width: 14px; height: 18px; margin-right: -4px; text-align: center; border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; padding: 0; }
 .hg .avatar { flex: none; width: 40px; height: 40px; }
 .hg .avatar svg { width: 100%; height: 100%; display: block; }
 .hg .avatar.sm { width: 28px; height: 28px; }
@@ -1315,6 +1569,10 @@ const CSS = `
 .hg .pname { font-weight: 600; color: var(--arco-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .ptitle, .hg .pruns { font-size: 12px; color: var(--arco-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .pruns { color: var(--arco-text-tertiary); }
+.hg .pavatar { flex: none; width: 34px; height: 34px; }
+.hg .arun.running { color: var(--arco-success); }
+.hg .arun.waiting { color: var(--arco-warning); }
+.hg .arun.error { color: var(--arco-danger); }
 .hg .acard { background: var(--arco-bg-elevated); border: 1px solid var(--arco-border); border-radius: var(--arco-radius-l); overflow: hidden; }
 .hg .achead { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--arco-border); }
 .hg .aicon { flex: none; width: 22px; height: 22px; border-radius: 6px; background: var(--arco-accent-soft); color: var(--arco-accent); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
@@ -1349,10 +1607,11 @@ const CSS = `
 @media (max-width: 1100px) { .hg .shell, .hg .shell.nodrawer { grid-template-columns: 56px 280px minmax(0, 1fr); } .hg .drawer:not(.previewcol) { display: none; } .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: 56px minmax(0, 1fr); } .hg .previewcol, .hg .computercol { display: none; } }
 @media (max-width: 900px) { .hg .studio { grid-template-columns: minmax(0, 1fr); overflow: auto; } .hg .spanel { border-left: 0; border-top: 1px solid var(--hg-border); } }
 .hg .mback, .hg .mscreen { display: none; border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 2px 6px; cursor: pointer; }
-.hg .pinned { display: flex; gap: 14px; overflow-x: auto; padding: 12px 4px 4px; scrollbar-width: none; }
-.hg .pin { flex: none; width: 64px; display: grid; justify-items: center; gap: 4px; border: 0; background: transparent; cursor: pointer; }
-.hg .pin svg { width: 56px; height: 56px; }
-.hg .pin[aria-current="true"] svg { filter: drop-shadow(0 0 0 2px var(--hg-contrast)); outline: 2px solid var(--hg-contrast); outline-offset: 2px; border-radius: 50%; }
+.hg .pinned { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding: 10px 6px 6px; scrollbar-width: none; }
+.hg .pin { flex: none; width: 64px; padding: 0; display: grid; justify-items: center; gap: 4px; border: 0; background: transparent; cursor: pointer; }
+.hg .pin .avatar { width: 52px; height: 52px; }
+.hg .pin svg { width: 100%; height: 100%; display: block; }
+.hg .pin[aria-current="true"] .avatar { outline: 2px solid var(--hg-contrast); outline-offset: 2px; border-radius: 14px; }
 .hg .pin span { font-size: 11px; color: var(--hg-muted); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .action { align-self: flex-start; max-width: 78%; padding: 12px 14px; border: 1px solid var(--hg-border); border-radius: 14px; background: var(--hg-panel); display: grid; gap: 8px; }
 .hg .action .atitle { font-size: 12px; color: var(--hg-muted); }
@@ -1360,10 +1619,15 @@ const CSS = `
 .hg .action .arow { display: flex; gap: 8px; }
 .hg .action button { border: 1px solid var(--hg-border); border-radius: 10px; padding: 6px 14px; background: var(--hg-raised); cursor: pointer; }
 .hg .action button.go { background: var(--hg-contrast); color: var(--hg-bg); border-color: var(--hg-contrast); font-weight: 600; }
-.hg .welcome { height: 100%; position: relative; display: grid; place-items: center; text-align: center; overflow: hidden; background: var(--hg-bg); }
-.hg .welcome .wblob { position: absolute; width: 56px; height: 56px; opacity: .95; }
+.hg .welcome { height: 100%; position: relative; display: grid; place-items: center; align-content: end; text-align: center; overflow: hidden; background: var(--hg-bg); padding-bottom: 7vh; }
+.hg .welcome .wcanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hg .welcome .wbox { position: relative; display: grid; justify-items: center; }
+.hg .welcome h1, .hg .welcome p { color: #fff; text-shadow: none; }
+.hg .welcome .wmodes { display: inline-flex; gap: 2px; margin-top: 14px; padding: 2px; border-radius: 999px; background: rgba(0,0,0,.28); }
+.hg .welcome .wmode { border: 0; background: transparent; color: rgba(255,255,255,.75); border-radius: 999px; padding: 3px 12px; font-size: 12px; cursor: pointer; }
+.hg .welcome .wmode[aria-pressed="true"] { background: rgba(255,255,255,.92); color: #1a1030; }
 .hg .welcome h1 { margin: 0 0 6px; font-size: 40px; color: var(--hg-contrast); }
-.hg .welcome p { margin: 0 0 18px; color: var(--hg-muted); max-width: 260px; }
+.hg .welcome p { margin: 0 0 18px; max-width: 260px; }
 .hg .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 10px 22px; font-weight: 600; cursor: pointer; }
 @media (max-width: 640px) {
   .hg .computercol .mbar { display: flex !important; }
@@ -1547,6 +1811,7 @@ function mount(host, container) {
     view: saved.view || "chat",
     pane: "list",
     welcomed: Boolean(saved.welcomed),
+    welcomeStyle: saved.welcomeStyle === "voxel" ? "voxel" : "smooth",
     looks: saved.looks || {},
     drawerOpen: saved.drawerOpen !== false,
     control: {},
@@ -1556,7 +1821,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -1564,6 +1829,14 @@ function mount(host, container) {
   const agents = () => [...state.live, ...samples];
   const current = () => agents().find((a) => a.id === state.selected) || agents()[0];
   const threadOf = (agent) => (agent.live ? agent.thread : [...agent.thread, ...(state.threads[agent.id] || [])]);
+  /** The "Powered by Kamiji and Kosmos" line, with a small Kamiji hand. */
+  const poweredBy = (cls = "") => {
+    const d = el("div", `powered${cls ? ` ${cls}` : ""}`);
+    const hand = el("span", "poweredmark");
+    hand.append(blobSvg("violet"));
+    d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
+    return d;
+  };
   const avatarFor = (agent, small) => avatar(agent.blob, small, state.looks[agent.id]);
   const modelOfAgent = (agent) => state.models[agent.id] || agent.model || "No model";
 
@@ -1802,8 +2075,9 @@ function mount(host, container) {
       group.rows.forEach(({ agent, depth, hasChildren, collapsed }) => {
         const btn = el("button", "row");
         btn.type = "button";
-        btn.style.paddingLeft = `${8 + depth * 22}px`;
+        btn.style.paddingLeft = `${8 + depth * 16}px`;
         btn.setAttribute("aria-current", String(agent.id === current().id));
+        if (!hasChildren) btn.append(el("span", "twist empty"));
         if (hasChildren) {
           const tw = el("span", "twist", collapsed ? "▸" : "▾");
           tw.setAttribute("role", "button");
@@ -1832,7 +2106,7 @@ function mount(host, container) {
     });
     if (!total) rows.append(el("p", "note", "No agents match this view."));
     if (state.liveNote) rows.append(el("p", "note", state.liveNote));
-    col.append(top, rows);
+    col.append(top, rows, poweredBy("lpowered"));
     return col;
   }
 
@@ -2065,6 +2339,7 @@ function mount(host, container) {
     computer: "M3 4h18v12H3zM8 20h8M12 16v4",
     studio: "M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-.7-1.6-.7-2.6c0-1 .8-1.4 1.8-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8ZM7.5 11.5h.01M10 7.5h.01M15 7.5h.01",
     drawer: "M3 4h18v16H3zM15 4v16",
+    welcome: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3",
   };
   const railIcon = (id) => {
     const svg = document.createElementNS(SVG_NS, "svg");
@@ -2098,6 +2373,9 @@ function mount(host, container) {
       rail.append(el("span", "rsep"));
       add("drawer", "Drawer", state.drawerOpen, () => { state.drawerOpen = !state.drawerOpen; persist(); render(); });
     }
+    // Pinned to the bottom: reopens the welcome and sign-in screen, so its design can be revisited any time.
+    rail.append(el("span", "rspacer"));
+    add("welcome", "Welcome", false, () => { state.welcomed = false; persist(); render(); });
     return rail;
   }
 
@@ -2233,10 +2511,7 @@ function mount(host, container) {
     reset.addEventListener("click", () => { const next = { ...state.looks }; delete next[agent.id]; state.looks = next; persist(); render(); });
     const actions = el("div", "sactions");
     actions.append(exp, reset);
-    const powered = el("div", "powered");
-    const hand = el("span", "poweredmark");
-    hand.append(blobSvg(agent.blob));
-    powered.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
+    const powered = poweredBy();
     stage.append(top, big, actions, powered);
 
     const panel = el("div", "col spanel");
@@ -2378,6 +2653,30 @@ function mount(host, container) {
         else pane.append(el("p", "lhint", agent.live ? "Conversations on the Agent Server do not name the people involved. Everyone on the team is listed below." : "Nobody is assigned to this agent yet."));
         pane.append(el("h4", "psec", `Team · ${TEAM_HUMANS.length}`));
         [...TEAM_HUMANS].sort((a, b) => Number(b.online) - Number(a.online)).forEach((h) => pane.append(person(h, false)));
+        const roster = teamAgents(agents(), agent);
+        const shown = state.teamAgentsOpen ? roster : roster.slice(0, 6);
+        pane.append(el("h4", "psec", `AI agents · ${roster.length}`));
+        shown.forEach((a) => {
+          const row = el("div", `person agentrow${a.id === agent.id ? " here" : ""}`);
+          const av = avatarFor(a, true);
+          av.classList.add("pavatar");
+          const text = el("span", "ptext");
+          const run = { running: "working", waiting: "waiting on you", error: "needs attention" }[a.work?.run] || "idle";
+          const owner = ownerOf(a.id);
+          text.append(el("span", "pname", a.name), el("span", "ptitle", `${a.role || "Agent"} · ${modelOfAgent(a)}`), el("span", `pruns arun ${a.work?.run || "idle"}`, `${run}${owner ? ` · runs for ${owner.name.split(" ")[0]}` : ""}`));
+          const open = el("button", "abtn", a.id === agent.id ? "Open" : "Chat");
+          open.type = "button";
+          open.addEventListener("click", () => { state.selected = a.id; persist(); render(); });
+          row.append(av, text, open);
+          pane.append(row);
+        });
+        if (roster.length > 6) {
+          const more = el("button", "abtn", state.teamAgentsOpen ? "Show fewer" : `Show ${roster.length - 6} more`);
+          more.type = "button";
+          more.style.alignSelf = "flex-start";
+          more.addEventListener("click", () => { state.teamAgentsOpen = !state.teamAgentsOpen; render(); });
+          pane.append(more);
+        }
         pane.append(el("p", "lhint", "Sample team. People appear here once agents and conversations carry owners and reviewers."));
         break;
       }
@@ -2443,23 +2742,67 @@ function mount(host, container) {
     return col;
   }
 
+  let stopWelcome = () => {};
+
   function welcomeView() {
     const w = el("div", "welcome");
-    BLOBS.slice(0, 8).forEach((b, i) => {
-      const s = blobSvg(b.id);
-      s.classList.add("wblob");
-      s.style.left = `${[8, 78, 40, 14, 80, 58, 6, 82][i]}%`;
-      s.style.top = `${[10, 18, 6, 70, 64, 84, 50, 38][i]}%`;
-      s.style.transform = `rotate(${[-12, 10, 18, -8, 14, -16, 6, -4][i]}deg)`;
-      w.append(s);
-    });
-    const box = el("div");
-    box.style.position = "relative";
+    const canvas = el("canvas", "wcanvas");
+    canvas.setAttribute("aria-hidden", "true");
+    w.append(canvas);
+    const box = el("div", "wbox");
     const go = el("button", "wgo", "Sign in →");
     go.type = "button";
     go.addEventListener("click", () => { state.welcomed = true; persist(); render(); });
-    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go);
-    w.append(box);
+    const modes = el("div", "wmodes");
+    [["smooth", "Smooth"], ["voxel", "Voxel"]].forEach(([id, label]) => {
+      const b = el("button", "wmode", label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.welcomeStyle === id));
+      b.addEventListener("click", () => { state.welcomeStyle = id; persist(); render(); });
+      modes.append(b);
+    });
+    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go, modes);
+    w.append(box, poweredBy("wpowered"));
+
+    const ctx = canvas.getContext?.("2d");
+    if (ctx) {
+      const off = document.createElement("canvas");
+      let scene = null;
+      let raf = 0;
+      let last = 0;
+      const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      const size = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = canvas.getBoundingClientRect();
+        const cw = Math.max(1, Math.round(rect.width)), ch = Math.max(1, Math.round(rect.height));
+        canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        scene = createBlobScene(cw, ch);
+        for (let n = 0; n < 40; n += 1) stepBlobScene(scene, 0.1);
+        if (still) { drawBlobScene(ctx, off, scene, state.welcomeStyle, [139, 92, 246]); drawEyes(ctx, scene); }
+      };
+      const tick = (now) => {
+        const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+        last = now;
+        stepBlobScene(scene, dt);
+        drawBlobScene(ctx, off, scene, state.welcomeStyle, [139, 92, 246]);
+        drawEyes(ctx, scene);
+        raf = requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(() => {
+        if (disposed) return;
+        size();
+        if (!still) raf = requestAnimationFrame(tick);
+      });
+      const onMove = (ev) => {
+        if (!scene) return;
+        const rect = canvas.getBoundingClientRect();
+        scene.eyes.pointer = { x: ev.clientX - rect.left, y: ev.clientY - rect.top, at: scene.t };
+      };
+      w.addEventListener("pointermove", onMove);
+      window.addEventListener("resize", size);
+      stopWelcome = () => { cancelAnimationFrame(raf); window.removeEventListener("resize", size); w.removeEventListener("pointermove", onMove); };
+    }
     return w;
   }
 
@@ -2470,6 +2813,8 @@ function mount(host, container) {
     const hadSearch = activeEl && activeEl.classList?.contains("search");
     const listScroll = root.querySelector(".rows")?.scrollTop || 0;
     const paneScroll = root.querySelector(".pane")?.scrollTop || 0;
+    stopWelcome();
+    stopWelcome = () => {};
     root.replaceChildren();
     if (!state.welcomed) { root.append(welcomeView()); return; }
     const shell = el("div");
@@ -2499,6 +2844,7 @@ function mount(host, container) {
   loadLive();
   return () => {
     disposed = true;
+    stopWelcome();
     document.removeEventListener("click", onDocClick);
     document.removeEventListener("keydown", onKey);
     style.remove();
