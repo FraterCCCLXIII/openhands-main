@@ -117,18 +117,7 @@ describe("ExtensionsNavigation", () => {
       "MCP Servers",
       "Skills",
       "Plugins",
-      "Apps",
     ]);
-  });
-
-  it("links Apps to its management page", () => {
-    renderExtensionsNavigation(<ExtensionsNavigation />);
-
-    const nav = screen.getByTestId("extensions-navbar-desktop");
-    expect(within(nav).getByTestId("sidebar-extensions-/apps")).toHaveAttribute(
-      "href",
-      "/apps",
-    );
   });
 
   it("renders the Plugins item as a live link without a Coming Soon badge", () => {
@@ -219,7 +208,7 @@ describe("ExtensionsNavigation", () => {
         within(nav)
           .getAllByRole("link")
           .map((link) => link.getAttribute("href")),
-      ).toEqual(["/mcp", "/skills", "/plugins", "/apps"]);
+      ).toEqual(["/mcp", "/skills", "/plugins"]);
       expect(
         within(nav).getByRole("link", { name: "MCP Servers" }),
       ).toHaveAttribute("aria-current", "page");

@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Blocks,
   ChevronLeft,
   MessagesSquare,
   Newspaper,
@@ -59,6 +60,7 @@ import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const FEED_PATH = "/feed";
 const TEAM_CHAT_PATH = "/team-chat";
+const APPS_PATH = "/apps";
 const TEAM_PATH = "/team";
 const ICON_SIZE = 18;
 const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
@@ -269,6 +271,15 @@ export function SidebarRailBody({
           forceActive={isExtensionsActive}
           icon={<CustomizeBoxesIcon width={ICON_SIZE} height={ICON_SIZE} />}
         />
+        {!isCloudBackend && (
+          <SidebarNavLink
+            to={APPS_PATH}
+            label={t(I18nKey.NAV$EXTENSIONS)}
+            testId="sidebar-apps-link"
+            collapsed={collapsed}
+            icon={<Blocks width={ICON_SIZE} height={ICON_SIZE} />}
+          />
+        )}
         {/* The interface manifest owns this entry's label, so an absent
             manifest leaves the rail without it rather than with host copy. */}
         {hasAutomationInterface() && (

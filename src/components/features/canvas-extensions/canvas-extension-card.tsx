@@ -42,7 +42,7 @@ export function CanvasExtensionCard({
         }
       >
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 to-black/10" />
-        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
+        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-linear-to-b from-white/20 to-white/5 inset-shadow-xs inset-shadow-white/40 shadow-md shadow-black/20 ring-1 ring-white/10">
           <CanvasExtensionIcon extension={extension} size={36} />
         </div>
         <ToggleSwitch
@@ -118,15 +118,6 @@ export function CanvasExtensionCard({
       <footer className="flex justify-end gap-2 px-4 pb-4">
         <BrandButton
           type="button"
-          variant="secondary"
-          testId={`canvas-extension-refresh-${extension.name}`}
-          isDisabled={isBusy}
-          onClick={onRefresh}
-        >
-          {t(I18nKey.SETTINGS$PLUGINS_REFRESH)}
-        </BrandButton>
-        <BrandButton
-          type="button"
           variant="ghost-danger"
           className="no-underline"
           testId={`canvas-extension-uninstall-${extension.name}`}
@@ -134,6 +125,15 @@ export function CanvasExtensionCard({
           onClick={onUninstall}
         >
           {t(I18nKey.SETTINGS$PLUGINS_UNINSTALL)}
+        </BrandButton>
+        <BrandButton
+          type="button"
+          variant="secondary"
+          testId={`canvas-extension-refresh-${extension.name}`}
+          isDisabled={isBusy}
+          onClick={onRefresh}
+        >
+          {t(I18nKey.SETTINGS$PLUGINS_REFRESH)}
         </BrandButton>
       </footer>
     </article>
