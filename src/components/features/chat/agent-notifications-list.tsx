@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { ChevronDown, Trash2 } from "lucide-react";
+import { Bookmark, ChevronDown, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ClockIcon from "#/icons/clock.svg?react";
 import SkillsIcon from "#/icons/skills.svg?react";
@@ -40,6 +40,7 @@ interface AgentNotificationsListProps {
   agentNotifications: AgentNotification[];
   onSubmit: (selectedIds: string[]) => void;
   onRemove?: (id: string) => void;
+  onSaveForLater?: (id: string) => void;
   onDismiss?: () => void;
   disabled?: boolean;
   isSubmitting?: boolean;
@@ -57,6 +58,7 @@ interface AgentNotificationListItemProps {
   onToggleChecked: () => void;
   onToggleExpanded: () => void;
   onRemove?: (id: string) => void;
+  onSaveForLater?: (id: string) => void;
 }
 
 function AgentNotificationListItem({
@@ -68,6 +70,7 @@ function AgentNotificationListItem({
   onToggleChecked,
   onToggleExpanded,
   onRemove,
+  onSaveForLater,
 }: AgentNotificationListItemProps) {
   const { t } = useTranslation("openhands");
   const detailsId = useId();
@@ -110,6 +113,30 @@ function AgentNotificationListItem({
             testId={`${listItemTestIdPrefix}-kind-pill-${agentNotification.id}`}
           />
         </label>
+        {onSaveForLater ? (
+          <button
+            type="button"
+            data-testid={`${listItemTestIdPrefix}-save-for-later-${agentNotification.id}`}
+            aria-label={t(
+              I18nKey.CHAT_INTERFACE$AGENT_NOTIFICATIONS_SAVE_FOR_LATER,
+              {
+                name: agentNotification.name,
+              },
+            )}
+            disabled={controlsDisabled}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onSaveForLater(agentNotification.id);
+            }}
+            className={cn(
+              ROW_ACTION_BUTTON_CLASSNAME,
+              controlsDisabled && "cursor-not-allowed opacity-50",
+            )}
+          >
+            <Bookmark className="size-4" strokeWidth={2} aria-hidden />
+          </button>
+        ) : null}
         {onRemove ? (
           <button
             type="button"
@@ -180,6 +207,7 @@ export function AgentNotificationsList({
   agentNotifications,
   onSubmit,
   onRemove,
+  onSaveForLater,
   onDismiss,
   disabled = false,
   isSubmitting = false,
@@ -264,6 +292,7 @@ export function AgentNotificationsList({
             }
             onToggleExpanded={() => toggleExpanded(agentNotification.id)}
             onRemove={onRemove}
+            onSaveForLater={onSaveForLater}
           />
         ))}
       </ul>

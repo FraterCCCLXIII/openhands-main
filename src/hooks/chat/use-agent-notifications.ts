@@ -134,6 +134,16 @@ export function useAgentNotifications({
     [conversationId, removeNotification],
   );
 
+  const saveForLater = useCallback(
+    (id: string) => {
+      if (!conversationId) {
+        return;
+      }
+      markSeen(conversationId, [id]);
+    },
+    [conversationId, markSeen],
+  );
+
   return {
     agentNotifications: recentAgentNotifications,
     history,
@@ -141,6 +151,7 @@ export function useAgentNotifications({
     dismiss,
     createAll,
     remove,
+    saveForLater,
     isCreating,
   };
 }
