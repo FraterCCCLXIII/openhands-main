@@ -107,16 +107,16 @@ export function SidebarFactories() {
   return (
     <section
       data-testid="sidebar-factories"
-      className="flex max-h-[45%] min-h-0 flex-col gap-1 px-2 pb-2 pt-1"
+      className="flex max-h-[55%] min-h-0 flex-col gap-1 px-2 pb-2 pt-1"
     >
-      <div className="flex shrink-0 items-center justify-between px-1">
+      <div className="flex shrink-0 items-center justify-between px-2">
         <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
           {t(I18nKey.FEED$FACTORIES)}
         </h2>
       </div>
       <ul
         ref={listRef}
-        className="custom-scrollbar flex min-h-0 flex-col gap-0.5 overflow-y-auto"
+        className="custom-scrollbar flex min-h-0 flex-col gap-0.5 overflow-y-auto pb-1"
       >
         <FactoryRow
           testId="sidebar-factory-all"
