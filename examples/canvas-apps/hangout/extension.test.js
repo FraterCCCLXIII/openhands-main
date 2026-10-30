@@ -1,99 +1,259 @@
 import { describe, expect, it, vi } from "vitest";
-import { activate, liveAgent, messageText, modelOf, shortTime } from "./extension.js";
+import {
+  activate, activityOf, kamijiFace, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+} from "./extension.js";
 
 function mountWith(request) {
+  localStorage.clear();
   let mountFn;
   const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
   activate(host);
   const container = document.createElement("div");
   document.body.append(container);
   const dispose = mountFn({ container });
-  return { container, dispose };
+  return { container, dispose, host };
 }
+const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
+const submit = (container, value) => {
+  const field = container.querySelector(".field");
+  field.value = value;
+  field.dispatchEvent(new Event("input"));
+  container.querySelector(".send").click();
+};
 
-describe("message helpers", () => {
+describe("message and agent helpers", () => {
   it("reads only text from a MessageEvent", () => {
     expect(messageText({ kind: "MessageEvent", llm_message: { content: [{ type: "text", text: "hi " }, { type: "image" }] } })).toBe("hi");
     expect(messageText({ kind: "ActionEvent" })).toBe("");
   });
 
-  it("builds a live agent row from a conversation and its events", () => {
-    const events = [
-      { kind: "MessageEvent", source: "user", llm_message: { content: [{ type: "text", text: "run tests" }] } },
-      { kind: "ActionEvent", source: "agent" },
-      { kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: "All green" }] } },
-    ];
-    const agent = liveAgent({ id: "abc123", title: "CI fixer", updated_at: "2026-01-01T10:00:00Z" }, events);
-    expect(agent).toMatchObject({ live: true, title: "CI fixer", conversationId: "abc123", preview: "All green" });
-    expect(agent.thread).toEqual([["me", "run tests"], ["agent", "All green"]]);
-  });
-
-  it("names a live agent from its profile, role tag and reported model", () => {
-    const conversation = {
-      id: "c9",
-      title: "Ship docs",
-      tags: { role: "worker" },
-      launched_agent_profile: { agent_profile_id: "p1" },
+  it("names a live agent from its profile, role tag and reported model, with workspace and parent", () => {
+    const agent = liveAgent({
+      id: "c9", title: "Ship docs", tags: { role: "worker" }, launched_agent_profile: { agent_profile_id: "p1" },
+      parent_conversation_id: "c1", workspace: { working_dir: "/work/site/" },
       stats: { usage_to_metrics: { default: { model_name: "ollama/qwen3:32b" } } },
-    };
-    const agent = liveAgent(conversation, [], [{ id: "p1", name: "Docs Bot" }]);
-    expect(agent).toMatchObject({ name: "Docs Bot", role: "Worker", model: "qwen3:32b" });
+    }, [], [{ id: "p1", name: "Docs Bot" }]);
+    expect(agent).toMatchObject({ name: "Docs Bot", role: "Worker", model: "qwen3:32b", workspace: "site", parentId: "live:c1", title: "Ship docs" });
     expect(modelOf({ current_model_id: "anthropic/claude-sonnet-5-5" })).toBe("claude-sonnet-5-5");
   });
 
-  it("falls back to a persona when the conversation carries no profile", () => {
-    const agent = liveAgent({ id: "zzz" }, []);
-    expect(agent.name).toBeTruthy();
-    expect(agent.role).toBeTruthy();
-    expect(agent.model).toBeTruthy();
-  });
-
-  it("labels today by time and yesterday by name", () => {
+  it("labels yesterday by name and ignores bad dates", () => {
     const now = new Date(2026, 9, 29, 15, 0);
     expect(shortTime(new Date(2026, 9, 28, 9, 0).toISOString(), now)).toBe("Yesterday");
     expect(shortTime("not a date", now)).toBe("");
   });
 });
 
+describe("Arco blocks", () => {
+  it("accepts the known block types and repairs fields", () => {
+    expect(validateBlock({ type: "statCard", title: "T", stats: [{ label: "A", value: 3 }, "junk"] })).toMatchObject({ type: "statCard", stats: [{ label: "A", value: "3", delta: "" }] });
+    expect(validateBlock({ type: "scriptTag" })).toBeNull();
+    expect(validateBlock("nope")).toBeNull();
+  });
+
+  it("finds blocks in fenced JSON: one block, an array, or a surface", () => {
+    const message = [
+      "Here you go",
+      "```json", JSON.stringify({ type: "textBlock", body: "hello" }), "```",
+      "```openui-lang", JSON.stringify({ id: "s", blocks: [{ type: "taskCard", tasks: [{ label: "a" }] }, { type: "bogus" }] }), "```",
+      "```json", "{not json", "```",
+    ].join("\n");
+    expect(extractBlocks(message).map((b) => b.type)).toEqual(["textBlock", "taskCard"]);
+  });
+
+  it("renders text safely and reports a form's answers", () => {
+    const onSubmit = vi.fn();
+    const card = renderBlock(validateBlock({ type: "formBlock", title: "Ask", fields: [{ name: "q", label: "<b>Question</b>" }] }), { onSubmit });
+    expect(card.querySelector("b")).toBeNull();
+    card.querySelector("input").value = "why?";
+    card.querySelector("form").dispatchEvent(new Event("submit", { cancelable: true }));
+    expect(onSubmit).toHaveBeenCalledWith("Ask\nq: why?");
+  });
+});
+
+describe("conversation activity", () => {
+  it("collects commands with their output, files, pages and tasks", () => {
+    const events = [
+      { kind: "ActionEvent", id: "a1", tool_name: "terminal", action: { command: "npm test" } },
+      { kind: "ObservationEvent", action_id: "a1", observation: { content: [{ type: "text", text: "42 passed" }], exit_code: 0 } },
+      { kind: "ActionEvent", id: "a2", tool_name: "file_editor", action: { command: "create", path: "/w/PLAN.md", file_text: "# Plan" } },
+      { kind: "ActionEvent", id: "a3", tool_name: "file_editor", action: { command: "str_replace", path: "/w/a.ts" } },
+      { kind: "ActionEvent", id: "a4", tool_name: "browser_navigate", action: { url: "https://example.com" } },
+      { kind: "ActionEvent", id: "a5", tool_name: "task_tracker", action: { task_list: [{ title: "Do it", status: "done" }] } },
+    ];
+    const a = activityOf(events);
+    expect(a.commands).toEqual([{ command: "npm test", output: "42 passed", exit: 0 }]);
+    expect(a.files.map((f) => f.path)).toEqual(["/w/PLAN.md", "/w/a.ts"]);
+    expect(a.plan).toBe("# Plan");
+    expect(a.pages[0].url).toBe("https://example.com");
+    expect(a.tasks).toEqual([{ title: "Do it", status: "done", notes: "" }]);
+  });
+});
+
+describe("work items", () => {
+  it("finds PRs and tickets by source, with state and the diff", () => {
+    const events = [
+      { kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: "Opened https://github.com/acme/app/pull/12 as a draft. Tracking https://linear.app/acme/issue/ENG-45 today. https://acme.atlassian.net/browse/OPS-7 is done." }] } },
+      { kind: "ActionEvent", id: "e1", tool_name: "file_editor", action: { command: "str_replace", path: "/a.ts", old_str: "a\nb", new_str: "a\nb\nc" } },
+      { kind: "ActionEvent", id: "e2", tool_name: "file_editor", action: { command: "create", path: "/b.ts", file_text: "x\ny\nz" } },
+    ];
+    const work = workOf(events, { execution_status: "running" }, activityOf(events));
+    expect(work.items.map((i) => [i.source, i.id])).toEqual([["github", "#12"], ["jira", "OPS-7"], ["linear", "ENG-45"]]);
+    expect(work.items.find((i) => i.source === "github").state).toBe("draft");
+    expect(work.items.find((i) => i.source === "jira").state).toBe("done");
+    expect(work.diff).toEqual({ files: 2, added: 6, removed: 2 });
+    expect(work.run).toBe("running");
+  });
+
+  it("keeps each mention's state to its own sentence", () => {
+    const events = [{ kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: "Opened https://github.com/acme/app/pull/12 as a draft. Tracking https://linear.app/acme/issue/ENG-45 today. https://acme.atlassian.net/browse/OPS-7 is done." }] } }];
+    const byId = Object.fromEntries(workOf(events).items.map((i) => [i.id, i.state]));
+    expect(byId).toEqual({ "#12": "draft", "ENG-45": "", "OPS-7": "done" });
+  });
+
+  it("does not mistake encodings for tickets, and reads merged state", () => {
+    const events = [{ kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: "Saved as UTF-8 per ISO-8601." }] } }];
+    expect(workOf(events).items).toEqual([]);
+    expect(stateNear("PR #5 was merged yesterday", "#5")).toBe("merged");
+  });
+
+  it("draws the source icon, number, state and diff", () => {
+    const line = workLine({ items: [{ source: "github", kind: "pr", id: "#9", repo: "a/b", state: "open" }], diff: { files: 2, added: 10, removed: 3 }, run: "idle" });
+    expect(line.querySelector(".srcicon.github")).toBeTruthy();
+    expect(line.querySelector(".wnum").textContent).toBe("#9");
+    expect(line.querySelector(".wstate").textContent).toBe("open");
+    expect(line.querySelector(".wdiff").textContent).toBe("+10−3");
+    expect(workLine({ items: [], diff: { files: 0, added: 0, removed: 0 }, run: "" })).toBeNull();
+  });
+});
+
+describe("list organising", () => {
+  const now = Date.parse("2026-10-30T12:00:00Z");
+  const mk = (id, extra = {}) => ({ id, name: id, title: id, role: "Worker", model: "m", live: true, workspace: "w1", parentId: "", tags: [], automation: false, updatedAt: now - 1000, createdAt: now - 5000, ...extra });
+  const flat = (groups) => groups.flatMap((g) => g.rows.map((r) => `${r.depth}:${r.agent.id}`));
+
+  it("nests subagents under their parent and can flatten or hide them", () => {
+    const agents = [mk("p"), mk("c", { parentId: "p", updatedAt: now - 2000 })];
+    expect(flat(organizeAgents(agents, DEFAULT_PREFS, "", {}, now))).toEqual(["0:p", "1:c"]);
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, subagents: "flat" }, "", {}, now))).toEqual(["0:p", "0:c"]);
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, subagents: "hide" }, "", {}, now))).toEqual(["0:p"]);
+    expect(flat(organizeAgents(agents, DEFAULT_PREFS, "", { p: true }, now))).toEqual(["0:p"]);
+  });
+
+  it("groups by workspace, sorts, and filters by age, automations and tags", () => {
+    const agents = [mk("a", { workspace: "w1", updatedAt: now - 10 * 86_400_000, createdAt: now - 1 }), mk("b", { workspace: "w2", automation: true, tags: ["team:ops"] }), mk("c", { workspace: "w1" })];
+    const groups = organizeAgents(agents, DEFAULT_PREFS, "", {}, now);
+    expect(groups.map((g) => g.label).sort()).toEqual(["w1", "w2"]);
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, organize: "recent", sort: "created" }, "", {}, now))).toEqual(["0:a", "0:b", "0:c"].sort((x, y) => ({ a: 0, b: 1, c: 1 }[x[2]] - { a: 0, b: 1, c: 1 }[y[2]])));
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, older: "7d" }, "", {}, now))).not.toContain("0:a");
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, automations: "only" }, "", {}, now))).toEqual(["0:b"]);
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, tags: ["team:ops"] }, "", {}, now))).toEqual(["0:b"]);
+    expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, source: "sample" }, "", {}, now))).toEqual([]);
+  });
+
+  it("nests the sample Inbox Manager under the EA", () => {
+    const rows = organizeAgents(sampleAgents(now), DEFAULT_PREFS, "", {}, now).flatMap((g) => g.rows);
+    expect(rows.find((r) => r.agent.id === "inbox").depth).toBe(1);
+  });
+});
+
 describe("Hangout page", () => {
-  it("lists the sample agents, opens one, and appends a sent message locally", async () => {
+  it("lists agents, switches the drawer tab, and sends from the pinned composer", async () => {
     const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
-    await new Promise((r) => setTimeout(r, 0));
-    const rows = container.querySelectorAll(".row");
-    expect(rows.length).toBe(9);
-    rows[2].click();
-    expect(container.querySelector(".chathead").textContent).toContain("Inbox Manager");
-    const input = container.querySelector(".composer input");
-    input.value = "status?";
-    input.dispatchEvent(new Event("input"));
-    container.querySelector(".composer").dispatchEvent(new Event("submit", { cancelable: true }));
-    await new Promise((r) => setTimeout(r, 0));
+    await tick();
+    expect(container.querySelectorAll(".row").length).toBe(9);
+    container.querySelector(".tab[aria-selected='true']").textContent === "Cards";
+    expect(container.querySelectorAll(".acard").length).toBeGreaterThan(0);
+    [...container.querySelectorAll(".tab")].find((t) => t.textContent === "Terminal").click();
+    expect(container.querySelector("[data-block='terminalBlock']")).toBeTruthy();
+    submit(container, "status?");
+    await tick();
     expect([...container.querySelectorAll(".bubble.me")].map((n) => n.textContent)).toContain("status?");
     expect(container.textContent).toContain("not reachable");
     dispose();
   });
 
-  it("shows real conversations first and posts a message to the one picked", async () => {
+  it("shows live conversations with their cards, and posts messages into them", async () => {
+    const reply = "```json\n" + JSON.stringify({ type: "statCard", title: "Tests", stats: [{ label: "passed", value: "42" }] }) + "\n```";
     const request = vi.fn(async ({ path }) => {
-      if (path.startsWith("/api/conversations/search")) return { items: [{ id: "c1", title: "Docs agent", updated_at: "2026-01-01T00:00:00Z" }] };
-      if (path.includes("/events/search")) return { items: [{ kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: "Docs updated" }] } }] };
+      if (path.startsWith("/api/conversations/search")) return { items: [{ id: "c1", title: "Docs agent", updated_at: "2026-10-30T10:00:00Z", workspace: { working_dir: "/work/docs" } }] };
+      if (path.includes("/events/search")) return { items: [{ kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: reply }] } }] };
       return {};
     });
     const { container, dispose } = mountWith(request);
-    await new Promise((r) => setTimeout(r, 10));
+    await tick(10);
+    expect(container.querySelector(".group").textContent).toBe("docs");
     const first = container.querySelector(".row");
     expect(first.textContent).toContain("Docs agent");
-    expect(first.querySelector(".role").textContent).toBeTruthy();
-    expect(first.querySelector(".model").textContent).toBeTruthy();
     first.click();
-    const input = container.querySelector(".composer input");
-    input.value = "ship it";
-    input.dispatchEvent(new Event("input"));
-    container.querySelector(".composer").dispatchEvent(new Event("submit", { cancelable: true }));
-    await new Promise((r) => setTimeout(r, 10));
+    expect(container.querySelector("[data-block='statCard']")).toBeTruthy();
+    submit(container, "ship it");
+    await tick(10);
     const post = request.mock.calls.find(([arg]) => arg.method === "POST");
     expect(post[0].path).toBe("/api/conversations/c1/events");
     expect(post[0].body).toMatchObject({ role: "user", run: true });
     dispose();
+  });
+
+  it("opens the view menu and narrows the list with a filter chip", async () => {
+    const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
+    await tick();
+    container.querySelector(".iconbtn").click();
+    const automations = [...container.querySelectorAll(".menu h4")].find((h) => h.textContent === "Automations").nextSibling;
+    [...automations.querySelectorAll("button")].find((b) => b.textContent === "Hide").click();
+    expect(container.querySelectorAll(".row").length).toBe(7);
+    expect(container.querySelector(".chip").textContent).toContain("No automations");
+    dispose();
+  });
+
+  it("toggles between chat, preview and computer views", async () => {
+    const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
+    await tick();
+    const view = (label) => [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === label);
+    expect(container.querySelector(".shell").classList.contains("view-chat")).toBe(true);
+    view("Drawer").click();
+    expect(container.querySelector(".drawer")).toBeNull();
+    view("Preview").click();
+    expect(container.querySelector(".urlbar")).toBeTruthy();
+    container.querySelector(".pstage .abtn").click();
+    expect(container.querySelector("iframe").getAttribute("sandbox")).toBe("");
+    view("Computer").click();
+    expect(container.querySelector(".ccontrol").textContent).toContain("has control");
+    container.querySelector(".takeover").click();
+    expect(container.querySelector(".ccontrol").textContent).toContain("You have control");
+    view("Chat").click();
+    expect(container.querySelector(".row")).toBeTruthy();
+    dispose();
+  });
+
+  it("edits an agent's Kamiji face in the Studio and shows it as their avatar", async () => {
+    const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
+    await tick();
+    [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === "Studio").click();
+    expect(container.querySelector(".powered").textContent).toContain("Powered by");
+    expect(container.querySelector(".powered").textContent).toContain("Kamiji");
+    expect(container.querySelector(".powered").textContent).toContain("Kosmos");
+    const options = [...container.querySelectorAll(".sopt")];
+    expect(options.length).toBe(LOOK_SHAPES.length + LOOK_EXPRESSIONS.length);
+    expect(LOOK_SHAPES.length).toBeGreaterThanOrEqual(24);
+    expect(new Set(LOOK_SHAPES.map((x) => x[2])).size).toBeGreaterThanOrEqual(4);
+    options.find((o) => o.textContent === "Hexagon").click();
+    container.querySelectorAll(".swatch")[2].click();
+    [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === "Chat").click();
+    const mark = container.querySelector(".chathead .avatar svg path");
+    expect(mark.getAttribute("fill")).toBe(LOOK_COLORS[2]);
+    dispose();
+  });
+});
+
+describe("Kamiji face engine", () => {
+  it("draws every shape and expression, with eyes that read on dark and light bodies", () => {
+    LOOK_SHAPES.forEach(([shape]) => LOOK_EXPRESSIONS.forEach(([expression]) => {
+      const svg = kamijiFace({ shape, expression, color: LOOK_COLORS[0] });
+      expect(svg.querySelectorAll("path, ellipse").length).toBeGreaterThan(2);
+    }));
+    expect(kamijiFace({ shape: "circle", expression: "neutral", color: "#0b0b0c" }).querySelector("ellipse").getAttribute("fill")).toBe("#ffffff");
+    expect(kamijiFace({ shape: "circle", expression: "neutral", color: "#efece4" }).querySelector("ellipse").getAttribute("fill")).toContain("rgba(0,0,0");
+    expect(kamijiFace({ shape: "nope", expression: "nope", color: "javascript:x" }).querySelector("path").getAttribute("fill")).toBe(LOOK_COLORS[0]);
   });
 });

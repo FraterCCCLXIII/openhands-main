@@ -1,19 +1,31 @@
 # Hangout
 
-A Canvas App for talking to your agents like teammates. Three panes: a list of
-agents with their latest update, a chat with the one you pick, and that agent's
-screen and routines.
+A Canvas App for talking to your agents like teammates.
 
-- **Sample agents** (Chief of Staff, EA, Inbox Manager, and so on) show the
-  layout. Their threads, screen and routines are illustrative; messages you send
-  to them are kept in this browser's localStorage.
-- **Live conversations.** With a reachable Agent Server, your 20 most recent
-  conversations appear at the top as agents, marked with a green dot. Their last messages
-  come from `GET /api/conversations/{id}/events/search`. Sending a message posts
-  a user message to `POST /api/conversations/{id}/events` with `run: true`.
-- Screen and routines are a preview until agents publish them; routines will
-  come from automations.
+- **Agents list** (left): Kamiji hand avatars, name, role and model, the PR or ticket
+  each agent is on (GitHub, GitLab, Jira, Linear or a bare key) with its state and
+  `+added −removed` diff. Search, and a View menu that mirrors the left-nav
+  conversation list: organise by workspace or recent activity, sort by updated,
+  created or name, nest/flatten/hide subagent trees, hide older conversations,
+  filter automations and tags. Active filters show as chips you can clear.
+- **Chat** (middle): header and composer stay pinned. The composer has the factory
+  composer's pieces: a drag grip, auto-growing field, send-to target menu, attach
+  files, model chip, dictation where the browser supports it, `/` commands
+  (`/card`, `/status`, `/plan`, `/file`) and Enter to send.
+- **Drawer** (right): Arco UI cards the agent generates (a fenced `json` block with
+  `statCard`, `taskCard`, `calendarCard`, `weatherCard`, `musicPlayerCard`,
+  `codeBlock`, `terminalBlock`, `textBlock` or `formBlock`, validated before
+  drawing), plus Screen, Files, Terminal, Browser, Webview, VS Code, Planner and
+  Tasks tabs built from the conversation's events.
+- **Views** (toggle in the chat header): Chat, Preview (a browser pane beside the
+  chat), Computer (the agent's desktop with a "has control / Take over" switch) and
+  Studio, an editor for each agent's Kamiji face: 26 shapes in four groups, 16
+  expressions, 12 colours, PNG export. "Powered by Kamiji and Kosmos" sits under it.
 
-Install it from Customize, then Apps, using this folder's path. The page opens at
-`/extensions/hangout/hangout`. Run the tests with
+Sample agents show the layout; with a reachable Agent Server your 40 most recent
+conversations appear as agents, and messages are posted to
+`POST /api/conversations/{id}/events` with `run: true`. Screen, routines and the
+Computer view are previews until agents publish them.
+
+Install from Customize, then Apps, using this folder's path. Tests:
 `npx vitest run --root examples/canvas-apps/hangout --environment jsdom`.
