@@ -4,8 +4,11 @@ import { useTranslation } from "react-i18next";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { useExtensionPageMount } from "#/components/features/canvas-extensions/extension-page-host";
+import { AppTurnedOffPage } from "#/components/features/built-in-apps/app-turned-off-page";
+import { useCanvasExtensions } from "#/hooks/query/use-canvas-extensions";
 import { I18nKey } from "#/i18n/declaration";
 
+// @spec CE-010 — A route for an app that is off or missing explains itself
 export default function CanvasExtensionPage() {
   const { t } = useTranslation("openhands");
   const params = useParams();
@@ -13,6 +16,10 @@ export default function CanvasExtensionPage() {
   const extensionName = params.extensionName ?? "";
   const routePath = params["*"] ?? "";
   const { pages, activating, errors } = useCanvasExtensionsRuntime();
+  const installed = useCanvasExtensions().data;
+  const installedExtension = installed?.find(
+    (candidate) => candidate.name === extensionName,
+  );
   const page = React.useMemo(
     () =>
       pages
@@ -43,6 +50,21 @@ export default function CanvasExtensionPage() {
         <LoadingSpinner size="large" />
       </div>
     );
+  }
+
+  // Installed but switched off, or not installed at all: say so and point at
+  // Customize > Apps instead of the generic unavailable card.
+  if (!page && installed) {
+    if (!installedExtension) {
+      return <AppTurnedOffPage name={extensionName} reason="missing" />;
+    }
+    if (!installedExtension.enabled) {
+      return (
+        <AppTurnedOffPage
+          name={installedExtension.manifest?.display_name || extensionName}
+        />
+      );
+    }
   }
 
   const error = mountError ?? errors.get(extensionName);

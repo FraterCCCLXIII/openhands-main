@@ -328,6 +328,28 @@ The initial route shape is
 `/apps`; there is no bare `/extensions` page. All routing goes through React
 Router so `VITE_BASE_PATH` continues to work.
 
+### Disabled and missing apps (additive, host API stays v1)
+
+### CE-010: A route for an app that is off or missing explains itself
+
+- [x] `/extensions/{name}/*` for an installed but disabled extension renders
+      the shared "{name} is turned off" page with a link to Customize > Apps,
+      instead of the generic unavailable card.
+- [x] The same route for an extension that is not installed renders "not
+      installed" with the same link. Once the inventory has loaded, an enabled
+      extension still mounts normally.
+- [x] No manifest or host API change: the guard reads the existing installed
+      inventory, so `contributes.nav` is not needed yet.
+
+### CE-011: Built-in apps share the switch model
+
+- [x] Built-in apps (Tower, Factory, Automations, Commons) have per-user,
+      per-backend switches under Customize > Apps > Built-in apps. All default
+      on. Off hides the app's nav, rail and New Chat entries and shows the same
+      "turned off" page at its routes; the app's data stores are never reset.
+- [x] An app another app needs is locked on (Automations while Factory is on);
+      a dependent is off whenever its requirement is off.
+
 ## Delivery plan
 
 ### Slice 1: contract and management

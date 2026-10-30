@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "kanban",
+  "display_name": "Kanban",
+  "version": "0.1.0",
+  "description": "A small three-column board (To do, In progress, Done) for cards you add, drag between columns and delete. Cards stay in this browser.",
+  "entrypoint": "extension.js",
+  "icon": "icon.svg",
+  "contributes": {
+    "pages": [
+      {
+        "id": "board",
+        "title": "Kanban",
+        "path": "/board",
+        "nav_label": "Kanban",
+        "description": "Track simple work in To do, In progress and Done."
+      }
+    ]
+  }
+}

@@ -16,10 +16,12 @@ import {
   type RegisteredCanvasExtensionCreateAction,
 } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { NavigationLink } from "#/components/shared/navigation-link";
+import type { BuiltInAppId } from "#/built-in-apps/registry";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { useCloseOnEscape } from "#/hooks/use-close-on-escape";
 import { I18nKey } from "#/i18n/declaration";
+import { useBuiltInAppEnabled } from "#/stores/built-in-apps-store";
 import { dispatchCanvasExtensionIntent } from "#/stores/canvas-extension-intent-store";
 import { ContextMenu } from "#/ui/context-menu";
 import { dropdownMenuRowIconWrapperClassName } from "#/utils/dropdown-classes";
@@ -35,12 +37,14 @@ const CREATE_ITEMS = [
   },
   {
     key: "factory",
+    app: "factory",
     icon: Factory,
     label: I18nKey.SIDEBAR$NEW_FACTORY,
     to: "/factory?new=1",
   },
   {
     key: "automation",
+    app: "automations",
     icon: Workflow,
     label: I18nKey.AUTOMATIONS$ADD_AUTOMATION,
     to: "/automations/setup",
@@ -65,6 +69,8 @@ const CREATE_ITEMS = [
   },
 ] as const satisfies readonly {
   key: string;
+  /** Built-in app that owns the entry; it hides while that app is off. */
+  app?: BuiltInAppId;
   icon: LucideIcon;
   label: I18nKey;
   to: string;
@@ -106,6 +112,14 @@ export function SidebarCreateMenu() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const { createActions } = useCanvasExtensionsRuntime();
   const backendScopedPath = useBackendScopedPath();
+  const factoryEnabled = useBuiltInAppEnabled("factory");
+  const automationsEnabled = useBuiltInAppEnabled("automations");
+  const appEnabled: Record<BuiltInAppId, boolean> = {
+    factory: factoryEnabled,
+    automations: automationsEnabled,
+    tower: true,
+    commons: true,
+  };
   const close = () => setIsOpen(false);
   const openCreateAction = (
     entry: RegisteredCanvasExtensionCreateAction,
@@ -149,7 +163,9 @@ export function SidebarCreateMenu() {
           spacing="none"
           className="z-[60] mt-2 min-w-56 p-1"
         >
-          {CREATE_ITEMS.map((item) => (
+          {CREATE_ITEMS.filter(
+            (item) => !("app" in item) || appEnabled[item.app],
+          ).map((item) => (
             <li key={item.key} role="presentation">
               <NavigationLink
                 to={item.to}

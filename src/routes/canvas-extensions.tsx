@@ -4,6 +4,7 @@ import { ExternalLink, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { AddCanvasExtensionModal } from "#/components/features/canvas-extensions/add-canvas-extension-modal";
 import { CanvasExtensionDetailsModal } from "#/components/features/canvas-extensions/canvas-extension-details-modal";
 import { useNavigation } from "#/context/navigation-context";
+import { BuiltInAppsSection } from "#/components/features/built-in-apps/built-in-apps-section";
 import { CanvasExtensionCard } from "#/components/features/canvas-extensions/canvas-extension-card";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { ConfirmationModal } from "#/components/shared/modals/confirmation-modal";
@@ -173,6 +174,8 @@ export default function CanvasExtensionsScreen() {
               </button>
             </div>
           )}
+
+          <BuiltInAppsSection />
 
           <div className="flex items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-contrast">

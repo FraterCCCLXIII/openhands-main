@@ -75,6 +75,16 @@
       "path": "examples/canvas-apps/murmur"
     },
     {
+      "name": "kanban",
+      "display_name": "Kanban",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "A small three-column board (To do, In progress, Done) for cards you add, drag between columns and delete. Cards stay in this browser.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "examples/canvas-apps/kanban"
+    },
+    {
       "name": "pullboard",
       "display_name": "Pullboard",
       "kind": "canvas-app-fixture",
