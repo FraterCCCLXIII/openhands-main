@@ -14,6 +14,8 @@ import { cn } from "#/utils/utils";
 interface CanvasExtensionIconProps {
   extension: InstalledCanvasExtensionInfo;
   size: number;
+  /** Size of the generic fallback glyph; defaults to `size`. */
+  fallbackSize?: number;
   className?: string;
   /** Whether to show the styled background (default: true when appearance is set). */
   showBackground?: boolean;
@@ -46,6 +48,7 @@ function defaultIconBackground(name: string): string {
 export function CanvasExtensionIcon({
   extension,
   size,
+  fallbackSize = size,
   className,
   showBackground,
 }: CanvasExtensionIconProps) {
@@ -120,9 +123,8 @@ export function CanvasExtensionIcon({
   if (!src) {
     return (
       <PanelsTopLeft
-        width={size}
-        height={size}
-        className={className}
+        width={fallbackSize}
+        height={fallbackSize}
         aria-hidden
         data-testid="canvas-extension-default-icon"
       />
