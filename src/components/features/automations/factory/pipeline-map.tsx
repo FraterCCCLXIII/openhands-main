@@ -17,7 +17,11 @@ import { useAgentServerUIAppearance } from "#/components/providers/agent-server-
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { inFlight, type StepActivity } from "./pipeline-activity";
-import { ActivityMarks, HangingChips } from "./pipeline-activity-ui";
+import {
+  ActivityMarks,
+  HangingChips,
+  ProfileLine,
+} from "./pipeline-activity-ui";
 import type {
   PipelineCountKind,
   PipelineStep,
@@ -87,6 +91,7 @@ function StepNodeView({ data, selected }: NodeProps<StepNode>) {
           {line}
         </span>
       ))}
+      {activity ? <ProfileLine activity={activity} /> : null}
       {step.count && count !== null ? (
         <span className="mt-1 rounded-full bg-surface px-2 py-0.5 font-mono text-xs text-contrast">
           {t(COUNT_LABEL[step.count], { count })}

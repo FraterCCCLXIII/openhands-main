@@ -1,4 +1,5 @@
 import { FEED_DEMO_AGENTS } from "#/utils/feed-demo-agents";
+import { getDemoAgentRole } from "#/utils/feed-agent-role";
 import type { PipelineStep } from "./pipeline-templates";
 
 export type PrState = "open" | "merged" | "draft" | "failing";
@@ -14,6 +15,8 @@ export interface StepActivity {
   prs: { number: number; state: PrState }[];
   tickets: string[];
   agents: string[];
+  /** The agent profile that handles this step, and the model it runs (null when it runs none). */
+  profile: { name: string; role: string; model: string | null } | null;
   /** Average minutes an item waits here. */
   waitMinutes: number | null;
   perDay: number | null;
@@ -60,6 +63,30 @@ function stageOf(step: PipelineStep): Stage | null {
   return null;
 }
 
+const STAGE_ROLES: Record<Stage, string[]> = {
+  intake: ["dispatcher"],
+  plan: ["conductor"],
+  code: ["worker"],
+  ci: ["verifier"],
+  review: ["verifier", "conductor"],
+  deploy: ["worker", "janitor"],
+  watch: ["scout", "janitor"],
+};
+
+/** The persona whose role fits a stage, picked the same way every visit. */
+function profileFor(stage: Stage, seed: string): StepActivity["profile"] {
+  const fits = FEED_DEMO_AGENTS.filter((a) =>
+    STAGE_ROLES[stage].includes(a.role),
+  );
+  if (!fits.length) return null;
+  const agent = fits[hash(seed) % fits.length];
+  return {
+    name: agent.name,
+    role: agent.role,
+    model: getDemoAgentRole(agent).model,
+  };
+}
+
 /** Illustrative activity for a step, from its role in the flow. Not the factory's own data. */
 export function sampleActivity(
   step: PipelineStep,
@@ -84,6 +111,7 @@ export function sampleActivity(
     prs: [],
     tickets: [],
     agents: [],
+    profile: profileFor(stage, `${factoryId}:${step.id}`),
     waitMinutes: null,
     perDay: null,
     lastMinutesAgo: r(55, 1),

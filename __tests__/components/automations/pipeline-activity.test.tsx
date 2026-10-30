@@ -28,6 +28,21 @@ describe("pipeline activity", () => {
     expect(Object.values(activity).some((a) => a.prs.length > 0)).toBe(true);
   });
 
+  it("assigns a profile and model to each step, and none to a dispatcher's model", () => {
+    const activity = Object.values(buildActivity(steps, "web"));
+    expect(activity.every((a) => a.profile)).toBe(true);
+    expect(
+      activity
+        .filter((a) => a.profile?.role === "dispatcher")
+        .every((a) => a.profile?.model === null),
+    ).toBe(true);
+    expect(
+      activity
+        .filter((a) => a.profile?.role === "worker")
+        .every((a) => a.profile?.model),
+    ).toBe(true);
+  });
+
   it("counts everything waiting or running as in flight", () => {
     expect(
       inFlight({
@@ -37,6 +52,7 @@ describe("pipeline activity", () => {
         prs: [],
         tickets: [],
         agents: [],
+        profile: null,
         waitMinutes: null,
         perDay: null,
         lastMinutesAgo: null,
@@ -54,6 +70,7 @@ describe("pipeline activity marks", () => {
     prs: [],
     tickets: [],
     agents: [],
+    profile: null,
     waitMinutes: null,
     perDay: null,
     lastMinutesAgo: null,

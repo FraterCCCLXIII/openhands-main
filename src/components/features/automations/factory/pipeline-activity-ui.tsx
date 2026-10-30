@@ -117,6 +117,24 @@ export function ActivityMarks({ activity }: { activity: StepActivity }) {
   );
 }
 
+/** The profile and model at a step, as one quiet line inside the node. */
+export function ProfileLine({ activity }: { activity: StepActivity }) {
+  const { t } = useTranslation("openhands");
+  const { profile } = activity;
+  if (!profile) return null;
+  return (
+    <span
+      data-testid="pipeline-profile-line"
+      className="mt-0.5 flex max-w-full items-center gap-1 truncate rounded-full bg-surface px-2 text-xs leading-4 text-contrast"
+    >
+      <span className="font-medium">{profile.name}</span>
+      <span className="text-muted">
+        {profile.model ?? t(I18nKey.FACTORY$ACTIVITY_NO_MODEL)}
+      </span>
+    </span>
+  );
+}
+
 /** Chips that hang off the bottom edge of a step: pull requests, tickets, agents. */
 export function HangingChips({ activity }: { activity: StepActivity }) {
   const prs = activity.prs.slice(0, 3);
