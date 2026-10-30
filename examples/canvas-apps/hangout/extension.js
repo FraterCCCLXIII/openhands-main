@@ -31,10 +31,19 @@ const SAMPLE_AGENTS = [
       ["file", { name: "Kickoff Agenda.pdf", meta: "12 pages · 1.2 MB" }],
       ["me", "Perfect, those shipped last week, post an update to let them know"],
       ["agent", "Got it! Product updates shared and linked in #brightside-shared slack channel"],
+      ["me", "Can you add a slide for headcount and pull from Rippling"],
+      ["agent", "Pulled and added"],
+      ["file", { name: "Q3 board deck v5", meta: "docs.google.com", icon: "DOC" }],
     ],
     routines: [["Morning briefing", "Every day at 8:00 AM", true], ["Inbox cleanup", "Weekdays at 6:00 PM", true], ["Weekly team update", "Paused", false]] },
   { id: "ea", role: "Dispatcher", model: "No model", name: "EA", blob: "blue", time: "", unread: false, thread: [["agent", "Responded in 3 threads, with two meetings moved to Thursday."]], routines: [["Calendar sweep", "Every day at 7:30 AM", true]] },
-  { id: "inbox", role: "Janitor", model: "Haiku", name: "Inbox Manager", blob: "green", time: "7:34 PM", unread: false, thread: [["agent", "Inbox at zero. 2 replies ready."]], routines: [["Triage", "Every 30 minutes", true]] },
+  { id: "inbox", role: "Janitor", model: "Haiku", name: "Inbox Manager", blob: "green", time: "7:34 PM", unread: false, thread: [
+      ["agent", "8am routine done. Inbox triaged, 3 unread left."],
+      ["agent", "One email from Dan needs a reply. I drafted one in your inbox."],
+      ["action", { kind: "email", title: "New email", lines: ["Hi Dan,", "2 PM works on our side. Review moved, invite updated.", "Peng"], actions: ["Send email", "Discard"], results: ["Sent", "Discarded"] }],
+      ["me", "Looks good, send it."],
+      ["agent", "Done"],
+    ], routines: [["Triage", "Every 30 minutes", true]] },
   { id: "sales", role: "Worker", model: "Sonnet", name: "Sales Outbound", blob: "teal", time: "11:18 AM", unread: false, thread: [["agent", "Outreach drafts queued for approval."]], routines: [["Lead refresh", "Weekdays at 9:00 AM", true]] },
   { id: "talent", role: "Scout", model: "Sonnet", name: "Talent Scout", blob: "brown", time: "", unread: true, thread: [["agent", "Shortlist of 6 candidates ready for review."]], routines: [["Sourcing run", "Mondays at 10:00 AM", true]] },
   { id: "growth", role: "Worker", model: "Sonnet", name: "Growth Marketer", blob: "orange", time: "9:04 AM", unread: false, thread: [["agent", "A/B copy variants ready to review."]], routines: [["Experiment readout", "Fridays at 4:00 PM", true]] },
@@ -830,6 +839,210 @@ export function factoryIcon(name, small) {
 /** Tag facets present across agents, for the filter menu. */
 export const tagFacets = (agents) => [...new Set(agents.flatMap((a) => a.tags || []))].sort();
 
+
+// ─── Markdown for agent messages: built as DOM, never as HTML ─────────────────
+
+/** Agents sometimes reply with a JSON envelope like {"message": "...", "summary": "..."}; show the message. */
+export function unwrapMessage(raw) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return { body: String(raw || ""), note: "" };
+  try {
+    const data = JSON.parse(trimmed);
+    if (isObject(data) && typeof data.message === "string") {
+      const note = typeof data.summary === "string" ? data.summary : "";
+      return { body: data.message, note };
+    }
+  } catch { /* not an envelope */ }
+  return { body: String(raw || ""), note: "" };
+}
+
+const SAFE_URL = /^(https?:\/\/|mailto:)/i;
+const INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*|__[^_\n]+__)|(~~[^~\n]+~~)|(\[[^\]\n]+\]\([^)\s]+\))|(\bhttps?:\/\/[^\s<>)]+[^\s<>).,;:!?])|(\*[^*\s][^*\n]*\*|_[^_\s][^_\n]*_)/g;
+
+/** Appends inline markdown (code, bold, italic, strike, links) to a parent, as text nodes and elements. */
+export function renderInline(parent, source) {
+  let last = 0;
+  const textOf = (t) => document.createTextNode(t);
+  for (const m of source.matchAll(INLINE)) {
+    if (m.index > last) parent.append(textOf(source.slice(last, m.index)));
+    const [whole] = m;
+    if (m[1]) { const c = document.createElement("code"); c.textContent = whole.slice(1, -1); parent.append(c); }
+    else if (m[2]) { const b = document.createElement("strong"); renderInline(b, whole.slice(2, -2)); parent.append(b); }
+    else if (m[3]) { const d = document.createElement("del"); renderInline(d, whole.slice(2, -2)); parent.append(d); }
+    else if (m[4]) {
+      const [, label, url] = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(whole);
+      if (SAFE_URL.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; renderInline(a, label); parent.append(a); }
+      else parent.append(textOf(label));
+    } else if (m[5]) { const a = document.createElement("a"); a.href = whole; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = whole; parent.append(a); }
+    else { const i = document.createElement("em"); renderInline(i, whole.slice(1, -1)); parent.append(i); }
+    last = m.index + whole.length;
+  }
+  if (last < source.length) parent.append(textOf(source.slice(last)));
+}
+
+const FENCE_OPEN = /^\s*```\s*([\w+#.-]*)\s*$/;
+const BULLET = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+
+function codeBlock(lang, lines) {
+  const wrap = document.createElement("div");
+  wrap.className = "mdcode";
+  const bar = document.createElement("div");
+  bar.className = "mdcodebar";
+  const label = document.createElement("span");
+  label.textContent = lang || "text";
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.textContent = "Copy";
+  copy.addEventListener("click", () => {
+    navigator.clipboard?.writeText(lines.join("\n")).then(() => { copy.textContent = "Copied"; setTimeout(() => { copy.textContent = "Copy"; }, 1200); }).catch(() => {});
+  });
+  bar.append(label, copy);
+  const pre = document.createElement("pre");
+  const code = document.createElement("code");
+  code.textContent = lines.join("\n");
+  pre.append(code);
+  wrap.append(bar, pre);
+  return wrap;
+}
+
+function listBlock(items) {
+  // items: [{ indent, ordered, text }]; nested by indentation.
+  const root = document.createElement(items[0].ordered ? "ol" : "ul");
+  const stack = [{ indent: items[0].indent, list: root }];
+  items.forEach((it) => {
+    while (stack.length > 1 && it.indent < stack.at(-1).indent) stack.pop();
+    let top = stack.at(-1);
+    if (it.indent > top.indent) {
+      const parentLi = top.list.lastElementChild;
+      const sub = document.createElement(it.ordered ? "ol" : "ul");
+      (parentLi || top.list).append(sub);
+      top = { indent: it.indent, list: sub };
+      stack.push(top);
+    }
+    const li = document.createElement("li");
+    const task = /^\[([ xX])\]\s+(.*)$/.exec(it.text);
+    if (task) {
+      li.className = "mdtask";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.disabled = true;
+      box.checked = task[1].toLowerCase() === "x";
+      li.append(box, document.createTextNode(" "));
+      renderInline(li, task[2]);
+    } else renderInline(li, it.text);
+    top.list.append(li);
+  });
+  return root;
+}
+
+function tableBlock(rows) {
+  const split = (line) => line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const hr = document.createElement("tr");
+  split(rows[0]).forEach((c) => { const th = document.createElement("th"); renderInline(th, c); hr.append(th); });
+  head.append(hr);
+  const body = document.createElement("tbody");
+  rows.slice(2).forEach((line) => {
+    const tr = document.createElement("tr");
+    split(line).forEach((c) => { const td = document.createElement("td"); renderInline(td, c); tr.append(td); });
+    body.append(tr);
+  });
+  table.append(head, body);
+  const wrap = document.createElement("div");
+  wrap.className = "mdtable";
+  wrap.append(table);
+  return wrap;
+}
+
+/** Renders markdown into a container element. Tolerates half-finished text, so it is safe to call as a reply streams in. */
+export function renderMarkdown(source) {
+  const root = document.createElement("div");
+  root.className = "md";
+  const { body, note } = unwrapMessage(source);
+  const lines = body.replace(/\r\n?/g, "\n").split("\n");
+  let i = 0;
+  let para = [];
+  const flush = () => {
+    if (!para.length) return;
+    const p = document.createElement("p");
+    para.forEach((line, n) => { if (n) p.append(document.createElement("br")); renderInline(p, line); });
+    root.append(p);
+    para = [];
+  };
+  while (i < lines.length) {
+    const line = lines[i];
+    const open = FENCE_OPEN.exec(line);
+    if (open) {
+      flush();
+      const code = [];
+      i += 1;
+      while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) { code.push(lines[i]); i += 1; }
+      i += 1; // closing fence, or the end of a reply that is still streaming
+      root.append(codeBlock(open[1], code));
+      continue;
+    }
+    if (!line.trim()) { flush(); i += 1; continue; }
+    const heading = /^(#{1,4})\s+(.*)$/.exec(line);
+    if (heading) {
+      flush();
+      const h = document.createElement(`h${Math.min(heading[1].length + 2, 6)}`);
+      renderInline(h, heading[2]);
+      root.append(h);
+      i += 1;
+      continue;
+    }
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { flush(); root.append(document.createElement("hr")); i += 1; continue; }
+    if (/^\s*>/.test(line)) {
+      flush();
+      const quote = [];
+      while (i < lines.length && /^\s*>/.test(lines[i])) { quote.push(lines[i].replace(/^\s*>\s?/, "")); i += 1; }
+      const bq = document.createElement("blockquote");
+      quote.forEach((q, n) => { if (n) bq.append(document.createElement("br")); renderInline(bq, q); });
+      root.append(bq);
+      continue;
+    }
+    if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+      flush();
+      const rows = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { rows.push(lines[i]); i += 1; }
+      root.append(tableBlock(rows));
+      continue;
+    }
+    if (BULLET.test(line)) {
+      flush();
+      const items = [];
+      while (i < lines.length && (BULLET.test(lines[i]) || (/^\s{2,}\S/.test(lines[i]) && items.length))) {
+        const b = BULLET.exec(lines[i]);
+        if (b) items.push({ indent: b[1].length, ordered: /\d/.test(b[2]), text: b[3] });
+        else items.at(-1).text += ` ${lines[i].trim()}`;
+        i += 1;
+      }
+      root.append(listBlock(items));
+      continue;
+    }
+    para.push(line);
+    i += 1;
+  }
+  flush();
+  if (note) { const n = document.createElement("p"); n.className = "mdnote"; n.textContent = note; root.append(n); }
+  return root;
+}
+
+/** A one-line plain version of a message, for the list preview. */
+export function plainText(source) {
+  const { body } = unwrapMessage(source);
+  return body
+    .replace(/```[\s\S]*?(```|$)/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/(\*\*|__|~~)/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^\s*([-*+]|\d+[.)])\s+(\[[ xX]\]\s+)?/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const CSS = `
 .hg { --hg-bg: var(--oh-color-base, #171717); --hg-panel: var(--oh-color-base-secondary, #212121); --hg-raised: var(--oh-surface-raised, #2a2a2a);
   --hg-text: var(--oh-foreground, #eee); --hg-contrast: var(--oh-contrast, #fff); --hg-muted: var(--oh-muted, #9a9a9a);
@@ -839,15 +1052,23 @@ const CSS = `
   height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
 .hg *, .hg *::before, .hg *::after { box-sizing: border-box; }
 .hg button { font: inherit; color: inherit; }
-.hg .shell { display: grid; grid-template-columns: 320px minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
-.hg .shell.nodrawer { grid-template-columns: 320px minmax(0, 1fr); }
-.hg .shell.view-studio { grid-template-columns: minmax(0, 1fr); }
+.hg .shell { display: grid; grid-template-columns: 56px 320px minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
+.hg .rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; border-right: 1px solid var(--hg-border); background: var(--hg-bg); min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.hg .rbtn { position: relative; width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--hg-muted); display: grid; place-items: center; cursor: pointer; }
+.hg .rbtn svg { width: 21px; height: 21px; }
+.hg .rbtn:hover { background: var(--hg-panel); color: var(--hg-contrast); }
+.hg .rbtn[aria-pressed="true"] { background: var(--hg-raised); color: var(--hg-contrast); }
+.hg .rbtn[aria-pressed="true"]::before { content: ""; position: absolute; left: -8px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--hg-primary); }
+.hg .rlabel { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); z-index: 9; padding: 3px 8px; border-radius: 8px; background: var(--hg-contrast); color: var(--hg-bg); font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; }
+.hg .rbtn:hover .rlabel, .hg .rbtn:focus-visible .rlabel { opacity: 1; }
+.hg .rsep { width: 24px; height: 1px; background: var(--hg-border); margin: 6px 0; }
+.hg .shell.nodrawer { grid-template-columns: 56px 320px minmax(0, 1fr); }
+.hg .shell.view-studio { grid-template-columns: 56px minmax(0, 1fr); }
 .hg .studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; min-height: 0; background: var(--hg-bg); }
 .hg .sstage { align-items: center; padding: 12px 20px 16px; gap: 18px; }
 .hg .stop { align-self: stretch; display: flex; align-items: center; gap: 10px; }
 .hg .stitle { font-weight: 600; color: var(--hg-contrast); }
 .hg .spick { background: var(--hg-panel); color: var(--hg-text); border: 1px solid var(--hg-border); border-radius: 8px; padding: 4px 8px; font: inherit; max-width: 260px; }
-.hg .stop .viewswitch { margin-left: auto; }
 .hg .sbig { flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; }
 .hg .sbig svg { width: min(52vh, 340px); height: min(52vh, 340px); filter: drop-shadow(0 18px 24px rgba(0,0,0,.35)); }
 .hg .sactions { display: flex; gap: 8px; }
@@ -881,13 +1102,8 @@ const CSS = `
 .hg .sswatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 .hg .swatch { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--hg-bg); outline: 1px solid var(--hg-border); cursor: pointer; }
 .hg .swatch[aria-pressed="true"] { outline: 2px solid var(--hg-text); }
-.hg .shell.view-preview { grid-template-columns: minmax(340px, 5fr) minmax(0, 6fr); }
-.hg .shell.view-computer { grid-template-columns: minmax(340px, 4fr) minmax(0, 8fr); }
-.hg .viewswitch { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--hg-border); border-radius: 10px; background: var(--hg-panel); margin-left: 8px; font-weight: 400; }
-.hg .headwork + .viewswitch { margin-left: 8px; }
-.hg .chathead > .viewswitch:last-child { margin-left: auto; }
-.hg .vbtn { border: 0; background: transparent; border-radius: 8px; padding: 3px 10px; cursor: pointer; font-size: 12px; color: var(--hg-muted); }
-.hg .vbtn[aria-pressed="true"] { background: var(--hg-raised); color: var(--hg-contrast); }
+.hg .shell.view-preview { grid-template-columns: 56px minmax(340px, 5fr) minmax(0, 6fr); }
+.hg .shell.view-computer { grid-template-columns: 56px minmax(340px, 4fr) minmax(0, 8fr); }
 .hg .namebox { white-space: nowrap; display: flex; align-items: baseline; gap: 8px; }
 .hg .presence { font-size: 12px; font-weight: 400; color: var(--hg-muted); }
 .hg .presence.running { color: var(--hg-success); }
@@ -920,12 +1136,15 @@ const CSS = `
 .hg .list { border-right: 1px solid var(--hg-border); }
 .hg .listtop { flex: none; padding: 12px 10px 8px; background: var(--hg-bg); border-bottom: 1px solid var(--hg-border); position: relative; z-index: 3; }
 .hg .factories { margin-bottom: 8px; }
-.hg .fhead { display: flex; align-items: center; gap: 6px; padding: 2px 2px 6px; }
+.hg .fhead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 6px; padding: 2px 2px 8px; }
 .hg .ftitle { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--hg-muted); }
 .hg .fcount { font-size: 11px; color: var(--hg-muted); margin-right: auto; }
-.hg .fchip::after { content: ""; }
+.hg .fhead .fview { border: 1px solid var(--hg-border); border-radius: 8px; padding: 1px; }
+.hg .fhead .fmore, .hg .fhead .fviewbtn { white-space: nowrap; }
+.hg .fchip { border: 1px solid var(--hg-border); background: transparent; color: var(--hg-text); border-radius: 999px; padding: 2px 10px; font-size: 12px; line-height: 18px; white-space: nowrap; cursor: pointer; }
+.hg .fchip:hover { background: var(--hg-panel); }
 .hg .fchip[aria-pressed="true"] { background: var(--hg-primary); color: var(--hg-on-primary); border-color: var(--hg-primary); }
-.hg .fmore { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 12px; padding: 2px 4px; }
+.hg .fmore { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 12px; padding: 2px 4px; white-space: nowrap; }
 .hg .fview { display: inline-flex; gap: 1px; }
 .hg .fviewbtn { border: 0; background: transparent; color: var(--hg-muted); border-radius: 6px; padding: 1px 6px; cursor: pointer; font-size: 11px; }
 .hg .fviewbtn[aria-pressed="true"] { background: var(--hg-raised); color: var(--hg-contrast); }
@@ -1002,6 +1221,34 @@ const CSS = `
 .hg .headmeta { display: block; font-size: 12px; font-weight: 400; color: var(--hg-muted); }
 .hg .msgs { flex: 1; min-height: 0; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
 .hg .bubble { max-width: 78%; padding: 10px 16px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hg .bubble.rich { white-space: normal; }
+.hg .md { display: grid; gap: 8px; min-width: 0; line-height: 1.5; }
+.hg .md > :first-child { margin-top: 0; }
+.hg .md p, .hg .md ul, .hg .md ol, .hg .md blockquote, .hg .md h3, .hg .md h4, .hg .md h5, .hg .md h6, .hg .md hr { margin: 0; }
+.hg .md h3 { font-size: 16px; font-weight: 650; color: var(--hg-contrast); }
+.hg .md h4 { font-size: 15px; font-weight: 650; color: var(--hg-contrast); }
+.hg .md h5, .hg .md h6 { font-size: 14px; font-weight: 650; color: var(--hg-contrast); }
+.hg .md strong { font-weight: 650; color: var(--hg-contrast); }
+.hg .md a { color: var(--arco-accent, #7c9dff); text-decoration: underline; text-underline-offset: 2px; }
+.hg .md ul, .hg .md ol { padding-left: 22px; display: grid; gap: 3px; }
+.hg .md li > ul, .hg .md li > ol { margin-top: 3px; }
+.hg .md li.mdtask { list-style: none; margin-left: -20px; }
+.hg .md li.mdtask input { margin-right: 4px; vertical-align: -1px; accent-color: var(--hg-primary); }
+.hg .md blockquote { border-left: 3px solid var(--hg-border); padding: 2px 0 2px 12px; color: var(--hg-muted); }
+.hg .md hr { border: 0; border-top: 1px solid var(--hg-border); }
+.hg .md code { font: 12.5px ui-monospace, SF Mono, Menlo, monospace; background: rgba(255,255,255,.08); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
+.hg .md .mdcode { border: 1px solid var(--hg-border); border-radius: 10px; overflow: hidden; background: #0e0e10; }
+.hg .md .mdcodebar { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: var(--hg-muted); border-bottom: 1px solid var(--hg-border); background: rgba(255,255,255,.03); }
+.hg .md .mdcodebar button { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 11px; }
+.hg .md .mdcodebar button:hover { color: var(--hg-contrast); }
+.hg .md pre { margin: 0; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.55 ui-monospace, SF Mono, Menlo, monospace; }
+.hg .md pre code { background: none; padding: 0; border-radius: 0; overflow-wrap: normal; }
+.hg .md .mdtable { overflow-x: auto; border: 1px solid var(--hg-border); border-radius: 10px; }
+.hg .md table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.hg .md th, .hg .md td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--hg-border); }
+.hg .md th { color: var(--hg-contrast); background: rgba(255,255,255,.03); font-weight: 600; }
+.hg .md tr:last-child td { border-bottom: 0; }
+.hg .md .mdnote { font-size: 12px; color: var(--hg-muted); border-top: 1px solid var(--hg-border); padding-top: 6px; }
 .hg .bubble.agent { align-self: flex-start; background: var(--hg-raised); }
 .hg .bubble.me { align-self: flex-end; background: var(--hg-primary); color: var(--hg-on-primary); }
 .hg .file { align-self: flex-start; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--hg-border); border-radius: 14px; background: var(--hg-panel); }
@@ -1076,9 +1323,37 @@ const CSS = `
 .hg .status { font: 11px/1 var(--arco-font-mono); text-transform: uppercase; color: var(--arco-text-secondary); border: 1px solid var(--arco-border-strong); border-radius: 999px; padding: 2px 7px; margin-left: auto; }
 .hg .status.done { color: var(--arco-success); } .hg .status.in_progress { color: var(--arco-accent); }
 .hg .lhint { color: var(--arco-text-secondary); font-size: var(--arco-text-sm); }
-@media (max-width: 1100px) { .hg .shell, .hg .shell.nodrawer { grid-template-columns: 280px minmax(0, 1fr); } .hg .drawer:not(.previewcol) { display: none; } .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: minmax(0, 1fr); } .hg .previewcol, .hg .computercol { display: none; } }
+@media (max-width: 1100px) { .hg .shell, .hg .shell.nodrawer { grid-template-columns: 56px 280px minmax(0, 1fr); } .hg .drawer:not(.previewcol) { display: none; } .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: 56px minmax(0, 1fr); } .hg .previewcol, .hg .computercol { display: none; } }
 @media (max-width: 900px) { .hg .studio { grid-template-columns: minmax(0, 1fr); overflow: auto; } .hg .spanel { border-left: 0; border-top: 1px solid var(--hg-border); } }
-@media (max-width: 640px) { .hg .shell { grid-template-columns: minmax(0, 1fr); } .hg .list { display: none; } }
+.hg .mback, .hg .mscreen { display: none; border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 2px 6px; cursor: pointer; }
+.hg .pinned { display: flex; gap: 14px; overflow-x: auto; padding: 12px 4px 4px; scrollbar-width: none; }
+.hg .pin { flex: none; width: 64px; display: grid; justify-items: center; gap: 4px; border: 0; background: transparent; cursor: pointer; }
+.hg .pin svg { width: 56px; height: 56px; }
+.hg .pin[aria-current="true"] svg { filter: drop-shadow(0 0 0 2px var(--hg-contrast)); outline: 2px solid var(--hg-contrast); outline-offset: 2px; border-radius: 50%; }
+.hg .pin span { font-size: 11px; color: var(--hg-muted); max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hg .action { align-self: flex-start; max-width: 78%; padding: 12px 14px; border: 1px solid var(--hg-border); border-radius: 14px; background: var(--hg-panel); display: grid; gap: 8px; }
+.hg .action .atitle { font-size: 12px; color: var(--hg-muted); }
+.hg .action .abody { padding: 10px 12px; border-radius: 10px; background: var(--hg-raised); display: grid; gap: 6px; }
+.hg .action .arow { display: flex; gap: 8px; }
+.hg .action button { border: 1px solid var(--hg-border); border-radius: 10px; padding: 6px 14px; background: var(--hg-raised); cursor: pointer; }
+.hg .action button.go { background: var(--hg-contrast); color: var(--hg-bg); border-color: var(--hg-contrast); font-weight: 600; }
+.hg .welcome { height: 100%; position: relative; display: grid; place-items: center; text-align: center; overflow: hidden; background: var(--hg-bg); }
+.hg .welcome .wblob { position: absolute; width: 56px; height: 56px; opacity: .95; }
+.hg .welcome h1 { margin: 0 0 6px; font-size: 40px; color: var(--hg-contrast); }
+.hg .welcome p { margin: 0 0 18px; color: var(--hg-muted); max-width: 260px; }
+.hg .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 10px 22px; font-weight: 600; cursor: pointer; }
+@media (max-width: 640px) {
+  .hg .computercol .mbar { display: flex !important; }
+  .hg .shell, .hg .shell.nodrawer, .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: minmax(0, 1fr); }
+  .hg .mback, .hg .mscreen { display: inline-flex; }
+  .hg .mscreen { margin-left: auto; }
+  .hg .chathead .viewswitch, .hg .chathead .headwork { display: none; }
+  .hg .shell.pane-list .chat, .hg .shell.pane-list .drawer { display: none; }
+  .hg .shell.pane-chat .list { display: none; }
+  .hg .shell.view-computer .chat, .hg .shell.view-preview .chat { display: none; }
+  .hg .shell.view-computer .computercol, .hg .shell.view-preview .previewcol { display: flex; }
+  .hg .shell.pane-chat.view-chat .drawer { display: none; }
+}
 `;
 
 function el(tag, cls, content) {
@@ -1247,6 +1522,8 @@ function mount(host, container) {
     busy: false,
     menu: "",
     view: saved.view || "chat",
+    pane: "list",
+    welcomed: Boolean(saved.welcomed),
     looks: saved.looks || {},
     drawerOpen: saved.drawerOpen !== false,
     control: {},
@@ -1256,7 +1533,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, cardState: state.cardState, models: state.models, view: state.view, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -1385,7 +1662,7 @@ function mount(host, container) {
     const head = el("div", "fhead");
     head.append(el("span", "ftitle", "Factories"), el("span", "fcount", String(factories.length)));
     const chipBtn = (label, pressed, onClick, title) => {
-      const b = el("button", "chip fchip", label);
+      const b = el("button", "fchip", label);
       b.type = "button";
       b.setAttribute("aria-pressed", String(pressed));
       if (title) b.title = title;
@@ -1474,6 +1751,23 @@ function mount(host, container) {
     view.addEventListener("click", () => { state.menu = state.menu === "view" ? "" : "view"; render(); });
     row.append(search, view);
     top.append(row);
+    if (!state.query.trim()) {
+      const pins = agents().filter((a) => !a.parentId).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 8);
+      if (pins.length) {
+        const strip = el("div", "pinned");
+        strip.setAttribute("aria-label", "Pinned agents");
+        pins.forEach((a) => {
+          const b = el("button", "pin");
+          b.type = "button";
+          b.title = a.name;
+          b.setAttribute("aria-current", String(a.id === current().id));
+          b.append(avatarFor(a), el("span", "", a.name));
+          b.addEventListener("click", () => { state.selected = a.id; state.pane = "chat"; persist(); render(); });
+          strip.append(b);
+        });
+        top.append(strip);
+      }
+    }
     const chips = activeChips();
     if (chips) top.append(chips);
     if (state.menu === "view") top.append(viewMenu());
@@ -1507,9 +1801,9 @@ function mount(host, container) {
         text.append(topLine, meta);
         const wl = workLine(agent.work);
         if (wl) text.append(wl);
-        text.append(el("span", "preview", agent.title || agent.preview || (last ? last[1] : "")));
+        text.append(el("span", "preview", plainText(agent.title || agent.preview || (last ? last[1] : ""))));
         btn.append(avatarFor(agent), text);
-        btn.addEventListener("click", () => { state.selected = agent.id; persist(); render(); });
+        btn.addEventListener("click", () => { state.selected = agent.id; state.pane = "chat"; persist(); render(); });
         rows.append(btn);
       });
     });
@@ -1686,23 +1980,54 @@ function mount(host, container) {
     const nameLine = el("span", "namebox");
     nameLine.append(el("span", "", agent.name), el("span", `presence ${agent.work?.run || "idle"}`, presence));
     who.append(nameLine, el("span", "headmeta", `${agent.role || "Agent"} · ${modelOfAgent(agent)}${agent.workspace ? ` · ${agent.workspace}` : ""}`));
-    head.append(avatarFor(agent, true), who);
+    const back = el("button", "mback", "‹");
+    back.type = "button";
+    back.setAttribute("aria-label", "Back to agents");
+    back.addEventListener("click", () => { state.pane = "list"; state.view = "chat"; render(); });
+    head.append(back, avatarFor(agent, true), who);
     const hw = workLine(agent.work, 4);
     if (hw) { hw.classList.add("headwork"); head.append(hw); }
-    head.append(viewSwitch());
+
+    const screen = el("button", "mscreen", "🖥");
+    screen.type = "button";
+    screen.setAttribute("aria-label", "Open the agent's computer");
+    screen.addEventListener("click", () => { state.view = "computer"; persist(); render(); });
+    head.append(screen);
     const msgs = el("div", "msgs");
     msgs.setAttribute("role", "log");
     const thread = threadOf(agent);
     if (!thread.length) msgs.append(el("p", "empty", "No messages yet. Say hello."));
-    thread.forEach(([who2, body]) => {
+    thread.forEach(([who2, body], idx) => {
       if (who2 === "file") {
         const card = el("div", "file");
         const info = el("div");
         info.append(el("div", "rtitle", body.name), el("div", "rsub", body.meta));
-        card.append(el("span", "fileicon", "PDF"), info);
+        card.append(el("span", "fileicon", body.icon || "PDF"), info);
         msgs.append(card);
+      } else if (who2 === "action") {
+        const key = `${agent.id}:${idx}`;
+        const picked = state.cardState[key];
+        const card = el("div", "action");
+        card.append(el("div", "atitle", body.title));
+        const inner = el("div", "abody");
+        body.lines.forEach((l) => inner.append(el("span", "", l)));
+        card.append(inner);
+        if (picked == null) {
+          const row = el("div", "arow");
+          body.actions.forEach((label, i) => {
+            const b = el("button", i === 0 ? "go" : "", label);
+            b.type = "button";
+            b.addEventListener("click", () => { state.cardState = { ...state.cardState, [key]: i }; persist(); render(); });
+            row.append(b);
+          });
+          card.append(row);
+        }
+        msgs.append(card);
+        if (picked != null) msgs.append(el("div", "bubble agent", body.results?.[picked] || "Done"));
       } else {
-        msgs.append(el("div", `bubble ${who2}`, body));
+        const bubble = el("div", `bubble ${who2}`);
+        if (who2 === "agent") { bubble.classList.add("rich"); bubble.append(renderMarkdown(body)); } else bubble.textContent = body;
+        msgs.append(bubble);
       }
     });
     col.append(head, msgs, composer(agent));
@@ -1710,26 +2035,47 @@ function mount(host, container) {
     return col;
   }
 
-  function viewSwitch() {
-    const box = el("span", "viewswitch");
-    box.setAttribute("role", "group");
-    box.setAttribute("aria-label", "View");
-    VIEWS.forEach(([id, label]) => {
-      const b = el("button", "vbtn", label);
+  // ── left: a vertical icon rail for the views ──
+  const RAIL_ICONS = {
+    chat: "M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z",
+    preview: "M3 5h18v14H3zM3 9h18M7 7h.01M10 7h.01",
+    computer: "M3 4h18v12H3zM8 20h8M12 16v4",
+    studio: "M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-.7-1.6-.7-2.6c0-1 .8-1.4 1.8-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8ZM7.5 11.5h.01M10 7.5h.01M15 7.5h.01",
+    drawer: "M3 4h18v16H3zM15 4v16",
+  };
+  const railIcon = (id) => {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.7");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", RAIL_ICONS[id]);
+    svg.append(path);
+    return svg;
+  };
+  function railCol() {
+    const rail = el("nav", "rail");
+    rail.setAttribute("aria-label", "Views");
+    const add = (id, label, pressed, onClick, extra = "") => {
+      const b = el("button", `rbtn${extra}`);
       b.type = "button";
-      b.setAttribute("aria-pressed", String(state.view === id));
-      b.addEventListener("click", () => { state.view = id; persist(); render(); });
-      box.append(b);
-    });
+      b.title = label;
+      b.setAttribute("aria-label", label);
+      b.setAttribute("aria-pressed", String(pressed));
+      b.append(railIcon(id), el("span", "rlabel", label));
+      b.addEventListener("click", onClick);
+      rail.append(b);
+    };
+    VIEWS.forEach(([id, label]) => add(id, label, state.view === id, () => { state.view = id; persist(); render(); }));
     if (state.view === "chat") {
-      const d = el("button", "vbtn", "Drawer");
-      d.type = "button";
-      d.setAttribute("aria-pressed", String(state.drawerOpen));
-      d.title = "Show or hide the drawer";
-      d.addEventListener("click", () => { state.drawerOpen = !state.drawerOpen; persist(); render(); });
-      box.append(d);
+      rail.append(el("span", "rsep"));
+      add("drawer", "Drawer", state.drawerOpen, () => { state.drawerOpen = !state.drawerOpen; persist(); render(); });
     }
-    return box;
+    return rail;
   }
 
   const previewUrlOf = (agent) => state.previews[agent.id]?.url ?? (agent.live ? [...(agent.activity?.pages || [])].reverse().find((p) => /^https?:/.test(p.url))?.url || agent.work?.items.find((i) => i.url)?.url || "" : "");
@@ -1789,6 +2135,15 @@ function mount(host, container) {
   function computerCol() {
     const agent = current();
     const col = el("div", "col computercol");
+    const mbar = el("div", "chathead");
+    const mb = el("button", "mback", "‹");
+    mb.type = "button";
+    mb.setAttribute("aria-label", "Back to chat");
+    mb.addEventListener("click", () => { state.view = "chat"; persist(); render(); });
+    mbar.append(mb, el("span", "", agent.name));
+    mbar.style.display = "none";
+    mbar.classList.add("mbar");
+    col.append(mbar);
     const blob = BLOBS.find((b) => b.id === agent.blob) || BLOBS[0];
     const frame = el("div", "cframe");
     frame.style.setProperty("--tint", blob.fill);
@@ -1834,7 +2189,7 @@ function mount(host, container) {
     pick.setAttribute("aria-label", "Agent");
     agents().slice(0, 60).forEach((a) => { const o = el("option", "", `${a.name} · ${a.role || "Agent"}`); o.value = a.id; o.selected = a.id === agent.id; pick.append(o); });
     pick.addEventListener("change", () => { state.selected = pick.value; persist(); render(); });
-    top.append(el("span", "stitle", "Look"), pick, viewSwitch());
+    top.append(el("span", "stitle", "Look"), pick);
     const big = el("div", "sbig");
     big.append(kamijiFace(look));
     const exp = el("button", "sexport", "Export as PNG");
@@ -2040,6 +2395,26 @@ function mount(host, container) {
     return col;
   }
 
+  function welcomeView() {
+    const w = el("div", "welcome");
+    BLOBS.slice(0, 8).forEach((b, i) => {
+      const s = blobSvg(b.id);
+      s.classList.add("wblob");
+      s.style.left = `${[8, 78, 40, 14, 80, 58, 6, 82][i]}%`;
+      s.style.top = `${[10, 18, 6, 70, 64, 84, 50, 38][i]}%`;
+      s.style.transform = `rotate(${[-12, 10, 18, -8, 14, -16, 6, -4][i]}deg)`;
+      w.append(s);
+    });
+    const box = el("div");
+    box.style.position = "relative";
+    const go = el("button", "wgo", "Sign in →");
+    go.type = "button";
+    go.addEventListener("click", () => { state.welcomed = true; persist(); render(); });
+    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go);
+    w.append(box);
+    return w;
+  }
+
   function render() {
     if (disposed) return;
     const activeEl = document.activeElement;
@@ -2048,8 +2423,10 @@ function mount(host, container) {
     const listScroll = root.querySelector(".rows")?.scrollTop || 0;
     const paneScroll = root.querySelector(".pane")?.scrollTop || 0;
     root.replaceChildren();
+    if (!state.welcomed) { root.append(welcomeView()); return; }
     const shell = el("div");
-    shell.className = `shell view-${state.view}${state.view === "chat" && !state.drawerOpen ? " nodrawer" : ""}`;
+    shell.className = `shell pane-${state.pane} view-${state.view}${state.view === "chat" && !state.drawerOpen ? " nodrawer" : ""}`;
+    shell.append(railCol());
     if (state.view === "chat") shell.append(listCol(), chatCol(), ...(state.drawerOpen ? [drawerCol()] : []));
     else if (state.view === "studio") shell.append(studioCol());
     else if (state.view === "preview") shell.append(chatCol(), previewCol());

@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
   localStorage.clear();
+  localStorage.setItem("hangout:v1", JSON.stringify({ welcomed: true }));
   let mountFn;
   const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
   activate(host);
@@ -68,6 +69,59 @@ describe("Arco blocks", () => {
     card.querySelector("input").value = "why?";
     card.querySelector("form").dispatchEvent(new Event("submit", { cancelable: true }));
     expect(onSubmit).toHaveBeenCalledWith("Ask\nq: why?");
+  });
+});
+
+describe("markdown in messages", () => {
+  const html = (source) => renderMarkdown(source).innerHTML;
+
+  it("renders bold, code, italics, links and lists as elements", () => {
+    const md = renderMarkdown("The only card is **small (S)** with `clamp(n)` and *care*.\n\n- one\n- two\n  - nested\n\n1. first\n2. second");
+    expect(md.querySelector("strong").textContent).toBe("small (S)");
+    expect(md.querySelector("p code").textContent).toBe("clamp(n)");
+    expect(md.querySelector("em").textContent).toBe("care");
+    expect(md.querySelectorAll("ul > li").length).toBe(3);
+    expect(md.querySelector("ul ul li").textContent).toBe("nested");
+    expect(md.querySelectorAll("ol > li").length).toBe(2);
+  });
+
+  it("draws fenced code with a language label and a copy button, and tolerates a fence still streaming", () => {
+    const done = renderMarkdown("Here:\n```js\nconst a = 1;\n```\nDone");
+    expect(done.querySelector(".mdcodebar span").textContent).toBe("js");
+    expect(done.querySelector("pre code").textContent).toBe("const a = 1;");
+    expect(done.querySelector("p:last-child").textContent).toBe("Done");
+    const streaming = renderMarkdown("Working:\n```bash\nnpm test");
+    expect(streaming.querySelector("pre code").textContent).toBe("npm test");
+  });
+
+  it("renders task lists, tables, headings and quotes", () => {
+    const md = renderMarkdown("## Plan\n- [x] done\n- [ ] todo\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n> quoted");
+    expect(md.querySelector("h4").textContent).toBe("Plan");
+    expect([...md.querySelectorAll("input[type=checkbox]")].map((c) => c.checked)).toEqual([true, false]);
+    expect(md.querySelector("th").textContent).toBe("a");
+    expect(md.querySelector("td").textContent).toBe("1");
+    expect(md.querySelector("blockquote").textContent).toBe("quoted");
+  });
+
+  it("never turns message text into markup, and only links to safe URLs", () => {
+    const md = renderMarkdown("<img src=x onerror=alert(1)> [bad](javascript:alert(1)) [ok](https://example.com) https://openhands.dev/docs.");
+    expect(md.querySelector("img")).toBeNull();
+    const hrefs = [...md.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["https://example.com", "https://openhands.dev/docs"]);
+    expect(md.textContent).toContain("<img src=x onerror=alert(1)>");
+  });
+
+  it("unwraps a JSON reply envelope into its message with the summary as a note", () => {
+    const envelope = JSON.stringify({ message: "Three items:\n- CARD-1\n- CARD-2", summary: "Inform user" });
+    expect(unwrapMessage(envelope)).toEqual({ body: "Three items:\n- CARD-1\n- CARD-2", note: "Inform user" });
+    const md = renderMarkdown(envelope);
+    expect(md.querySelectorAll("li").length).toBe(2);
+    expect(md.querySelector(".mdnote").textContent).toBe("Inform user");
+    expect(html("plain {not json}")).toContain("plain {not json}");
+  });
+
+  it("makes a one-line preview without markdown marks", () => {
+    expect(plainText("**Done** — see `util.mjs`\n```\ncode\n```\n- [x] item")).toBe("Done — see util.mjs item");
   });
 });
 
@@ -230,7 +284,7 @@ describe("Hangout page", () => {
   it("toggles between chat, preview and computer views", async () => {
     const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
     await tick();
-    const view = (label) => [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === label);
+    const view = (label) => container.querySelector(`.rail [aria-label="${label}"]`);
     expect(container.querySelector(".shell").classList.contains("view-chat")).toBe(true);
     view("Drawer").click();
     expect(container.querySelector(".drawer")).toBeNull();
@@ -250,7 +304,7 @@ describe("Hangout page", () => {
   it("edits an agent's Kamiji face in the Studio and shows it as their avatar", async () => {
     const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
     await tick();
-    [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === "Studio").click();
+    container.querySelector('.rail [aria-label="Studio"]').click();
     expect(container.querySelector(".powered").textContent).toContain("Powered by");
     expect(container.querySelector(".powered").textContent).toContain("Kamiji");
     expect(container.querySelector(".powered").textContent).toContain("Kosmos");
@@ -260,7 +314,7 @@ describe("Hangout page", () => {
     expect(new Set(LOOK_SHAPES.map((x) => x[2])).size).toBeGreaterThanOrEqual(4);
     options.find((o) => o.textContent === "Hexagon").click();
     container.querySelectorAll(".swatch")[2].click();
-    [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === "Chat").click();
+    container.querySelector('.rail [aria-label="Chat"]').click();
     const mark = container.querySelector(".chathead .avatar svg path");
     expect(mark.getAttribute("fill")).toBe(LOOK_COLORS[2]);
     dispose();
@@ -298,7 +352,7 @@ describe("Kamiji face engine", () => {
   it("offers eye styles and face switches in the Studio and applies them", async () => {
     const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
     await tick();
-    [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === "Studio").click();
+    container.querySelector('.rail [aria-label="Studio"]').click();
     [...container.querySelectorAll(".sopt")].find((o) => o.textContent === "Cartoon").click();
     expect(container.querySelector(".sbig svg ellipse[fill='#f4f6f7']")).toBeTruthy();
     const glasses = [...container.querySelectorAll(".sswitch")].find((r) => r.textContent === "Glasses").querySelector("input");
@@ -344,5 +398,32 @@ describe("factories strip", () => {
     expect(tile.querySelector("svg")).toBeTruthy();
     expect(tile.querySelectorAll("ellipse").length).toBe(0);
     expect(tile.getAttribute("class")).not.toContain("avatar");
+  });
+});
+
+describe("mobile views", () => {
+  it("shows the welcome screen on first run and the list after signing in", () => {
+    localStorage.clear();
+    let mountFn;
+    activate({ apiVersion: "1", navigate: vi.fn(), agentServer: { request: async () => ({ items: [] }) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } });
+    const container = document.createElement("div");
+    document.body.append(container);
+    mountFn({ container });
+    expect(container.querySelector(".list")).toBeNull();
+    container.querySelector(".wgo").click();
+    expect(container.querySelector(".list")).not.toBeNull();
+    expect(container.querySelector(".pinned .pin")).not.toBeNull();
+  });
+
+  it("opens a chat from the list, goes back, and resolves an email draft card", () => {
+    const { container } = mountWith(async () => ({ items: [] }));
+    const inbox = [...container.querySelectorAll(".row")].find((r) => r.textContent.includes("Inbox Manager"));
+    inbox.click();
+    expect(container.querySelector(".shell").classList.contains("pane-chat")).toBe(true);
+    container.querySelector(".action .go").click();
+    expect(container.querySelector(".action .arow")).toBeNull();
+    expect([...container.querySelectorAll(".bubble.agent")].some((b) => b.textContent === "Sent")).toBe(true);
+    container.querySelector(".mback").click();
+    expect(container.querySelector(".shell").classList.contains("pane-list")).toBe(true);
   });
 });
