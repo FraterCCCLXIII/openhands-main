@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronUp, LayoutGrid } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
+import { SidebarGrip } from "./sidebar-grip";
 import { FeedCustomIcon } from "#/components/features/feed/feed-custom-icon";
 import { FeedIconTile } from "#/components/features/feed/feed-icon-tile";
 import { usePaginatedConversations } from "#/hooks/query/use-paginated-conversations";
@@ -75,9 +76,10 @@ export function SidebarFactories() {
   const factories = useFeedFactories();
   const { data } = usePaginatedConversations();
   const factoryId = useSidebarFactoryStore((s) => s.factoryId);
-  const expanded = useSidebarFactoryStore((s) => s.expanded);
+  const visibleRows = useSidebarFactoryStore((s) => s.visibleRows);
   const selectFactory = useSidebarFactoryStore((s) => s.selectFactory);
-  const setExpanded = useSidebarFactoryStore((s) => s.setExpanded);
+  const setVisibleRows = useSidebarFactoryStore((s) => s.setVisibleRows);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const stats = useMemo(() => {
     const all = data?.pages.flatMap((page) => page.items) ?? [];
@@ -97,8 +99,10 @@ export function SidebarFactories() {
     };
   }, [data]);
 
-  const rows = expanded ? factories : factories.slice(0, COLLAPSED_ROWS);
-  const hidden = factories.length - COLLAPSED_ROWS;
+  const shown = Math.min(Math.max(visibleRows, 1), factories.length);
+  const rows = factories.slice(0, shown);
+  const rowHeight = () =>
+    listRef.current?.querySelector<HTMLElement>("li")?.offsetHeight || 36;
 
   return (
     <section
@@ -109,33 +113,8 @@ export function SidebarFactories() {
         <h2 className="text-xs font-medium uppercase tracking-wide text-muted">
           {t(I18nKey.FEED$FACTORIES)}
         </h2>
-        {hidden > 0 ? (
-          <button
-            type="button"
-            data-testid="sidebar-factories-toggle"
-            aria-expanded={expanded}
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-0.5 text-xs text-muted hover:text-contrast"
-          >
-            {t(
-              expanded
-                ? I18nKey.FEED$DETAILS_SHOW_LESS
-                : I18nKey.FEED$DETAILS_SHOW_MORE,
-            )}
-            {expanded ? (
-              <ChevronUp size={12} aria-hidden />
-            ) : (
-              <ChevronDown size={12} aria-hidden />
-            )}
-          </button>
-        ) : null}
       </div>
-      <ul
-        className={cn(
-          "custom-scrollbar flex flex-col gap-0.5 overflow-y-auto",
-          expanded ? "max-h-72" : "max-h-48",
-        )}
-      >
+      <ul ref={listRef} className="flex flex-col gap-0.5">
         <FactoryRow
           testId="sidebar-factory-all"
           label={t(I18nKey.FEED$ALL)}
@@ -170,6 +149,16 @@ export function SidebarFactories() {
           />
         ))}
       </ul>
+      {factories.length > 1 ? (
+        <SidebarGrip
+          testId="sidebar-factories-toggle"
+          shown={shown}
+          total={factories.length}
+          collapsedCount={COLLAPSED_ROWS}
+          rowHeight={rowHeight}
+          onChange={setVisibleRows}
+        />
+      ) : null}
     </section>
   );
 }

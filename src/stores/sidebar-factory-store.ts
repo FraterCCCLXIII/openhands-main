@@ -4,13 +4,13 @@ import { persist, createJSONStorage } from "zustand/middleware";
 interface SidebarFactoryState {
   /** The factory whose conversations the left nav list shows, or null for all of them. */
   factoryId: string | null;
-  /** Whether the factory list shows every factory or just the first few. */
-  expanded: boolean;
+  /** How many factories the list shows before the rest hide behind the grip. */
+  visibleRows: number;
 }
 
 interface SidebarFactoryActions {
   selectFactory: (factoryId: string | null) => void;
-  setExpanded: (expanded: boolean) => void;
+  setVisibleRows: (rows: number) => void;
 }
 
 /**
@@ -23,9 +23,10 @@ export const useSidebarFactoryStore = create<
   persist(
     (set) => ({
       factoryId: null,
-      expanded: false,
+      visibleRows: 4,
       selectFactory: (factoryId) => set({ factoryId }),
-      setExpanded: (expanded) => set({ expanded }),
+      setVisibleRows: (rows) =>
+        set({ visibleRows: Math.max(1, Math.round(rows)) }),
     }),
     {
       name: "sidebar-factory-filter",

@@ -11,6 +11,7 @@ import { useSidebarAppsStore } from "#/stores/sidebar-apps-store";
 import { cn } from "#/utils/utils";
 import { BuiltInAppNavLink } from "./built-in-app-nav-link";
 import { CanvasExtensionNavMenu } from "./canvas-extension-nav-menu";
+import { SidebarGrip } from "./sidebar-grip";
 import { SidebarNavLink } from "./sidebar-nav-link";
 
 const FEED_PATH = "/feed";
@@ -36,11 +37,6 @@ export function SidebarAppsList({ collapsed }: { collapsed: boolean }) {
   const visibleCount = useSidebarAppsStore((s) => s.visibleCount);
   const setVisibleCount = useSidebarAppsStore((s) => s.setVisibleCount);
   const listRef = React.useRef<HTMLDivElement>(null);
-  const drag = React.useRef<{
-    y: number;
-    count: number;
-    moved: boolean;
-  } | null>(null);
   const order = useSidebarAppsStore((s) => s.order);
   const moveApp = useSidebarAppsStore((s) => s.moveApp);
   const [dragKey, setDragKey] = React.useState<string | null>(null);
@@ -126,7 +122,6 @@ export function SidebarAppsList({ collapsed }: { collapsed: boolean }) {
   const ordered = [...apps].sort((a, b) => rank(a.key) - rank(b.key));
   const total = ordered.length;
   const shown = Math.min(Math.max(visibleCount, 1), total);
-  const hiddenCount = total - shown;
   const visible = ordered.filter(
     (app, index) =>
       index < shown ||
@@ -206,59 +201,14 @@ export function SidebarAppsList({ collapsed }: { collapsed: boolean }) {
         ))}
       </div>
       {!collapsed && total > 1 ? (
-        <button
-          type="button"
-          data-testid="sidebar-apps-toggle"
-          aria-label={t(
-            hiddenCount > 0
-              ? I18nKey.FEED$DETAILS_SHOW_MORE
-              : I18nKey.FEED$DETAILS_SHOW_LESS,
-          )}
-          aria-expanded={hiddenCount === 0}
-          onPointerDown={(event) => {
-            drag.current = { y: event.clientY, count: shown, moved: false };
-            event.currentTarget.setPointerCapture(event.pointerId);
-          }}
-          onPointerMove={(event) => {
-            const start = drag.current;
-            if (!start) return;
-            const delta = event.clientY - start.y;
-            if (Math.abs(delta) > 4) start.moved = true;
-            if (!start.moved) return;
-            const next = Math.min(
-              total,
-              Math.max(1, start.count + Math.round(delta / rowHeight())),
-            );
-            if (next !== shown) setVisibleCount(next);
-          }}
-          onPointerUp={() => {
-            const start = drag.current;
-            drag.current = null;
-            // A plain click toggles between the default few and all of them.
-            if (start && !start.moved) {
-              setVisibleCount(hiddenCount > 0 ? total : COLLAPSED_COUNT);
-            }
-          }}
-          onPointerCancel={() => {
-            drag.current = null;
-          }}
-          className={cn(
-            "group flex w-full cursor-row-resize touch-none flex-col items-center gap-1 rounded-lg px-2 pb-1 pt-1.5 text-xs text-muted",
-            "hover:text-contrast focus-visible:text-contrast",
-          )}
-        >
-          <span
-            aria-hidden="true"
-            className="h-1 w-9 rounded-full bg-border transition-colors group-hover:bg-muted"
-          />
-          <span className="h-4 leading-4 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-            {t(
-              hiddenCount > 0
-                ? I18nKey.FEED$DETAILS_SHOW_MORE
-                : I18nKey.FEED$DETAILS_SHOW_LESS,
-            )}
-          </span>
-        </button>
+        <SidebarGrip
+          testId="sidebar-apps-toggle"
+          shown={shown}
+          total={total}
+          collapsedCount={COLLAPSED_COUNT}
+          rowHeight={rowHeight}
+          onChange={setVisibleCount}
+        />
       ) : null}
     </>
   );

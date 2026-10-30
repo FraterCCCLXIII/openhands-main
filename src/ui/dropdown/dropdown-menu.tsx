@@ -44,7 +44,9 @@ export function DropdownMenu({
         !fitContent && "max-w-[min(26rem,calc(100vw-2rem))]",
         openUpward ? "bottom-full mb-1" : "mt-1",
         "bg-tertiary rounded-md context-menu-box-shadow p-1",
-        "max-h-60 overflow-auto",
+        // A menu with footer actions needs room to show them, not just the options.
+        footer ? "max-h-[min(32rem,calc(100vh-6rem))]" : "max-h-60",
+        "overflow-auto",
         !isOpen && "hidden",
       )}
     >
