@@ -1,5 +1,6 @@
 import { PrefetchPageLinks, useLocation } from "react-router";
 import { HomeAppPromoCard } from "#/components/features/home/home-app-promo-card";
+import { CustomerIntakeHost } from "#/components/features/customer-intake/customer-intake-modal";
 import { HomeChatLauncher } from "#/components/features/home/home-chat-launcher";
 import { LlmNotConfiguredBanner } from "#/components/features/home/llm-not-configured-banner";
 import {
@@ -35,6 +36,7 @@ function HomeScreen() {
       />
 
       <HomeAppPromoCard />
+      {!isPreview ? <CustomerIntakeHost /> : null}
     </div>
   );
 }
