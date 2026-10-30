@@ -19,7 +19,7 @@ A Canvas App for talking to your agents like teammates.
   Tasks tabs built from the conversation's events.
 - **Views** (toggle in the chat header): Chat, Preview (a browser pane beside the
   chat), Computer (the agent's desktop with a "has control / Take over" switch) and
-  Studio, an editor for each agent's Kamiji face: 26 shapes in four groups, 16
+  Studio, an editor for each agent's Kamiji face: 27 shapes in four groups, 16
   expressions, 12 colours, PNG export. "Powered by Kamiji and Kosmos" sits under it.
 
 Sample agents show the layout; with a reachable Agent Server your 40 most recent

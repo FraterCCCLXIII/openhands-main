@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, BLOB_SHAPES, setBlobShape, shapeIcon, blobSvg, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, techRail, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, BLOB_SHAPES, setBlobShape, shapeIcon, blobSvg, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, fluxOrb, pipelineAssignments, PIPELINE_STEPS, PIPELINE_LINKS, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -253,34 +253,13 @@ describe("blob eyes", () => {
 
 const BLOBS_FOR_TEST = ["violet", "blue", "green", "teal", "brown", "orange", "red", "pink", "indigo"];
 
-describe("voxel hands", () => {
-  it("builds the hand from cubes inside the grid, with a blocky face, tinted per agent", () => {
-    const svg = blobSvg("violet", "hand");
-    const cubes = [...svg.querySelectorAll("rect")];
-    expect(cubes.length).toBeGreaterThan(150);
-    cubes.forEach((r) => {
-      const x = Number(r.getAttribute("x")), y = Number(r.getAttribute("y"));
-      expect(x).toBeGreaterThanOrEqual(0);
-      expect(x + Number(r.getAttribute("width"))).toBeLessThanOrEqual(16);
-      expect(y + Number(r.getAttribute("height"))).toBeLessThanOrEqual(16);
-    });
-    expect(svg.querySelector("g").getAttribute("shape-rendering")).toBe("crispEdges");
-    expect(svg.querySelectorAll("path, ellipse, circle, line").length).toBe(0);
-    const eyes = [...svg.querySelectorAll("rect.pill-eye")];
-    expect(eyes).toHaveLength(2);
-    eyes.forEach((e) => {
-      expect(Number(e.getAttribute("height"))).toBeGreaterThan(Number(e.getAttribute("width")) * 2);
-      expect(Number(e.getAttribute("rx"))).toBeCloseTo(Number(e.getAttribute("width")) / 2, 5);
-    });
-    expect(blobSvg("red", "hand").innerHTML).not.toBe(svg.innerHTML);
-  });
-
-  it("is still the hand for the Hand shape in the Studio", () => {
-    const hand = kamijiFace({ shape: "hand", expression: "happy", color: "#3b82f6" });
-    expect(hand.querySelectorAll("rect").length).toBeGreaterThan(100);
+describe("smooth hands", () => {
+  it("draws the Hand shape in the Studio as smooth curves, with no cube grid", () => {
+    const svg = kamijiFace({ shape: "hand", expression: "neutral", color: "#3b82f6", eyeStyle: "oval", gaze: "center", eyeSize: 1, eyeSpacing: 1, brows: true, mouth: true, effects: true, shine: false, glasses: false, blush: "auto" });
+    expect(svg.querySelectorAll("line").length).toBeGreaterThan(4);
+    expect(svg.querySelectorAll("rect").length).toBeLessThan(10);
   });
 });
-
 describe("avatar alignment", () => {
   it("puts every avatar first in its row, with the expand arrow on the right", async () => {
     localStorage.clear();
@@ -329,36 +308,6 @@ describe("orb avatars", () => {
     const avatars = [...container.querySelectorAll(".row .avatar svg")];
     expect(avatars.length).toBeGreaterThan(5);
     expect(avatars.every((s) => s.getAttribute("data-style") === "orb")).toBe(true);
-    dispose();
-  });
-});
-
-describe("ghost avatars", () => {
-  it("draws a voxel ghost with pill eyes, different from the hand and tinted per agent", () => {
-    const ghost = blobSvg("blue", "ghost");
-    expect(ghost.getAttribute("data-style")).toBe("ghost");
-    expect(ghost.querySelectorAll("rect").length).toBeGreaterThan(150);
-    expect(ghost.querySelectorAll("rect.pill-eye")).toHaveLength(2);
-    expect(ghost.innerHTML).not.toBe(blobSvg("blue", "hand").innerHTML);
-    expect(blobSvg("pink", "ghost").innerHTML).not.toBe(ghost.innerHTML);
-    expect(blobSvg("blue").getAttribute("data-style")).toBe("orb");
-  });
-
-  it("switches every avatar between hand and ghost from the View menu, and remembers it", async () => {
-    localStorage.clear();
-    let mountFn;
-    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
-    activate(host);
-    const container = document.createElement("div");
-    document.body.append(container);
-    const dispose = mountFn({ container });
-    container.querySelector(".wgo").click();
-    expect(container.querySelector(".row .avatar svg").getAttribute("data-style")).toBe("orb");
-    container.querySelector(".iconbtn").click();
-    const heading = [...container.querySelectorAll(".menu h4")].find((h) => h.textContent === "Avatars");
-    [...heading.nextSibling.querySelectorAll("button")].find((b) => b.textContent === "Ghost").click();
-    expect([...container.querySelectorAll(".row .avatar svg")].every((s) => s.getAttribute("data-style") === "ghost")).toBe(true);
-    expect(JSON.parse(localStorage.getItem("hangout:v1")).avatarStyle).toBe("ghost");
     dispose();
   });
 });
@@ -912,5 +861,74 @@ describe("mobile views", () => {
     expect([...container.querySelectorAll(".bubble.agent")].some((b) => b.textContent === "Sent")).toBe(true);
     container.querySelector(".mback").click();
     expect(container.querySelector(".shell").classList.contains("pane-list")).toBe(true);
+  });
+});
+
+const DEFAULT_LOOK_FOR_TEST = { shape: "circle", expression: "neutral", color: "#8b5cf6", eyeStyle: "oval", gaze: "center", eyeSize: 1, eyeSpacing: 1, brows: true, mouth: true, effects: true, shine: false, glasses: false, blush: "auto" };
+describe("wisp in the Studio", () => {
+  it("offers the wisp as a shape that draws with any expression", () => {
+    expect(LOOK_SHAPES.some(([id]) => id === "wisp")).toBe(true);
+    const svg = kamijiFace({ ...DEFAULT_LOOK_FOR_TEST, shape: "wisp" });
+    expect(svg.querySelector("path").getAttribute("d")).toContain("M32 6C45 5");
+  });
+});
+
+describe("flux orbs", () => {
+  it("gives each human their own orb in the Team tab, not initials", () => {
+    localStorage.clear();
+    localStorage.setItem("hangout:v1", JSON.stringify({ welcomed: true, tab: "team", tabv: 2 }));
+    let mountFn;
+    activate({ apiVersion: "1", navigate: vi.fn(), agentServer: { request: async () => ({ items: [] }) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } });
+    const container = document.createElement("div");
+    document.body.append(container);
+    mountFn({ container });
+    const badges = [...container.querySelectorAll(".pbadge")];
+    expect(badges.length).toBeGreaterThan(3);
+    badges.forEach((b) => { expect(b.querySelector("canvas.flux")).not.toBeNull(); expect(b.textContent).toBe(""); });
+    expect(new Set(badges.map((b) => `${b.querySelector("canvas").dataset.variant}/${b.querySelector("canvas").dataset.shape}`)).size).toBeGreaterThan(2);
+  });
+
+  it("is a Studio shape whose colours and shape follow the look", () => {
+    expect(LOOK_SHAPES.some(([id]) => id === "flux")).toBe(true);
+    expect(fluxOrb({ variant: "sunset", shape: "blob" }).dataset.variant).toBe("sunset");
+  });
+});
+
+describe("pipeline tab", () => {
+  it("assigns the people to person-led steps and an agent by role to the rest, steadily", () => {
+    const asg = pipelineAssignments(sampleAgents());
+    expect(asg.t1.humans.map((h) => h.name)).toEqual(["Omar Haddad"]);
+    expect(asg.hitl2.humans.map((h) => h.name)).toEqual(["Maya Chen"]);
+    expect(asg.plan.agent.role.toLowerCase()).toBe("conductor");
+    expect(asg.ci.agent.role.toLowerCase()).toBe("verifier");
+    expect(pipelineAssignments(sampleAgents()).code.agent.id).toBe(asg.code.agent.id);
+    PIPELINE_LINKS.forEach((l) => { expect(PIPELINE_STEPS.some((x) => x.id === l.source)).toBe(true); expect(PIPELINE_STEPS.some((x) => x.id === l.target)).toBe(true); });
+  });
+
+  it("opens a wide Pipeline tab with every step, and selecting one shows who works it", () => {
+    localStorage.clear();
+    localStorage.setItem("hangout:v1", JSON.stringify({ welcomed: true, tab: "pipeline", tabv: 2 }));
+    let mountFn;
+    activate({ apiVersion: "1", navigate: vi.fn(), agentServer: { request: async () => ({ items: [] }) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } });
+    const container = document.createElement("div");
+    document.body.append(container);
+    mountFn({ container });
+    expect(container.querySelector(".shell").classList.contains("pipewide")).toBe(true);
+    expect(container.querySelectorAll(".pnode")).toHaveLength(PIPELINE_STEPS.length);
+    [...container.querySelectorAll(".pnode")].find((n) => n.textContent.startsWith("Jira ticket")).click();
+    expect(container.querySelector(".pdetail").textContent).toContain("Dev Patel");
+  });
+});
+
+describe("built-with rail", () => {
+  it("links each technology by name, and falls back to a letter when its logo cannot load", () => {
+    const rail = techRail(["webrtc", "nostr", "unknown"]);
+    const links = [...rail.querySelectorAll("a.tech")];
+    expect(links.map((a) => a.title)).toEqual(["WebRTC", "Nostr"]);
+    expect(links.every((a) => a.rel.includes("noopener"))).toBe(true);
+    expect(links[1].textContent).toBe("N");
+    links[0].querySelector("img").dispatchEvent(new Event("error"));
+    expect(links[0].querySelector("img")).toBeNull();
+    expect(links[0].textContent).toBe("W");
   });
 });

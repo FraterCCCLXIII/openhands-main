@@ -72,80 +72,36 @@ const mixHex = (hex, other, t) => {
   return `#${[16, 8, 0].map((sh) => ch(sh).toString(16).padStart(2, "0")).join("")}`;
 };
 
-// The hand as a 16 by 16 grid of cubes: pinky, ring, middle, index, and the thumb off to the right.
-const HAND_VOXELS = [
-  ".......XX.......",
-  ".......XX.......",
-  "....XX.XX.XX....",
-  "....XX.XX.XX....",
-  "....XX.XX.XX....",
-  ".XX.XX.XX.XX....",
-  ".XX.XX.XX.XX....",
-  ".XX.XXXXXXXX....",
-  ".XXXXXXXXXXXXX..",
-  ".XXXXXXXXXXXXXX.",
-  ".XXXXXXXXXXXXXXX",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "...XXXXXXXXXX...",
-  "....XXXXXXXX....",
-  "................",
-];
-// The face: the mouth is cells of the same grid, a smile one row below the eyes.
-const HAND_FACE = [[5, 12, "M"], [6, 13, "M"], [7, 13, "M"], [8, 13, "M"], [9, 13, "M"], [10, 12, "M"]];
-// The eyes are tall rounded pills, like the welcome blob's, laid over the cubes: [x, y, width, height] in cells.
-const HAND_EYES = [[5.15, 8.5, 1.15, 3], [9.7, 8.5, 1.15, 3]];
-const GHOST_EYES = [[5.15, 5.2, 1.15, 3.2], [9.7, 5.2, 1.15, 3.2]];
-const GHOST_MOUTH = [[7, 10], [8, 10]];
+// Fingers as fat round-capped strokes: [x1, y1, x2, y2, width], pinky to thumb.
+const FINGERS = [[17, 40, 8.5, 23.5, 8.4], [24.5, 34, 21.5, 13, 9], [32, 32, 32, 8.5, 9.6], [39.5, 34, 43, 13.5, 9], [47, 44, 57.5, 33, 9.4]];
+const PALM = "M14.5 41C14.5 32 21 29.5 32 29.5S49.5 32 49.5 41C49.5 53 42 59 32 59S14.5 53 14.5 41Z";
 
-// The ghost: a rounded body with a wavy hem, on the same 16 by 16 grid.
-const GHOST_VOXELS = [
-  "................",
-  "....XXXXXXXX....",
-  "...XXXXXXXXXX...",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XXXXXXXXXXXX..",
-  "..XX.XXXX.XXXX..",
-  "..X...XX...XX...",
-];
-
-/** Draws a voxel figure into an svg: one cube per cell, lit on top and shaded underneath. */
-function drawVoxels(svg, rows, color, shift = [0, 0]) {
-  const dark = mixHex(color, "#000000", 0.35);
-  const light = mixHex(color, "#ffffff", 0.4);
-  const g = document.createElementNS(SVG_NS, "g");
-  g.setAttribute("transform", `scale(4) translate(${shift[0]} ${shift[1]})`);
-  g.setAttribute("shape-rendering", "crispEdges");
-  const cube = (x, y) => {
-    const add = (attrs) => {
-      const r = document.createElementNS(SVG_NS, "rect");
-      Object.entries(attrs).forEach(([k, v]) => r.setAttribute(k, String(v)));
-      g.append(r);
-    };
-    add({ x: x + 0.04, y: y + 0.04, width: 0.92, height: 0.92, fill: color });
-    add({ x: x + 0.04, y: y + 0.04, width: 0.92, height: 0.26, fill: light, opacity: 0.5 });
-    add({ x: x + 0.04, y: y + 0.7, width: 0.92, height: 0.26, fill: dark, opacity: 0.4 });
-  };
-  rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === "X") cube(x, y); }));
-  svg.append(g);
-  return g;
-}
-
-/** Draws the Kamiji hand into an svg as voxels. */
+/** Draws the Kamiji hand into an svg: one smooth glossy piece with a shaded rim and highlights, like the 3D model. */
 function drawHand(svg, color) {
-  return drawVoxels(svg, HAND_VOXELS, color, [-0.5, 0.5]);
+  const dark = mixHex(color, "#000000", 0.3);
+  const light = mixHex(color, "#ffffff", 0.45);
+  const add = (parent, tag, attrs) => {
+    const n = document.createElementNS(SVG_NS, tag);
+    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
+    parent.append(n);
+    return n;
+  };
+  const layer = (fill, attrs = {}) => {
+    const g = add(svg, "g", { fill, stroke: fill, "stroke-linecap": "round", "stroke-linejoin": "round", ...attrs });
+    add(g, "path", { d: PALM, stroke: "none" });
+    FINGERS.forEach(([x1, y1, x2, y2, w]) => add(g, "line", { x1, y1, x2, y2, "stroke-width": w }));
+    return g;
+  };
+  layer(dark, { transform: "translate(.9 1.2)" });
+  layer(color);
+  const hi = add(svg, "g", { stroke: light, "stroke-linecap": "round", opacity: 0.3, fill: "none" });
+  FINGERS.forEach(([x1, y1, x2, y2, w]) => {
+    const dx = (x2 - x1) * 0.8, dy = (y2 - y1) * 0.8;
+    add(hi, "line", { x1: x1 + (x2 - x1) * 0.18 - w * 0.2, y1: y1 + (y2 - y1) * 0.18 - w * 0.1, x2: x1 + dx - w * 0.2, y2: y1 + dy - w * 0.1, "stroke-width": 2.2 });
+  });
+  add(svg, "ellipse", { cx: 25.5, cy: 36, rx: 6.5, ry: 3.4, fill: light, opacity: 0.18, transform: "rotate(-24 25.5 36)" });
 }
 
-export const AVATAR_STYLES = [["orb", "Orb"], ["hand", "Hand"], ["ghost", "Ghost"]];
 
 // Slightly different outlines for the orb, so a column of them does not look stamped.
 const ORB_PATHS = [
@@ -180,41 +136,10 @@ function orbSvg(blob, index) {
   return svg;
 }
 
-/** The avatar for an agent, tinted per agent: a voxel Kamiji hand or a voxel ghost, both with pill eyes. */
-export function blobSvg(blobId, style = "orb") {
+/** The avatar for an agent, tinted per agent: the wisp, a flat blob with two pill eyes. */
+export function blobSvg(blobId) {
   const blob = BLOBS.find((b) => b.id === blobId) || BLOBS[0];
-  if (style === "orb") return orbSvg(blob, BLOBS.indexOf(blob));
-  const ghost = style === "ghost";
-  const svg = document.createElementNS(SVG_NS, "svg");
-  svg.setAttribute("viewBox", "0 0 64 64");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("data-style", ghost ? "ghost" : "hand");
-  const g = ghost ? drawVoxels(svg, GHOST_VOXELS, blob.fill, [0, -0.5]) : drawHand(svg, blob.fill);
-  const ink = "#1a0f33";
-  const cell = (x, y) => {
-    const r = document.createElementNS(SVG_NS, "rect");
-    r.setAttribute("x", String(x + 0.04)); r.setAttribute("y", String(y + 0.04));
-    r.setAttribute("width", "0.92"); r.setAttribute("height", "0.92");
-    r.setAttribute("fill", ink);
-    g.append(r);
-  };
-  const pill = (x, y, w, h) => {
-    const r = document.createElementNS(SVG_NS, "rect");
-    r.setAttribute("class", "pill-eye");
-    r.setAttribute("x", String(x)); r.setAttribute("y", String(y));
-    r.setAttribute("width", String(w)); r.setAttribute("height", String(h));
-    r.setAttribute("rx", String(w / 2));
-    r.setAttribute("fill", ink);
-    g.append(r);
-  };
-  if (ghost) {
-    GHOST_MOUTH.forEach(([x, y]) => cell(x, y));
-    GHOST_EYES.forEach(([x, y, w, h]) => pill(x, y, w, h));
-  } else {
-    HAND_FACE.forEach(([x, y]) => cell(x, y));
-    HAND_EYES.forEach(([x, y, w, h]) => pill(x, y, w, h));
-  }
-  return svg;
+  return orbSvg(blob, BLOBS.indexOf(blob));
 }
 
 // ─── The Kamiji face engine: 8 body shapes × 16 expressions × a colour, drawn as SVG ──
@@ -227,7 +152,7 @@ export const LOOK_SHAPES = [
   ["flower", "Flower", "Organic"], ["leaf", "Leaf", "Organic"],
   ["star", "Star", "Symbols"], ["heart", "Heart", "Symbols"], ["burst", "Burst", "Symbols"], ["shield", "Shield", "Symbols"],
   ["bubble", "Bubble", "Symbols"], ["ghost", "Ghost", "Symbols"],
-  ["hand", "Hand", "Characters"], ["bunny", "Bunny", "Characters"], ["cat", "Cat", "Characters"], ["bear", "Bear", "Characters"],
+  ["wisp", "Wisp", "Characters"], ["flux", "Flux orb", "Characters"], ["hand", "Hand", "Characters"], ["bunny", "Bunny", "Characters"], ["cat", "Cat", "Characters"], ["bear", "Bear", "Characters"],
 ];
 export const LOOK_EXPRESSIONS = [
   ["neutral", "Neutral"], ["attentive", "Attentive"], ["surprised", "Surprised"], ["excited", "Excited"],
@@ -275,6 +200,8 @@ const BODIES = {
   burst: { d: starPath(10, 29, 22, 32, 32), fy: 33, k: 0.95, round: true },
   shield: { d: "M32 5 54 12v18c0 14-10 24-22 29C20 54 10 44 10 30V12Z", fy: 30, k: 0.95, round: true },
   bubble: { d: "M12 8h40c4 0 7 3 7 7v26c0 4-3 7-7 7H28L16 58V48h-4c-4 0-7-3-7-7V15c0-4 3-7 7-7Z", fy: 27, k: 0.95 },
+  wisp: { d: ORB_PATHS[0], fy: 34, k: 1 },
+  flux: { d: ORB_PATHS[1], fy: 34, k: 1 },
   ghost: { d: "M32 5C18 5 10 15 10 29v28l7-6 7 6 8-6 8 6 7-6 7 6V29C54 15 46 5 32 5Z", fy: 29, k: 0.95 },
   bunny: { d: `${"M10 38a22 20 0 1 0 44 0a22 20 0 1 0-44 0Z"}${"M14 17a6 10 0 1 0 12 0a6 10 0 1 0-12 0Z"}${"M38 17a6 10 0 1 0 12 0a6 10 0 1 0-12 0Z"}`, fy: 40, k: 0.9 },
   cat: { d: `${circ(32, 38, 22)}M11 30 12 6 28 17ZM53 30 52 6 36 17Z`, fy: 40, k: 0.9, round: true },
@@ -795,7 +722,50 @@ export function teamAgents(all, selected) {
 
 export const initialsOf = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 
-export const DRAWER_TABS = [["team", "Team"], ["cards", "Cards"], ["screen", "Screen"], ["files", "Files"], ["terminal", "Terminal"], ["browser", "Browser"], ["webview", "Webview"], ["vscode", "VS Code"], ["planner", "Planner"], ["tasks", "Tasks"]];
+export const DRAWER_TABS = [["team", "Team"], ["pipeline", "Pipeline"], ["cards", "Cards"], ["screen", "Screen"], ["files", "Files"], ["terminal", "Terminal"], ["browser", "Browser"], ["webview", "Webview"], ["vscode", "VS Code"], ["planner", "Planner"], ["tasks", "Tasks"]];
+
+// ─── The Agentic SDLC pipeline from the factory Pipeline page: steps, links, and who works each one ──
+const pstep = (id, kind, x, y, width, height, title, lines = []) => ({ id, kind, x, y, width, height, title, lines });
+export const PIPELINE_STEPS = [
+  pstep("t1", "human", 20, 0, 220, 54, "Monitoring signals", ["Defines issue"]),
+  pstep("t2", "human", 255, 0, 220, 54, "Jira ticket assigned", ["Defines outcome or issue"]),
+  pstep("t3", "human", 490, 0, 220, 54, "Slack message @tag", ["Defines outcome"]),
+  pstep("t4", "human", 725, 0, 220, 54, "Software builder", ["Defines outcome"]),
+  pstep("ticket", "auto", 40, 110, 340, 62, "Ticket"),
+  pstep("hitl1", "human", 40, 200, 340, 56, "HITL review first", ["Elevated to autonomous later"]),
+  pstep("plan", "auto", 40, 290, 340, 82, "Plan agent", ["Defines implementation spec (architect agent)"]),
+  pstep("hitl2", "human", 40, 400, 340, 56, "HITL review first", ["Elevated to autonomous later"]),
+  pstep("code", "auto", 40, 490, 340, 92, "Coding agents", ["Writes and edits the code (developer agent)"]),
+  pstep("ci", "auto", 70, 620, 280, 96, "CI: build and test", ["Hardened for agent-scale load", "Performance testing"]),
+  pstep("sys", "system", 560, 250, 400, 190, "Internal systems", ["Source code and docs", "GitHub · Google Docs · Lucid", "Slack · Confluence wiki", "Internal skills and plugins"]),
+  pstep("review", "auto", 560, 480, 400, 120, "Agentic code review", ["Parallel review: security, quality, standards", "Risk classification"]),
+  pstep("risk", "auto", 660, 640, 200, 84, "Low-risk change?"),
+  pstep("eng", "human", 790, 760, 170, 84, "Code review", ["Additional review by an engineer"]),
+  pstep("deploy", "auto", 560, 880, 400, 96, "Agentic deploy", ["Babysits the change into prod, including feature flag rollout"]),
+  pstep("prod", "auto", 40, 760, 440, 96, "Production", ["Agent watches graphs, signals and alerts"]),
+  pstep("perf", "auto", 40, 900, 260, 96, "Performance monitoring agent", ["Detects latency regressions"]),
+  pstep("sre", "auto", 320, 900, 220, 96, "SRE bot", ["Investigates incidents, proposes mitigations"]),
+];
+export const PIPELINE_LINKS = [
+  ["t1", "ticket"], ["t2", "ticket"], ["t3", "ticket"], ["t4", "ticket"], ["ticket", "hitl1"], ["hitl1", "plan"], ["plan", "hitl2"], ["hitl2", "code"],
+  ["sys", "plan", "context"], ["sys", "code", "context"], ["code", "ci"], ["ci", "review"], ["ci", "code", "fix until green"], ["sys", "review", "context"],
+  ["review", "risk"], ["risk", "deploy", "yes"], ["risk", "eng", "no"], ["eng", "deploy"], ["deploy", "prod"], ["prod", "perf", "monitors"], ["prod", "sre", "outage"], ["perf", "t1", "proposes fixes"],
+].map(([source, target, label]) => ({ source, target, label, dashed: ["context", "fix until green", "monitors", "proposes fixes"].includes(label) }));
+
+// Who a person-led step is for, and which agent role works each automated step.
+const PIPELINE_HUMANS = { t1: ["omar"], t2: ["dev"], t3: ["maya"], t4: ["lena"], hitl1: ["lena"], hitl2: ["maya"], eng: ["lena", "sofia"] };
+const PIPELINE_ROLES = { ticket: "dispatcher", plan: "conductor", code: "worker", ci: "verifier", review: "verifier", risk: "verifier", deploy: "worker", prod: "scout", perf: "scout", sre: "janitor" };
+
+/** For every step: the people in the loop, or the agent whose role fits it, the same every visit. */
+export function pipelineAssignments(allAgents, humans = TEAM_HUMANS) {
+  const out = {};
+  PIPELINE_STEPS.forEach((st) => {
+    const people = (PIPELINE_HUMANS[st.id] || []).map((id) => humans.find((h) => h.id === id)).filter(Boolean);
+    const pool = PIPELINE_ROLES[st.id] ? allAgents.filter((a) => String(a.role || "").toLowerCase() === PIPELINE_ROLES[st.id]) : [];
+    out[st.id] = { humans: people, agent: pool.length ? pool[hashOf(st.id) % pool.length] : null };
+  });
+  return out;
+}
 
 export const SLASH_COMMANDS = [
   { name: "/card", hint: "Ask for a card", text: "Show your answer as a card. Reply with one fenced json block like {\"type\":\"statCard\",\"title\":\"...\",\"stats\":[{\"label\":\"...\",\"value\":\"...\"}]}. Block types: " + BLOCK_TYPES.join(", ") + "." },
@@ -1529,9 +1499,9 @@ export function blobColorAt(balls, x, y, fallback = BLOB_RGB) {
 }
 
 /** Draws the scene in one flat colour per blob. Smooth mode softens the edge; voxel mode keeps hard square cells. */
-export function drawBlobScene(ctx, off, scene, mode, rgb) {
+export function drawBlobScene(ctx, off, scene, mode, rgb, cellSize) {
   const voxel = mode === "voxel";
-  const cell = voxel ? 14 : 4;
+  const cell = cellSize || (voxel ? 14 : 4);
   const gw = Math.ceil(scene.w / cell), gh = Math.ceil(scene.h / cell);
   if (off.width !== gw || off.height !== gh) { off.width = gw; off.height = gh; }
   const octx = off.getContext("2d");
@@ -1551,6 +1521,90 @@ export function drawBlobScene(ctx, off, scene, mode, rgb) {
   ctx.clearRect(0, 0, scene.w, scene.h);
   ctx.imageSmoothingEnabled = !voxel;
   ctx.drawImage(off, 0, 0, gw * cell, gh * cell);
+}
+
+// ─── Flux orbs: the welcome blob in miniature, with its own colour variation and shape ──
+const fluxLive = new Set();
+let fluxTimer = 0;
+const FLUX_VARIANTS = ["aurora", "sunset", "prism", "gradient", "rainbow", "neon"];
+
+function fluxTick() {
+  fluxLive.forEach((orb) => {
+    if (!orb.canvas.isConnected) { fluxLive.delete(orb); return; }
+    const r = orb.canvas.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight) return;
+    stepBlobScene(orb.scene, 0.1);
+    orb.paint();
+  });
+  if (!fluxLive.size) { clearInterval(fluxTimer); fluxTimer = 0; }
+}
+
+/** An animated orb avatar: colours that drift and a body that wobbles or morphs into a shape. */
+export function fluxOrb({ variant = "aurora", shape = "blob", seed = "orb", size = 72 } = {}) {
+  const canvas = document.createElement("canvas");
+  canvas.className = "flux";
+  canvas.width = size; canvas.height = size;
+  canvas.setAttribute("aria-hidden", "true");
+  canvas.dataset.variant = variant;
+  canvas.dataset.shape = shape;
+  const ctx = canvas.getContext?.("2d");
+  if (!ctx) return canvas;
+  const W = 320;
+  const scene = createBlobScene(W, W, seededRandom(hashOf(seed)));
+  setBlobVariant(scene, variant);
+  setBlobShape(scene, shape);
+  for (let i = 0; i < 40; i += 1) stepBlobScene(scene, 0.1);
+  const big = document.createElement("canvas");
+  big.width = W; big.height = W;
+  const bctx = big.getContext("2d");
+  const off = document.createElement("canvas");
+  const paint = () => {
+    drawBlobScene(bctx, off, scene, "smooth", BLOB_RGB, 5);
+    drawEyes(bctx, scene, scene.variant.eye);
+    const side = scene.base * 6.8;
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(big, scene.fx - side / 2, scene.fy - side / 2, side, side, 0, 0, size, size);
+  };
+  paint();
+  fluxLive.add({ canvas, scene, paint });
+  if (!fluxTimer) fluxTimer = setInterval(fluxTick, 100);
+  return canvas;
+}
+
+// ─── "Built with" rail: small logos of the open technology an app is built on (convention for every app) ──
+export const TECH = {
+  webrtc: { name: "WebRTC", url: "https://webrtc.org", slug: "webrtc" },
+  livekit: { name: "LiveKit", url: "https://livekit.io", slug: "livekit" },
+  nostr: { name: "Nostr", url: "https://nostr.com" },
+  github: { name: "GitHub", url: "https://github.com", slug: "github" },
+  openhands: { name: "OpenHands", url: "https://openhands.dev" },
+  kamiji: { name: "Kamiji", url: "https://openhands.dev" },
+  kosmos: { name: "Kosmos", url: "https://openhands.dev" },
+};
+
+/** A small row of linked logos with the name on hover. A logo that cannot load falls back to the name's first letter. */
+export function techRail(ids) {
+  const rail = el("div", "techrail");
+  rail.setAttribute("role", "list");
+  rail.setAttribute("aria-label", "Built with");
+  rail.append(el("span", "techlabel", "Built with"));
+  ids.map((id) => TECH[id]).filter(Boolean).forEach((t) => {
+    const a = el("a", "tech");
+    a.href = t.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.title = t.name;
+    a.setAttribute("aria-label", t.name);
+    a.setAttribute("role", "listitem");
+    const mono = el("span", "techmono", t.name[0]);
+    if (t.slug) {
+      const img = document.createElement("img");
+      img.alt = ""; img.width = 14; img.height = 14;
+      img.src = `https://cdn.simpleicons.org/${t.slug}/9a9a9a`;
+      img.addEventListener("error", () => img.replaceWith(mono));
+      a.append(img);
+    } else a.append(mono);
+    rail.append(a);
+  });
+  return rail;
 }
 
 const CSS = `
@@ -1573,6 +1627,29 @@ const CSS = `
 .hg .rbtn:hover .rlabel, .hg .rbtn:focus-visible .rlabel { opacity: 1; }
 .hg .rspacer { flex: 1; }
 .hg .rsep { width: 24px; height: 1px; background: var(--hg-border); margin: 6px 0; }
+.hg .techrail { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--hg-border); color: var(--hg-muted); font-size: 11px; }
+.hg .techlabel { letter-spacing: .06em; text-transform: uppercase; }
+.hg .tech { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: inherit; text-decoration: none; opacity: .8; }
+.hg .tech:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
+.hg .tech img { width: 14px; height: 14px; display: block; }
+.hg .techmono { font-weight: 700; font-size: 11px; }
+.hg .shell.pipewide { grid-template-columns: 56px 320px minmax(0, 1fr); }
+.hg .pgraph { position: relative; width: 100%; overflow: hidden; }
+.hg .pcanvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.hg .pedges { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.hg .pedges path { fill: none; stroke: color-mix(in srgb, var(--hg-text) 45%, transparent); stroke-width: 1.5; }
+.hg .pedges path.dashed { stroke-dasharray: 5 5; }
+.hg .pedges text { fill: var(--hg-muted); font-size: 11px; }
+.hg .pnode { position: absolute; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--hg-border); background: var(--hg-panel); display: flex; flex-direction: column; gap: 2px; overflow: hidden; text-align: left; cursor: pointer; color: var(--hg-text); }
+.hg .pnode.human { border-color: color-mix(in srgb, var(--hg-success) 55%, transparent); background: color-mix(in srgb, var(--hg-success) 12%, var(--hg-panel)); }
+.hg .pnode.system { border-style: dashed; }
+.hg .pnode.mine, .hg .pnode[aria-pressed="true"] { outline: 2px solid var(--hg-contrast); outline-offset: 1px; }
+.hg .pnode .nt { font-weight: 600; color: var(--hg-contrast); font-size: 14px; }
+.hg .pnode .nl { font-size: 11.5px; color: var(--hg-muted); }
+.hg .pnode .nwho { margin-top: auto; display: flex; align-items: center; gap: 6px; font-size: 11.5px; flex-wrap: wrap; }
+.hg .pnode .nwho .wp { display: inline-flex; align-items: center; gap: 4px; }
+.hg .pnode .nwho canvas, .hg .pnode .nwho .avatar { width: 20px; height: 20px; border-radius: 50%; flex: none; }
+.hg .pdetail { border: 1px solid var(--hg-border); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; background: var(--hg-panel); }
 .hg .shell.nodrawer { grid-template-columns: 56px 320px minmax(0, 1fr); }
 .hg .shell.view-studio { grid-template-columns: 56px minmax(0, 1fr); }
 .hg .studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; min-height: 0; background: var(--hg-bg); }
@@ -1815,6 +1892,8 @@ const CSS = `
 .hg .person { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--arco-radius-m); border: 1px solid transparent; }
 .hg .person:hover { background: var(--arco-bg-hover); }
 .hg .person.here { background: var(--arco-bg-elevated); border-color: var(--arco-border); }
+.hg .flux { width: 100%; height: 100%; display: block; border-radius: 50%; }
+.hg .pbadge.fluxbadge { background: transparent; padding: 0; }
 .hg .pbadge { position: relative; flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--tint); background: color-mix(in srgb, var(--tint) 20%, transparent); }
 .hg .pdot { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; background: var(--arco-success); border: 2px solid var(--arco-bg-surface-solid); }
 .hg .ptext { min-width: 0; flex: 1; display: grid; gap: 1px; }
@@ -1915,9 +1994,9 @@ function el(tag, cls, content) {
   return node;
 }
 
-function avatar(blobId, small, look, style = "orb") {
+function avatar(blobId, small, look) {
   const wrap = el("span", `avatar${small ? " sm" : ""}`);
-  wrap.append(look ? kamijiFace(look) : blobSvg(blobId, style));
+  wrap.append(look && look.shape === "flux" ? fluxOrb({ variant: look.fluxVariant || "aurora", shape: look.fluxShape || "blob", seed: `${blobId}${look.fluxVariant}${look.fluxShape}` }) : look ? kamijiFace(look) : blobSvg(blobId));
   return wrap;
 }
 
@@ -2077,7 +2156,6 @@ function mount(host, container) {
     pane: "list",
     welcomed: Boolean(saved.welcomed),
     welcomeStyle: saved.welcomeStyle === "voxel" ? "voxel" : "smooth",
-    avatarStyle: ["hand", "ghost"].includes(saved.avatarStyle) ? saved.avatarStyle : "orb",
     welcomeShape: BLOB_SHAPES.some((x) => x.id === saved.welcomeShape) ? saved.welcomeShape : "blob",
     welcomeVariant: BLOB_VARIANTS.some((v) => v.id === saved.welcomeVariant) ? saved.welcomeVariant : "solid",
     looks: saved.looks || {},
@@ -2089,7 +2167,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, welcomeShape: state.welcomeShape, avatarStyle: state.avatarStyle, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, welcomeShape: state.welcomeShape, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -2105,7 +2183,7 @@ function mount(host, container) {
     d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
     return d;
   };
-  const avatarFor = (agent, small) => avatar(agent.blob, small, state.looks[agent.id], state.avatarStyle);
+  const avatarFor = (agent, small) => avatar(agent.blob, small, state.looks[agent.id]);
   const modelOfAgent = (agent) => state.models[agent.id] || agent.model || "No model";
 
   async function loadLive() {
@@ -2191,16 +2269,6 @@ function mount(host, container) {
       });
       menu.append(seg);
     }
-    menu.append(el("h4", "", "Avatars"));
-    const avatarSeg = el("div", "seg");
-    AVATAR_STYLES.forEach(([id, label]) => {
-      const b = el("button", "", label);
-      b.type = "button";
-      b.setAttribute("aria-pressed", String(state.avatarStyle === id));
-      b.addEventListener("click", () => { state.avatarStyle = id; persist(); render(); });
-      avatarSeg.append(b);
-    });
-    menu.append(avatarSeg);
     const reset = el("button", "abtn", "Reset view");
     reset.type = "button";
     reset.style.marginTop = "10px";
@@ -2384,7 +2452,7 @@ function mount(host, container) {
     });
     if (!total) rows.append(el("p", "note", "No agents match this view."));
     if (state.liveNote) rows.append(el("p", "note", state.liveNote));
-    col.append(top, rows, poweredBy("lpowered"));
+    col.append(top, rows, techRail(["openhands", "kamiji", "kosmos"]), poweredBy("lpowered"));
     return col;
   }
 
@@ -2770,7 +2838,7 @@ function mount(host, container) {
     pick.addEventListener("change", () => { state.selected = pick.value; persist(); render(); });
     top.append(el("span", "stitle", "Look"), pick);
     const big = el("div", "sbig");
-    big.append(kamijiFace(look));
+    big.append(look.shape === "flux" ? fluxOrb({ variant: look.fluxVariant || "aurora", shape: look.fluxShape || "blob", seed: agent.id, size: 360 }) : kamijiFace(look));
     const exp = el("button", "sexport", "Export as PNG");
     exp.type = "button";
     exp.addEventListener("click", async () => {
@@ -2842,6 +2910,10 @@ function mount(host, container) {
       });
       panel.append(seg);
     };
+    if (look.shape === "flux") {
+      segmented("Flux colours", BLOB_VARIANTS.map((v) => [v.id, v.label]), look.fluxVariant || "aurora", (fluxVariant) => set({ fluxVariant }));
+      segmented("Flux shape", BLOB_SHAPES.map((x) => [x.id, x.label]), look.fluxShape || "blob", (fluxShape) => set({ fluxShape }));
+    }
     segmented("Gaze", LOOK_GAZES, look.gaze, (gaze) => set({ gaze }));
     segmented("Blush", [["auto", "Auto"], ["on", "On"], ["off", "Off"]], look.blush, (blush) => set({ blush }));
     panel.append(el("h4", "", "Face"));
@@ -2913,7 +2985,10 @@ function mount(host, container) {
         const on = humansOnAgent(agent.id);
         const person = (h, here) => {
           const row = el("div", `person${here ? " here" : ""}`);
-          const badge = el("span", "pbadge", initialsOf(h.name));
+          const badge = el("span", "pbadge fluxbadge");
+          badge.setAttribute("role", "img");
+          badge.setAttribute("aria-label", h.name);
+          badge.append(fluxOrb({ variant: FLUX_VARIANTS[hashOf(h.name) % FLUX_VARIANTS.length], shape: BLOB_SHAPES[hashOf(h.name + "s") % BLOB_SHAPES.length].id, seed: h.name }));
           badge.style.setProperty("--tint", h.tint);
           if (h.online) badge.append(el("i", "pdot"));
           const text = el("span", "ptext");
@@ -2956,6 +3031,79 @@ function mount(host, container) {
           pane.append(more);
         }
         pane.append(el("p", "lhint", "Sample team. People appear here once agents and conversations carry owners and reviewers."));
+        break;
+      }
+      case "pipeline": {
+        const asg = pipelineAssignments(agents());
+        const W = 980, H = 1020;
+        const picked = PIPELINE_STEPS.find((x) => x.id === state.pipeStep);
+        pane.append(el("p", "lhint", "The Agentic SDLC: people where risk is higher, agents everywhere else. Select a step to see who works it."));
+        const holder = el("div", "pgraph");
+        const canvas = el("div", "pcanvas");
+        canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
+        const ns = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("class", "pedges");
+        svg.setAttribute("width", String(W)); svg.setAttribute("height", String(H));
+        const defs = document.createElementNS(ns, "defs");
+        defs.innerHTML = '<marker id="parrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a8a8a" stroke="none"/></marker>';
+        svg.append(defs);
+        const byId = Object.fromEntries(PIPELINE_STEPS.map((x) => [x.id, x]));
+        PIPELINE_LINKS.forEach((l) => {
+          const a = byId[l.source], b = byId[l.target];
+          let d, lx, ly;
+          if (b.y > a.y + a.height / 2) {
+            const sx = a.x + a.width / 2, sy = a.y + a.height, tx = b.x + b.width / 2, ty = b.y, my = sy + Math.max(10, (ty - sy) / 2);
+            d = `M${sx} ${sy}V${my}H${tx}V${ty}`; lx = (sx + tx) / 2; ly = my - 4;
+          } else {
+            const sx = a.x, sy = a.y + a.height / 2, tx = b.x, ty = b.y + b.height / 2, gx = Math.min(sx, tx) - 26;
+            d = `M${sx} ${sy}H${gx}V${ty}H${tx}`; lx = gx + 4; ly = (sy + ty) / 2;
+          }
+          const path = document.createElementNS(ns, "path");
+          path.setAttribute("d", d);
+          path.setAttribute("marker-end", "url(#parrow)");
+          if (l.dashed) path.setAttribute("class", "dashed");
+          svg.append(path);
+          if (l.label) { const t = document.createElementNS(ns, "text"); t.setAttribute("x", String(lx)); t.setAttribute("y", String(ly)); t.textContent = l.label; svg.append(t); }
+        });
+        canvas.append(svg);
+        PIPELINE_STEPS.forEach((st) => {
+          const who = asg[st.id];
+          const node = el("button", `pnode ${st.kind}${who.agent && who.agent.id === agent.id ? " mine" : ""}`);
+          node.type = "button";
+          node.style.left = `${st.x}px`; node.style.top = `${st.y}px`; node.style.width = `${st.width}px`; node.style.height = `${st.height}px`;
+          node.setAttribute("aria-pressed", String(state.pipeStep === st.id));
+          node.append(el("span", "nt", st.title));
+          st.lines.forEach((ln) => node.append(el("span", "nl", ln)));
+          const row = el("span", "nwho");
+          who.humans.forEach((h) => { const wp = el("span", "wp"); wp.append(fluxOrb({ variant: FLUX_VARIANTS[hashOf(h.name) % FLUX_VARIANTS.length], shape: BLOB_SHAPES[hashOf(h.name + "s") % BLOB_SHAPES.length].id, seed: h.name, size: 40 }), document.createTextNode(h.name)); row.append(wp); });
+          if (who.agent) { const wp = el("span", "wp"); wp.append(avatarFor(who.agent, true), document.createTextNode(`${who.agent.name} · ${who.agent.role || "Agent"}`)); row.append(wp); }
+          if (row.childNodes.length) node.append(row);
+          node.addEventListener("click", () => { state.pipeStep = st.id; render(); });
+          canvas.append(node);
+        });
+        holder.append(canvas);
+        pane.append(holder);
+        requestAnimationFrame(() => {
+          const k = Math.min(1, (pane.clientWidth - 32) / W);
+          canvas.style.transform = `scale(${k})`;
+          holder.style.height = `${H * k}px`;
+        });
+        const detail = el("div", "pdetail");
+        if (picked) {
+          const who = asg[picked.id];
+          detail.append(el("b", "", picked.title), el("span", "lhint", picked.lines.join(" · ") || { human: "A person-led step", auto: "Run by agents", system: "A system the agents read" }[picked.kind]));
+          who.humans.forEach((h) => detail.append(el("span", "", `${h.name} · ${h.title} · ${h.online ? "online" : "away"}`)));
+          if (who.agent) {
+            detail.append(el("span", "", `${who.agent.name} · ${who.agent.role || "Agent"} · ${modelOfAgent(who.agent)}`));
+            const open = el("button", "abtn", "Open this agent");
+            open.type = "button";
+            open.style.alignSelf = "flex-start";
+            open.addEventListener("click", () => { state.selected = who.agent.id; state.tab = "team"; state.pane = "chat"; persist(); render(); });
+            detail.append(open);
+          }
+        } else detail.append(el("span", "lhint", "Select a step to see its details."));
+        pane.append(detail);
         break;
       }
       case "cards": {
@@ -3165,9 +3313,10 @@ function mount(host, container) {
     root.replaceChildren();
     if (!state.welcomed) { root.append(welcomeView()); return; }
     const shell = el("div");
-    shell.className = `shell pane-${state.pane} view-${state.view}${state.view === "chat" && !state.drawerOpen ? " nodrawer" : ""}`;
+    const pipeWide = state.view === "chat" && state.drawerOpen && state.tab === "pipeline";
+    shell.className = `shell pane-${state.pane} view-${state.view}${state.view === "chat" && !state.drawerOpen ? " nodrawer" : ""}${pipeWide ? " pipewide" : ""}`;
     shell.append(railCol());
-    if (state.view === "chat") shell.append(listCol(), chatCol(), ...(state.drawerOpen ? [drawerCol()] : []));
+    if (state.view === "chat") shell.append(listCol(), ...(pipeWide ? [drawerCol()] : [chatCol(), ...(state.drawerOpen ? [drawerCol()] : [])]));
     else if (state.view === "studio") shell.append(studioCol());
     else if (state.view === "preview") shell.append(chatCol(), previewCol());
     else shell.append(chatCol(), computerCol());
