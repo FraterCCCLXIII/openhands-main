@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  KAMIJI_SHOW_MOUTH,
   KamijiAnimation,
   KamijiExpression,
   KamijiPose,
@@ -21,6 +22,10 @@ interface KamijiSceneProps {
   shapeDurationMs?: number;
   pose?: KamijiPose;
   poseDurationMs?: number;
+  mouth?: boolean;
+  outline?: boolean;
+  viewYaw?: number;
+  viewPitch?: number;
   onReady: () => void;
   onUnavailable: () => void;
 }
@@ -36,6 +41,10 @@ export default function KamijiScene({
   shapeDurationMs,
   pose,
   poseDurationMs,
+  mouth,
+  outline,
+  viewYaw,
+  viewPitch,
   onReady,
   onUnavailable,
 }: KamijiSceneProps) {
@@ -51,6 +60,10 @@ export default function KamijiScene({
     shapeDurationMs,
     pose,
     poseDurationMs,
+    mouth,
+    outline,
+    viewYaw,
+    viewPitch,
   });
   latest.current = {
     color,
@@ -62,6 +75,10 @@ export default function KamijiScene({
     shapeDurationMs,
     pose,
     poseDurationMs,
+    mouth,
+    outline,
+    viewYaw,
+    viewPitch,
   };
   const callbacks = React.useRef({ onReady, onUnavailable });
   callbacks.current = { onReady, onUnavailable };
@@ -97,6 +114,8 @@ export default function KamijiScene({
         instance.setSpeaking(latest.current.speaking);
         instance.setLockFace(!!latest.current.lockFace);
         instance.setShape(latest.current.shape, 0);
+        instance.setMouth(latest.current.mouth ?? KAMIJI_SHOW_MOUTH);
+        instance.setOutline(!!latest.current.outline);
         instance.tick(0);
         instance.draw(context);
         instanceRef.current = instance;
@@ -137,6 +156,15 @@ export default function KamijiScene({
   React.useEffect(
     () => instanceRef.current?.setPose(pose, poseDurationMs),
     [pose, poseDurationMs],
+  );
+  React.useEffect(
+    () => instanceRef.current?.setMouth(mouth ?? KAMIJI_SHOW_MOUTH),
+    [mouth],
+  );
+  React.useEffect(() => instanceRef.current?.setOutline(!!outline), [outline]);
+  React.useEffect(
+    () => instanceRef.current?.setView(viewYaw, viewPitch),
+    [viewYaw, viewPitch],
   );
 
   return (
