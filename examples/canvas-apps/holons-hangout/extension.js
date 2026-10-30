@@ -1,4 +1,4 @@
-/* Holons Hangout — the Hangout / Team Chat experience, built on Holons.
+/* Holons — the Hangout / Team Chat experience, built on Holons.
  *
  * A Holon is a workspace (left icon rail); its feed, courses and modules are channels; its
  * members are the team; feed posts are threaded messages (comments are the replies).
@@ -757,7 +757,7 @@ const CSS = `
 `;
 
 export function activate(host) {
-  if (host.apiVersion !== "1") throw new Error("Holons Hangout requires Canvas host API 1.");
+  if (host.apiVersion !== "1") throw new Error("Holons requires Canvas host API 1.");
   return host.registerPage("holons-hangout", ({ container }) => mount(container));
 }
 
@@ -1310,7 +1310,7 @@ function mount(container) {
     if (state.channel === "welcome" || !h) {
       const w = el("div", "welcome");
       const big = el("span", "wbig"); big.append(blobSvg("violet"));
-      w.append(big, el("h1", "", "Holons Hangout"),
+      w.append(big, el("h1", "", "Holons"),
         el("p", "", live() ? `Connected to ${state.backend.base}. Pick a Holon on the left, or press + to create one.` : "Chat with your Holons: feeds, courses and the people in them. You are in Demo mode with sample Holons."),
         poweredBy("wpowered"));
       main.append(w);

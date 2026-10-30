@@ -276,7 +276,7 @@ describe("the page", () => {
   it("shows the welcome page first with the Powered by footer", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
     const { container } = mountApp({ welcomed: false });
-    expect(container.querySelector(".welcome h1").textContent).toBe("Welcome to MESH Hangout");
+    expect(container.querySelector(".welcome h1").textContent).toBe("Welcome to MESH");
     expect(container.querySelector(".welcome .powered b").textContent).toBe("Kamiji");
     container.querySelector(".wgo").click();
     expect(container.querySelector(".welcome")).toBeNull();

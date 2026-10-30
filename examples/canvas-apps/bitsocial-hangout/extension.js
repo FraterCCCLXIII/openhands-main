@@ -1,4 +1,4 @@
-/* Bitsocial Hangout — a Canvas App that looks and feels like Hangout / Team Chat, but talks
+/* Bitsocial — a Canvas App that looks and feels like Hangout / Team Chat, but talks
  * to the Bitsocial protocol (peer-to-peer social on IPFS pubsub, formerly Plebbit).
  *
  *   community  = channel      post  = thread root      reply = reply in the thread
@@ -960,7 +960,7 @@ function avatar(address, size) {
 }
 
 export function activate(host, options = {}) {
-  if (host.apiVersion !== "1") throw new Error("Bitsocial Hangout requires Canvas host API 1.");
+  if (host.apiVersion !== "1") throw new Error("Bitsocial requires Canvas host API 1.");
   return host.registerPage("bitsocial-hangout", ({ container }) => mount(container, options));
 }
 
@@ -1870,7 +1870,7 @@ function mount(container, options) {
   function renderSide() {
     side.replaceChildren();
     const brand = el("div", "brand");
-    brand.append(avatar("bitsocial", ""), el("h1", "", "Bitsocial Hangout"));
+    brand.append(avatar("bitsocial", ""), el("h1", "", "Bitsocial"));
     const status = el("div", "status", statusText());
     status.dataset.state = state.status;
     status.setAttribute("role", "status");
@@ -2064,7 +2064,7 @@ function mount(container, options) {
       const page = el("div", "page");
       const big = el("span", "avatar lg");
       big.append(orbSvg(BLOBS[0], 0));
-      page.append(big, el("h2", "", "Welcome to Bitsocial Hangout"), el("p", "", "Chat in Bitsocial communities: each community is a channel, each post a thread, all peer to peer. No node yet? Start in demo mode."), settingsCard());
+      page.append(big, el("h2", "", "Welcome to Bitsocial"), el("p", "", "Chat in Bitsocial communities: each community is a channel, each post a thread, all peer to peer. No node yet? Start in demo mode."), settingsCard());
       body.append(page);
       return;
     }

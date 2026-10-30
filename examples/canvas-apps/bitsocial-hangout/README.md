@@ -1,4 +1,4 @@
-# Bitsocial Hangout
+# Bitsocial
 
 A Canvas App that looks like Hangout / Team Chat but talks to the
 [Bitsocial](https://bitsocial.net) protocol (peer-to-peer social over IPFS pubsub, formerly Plebbit).

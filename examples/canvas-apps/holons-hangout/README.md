@@ -1,4 +1,4 @@
-# Holons Hangout
+# Holons
 
 The Hangout / Team Chat experience on Holons (an LMS and social network).
 

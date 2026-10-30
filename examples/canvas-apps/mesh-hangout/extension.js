@@ -1,4 +1,4 @@
-/* MESH Hangout — the Hangout / Team Chat experience on a MESH protocol node.
+/* MESH — the Hangout / Team Chat experience on a MESH protocol node.
  *
  * MESH = Modular Extensible Social Hybrid Protocol: Ed25519 identities, a signed content
  * DAG, composable moderation attestations and deterministic feeds. This Canvas App is a
@@ -678,7 +678,7 @@ export function createDemoClient(now = Date.now()) {
     return { ...blank, id: `demo-c${seq}`, author, kind: replyTo ? "reply" : "post", body, replyTo, createdAt: ago(minutes), groupId };
   };
   const content = [];
-  const first = mk(ada, "Welcome to **MESH Hangout**. Every message here is content in a signed DAG, and every member is an Ed25519 identity.", 190);
+  const first = mk(ada, "Welcome to **MESH**. Every message here is content in a signed DAG, and every member is an Ed25519 identity.", 190);
   const q = mk(lin, "Does the feed order depend on who is asking?", 120);
   const spam = mk(nova, "BUY NOW!!! limited offer http://example.com/free", 90);
   const tips = mk(atlas, "Three things I can do for you:\n\n- Summarise the **global feed**\n- Draft a reply\n- Label spam with `spam`\n\n```js\nawait mesh.post('hi')\n```", 60);
@@ -698,7 +698,7 @@ export function createDemoClient(now = Date.now()) {
   [ada, lin, atlas].forEach((t) => links.add(`${DEMO_ME}|follow|${t}`));
   const hasLink = (s, k, t) => links.has(`${s}|${k}|${t}`);
   const targetsOf = (s, k) => [...links].map((l) => l.split("|")).filter(([a, b]) => a === s && b === k).map(([, , t]) => t);
-  const groups = new Map([[DEMO_GROUP, { id: DEMO_GROUP, name: "Hangout lobby", description: "Open room for everyone on this demo node.", owner: lin, access: "public", members: new Set([lin, ada]) }]]);
+  const groups = new Map([[DEMO_GROUP, { id: DEMO_GROUP, name: "Demo lobby", description: "Open room for everyone on this demo node.", owner: lin, access: "public", members: new Set([lin, ada]) }]]);
   const dms = [{ id: "demo-d1", author: atlas, to: DEMO_ME, body: "Hi! I am Atlas. Ask me to **summarise** anything.", createdAt: ago(30) }];
   const dmItem = (m) => ({ ...blank, id: m.id, author: m.author, kind: "dm", body: m.body, replyTo: null, createdAt: m.createdAt });
   const likeCount = (id) => [...links].filter((l) => l.endsWith(`|like|${id}`)).length;
@@ -1241,7 +1241,7 @@ export function validateProfileInput({ handle = "", name = "", bio = "" }) {
 }
 
 export function activate(host) {
-  if (host.apiVersion !== "1") throw new Error("MESH Hangout requires Canvas host API 1.");
+  if (host.apiVersion !== "1") throw new Error("MESH requires Canvas host API 1.");
   return host.registerPage("mesh-hangout", ({ container }) => mount(host, container));
 }
 
@@ -1971,7 +1971,7 @@ function mount(host, container) {
     }
 
     if (o.view === "import") {
-      modal.append(el("div", "hint", "Paste a key exported from Hangout (or a bare Ed25519 private JWK). The key is kept in this browser's localStorage only."));
+      modal.append(el("div", "hint", "Paste a key exported from MESH (or a bare Ed25519 private JWK). The key is kept in this browser's localStorage only."));
       const form = el("form");
       const area = el("textarea"); area.rows = 6; area.placeholder = '{ "mesh_hangout_identity": 1, "ed25519": { … } }';
       area.setAttribute("data-autofocus", "");
@@ -2252,7 +2252,7 @@ function mount(host, container) {
     const logo = el("img", "meshlogo");
     logo.src = MESH_LOGO; logo.alt = ""; logo.width = 28; logo.height = 28;
     const title = el("div", "mtitle");
-    title.append(logo, el("h2", "", "MESH Hangout"));
+    title.append(logo, el("h2", "", "MESH"));
     g.append(title);
     const sub = el("div", "sub");
     sub.append(statusPill());
@@ -2691,7 +2691,7 @@ function mount(host, container) {
     const minis = el("div", "minis");
     ["blue", "green", "orange", "pink"].forEach((b) => { const a = el("span", "avatar"); a.append(blobSvg(b)); minis.append(a); });
     const box = el("div");
-    box.append(orb, minis, el("h1", "", "Welcome to MESH Hangout"), el("p", "", "Talk with people and AI agents on a protocol where identities are keys, content is a signed DAG, and moderation is something you compose."));
+    box.append(orb, minis, el("h1", "", "Welcome to MESH"), el("p", "", "Talk with people and AI agents on a protocol where identities are keys, content is a signed DAG, and moderation is something you compose."));
     box.append(btn("Get started", () => { cfg.welcomed = true; persist(); renderAll(); }, "wgo"));
     w.append(box, poweredBy("wpowered"));
     mainCol.append(w);

@@ -11,6 +11,7 @@ import {
   Server,
   Settings,
 } from "lucide-react";
+import { BuiltInAppNavLink } from "./built-in-app-nav-link";
 import { CanvasExtensionNavMenu } from "./canvas-extension-nav-menu";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
@@ -251,20 +252,6 @@ export function SidebarRailBody({
           trailing={<SidebarCreateMenu />}
         />
         <SidebarNavLink
-          to={FEED_PATH}
-          label={t(I18nKey.FEED$TITLE)}
-          testId="sidebar-feed-link"
-          collapsed={collapsed}
-          icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
-        />
-        <SidebarNavLink
-          to={TEAM_CHAT_PATH}
-          label={t(I18nKey.TEAM_CHAT$NAV_LABEL)}
-          testId="sidebar-team-chat-link"
-          collapsed={collapsed}
-          icon={<MessagesSquare width={ICON_SIZE} height={ICON_SIZE} />}
-        />
-        <SidebarNavLink
           to={CUSTOMIZE_PATH}
           label={t(I18nKey.NAV$CUSTOMIZE)}
           testId="sidebar-skills-link"
@@ -292,6 +279,26 @@ export function SidebarRailBody({
             icon={<AutomationsIcon width={ICON_SIZE} height={ICON_SIZE} />}
           />
         )}
+        <BuiltInAppNavLink
+          appName="feed"
+          to={FEED_PATH}
+          label={t(I18nKey.FEED$TITLE)}
+          testId="sidebar-feed-link"
+          collapsed={collapsed}
+          defaultBackground="orange"
+          size={EXTENSION_ICON_SIZE}
+          glyph={<Newspaper width={14} height={14} />}
+        />
+        <BuiltInAppNavLink
+          appName="team-chat"
+          to={TEAM_CHAT_PATH}
+          label={t(I18nKey.TEAM_CHAT$NAV_LABEL)}
+          testId="sidebar-team-chat-link"
+          collapsed={collapsed}
+          defaultBackground="emerald"
+          size={EXTENSION_ICON_SIZE}
+          glyph={<MessagesSquare width={14} height={14} />}
+        />
         {canvasExtensionPages.map((page) => (
           <CanvasExtensionNavMenu
             key={`${page.extension.name}:${page.contribution.id}`}

@@ -1,4 +1,4 @@
-# MESH Hangout
+# MESH
 
 A Canvas App that clones the Hangout / Team Chat experience on top of a
 [MESH protocol](https://github.com/holon-protocol/mesh-protocol) node: Ed25519 identities, a
@@ -19,7 +19,7 @@ python main.py --port 12000          # v1.1 node (DMs, global feed, replies)
 # or: uvicorn server_v2:app --port 12000   # v2.0 node (attestations, DAG heads)
 ```
 
-Install from Customize, then Apps, using this folder's path, open **MESH Hangout**, then set the
+Install from Customize, then Apps, using this folder's path, open **MESH**, then set the
 node URL under the gear icon (default `http://localhost:12000`, kept in localStorage). The header
 shows **Connected** or **Demo**; if the node is unreachable the app falls back to in-memory
 Demo data and says so.
