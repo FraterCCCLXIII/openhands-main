@@ -29,6 +29,9 @@ const ORB_PATHS = [
 ];
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/** The MESH mark, from the Modern Telepathy Relay and MESH product page (public/projects/relay/logo.svg). */
+const MESH_LOGO = "data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20512%20512%22%20role=%22img%22%20aria-label=%22Relay%22%3E%3Crect%20width=%22512%22%20height=%22512%22%20fill=%22%23000%22/%3E%3Cpath%20d=%22M328.3%20105.5L234.5%2079.1M328.3%20105.5L325.0%2084.1M234.5%2079.1L152.2%20141.6M147.0%20105.5L152.2%20141.6M328.3%20105.5L258.7%20141.6M234.5%2079.1L258.7%20141.6M188.3%20211.9L152.2%20141.6M258.7%20141.6L152.2%20141.6M188.3%20211.9L258.7%20141.6M152.2%20141.6L85.2%20185.3M188.3%20211.9L109.5%20247.8M152.2%20141.6L109.5%20247.8M109.5%20247.8L85.2%20185.3M74.5%20286.2L109.5%20247.8M328.3%20105.5L405.2%20149.8M109.5%20247.8L122.8%20357.2M74.5%20286.2L122.8%20357.2M188.3%20211.9L189.7%20313.5M109.5%20247.8L189.7%20313.5M210.9%20397.9L122.8%20357.2M189.7%20313.5L122.8%20357.2M210.9%20397.9L189.7%20313.5M258.7%20141.6L282.0%20247.8M188.3%20211.9L282.0%20247.8M328.3%20105.5L364.3%20185.3M258.7%20141.6L364.3%20185.3M367.9%20286.2L282.0%20247.8M364.3%20185.3L282.0%20247.8M367.9%20286.2L364.3%20185.3M277.5%20432.9L293.6%20427.9M365.0%20406.5L293.6%20427.9M210.9%20397.9L293.6%20427.9M187.0%20427.9L293.6%20427.9M210.9%20397.9L187.0%20427.9M293.6%20427.9L385.8%20362.2M365.0%20406.5L385.8%20362.2M210.9%20397.9L295.3%20357.2M293.6%20427.9L295.3%20357.2M367.9%20286.2L385.8%20362.2M295.3%20357.2L385.8%20362.2M367.9%20286.2L295.3%20357.2M426.8%20326.7L385.8%20362.2M367.9%20286.2L428.5%20256.0M385.8%20362.2L428.5%20256.0M426.8%20326.7L428.5%20256.0M437.5%20225.8L428.5%20256.0M122.8%20357.2L187.0%20427.9M106.8%20362.2L122.8%20357.2M282.0%20247.8L295.3%20357.2M189.7%20313.5L295.3%20357.2M189.7%20313.5L282.0%20247.8M405.2%20149.8L428.5%20256.0M364.3%20185.3L428.5%20256.0M405.2%20149.8L364.3%20185.3%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-opacity=%22.22%22%20stroke-width=%227%22%20stroke-linecap=%22round%22/%3E%3Cpath%20d=%22M147.0%20105.5L126.2%20149.8M126.2%20149.8L218.4%2084.1M147.0%20105.5L218.4%2084.1M144.1%20225.8L216.7%20154.8M126.2%20149.8L216.7%20154.8M144.1%20225.8L126.2%20149.8M301.1%20114.1L218.4%2084.1M216.7%20154.8L218.4%2084.1M301.1%20114.1L216.7%20154.8M218.4%2084.1L234.5%2079.1M147.0%20105.5L234.5%2079.1M301.1%20114.1L325.0%2084.1M218.4%2084.1L325.0%2084.1M325.0%2084.1L234.5%2079.1M147.0%20105.5L85.2%20185.3M74.5%20286.2L85.2%20185.3M126.2%20149.8L85.2%20185.3M74.5%20286.2L83.5%20256.0M85.2%20185.3L83.5%20256.0M126.2%20149.8L83.5%20256.0M144.1%20225.8L83.5%20256.0M325.0%2084.1L405.2%20149.8M301.1%20114.1L389.2%20154.8M325.0%2084.1L389.2%20154.8M437.5%20225.8L405.2%20149.8M389.2%20154.8L405.2%20149.8M437.5%20225.8L389.2%20154.8M216.7%20154.8L322.3%20198.5M301.1%20114.1L322.3%20198.5M144.1%20225.8L230.0%20264.2M216.7%20154.8L230.0%20264.2M323.7%20300.1L322.3%20198.5M230.0%20264.2L322.3%20198.5M323.7%20300.1L230.0%20264.2M83.5%20256.0L147.7%20326.7M144.1%20225.8L147.7%20326.7M74.5%20286.2L106.8%20362.2M83.5%20256.0L106.8%20362.2M183.7%20406.5L147.7%20326.7M106.8%20362.2L147.7%20326.7M183.7%20406.5L106.8%20362.2M365.0%20406.5L426.8%20326.7M426.8%20326.7L359.8%20370.4M365.0%20406.5L359.8%20370.4M437.5%20225.8L402.5%20264.2M426.8%20326.7L402.5%20264.2M437.5%20225.8L426.8%20326.7M323.7%20300.1L359.8%20370.4M402.5%20264.2L359.8%20370.4M323.7%20300.1L402.5%20264.2M359.8%20370.4L277.5%20432.9M365.0%20406.5L277.5%20432.9M323.7%20300.1L253.3%20370.4M359.8%20370.4L253.3%20370.4M183.7%20406.5L277.5%20432.9M253.3%20370.4L277.5%20432.9M183.7%20406.5L253.3%20370.4M183.7%20406.5L187.0%20427.9M277.5%20432.9L187.0%20427.9M322.3%20198.5L402.5%20264.2M389.2%20154.8L402.5%20264.2M389.2%20154.8L322.3%20198.5M147.7%20326.7L253.3%20370.4M230.0%20264.2L253.3%20370.4M230.0%20264.2L147.7%20326.7M106.8%20362.2L187.0%20427.9%22%20fill=%22none%22%20stroke=%22%23fff%22%20stroke-width=%2213%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E";
+
 function orbSvg(blob, index) {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 64 64");
@@ -805,7 +808,12 @@ const CSS = `
 .mh .status[data-mode="connected"] i { background: var(--hg-ok); }
 .mh .status[data-mode="demo"] i { background: var(--hg-warn); }
 .mh .status[data-mode="connecting"] i { background: var(--hg-info); }
-.mh .iconbtn { border: 0; background: transparent; border-radius: 10px; padding: 6px 8px; color: var(--hg-muted); }
+.mh .iconbtn { border: 0; background: transparent; border-radius: 10px; padding: 7px; line-height: 0; color: var(--hg-muted); }
+.mh .iconbtn svg { width: 18px; height: 18px; display: block; }
+.mh .lhead { align-items: flex-start; padding: 16px 14px 14px; }
+.mh .lhead .sub { margin-top: 8px; }
+.mh .mtitle { display: flex; align-items: center; gap: 10px; }
+.mh .meshlogo { width: 28px; height: 28px; border-radius: 7px; flex: none; display: block; }
 .mh .iconbtn:hover { background: var(--hg-panel); color: var(--hg-contrast); }
 .mh .notice { flex: none; margin: 8px 14px 0; padding: 8px 12px; border-radius: 10px; background: var(--hg-panel); border: 1px solid var(--hg-border); font-size: 13px; color: var(--hg-text); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .mh .notice.warn { border-color: var(--hg-warn); }
@@ -847,14 +855,15 @@ const CSS = `
 .mh .mrow { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; }
 .mh .mrow:hover { background: var(--hg-panel); }
 .mh .mrow .meta { flex: 1; min-width: 0; display: grid; cursor: pointer; }
-.mh .mrow .name { font-weight: 550; color: var(--hg-contrast); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.mh .mrow .name { font-weight: 550; color: var(--hg-contrast); display: flex; gap: 6px; align-items: center; min-width: 0; }
+.mh .mrow .name > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mh .mrow .follow { border: 1px solid var(--hg-border); background: transparent; border-radius: 999px; font-size: 12px; padding: 1px 10px; }
 .mh .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
 .mh .powered b { color: var(--hg-text); font-weight: 600; }
 .mh .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hg-border); }
 .mh .poweredmark { width: 18px; height: 18px; display: inline-block; }
 .mh .poweredmark svg { width: 100%; height: 100%; }
-.mh .welcome { flex: 1; position: relative; display: grid; place-items: center; align-content: center; text-align: center; overflow: hidden; padding: 24px; }
+.mh .welcome { flex: 1; position: relative; display: grid; place-items: center; align-content: center; text-align: center; overflow: hidden; padding: 24px 24px 64px; }
 .mh .welcome .worb { width: 160px; height: 160px; margin: 0 auto 18px; }
 .mh .welcome .worb svg { width: 100%; height: 100%; }
 .mh .welcome .minis { display: flex; gap: 14px; justify-content: center; margin-bottom: 18px; }
@@ -1225,15 +1234,38 @@ function mount(host, container) {
     return s;
   };
 
+  /** The settings gear, as an SVG so it renders the same everywhere. */
+  function gearIcon() {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z");
+    const circle = document.createElementNS(SVG_NS, "circle");
+    circle.setAttribute("cx", "12"); circle.setAttribute("cy", "12"); circle.setAttribute("r", "3");
+    svg.append(path, circle);
+    return svg;
+  }
+
   function renderRail() {
     listCol.replaceChildren();
     const head = el("div", "lhead");
     const g = el("div", "grow");
-    g.append(el("h2", "", "MESH Hangout"));
+    const logo = el("img", "meshlogo");
+    logo.src = MESH_LOGO; logo.alt = ""; logo.width = 28; logo.height = 28;
+    const title = el("div", "mtitle");
+    title.append(logo, el("h2", "", "MESH Hangout"));
+    g.append(title);
     const sub = el("div", "sub");
     sub.append(statusPill());
     g.append(sub);
-    head.append(g, btn("⚙", () => { state.settings = true; renderOverlay(); }, "iconbtn"));
+    head.append(g, btn("", () => { state.settings = true; renderOverlay(); }, "iconbtn"));
+    head.lastChild.append(gearIcon());
     head.lastChild.title = "Settings";
     head.lastChild.setAttribute("aria-label", "Settings");
     listCol.append(head);
@@ -1623,7 +1655,7 @@ function mount(host, container) {
     memCol.style.display = welcoming ? "none" : "";
     renderRail();
     if (welcoming) { renderWelcome(); renderOverlay(); return; }
-    if (!mainCol.querySelector(".chead")) { mainCol.replaceChildren(); }
+    if (!mainCol.querySelector(".chead") || mainCol.querySelector(".welcome")) { mainCol.replaceChildren(); }
     renderHead();
     renderThread();
     renderNotices();

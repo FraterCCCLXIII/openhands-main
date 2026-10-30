@@ -275,10 +275,11 @@ const BLOBS = [
 
 
 // Slightly different outlines for the orb, so a column of them does not look stamped.
+// Bitsocial characters have square heads: a rounded square with a slightly different corner radius each.
 const ORB_PATHS = [
-  "M32 6C45 5 58 15 58 31C58 47 46 58 31 58C17 58 6 47 6 32C6 17 18 7 32 6Z",
-  "M30 5C44 4 59 17 58 33C57 48 44 59 30 58C16 57 5 46 6 31C7 17 17 6 30 5Z",
-  "M34 6C47 8 58 19 57 34C56 49 43 58 29 57C15 56 6 44 7 29C8 15 21 4 34 6Z",
+  "M18 7h28c8 0 12 4 12 12v26c0 8-4 12-12 12H18c-8 0-12-4-12-12V19C6 11 10 7 18 7Z",
+  "M15 7h34c6 0 9 3 9 9v32c0 6-3 9-9 9H15c-6 0-9-3-9-9V16C6 10 9 7 15 7Z",
+  "M20 7h24c9 0 14 5 14 14v22c0 9-5 14-14 14H20c-9 0-14-5-14-14V21C6 12 11 7 20 7Z",
 ];
 
 /** The front-page orb as an avatar: one flat blob that wobbles, with two pill eyes that glance around and blink. */
@@ -294,7 +295,7 @@ function orbSvg(blob, index) {
     parent.append(n);
     return n;
   };
-  const halo = add(svg, "circle", { cx: 32, cy: 33, r: 31, fill: blob.fill, opacity: 0.16 });
+  const halo = add(svg, "rect", { x: 1, y: 2, width: 62, height: 62, rx: 18, fill: blob.fill, opacity: 0.16 });
   halo.setAttribute("class", "orb-halo");
   const body = add(svg, "g", { class: "orb-body" });
   body.style.animationDelay = delay;

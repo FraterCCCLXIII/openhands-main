@@ -282,4 +282,13 @@ describe("the page", () => {
     expect(container.querySelector(".welcome")).toBeNull();
     expect(container.querySelector(".thread")).not.toBeNull();
   });
+
+  it("replaces the welcome page when a channel is opened from the rail", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
+    const { container } = mountApp({ welcomed: false });
+    [...container.querySelectorAll(".list .row")].find((b) => /Global feed/.test(b.textContent)).click();
+    await waitFor(() => container.querySelector(".thread"));
+    expect(container.querySelector(".welcome")).toBeNull();
+    expect(container.querySelectorAll(".composerwrap")).toHaveLength(1);
+  });
 });
