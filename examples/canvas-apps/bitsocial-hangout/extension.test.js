@@ -140,7 +140,7 @@ describe("rendering and demo mode", () => {
     expect(container.querySelector(".head h2").textContent).toBe("Thread");
     const ta = container.querySelector("textarea");
     ta.value = "a **new** reply";
-    container.querySelector(".composerbar .btn").click();
+    container.querySelector(".composerbar .send").click();
     await tick();
     const last = [...container.querySelectorAll(".msg")].at(-1);
     expect(last.querySelector("strong").textContent).toBe("new");
@@ -296,7 +296,7 @@ describe("identity dialog", () => {
 
 describe("demo mode, end to end and in memory", () => {
   const demo = () => mountApp({ autoConnect: false }, { welcomed: true });
-  const composer = (c) => ({ title: c.querySelector('[aria-label="Post title"]'), link: c.querySelector('[aria-label="Post link"]'), text: c.querySelector('.composerbox textarea'), send: c.querySelector(".composerbar .btn"), err: c.querySelector(".composerbar .err") });
+  const composer = (c) => ({ title: c.querySelector('[aria-label="Post title"]'), link: c.querySelector('[aria-label="Post link"]'), text: c.querySelector('.composerbox textarea'), send: c.querySelector(".composerbar .send"), err: c.querySelector(".composerbar .err") });
 
   it("validates, then publishes a post with title, link and markdown body", async () => {
     const { container } = demo();
@@ -310,7 +310,7 @@ describe("demo mode, end to end and in memory", () => {
     fill(f.link, "https://example.com/x"); fill(f.text, "some **bold** words");
     f.send.click();
     expect(f.send.disabled).toBe(true);
-    expect(f.send.textContent).toBe("Sending…");
+    expect(f.send.title).toBe("Sending…");
     await waitFor(() => !f.send.disabled);
     const posted = await waitFor(() => [...container.querySelectorAll(".msg")].find((m) => m.querySelector(".ptitle") && m.querySelector(".ptitle").textContent === "Hello"));
     expect(posted.querySelector("strong").textContent).toBe("bold");
@@ -465,7 +465,7 @@ async function connectedApp({ identity = IDENTITY, name = "Zoë ✓", opts = {},
   await waitFor(() => app.container.querySelector(".msg"));
   return { ...app, node };
 }
-const composerOf = (c) => ({ title: c.querySelector('[aria-label="Post title"]'), link: c.querySelector('[aria-label="Post link"]'), text: c.querySelector(".composerbox textarea"), send: c.querySelector(".composerbar .btn"), err: c.querySelector(".composerbar .err") });
+const composerOf = (c) => ({ title: c.querySelector('[aria-label="Post title"]'), link: c.querySelector('[aria-label="Post link"]'), text: c.querySelector(".composerbox textarea"), send: c.querySelector(".composerbar .send"), err: c.querySelector(".composerbar .err") });
 
 describe("connected mode: exact RPC calls", () => {
   it("publishes a signed post with the exact publishComment params, then unsubscribes after verification", async () => {

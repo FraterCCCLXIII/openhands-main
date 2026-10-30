@@ -1158,6 +1158,16 @@ const CSS = `
   .mh[data-pane="list"] .main, .mh[data-pane="chat"] .list { display: none; }
   .mh .back { display: inline-block; }
 }
+/* Feed app sizing: 14px text, 12px meta, 16px gutters, 12px gaps, 32px avatars, 16px section titles. */
+.mh { font-size: 14px; line-height: 20px; }
+.mh small, .mh .sub, .mh .sectionlabel, .mh .sect { font-size: 12px; line-height: 16px; }
+.mh h1, .mh .lhead h2, .mh .chead h2, .mh .mhead h2, .mh .brand h1 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.mh .lhead, .mh .chead, .mh .mhead, .mh .brand { padding-left: 16px; padding-right: 16px; }
+.mh .msg { gap: 12px; }
+.mh .thread, .mh .body { padding: 12px 16px; gap: 12px; }
+.mh .composerwrap { padding: 8px 16px 14px; }
+.mh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
+.mh .avatar { width: 32px; height: 32px; }
 `;
 
 // ─── The page ─────────────────────────────────────────────────────────────────────────────

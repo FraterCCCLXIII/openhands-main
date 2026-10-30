@@ -840,11 +840,19 @@ const CSS = `
 .bh .linkbtn:hover { text-decoration: underline; }
 .bh .empty { padding: 40px 20px; text-align: center; color: var(--bh-muted); }
 .bh .composerwrap { flex: none; padding: 8px 16px 14px; }
-.bh .composerbox { display: grid; gap: 6px; border: 1px solid var(--bh-border); border-radius: 18px; background: var(--bh-panel); padding: 8px 12px; }
+.bh .composerbox { display: grid; gap: 2px; border: 1px solid var(--bh-border); border-radius: 18px; background: var(--bh-panel); padding: 0 10px 8px; }
 .bh .composerbox:focus-within { border-color: var(--bh-muted); }
-.bh .composerbox input, .bh .composerbox textarea { border: 0; outline: 0; background: transparent; resize: none; width: 100%; }
-.bh .composerbox textarea { min-height: 38px; max-height: 160px; }
-.bh .composerbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bh .composerbox .grip { height: 14px; display: grid; place-items: center; }
+.bh .composerbox .grip::after { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--bh-border); }
+.bh .composerbox input, .bh .composerbox textarea { border: 0; outline: 0; background: transparent; resize: none; width: 100%; padding: 6px 6px; }
+.bh .composerbox textarea { min-height: 44px; max-height: 320px; }
+.bh .composerbar { display: flex; align-items: center; gap: 6px; }
+.bh .composerbar .tool { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 12px; background: var(--bh-bg); padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.bh .composerbar .tool:hover { background: var(--bh-raised); }
+.bh .composerbar .tool.on { background: var(--bh-primary); color: var(--bh-on-primary); }
+.bh .composerbar .spacer { flex: 1; }
+.bh .composerbar .send { border: 0; border-radius: 50%; width: 34px; height: 34px; background: var(--bh-primary); color: var(--bh-on-primary); cursor: pointer; font-weight: 700; }
+.bh .composerbar .send:disabled { opacity: .4; cursor: default; }
 .bh .composerbar .err { color: var(--bh-bad); font-size: 12px; }
 .bh .mhead { padding: 14px 14px 6px; font-weight: 600; color: var(--bh-contrast); }
 .bh .mrow { display: flex; align-items: center; gap: 10px; padding: 5px 14px; }
@@ -944,6 +952,16 @@ const CSS = `
 @media (prefers-reduced-motion: reduce) { .bh .orb-body, .bh .orb-look, .bh .orb-blink { animation: none; } }
 @media (max-width: 900px) { .bh .shell { grid-template-columns: 220px minmax(0, 1fr); } .bh .members { display: none; } }
 @media (max-width: 600px) { .bh .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } .bh .side { border-right: 0; border-bottom: 1px solid var(--bh-border); max-height: 38vh; } }
+/* Feed app sizing: 14px text, 12px meta, 16px gutters, 12px gaps, 32px avatars, 16px section titles. */
+.bh { font-size: 14px; line-height: 20px; }
+.bh small, .bh .sub, .bh .sectionlabel, .bh .sect { font-size: 12px; line-height: 16px; }
+.bh h1, .bh .lhead h2, .bh .chead h2, .bh .mhead h2, .bh .brand h1 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.bh .lhead, .bh .chead, .bh .mhead, .bh .brand { padding-left: 16px; padding-right: 16px; }
+.bh .msg { gap: 12px; }
+.bh .thread, .bh .body { padding: 12px 16px; gap: 12px; }
+.bh .composerwrap { padding: 8px 16px 14px; }
+.bh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
+.bh .avatar { width: 32px; height: 32px; }
 `;
 
 function el(tag, cls, content) {
@@ -1819,18 +1837,35 @@ function mount(container, options) {
   const textarea = el("textarea");
   textarea.rows = 1;
   textarea.setAttribute("aria-label", "Message");
-  const sendBtn = el("button", "btn primary", "Send");
+  const sendBtn = el("button", "send", "↑");
   sendBtn.type = "button";
+  sendBtn.setAttribute("aria-label", "Send");
+  sendBtn.title = "Send";
   const errLine = el("span", "err");
   errLine.setAttribute("role", "alert");
   const bar = el("div", "composerbar");
-  bar.append(errLine, sendBtn);
+  // The title and link fields stay tucked behind chips until they are wanted.
+  const fieldChip = (label, input) => {
+    const chip = el("button", "tool", label);
+    chip.type = "button";
+    chip.setAttribute("aria-pressed", "false");
+    input.hidden = true;
+    chip.addEventListener("click", () => {
+      input.hidden = !input.hidden;
+      chip.setAttribute("aria-pressed", String(!input.hidden));
+      chip.classList.toggle("on", !input.hidden);
+      if (!input.hidden) input.focus();
+    });
+    return chip;
+  };
+  bar.append(fieldChip("Title", titleInput), fieldChip("Link", linkInput), errLine, el("span", "spacer"), sendBtn);
   const box = el("div", "composerbox");
-  box.append(titleInput, linkInput, textarea, bar);
+  box.append(el("div", "grip"), titleInput, linkInput, textarea, bar);
   composerWrap.append(replyChip, box);
   function setSendBusy(busy, ok = true) {
     sendBtn.disabled = busy;
-    sendBtn.textContent = busy ? "Sending…" : "Send";
+    sendBtn.textContent = busy ? "…" : "↑";
+    sendBtn.title = busy ? "Sending…" : "Send";
     if (busy) sendBtn.setAttribute("aria-busy", "true"); else sendBtn.removeAttribute("aria-busy");
     if (!busy && !ok) renderComposerError();
   }

@@ -754,6 +754,16 @@ const CSS = `
 .hh .md th, .hh .md td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--hh-border); }
 .hh .md .mdnote { font-size: 12px; color: var(--hh-muted); }
 @media (max-width: 900px) { .hh .shell { grid-template-columns: 56px 220px minmax(0, 1fr); } .hh .team { display: none; } }
+/* Feed app sizing: 14px text, 12px meta, 16px gutters, 12px gaps, 32px avatars, 16px section titles. */
+.hh { font-size: 14px; line-height: 20px; }
+.hh small, .hh .sub, .hh .sectionlabel, .hh .sect { font-size: 12px; line-height: 16px; }
+.hh h1, .hh .lhead h2, .hh .chead h2, .hh .mhead h2, .hh .brand h1 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.hh .lhead, .hh .chead, .hh .mhead, .hh .brand { padding-left: 16px; padding-right: 16px; }
+.hh .msg { gap: 12px; }
+.hh .thread, .hh .body { padding: 12px 16px; gap: 12px; }
+.hh .composerwrap { padding: 8px 16px 14px; }
+.hh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
+.hh .avatar { width: 32px; height: 32px; }
 `;
 
 export function activate(host) {
