@@ -1148,8 +1148,8 @@ export function eyesOf(s) {
   return [-0.3, 0.3].map((dx) => eyeOutline(s, e.yaw + dx, e.pitch, squash));
 }
 
-export function drawEyes(ctx, s, color = "#1a0f33") {
-  ctx.fillStyle = color;
+export function drawEyes(ctx, s, color) {
+  ctx.fillStyle = color || "#1a0f33";
   eyesOf(s).forEach((pts) => {
     ctx.beginPath();
     pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
@@ -1161,7 +1161,8 @@ export function drawEyes(ctx, s, color = "#1a0f33") {
 export function createBlobScene(w, h, rand = Math.random) {
   const base = Math.min(w, h) * 0.105;
   const lobes = Array.from({ length: 6 }, (_, i) => ({ a: (i / 6) * Math.PI * 2, d: base * 0.4, r: base * (0.58 + 0.14 * (i % 3)), sp: 0.45 + i * 0.12, ph: i * 1.7 }));
-  const scene = { w, h, base, rand, t: 0, lobes, minis: [], next: 0.6, bump: 0, balls: [], melted: 0, shed: 0, eyes: createEyes(rand), fx: w / 2, fy: h * 0.4, eyeR: base * 2 };
+  const scene = { w, h, base, rand, t: 0, lobes, minis: [], next: 0.6, bump: 0, balls: [], melted: 0, shed: 0, eyes: createEyes(rand), fx: w / 2, fy: h * 0.4, eyeR: base * 2, variant: null };
+  setBlobVariant(scene, "solid");
   stepBlobScene(scene, 0);
   return scene;
 }
@@ -1223,18 +1224,27 @@ export function stepBlobScene(s, dt) {
   const gone = s.minis.filter((m) => m.state === "in" && m.r < base * 0.035).length;
   s.melted += gone;
   s.minis = s.minis.filter((m) => !(m.state === "in" && m.r < base * 0.035));
+  const baseRgb = (s.variant && s.variant.base) || BLOB_RGB;
   const grow = 1 + s.bump * 0.3;
-  const balls = [{ x: cx, y: cy, r: base * grow * (1 + 0.05 * Math.sin(t * 1.9)), rgb: BLOB_RGB }];
+  const balls = [{ x: cx, y: cy, r: base * grow * (1 + 0.05 * Math.sin(t * 1.9)), rgb: baseRgb }];
   s.lobes.forEach((l) => {
     const reach = l.d * (1 + 0.28 * Math.sin(t * 1.3 + l.ph)) * grow;
-    balls.push({ x: cx + Math.cos(l.a + t * l.sp) * reach, y: cy + Math.sin(l.a + t * l.sp * 0.9) * reach, r: l.r * (1 + 0.14 * Math.sin(t * 2.1 + l.ph)), rgb: BLOB_RGB });
+    balls.push({ x: cx + Math.cos(l.a + t * l.sp) * reach, y: cy + Math.sin(l.a + t * l.sp * 0.9) * reach, r: l.r * (1 + 0.14 * Math.sin(t * 2.1 + l.ph)), rgb: baseRgb });
   });
   s.minis.forEach((m) => {
     // Violet at the surface, its own hue once it is clear of the mass, violet again as it melts back in.
     const away = clampN((Math.hypot(m.x - cx, m.y - cy) - s.eyeR * 1.15) / (s.eyeR * 0.7), 0, 1);
-    m.rgb = mixRgb(BLOB_RGB, m.hue || BLOB_RGB, away);
+    m.rgb = mixRgb(baseRgb, m.hue || baseRgb, away);
     balls.push({ x: m.x, y: m.y, r: m.r * (1 + 0.1 * Math.sin(t * 3 + m.ph)), rgb: m.rgb });
   });
+  // Vibration: every blob's radius shakes at the variation's frequency, and some jitter in place.
+  const vibe = s.variant && s.variant.vibe;
+  if (vibe) {
+    balls.forEach((b, i) => {
+      b.r *= 1 + vibe.amp * Math.sin(t * vibe.freq * Math.PI * 2 + i * 1.7);
+      if (vibe.jit) { b.x += Math.sin(t * 47 + i * 5) * base * 0.02; b.y += Math.cos(t * 53 + i * 3) * base * 0.02; }
+    });
+  }
   s.balls = balls;
   // The eyes live on a sphere that is the mass itself: centred on the mass's real centroid, with its radius measured from there.
   const mass = balls.slice(0, 1 + s.lobes.length);
@@ -1267,6 +1277,48 @@ export function blobField(balls, x, y) {
   return f;
 }
 
+
+// ─── Variations of the blob: colours, gradients and vibrations ───────────────
+
+const hslToRgb = (h, sat, l) => {
+  const hh = (((h % 360) + 360) % 360) / 30;
+  const a = sat * Math.min(l, 1 - l);
+  const f = (n) => { const k = (n + hh) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return [f(0), f(8), f(4)].map((v) => Math.round(v * 255));
+};
+const stops = (list, u) => {
+  const x = clampN(u, 0, 1) * (list.length - 1);
+  const i = Math.min(list.length - 2, Math.floor(x));
+  return mixRgb(list[i], list[i + 1], x - i);
+};
+
+/**
+ * Each variation is a look for the mass: a flat base colour, or a colour function of position and time,
+ * and how much it vibrates (radius wobble at a frequency in Hz, and optional jitter).
+ */
+export const BLOB_VARIANTS = [
+  { id: "solid", label: "Violet", dot: "#8b5cf6", base: [139, 92, 246] },
+  { id: "rainbow", label: "Rainbow", dot: "linear-gradient(135deg,#ef4444,#f59e0b,#84cc16,#22d3ee,#8b5cf6)", color: (x, y, t) => hslToRgb(t * 45 + (x + y) * 0.22, 0.85, 0.6) },
+  { id: "gradient", label: "Gradient", dot: "linear-gradient(135deg,#8b5cf6,#ec4899,#f97316)", color: (x, y, t, s) => { const a = t * 0.25; return stops([[139, 92, 246], [236, 72, 153], [249, 115, 22]], ((x - s.fx) * Math.cos(a) + (y - s.fy) * Math.sin(a)) / (s.eyeR * 2.2) + 0.5); } },
+  { id: "aurora", label: "Aurora", dot: "linear-gradient(135deg,#34d399,#38bdf8,#a78bfa)", color: (x, y, t) => hslToRgb(150 + 110 * (0.5 + 0.5 * Math.sin(x * 0.012 + t * 0.9)) + 30 * Math.sin(y * 0.015 - t * 0.6), 0.75, 0.58) },
+  { id: "sunset", label: "Sunset", dot: "radial-gradient(circle,#fde047,#f97316,#db2777,#4c1d95)", color: (x, y, t, s) => stops([[253, 224, 71], [249, 115, 22], [219, 39, 119], [76, 29, 149]], Math.hypot(x - s.fx, y - s.fy) / (s.eyeR * 1.35)) },
+  { id: "prism", label: "Prism", dot: "conic-gradient(#ef4444,#f59e0b,#84cc16,#22d3ee,#8b5cf6,#ef4444)", color: (x, y, t, s) => hslToRgb((Math.atan2(y - s.fy, x - s.fx) * 180) / Math.PI + t * 60, 0.8, 0.6) },
+  { id: "neon", label: "Neon", dot: "#22d3ee", base: [34, 211, 238], color: (x, y, t) => mixRgb([34, 211, 238], [205, 255, 255], 0.18 + 0.17 * Math.sin(t * 6)), vibe: { amp: 0.05, freq: 6 } },
+  { id: "jelly", label: "Jelly", dot: "#34d399", base: [52, 211, 153], vibe: { amp: 0.1, freq: 2.2 } },
+  { id: "fizz", label: "Fizz", dot: "#f43f5e", base: [244, 63, 94], vibe: { amp: 0.07, freq: 22, jit: true } },
+  { id: "paper", label: "Paper", dot: "#efece4", base: [239, 236, 228], eye: "#2b2433" },
+];
+
+export function setBlobVariant(scene, id) {
+  scene.variant = BLOB_VARIANTS.find((v) => v.id === id) || BLOB_VARIANTS[0];
+}
+
+/** The colour a variation gives a point: its own function, or the blobs' flat colours. */
+export function variantColorAt(scene, x, y) {
+  const v = scene.variant;
+  return v.color ? v.color(x, y, scene.t, scene) : blobColorAt(scene.balls, x, y, v.base || BLOB_RGB);
+}
+
 /** The flat colour at a point: each blob's colour weighted by how much of the field it supplies there. */
 export function blobColorAt(balls, x, y, fallback = BLOB_RGB) {
   let f = 0, r = 0, g = 0, b = 0;
@@ -1294,7 +1346,7 @@ export function drawBlobScene(ctx, off, scene, mode, rgb) {
       const a = voxel ? (f > 1 ? 255 : 0) : Math.max(0, Math.min(1, (f - 0.9) / 0.18)) * 255;
       if (a) {
         const i = (gy * gw + gx) * 4;
-        const c = blobColorAt(scene.balls, (gx + 0.5) * cell, (gy + 0.5) * cell, rgb);
+        const c = variantColorAt(scene, (gx + 0.5) * cell, (gy + 0.5) * cell);
         img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2]; img.data[i + 3] = a;
       }
     }
@@ -1339,6 +1391,11 @@ const CSS = `
 .hg .sreset { border: 1px solid var(--hg-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hg .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
 .hg .powered b { color: var(--hg-text); font-weight: 600; }
+.hg .welcome .wdots { display: flex; justify-content: center; gap: 9px; margin-top: 14px; }
+.hg .welcome .wdot { width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 2px solid transparent; outline: 1px solid rgba(255,255,255,.2); cursor: pointer; transition: transform .12s; }
+.hg .welcome .wdot:hover { transform: scale(1.25); }
+.hg .welcome .wdot[aria-pressed="true"] { border-color: var(--hg-bg); outline: 2px solid #fff; transform: scale(1.15); }
+.hg .welcome .wvariant { margin-top: 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }
 .hg .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: rgba(255,255,255,.62); }
 .hg .welcome .wpowered b { color: #fff; }
 .hg .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hg-border); background: var(--hg-bg); }
@@ -1812,6 +1869,7 @@ function mount(host, container) {
     pane: "list",
     welcomed: Boolean(saved.welcomed),
     welcomeStyle: saved.welcomeStyle === "voxel" ? "voxel" : "smooth",
+    welcomeVariant: BLOB_VARIANTS.some((v) => v.id === saved.welcomeVariant) ? saved.welcomeVariant : "solid",
     looks: saved.looks || {},
     drawerOpen: saved.drawerOpen !== false,
     control: {},
@@ -1821,7 +1879,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -2761,7 +2819,29 @@ function mount(host, container) {
       b.addEventListener("click", () => { state.welcomeStyle = id; persist(); render(); });
       modes.append(b);
     });
-    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go, modes);
+    const dots = el("div", "wdots");
+    dots.setAttribute("role", "group");
+    dots.setAttribute("aria-label", "Blob variation");
+    const vlabel = el("span", "wvariant", BLOB_VARIANTS.find((v) => v.id === state.welcomeVariant)?.label || "");
+    let liveScene = null;
+    BLOB_VARIANTS.forEach((v) => {
+      const d = el("button", "wdot");
+      d.type = "button";
+      d.title = v.label;
+      d.dataset.variant = v.id;
+      d.setAttribute("aria-label", v.label);
+      d.setAttribute("aria-pressed", String(state.welcomeVariant === v.id));
+      d.style.background = v.dot;
+      d.addEventListener("click", () => {
+        state.welcomeVariant = v.id;
+        persist();
+        if (liveScene) setBlobVariant(liveScene, v.id);
+        dots.querySelectorAll(".wdot").forEach((x) => x.setAttribute("aria-pressed", String(x === d)));
+        vlabel.textContent = v.label;
+      });
+      dots.append(d);
+    });
+    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go, modes, dots, vlabel);
     w.append(box, poweredBy("wpowered"));
 
     const ctx = canvas.getContext?.("2d");
@@ -2778,15 +2858,17 @@ function mount(host, container) {
         canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         scene = createBlobScene(cw, ch);
+        setBlobVariant(scene, state.welcomeVariant);
+        liveScene = scene;
         for (let n = 0; n < 40; n += 1) stepBlobScene(scene, 0.1);
-        if (still) { drawBlobScene(ctx, off, scene, state.welcomeStyle, [139, 92, 246]); drawEyes(ctx, scene); }
+        if (still) { drawBlobScene(ctx, off, scene, state.welcomeStyle, [139, 92, 246]); drawEyes(ctx, scene, scene.variant.eye); }
       };
       const tick = (now) => {
         const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
         last = now;
         stepBlobScene(scene, dt);
         drawBlobScene(ctx, off, scene, state.welcomeStyle, [139, 92, 246]);
-        drawEyes(ctx, scene);
+        drawEyes(ctx, scene, scene.variant.eye);
         raf = requestAnimationFrame(tick);
       };
       requestAnimationFrame(() => {

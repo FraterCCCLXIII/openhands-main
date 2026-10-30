@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -248,6 +248,68 @@ describe("blob eyes", () => {
     s.eyes.pointer = { x: s.fx + 400, y: s.fy, at: s.t };
     for (let t = 0; t < 1; t += 0.02) stepBlobScene(s, 0.02);
     expect(s.eyes.yaw).toBeGreaterThan(0.3);
+  });
+});
+
+describe("blob variations", () => {
+  const sceneWith = (id) => { const s = createBlobScene(1200, 800, seededRandom(4)); setBlobVariant(s, id); for (let t = 0; t < 3; t += 0.05) stepBlobScene(s, 0.05); return s; };
+
+  it("offers at least eight distinct variations, each giving valid colours", () => {
+    expect(BLOB_VARIANTS.length).toBeGreaterThanOrEqual(8);
+    expect(new Set(BLOB_VARIANTS.map((v) => v.id)).size).toBe(BLOB_VARIANTS.length);
+    BLOB_VARIANTS.forEach((v) => {
+      const s = sceneWith(v.id);
+      for (const [x, y] of [[s.fx, s.fy], [s.fx + 90, s.fy - 40], [s.fx - 120, s.fy + 100]]) {
+        const c = variantColorAt(s, x, y);
+        expect(c).toHaveLength(3);
+        c.forEach((n) => { expect(Number.isFinite(n)).toBe(true); expect(n).toBeGreaterThanOrEqual(0); expect(n).toBeLessThanOrEqual(255); });
+      }
+    });
+  });
+
+  it("rainbow and prism change across the mass and over time; solid does not", () => {
+    ["rainbow", "prism", "gradient", "aurora", "sunset"].forEach((id) => {
+      const s = sceneWith(id);
+      const a = variantColorAt(s, s.fx - 80, s.fy - 50).join();
+      const b = variantColorAt(s, s.fx + 80, s.fy + 60).join();
+      expect(a).not.toBe(b);
+    });
+    const r = sceneWith("rainbow");
+    const before = variantColorAt(r, r.fx, r.fy).join();
+    for (let t = 0; t < 2; t += 0.05) stepBlobScene(r, 0.05);
+    expect(variantColorAt(r, r.fx, r.fy).join()).not.toBe(before);
+    const solid = sceneWith("solid");
+    expect(variantColorAt(solid, solid.fx, solid.fy)).toEqual(variantColorAt(solid, solid.fx + 60, solid.fy + 30));
+  });
+
+  it("vibrates: fizz and neon shake the radii faster than the calm violet", () => {
+    const shake = (id) => {
+      const s = sceneWith(id);
+      let total = 0, prev = s.balls[0].r;
+      for (let i = 0; i < 80; i += 1) { stepBlobScene(s, 0.01); total += Math.abs(s.balls[0].r - prev); prev = s.balls[0].r; }
+      return total;
+    };
+    expect(shake("fizz")).toBeGreaterThan(shake("solid") * 2);
+    expect(shake("neon")).toBeGreaterThan(shake("solid"));
+  });
+
+  it("shows a dot for each variation, switches live, and remembers the choice", () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    const dots = [...container.querySelectorAll(".wdot")];
+    expect(dots.length).toBe(BLOB_VARIANTS.length);
+    expect(dots[0].getAttribute("aria-pressed")).toBe("true");
+    container.querySelector('.wdot[data-variant="rainbow"]').click();
+    expect(container.querySelector('.wdot[data-variant="rainbow"]').getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector(".wdot[data-variant='solid']").getAttribute("aria-pressed")).toBe("false");
+    expect(container.querySelector(".wvariant").textContent).toBe("Rainbow");
+    expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeVariant).toBe("rainbow");
+    dispose();
   });
 });
 
