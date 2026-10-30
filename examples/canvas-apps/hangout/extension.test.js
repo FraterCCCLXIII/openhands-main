@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -282,6 +282,20 @@ describe("blob variations", () => {
     expect(variantColorAt(solid, solid.fx, solid.fy)).toEqual(variantColorAt(solid, solid.fx + 60, solid.fy + 30));
   });
 
+  it("maps the mass onto a sphere, and bunches the gradient bands toward its edge", () => {
+    const s = sceneWith("rainbow");
+    const R = s.eyeR / 0.9;
+    const mid = sphereCoords(s, s.fx, s.fy);
+    expect(mid.w).toBeCloseTo(1, 5);
+    const edge = sphereCoords(s, s.fx + R * 0.97, s.fy);
+    expect(edge.w).toBeLessThan(0.3);
+    const dist = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+    const change = (x) => dist(variantColorAt(s, x, s.fy), variantColorAt(s, x + 4, s.fy));
+    expect(change(s.fx + R * 0.88)).toBeGreaterThan(change(s.fx) * 1.5);
+    const out = sphereCoords(s, s.fx + R * 3, s.fy);
+    expect(Math.hypot(out.u, out.v)).toBeLessThanOrEqual(1.0001);
+  });
+
   it("vibrates: fizz and neon shake the radii faster than the calm violet", () => {
     const shake = (id) => {
       const s = sceneWith(id);
@@ -310,6 +324,30 @@ describe("blob variations", () => {
     expect(container.querySelector(".wvariant").textContent).toBe("Rainbow");
     expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeVariant).toBe("rainbow");
     dispose();
+  });
+
+  it("uses small single-colour dots, and the arrow keys cycle through the variations", () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    BLOB_VARIANTS.forEach((v) => expect(v.dot).toMatch(/^#[0-9a-f]{6}$/i));
+    expect(new Set(BLOB_VARIANTS.map((v) => v.dot)).size).toBe(BLOB_VARIANTS.length);
+    const pressed = () => container.querySelector(".wdot[aria-pressed='true']").dataset.variant;
+    expect(pressed()).toBe("solid");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    expect(pressed()).toBe("rainbow");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+    expect(pressed()).toBe("paper");
+    expect(container.querySelector(".wvariant").textContent).toBe("Paper");
+    expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeVariant).toBe("paper");
+    dispose();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeVariant).toBe("paper");
   });
 });
 

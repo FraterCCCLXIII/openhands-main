@@ -1292,19 +1292,32 @@ const stops = (list, u) => {
   return mixRgb(list[i], list[i + 1], x - i);
 };
 
+/** A point on the mass as a point on a sphere: unit-sphere x, y and depth, longitude and latitude. Points outside the rim sit on the rim. */
+export function sphereCoords(s, x, y) {
+  const R = Math.max(1, s.eyeR / 0.9);
+  let u = (x - s.fx) / R, v = (y - s.fy) / R;
+  const r = Math.hypot(u, v);
+  if (r > 1) { u /= r; v /= r; }
+  const w = Math.sqrt(Math.max(0, 1 - u * u - v * v));
+  return { u, v, w, lon: Math.atan2(u, w), lat: Math.asin(v) };
+};
+
+const DEG = 180 / Math.PI;
+
 /**
  * Each variation is a look for the mass: a flat base colour, or a colour function of position and time,
- * and how much it vibrates (radius wobble at a frequency in Hz, and optional jitter).
+ * and how much it vibrates (radius wobble at a frequency in Hz, and optional jitter). The gradients are
+ * drawn on a sphere, so their bands curve around the mass and bunch up toward its edge.
  */
 export const BLOB_VARIANTS = [
   { id: "solid", label: "Violet", dot: "#8b5cf6", base: [139, 92, 246] },
-  { id: "rainbow", label: "Rainbow", dot: "linear-gradient(135deg,#ef4444,#f59e0b,#84cc16,#22d3ee,#8b5cf6)", color: (x, y, t) => hslToRgb(t * 45 + (x + y) * 0.22, 0.85, 0.6) },
-  { id: "gradient", label: "Gradient", dot: "linear-gradient(135deg,#8b5cf6,#ec4899,#f97316)", color: (x, y, t, s) => { const a = t * 0.25; return stops([[139, 92, 246], [236, 72, 153], [249, 115, 22]], ((x - s.fx) * Math.cos(a) + (y - s.fy) * Math.sin(a)) / (s.eyeR * 2.2) + 0.5); } },
-  { id: "aurora", label: "Aurora", dot: "linear-gradient(135deg,#34d399,#38bdf8,#a78bfa)", color: (x, y, t) => hslToRgb(150 + 110 * (0.5 + 0.5 * Math.sin(x * 0.012 + t * 0.9)) + 30 * Math.sin(y * 0.015 - t * 0.6), 0.75, 0.58) },
-  { id: "sunset", label: "Sunset", dot: "radial-gradient(circle,#fde047,#f97316,#db2777,#4c1d95)", color: (x, y, t, s) => stops([[253, 224, 71], [249, 115, 22], [219, 39, 119], [76, 29, 149]], Math.hypot(x - s.fx, y - s.fy) / (s.eyeR * 1.35)) },
-  { id: "prism", label: "Prism", dot: "conic-gradient(#ef4444,#f59e0b,#84cc16,#22d3ee,#8b5cf6,#ef4444)", color: (x, y, t, s) => hslToRgb((Math.atan2(y - s.fy, x - s.fx) * 180) / Math.PI + t * 60, 0.8, 0.6) },
+  { id: "rainbow", label: "Rainbow", dot: "#f59e0b", color: (x, y, t, s) => { const c = sphereCoords(s, x, y); return hslToRgb(t * 40 + c.lon * 110 + c.lat * 50, 0.85, 0.6); } },
+  { id: "gradient", label: "Gradient", dot: "#ec4899", color: (x, y, t, s) => { const c = sphereCoords(s, x, y); const a = t * 0.3; const g = (c.u * Math.cos(a) + c.v * Math.sin(a)) * 0.8 + c.w * 0.6; return stops([[139, 92, 246], [236, 72, 153], [249, 115, 22]], (g + 0.9) / 1.9); } },
+  { id: "aurora", label: "Aurora", dot: "#2dd4bf", color: (x, y, t, s) => { const c = sphereCoords(s, x, y); return hslToRgb(150 + 110 * (0.5 + 0.5 * Math.sin(c.lon * 2.4 + t * 0.9)) + 36 * Math.sin(c.lat * 3.2 - t * 0.6), 0.75, 0.58); } },
+  { id: "sunset", label: "Sunset", dot: "#f97316", color: (x, y, t, s) => { const c = sphereCoords(s, x, y); const e = s.eyes; const sun = (c.u * Math.sin(e.yaw) * Math.cos(e.pitch) + c.v * Math.sin(e.pitch) + c.w * Math.cos(e.yaw) * Math.cos(e.pitch)); return stops([[76, 29, 149], [219, 39, 119], [249, 115, 22], [253, 224, 71]], (sun + 0.2) / 1.2); } },
+  { id: "prism", label: "Prism", dot: "#3b82f6", color: (x, y, t, s) => { const c = sphereCoords(s, x, y); const a = t * 0.7; const lon = Math.atan2(c.u * Math.cos(a) + c.w * Math.sin(a), c.w * Math.cos(a) - c.u * Math.sin(a)); return hslToRgb(lon * DEG * 2 + c.lat * 40, 0.8, 0.6); } },
   { id: "neon", label: "Neon", dot: "#22d3ee", base: [34, 211, 238], color: (x, y, t) => mixRgb([34, 211, 238], [205, 255, 255], 0.18 + 0.17 * Math.sin(t * 6)), vibe: { amp: 0.05, freq: 6 } },
-  { id: "jelly", label: "Jelly", dot: "#34d399", base: [52, 211, 153], vibe: { amp: 0.1, freq: 2.2 } },
+  { id: "jelly", label: "Jelly", dot: "#4ade80", base: [52, 211, 153], vibe: { amp: 0.1, freq: 2.2 } },
   { id: "fizz", label: "Fizz", dot: "#f43f5e", base: [244, 63, 94], vibe: { amp: 0.07, freq: 22, jit: true } },
   { id: "paper", label: "Paper", dot: "#efece4", base: [239, 236, 228], eye: "#2b2433" },
 ];
@@ -1391,10 +1404,10 @@ const CSS = `
 .hg .sreset { border: 1px solid var(--hg-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hg .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
 .hg .powered b { color: var(--hg-text); font-weight: 600; }
-.hg .welcome .wdots { display: flex; justify-content: center; gap: 9px; margin-top: 14px; }
-.hg .welcome .wdot { width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 2px solid transparent; outline: 1px solid rgba(255,255,255,.2); cursor: pointer; transition: transform .12s; }
-.hg .welcome .wdot:hover { transform: scale(1.25); }
-.hg .welcome .wdot[aria-pressed="true"] { border-color: var(--hg-bg); outline: 2px solid #fff; transform: scale(1.15); }
+.hg .welcome .wdots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.hg .welcome .wdot { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: 0; cursor: pointer; transition: transform .12s; }
+.hg .welcome .wdot:hover { transform: scale(1.35); }
+.hg .welcome .wdot[aria-pressed="true"] { outline: 1.5px solid #fff; outline-offset: 2px; transform: scale(1.1); }
 .hg .welcome .wvariant { margin-top: 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }
 .hg .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: rgba(255,255,255,.62); }
 .hg .welcome .wpowered b { color: #fff; }
@@ -2801,6 +2814,7 @@ function mount(host, container) {
   }
 
   let stopWelcome = () => {};
+  let stopKeys = () => {};
 
   function welcomeView() {
     const w = el("div", "welcome");
@@ -2824,6 +2838,26 @@ function mount(host, container) {
     dots.setAttribute("aria-label", "Blob variation");
     const vlabel = el("span", "wvariant", BLOB_VARIANTS.find((v) => v.id === state.welcomeVariant)?.label || "");
     let liveScene = null;
+    const choose = (id) => {
+      state.welcomeVariant = id;
+      persist();
+      if (liveScene) setBlobVariant(liveScene, id);
+      dots.querySelectorAll(".wdot").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.variant === id)));
+      vlabel.textContent = BLOB_VARIANTS.find((v) => v.id === id)?.label || "";
+    };
+    const step = (dir) => {
+      const i = BLOB_VARIANTS.findIndex((v) => v.id === state.welcomeVariant);
+      choose(BLOB_VARIANTS[(i + dir + BLOB_VARIANTS.length) % BLOB_VARIANTS.length].id);
+    };
+    const onKeys = (ev) => {
+      if ((ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+      const tag = ev.target && ev.target.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || ev.target?.isContentEditable) return;
+      ev.preventDefault();
+      step(ev.key === "ArrowRight" ? 1 : -1);
+    };
+    document.addEventListener("keydown", onKeys);
+    stopKeys = () => document.removeEventListener("keydown", onKeys);
     BLOB_VARIANTS.forEach((v) => {
       const d = el("button", "wdot");
       d.type = "button";
@@ -2832,13 +2866,7 @@ function mount(host, container) {
       d.setAttribute("aria-label", v.label);
       d.setAttribute("aria-pressed", String(state.welcomeVariant === v.id));
       d.style.background = v.dot;
-      d.addEventListener("click", () => {
-        state.welcomeVariant = v.id;
-        persist();
-        if (liveScene) setBlobVariant(liveScene, v.id);
-        dots.querySelectorAll(".wdot").forEach((x) => x.setAttribute("aria-pressed", String(x === d)));
-        vlabel.textContent = v.label;
-      });
+      d.addEventListener("click", () => choose(v.id));
       dots.append(d);
     });
     box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go, modes, dots, vlabel);
@@ -2897,6 +2925,8 @@ function mount(host, container) {
     const paneScroll = root.querySelector(".pane")?.scrollTop || 0;
     stopWelcome();
     stopWelcome = () => {};
+    stopKeys();
+    stopKeys = () => {};
     root.replaceChildren();
     if (!state.welcomed) { root.append(welcomeView()); return; }
     const shell = el("div");
@@ -2927,6 +2957,7 @@ function mount(host, container) {
   return () => {
     disposed = true;
     stopWelcome();
+    stopKeys();
     document.removeEventListener("click", onDocClick);
     document.removeEventListener("keydown", onKey);
     style.remove();
