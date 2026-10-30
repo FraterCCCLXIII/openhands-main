@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, factoriesOf, factoryName, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -312,21 +312,37 @@ describe("Kamiji face engine", () => {
 });
 
 describe("factories strip", () => {
-  it("shows a pinned factories strip that filters the list and expands with More", async () => {
+  it("shows factories as a list of objects, and keeps the card grid as an alternative", async () => {
     const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
     await tick();
     expect(container.querySelector(".listtop .factories")).toBeTruthy();
-    expect(container.querySelectorAll(".fcard").length).toBe(4);
-    const grid = () => container.querySelector(".fgrid");
-    expect(grid().classList.contains("open")).toBe(false);
+    expect(container.querySelectorAll(".frow").length).toBe(4);
+    expect(container.querySelectorAll(".fcard").length).toBe(0);
+    expect([...container.querySelectorAll(".ficon")].map((i) => i.dataset.icon)).toEqual(["phone", "globe", "database", "server"]);
+    const list = () => container.querySelector(".flist");
+    expect(list().classList.contains("open")).toBe(false);
     container.querySelector(".fmore").click();
-    expect(grid().classList.contains("open")).toBe(true);
-    [...container.querySelectorAll(".fcard")].find((c) => c.textContent.includes("Data Pipeline")).click();
+    expect(list().classList.contains("open")).toBe(true);
+    [...container.querySelectorAll(".frow")].find((r) => r.textContent.includes("Data Pipeline")).click();
     expect(container.querySelectorAll(".row").length).toBe(2);
     expect(container.querySelector(".chips").textContent).toContain("Factory: Data Pipeline");
     [...container.querySelectorAll(".fchip")].find((c) => c.textContent === "All").click();
     [...container.querySelectorAll(".fchip")].find((c) => c.textContent === "Multi-agent").click();
     expect(container.querySelectorAll(".row").length).toBe(5);
+    [...container.querySelectorAll(".fviewbtn")].find((b) => b.textContent === "Grid").click();
+    expect(container.querySelectorAll(".fcard").length).toBe(4);
+    expect(container.querySelectorAll(".frow").length).toBe(0);
     dispose();
+  });
+
+  it("gives factories things to look like, not faces", () => {
+    expect(factoryIconKey("Web Platform")).toBe("globe");
+    expect(factoryIconKey("Mobile Apps")).toBe("phone");
+    expect(factoryIconKey("Scratch workspaces")).toBe("box");
+    expect(factoryIconKey("some-unknown-repo")).toBeTruthy();
+    const tile = factoryIcon("Infrastructure");
+    expect(tile.querySelector("svg")).toBeTruthy();
+    expect(tile.querySelectorAll("ellipse").length).toBe(0);
+    expect(tile.getAttribute("class")).not.toContain("avatar");
   });
 });

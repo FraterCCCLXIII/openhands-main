@@ -767,6 +767,66 @@ export function factoriesOf(agents) {
   return [...map.values()].sort((x, y) => y.live - x.live || y.agents - x.agents || x.name.localeCompare(y.name));
 }
 
+
+// ─── Object icons for factories (things, not faces) ──────────────────────────
+
+const OBJECT_ICONS = {
+  globe: ["circle:12,12,9", "path:M3 12h18", "path:M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"],
+  phone: ["rect:7,2,10,20,2", "path:M11 18h2"],
+  database: ["ellipse:12,5,8,3", "path:M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5", "path:M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"],
+  server: ["rect:3,3,18,7,2", "rect:3,14,18,7,2", "path:M7 6.5h.01M7 17.5h.01"],
+  box: ["path:M12 2 3 7v10l9 5 9-5V7z", "path:M3 7l9 5 9-5M12 12v10"],
+  cog: ["circle:12,12,3.5", "path:M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"],
+  rocket: ["path:M5 15c-1.5 1.3-2 5-2 5s3.7-.5 5-2", "path:M12 15l-3-3a22 22 0 0 1 2-4 11 11 0 0 1 11-5c0 3-1 8-5 11a22 22 0 0 1-4 2z", "path:M9 12H4s.6-3 2-4c1.6-1 5 0 5 0M12 15v5s3-.6 4-2c1-1.6 0-5 0-5"],
+  bolt: ["path:M13 2 4 14h7l-1 8 9-12h-7z"],
+  layers: ["path:M12 2 2 7l10 5 10-5z", "path:M2 17l10 5 10-5M2 12l10 5 10-5"],
+  cloud: ["path:M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 12 3.5 3.5 0 0 0 6 19z"],
+  shield: ["path:M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"],
+  chart: ["path:M4 20V10M10 20V4M16 20v-8M22 20H2"],
+  flask: ["path:M9 2h6M10 2v6L4 19a2 2 0 0 0 1.8 3h12.4A2 2 0 0 0 20 19l-6-11V2", "path:M7 15h10"],
+  factory: ["path:M2 21V9l6 4V9l6 4V4h4v17z", "path:M6 17h.01M10 17h.01M14 17h.01"],
+  compass: ["circle:12,12,10", "path:M16 8l-2 6-6 2 2-6z"],
+  wrench: ["path:M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.4 2.4-2.6-.6-.6-2.6z"],
+};
+const ICON_KEYWORDS = [[/web|site|frontend|portal/i, "globe"], [/mobile|ios|android|app/i, "phone"], [/data|pipeline|etl|warehouse/i, "database"], [/infra|platform ops|server|devops/i, "server"], [/scratch|tmp|misc|unassigned/i, "box"], [/kosmos|engine|core/i, "cog"], [/road|launch|release|ship/i, "rocket"], [/security|auth|safe/i, "shield"], [/analytic|report|metric|growth/i, "chart"], [/research|lab|test|experiment/i, "flask"], [/openhands|hands|agent/i, "factory"], [/cloud/i, "cloud"], [/doc|learn|index/i, "layers"]];
+const ICON_ORDER = Object.keys(OBJECT_ICONS);
+const ICON_TINTS = ["#8b5cf6", "#3b82f6", "#19b5a5", "#f5760a", "#ec4899", "#34d399", "#f2b51d", "#ef4444"];
+
+/** Which object a factory gets: by what its name says, else a stable pick. */
+export function factoryIconKey(name) {
+  const hit = ICON_KEYWORDS.find(([re]) => re.test(name));
+  return hit ? hit[1] : ICON_ORDER[hashOf(name) % ICON_ORDER.length];
+}
+
+/** A factory's object icon in a tinted tile. No face: factories are things. */
+export function factoryIcon(name, small) {
+  const key = factoryIconKey(name);
+  const tile = document.createElement("span");
+  tile.className = `ficon${small ? " sm" : ""}`;
+  tile.dataset.icon = key;
+  tile.style.setProperty("--tint", ICON_TINTS[hashOf(name) % ICON_TINTS.length]);
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  OBJECT_ICONS[key].forEach((spec) => {
+    const [kind, rest] = [spec.slice(0, spec.indexOf(":")), spec.slice(spec.indexOf(":") + 1)];
+    const n = document.createElementNS(SVG_NS, kind === "path" ? "path" : kind);
+    const v = rest.split(",");
+    if (kind === "path") n.setAttribute("d", rest);
+    else if (kind === "circle") { n.setAttribute("cx", v[0]); n.setAttribute("cy", v[1]); n.setAttribute("r", v[2]); }
+    else if (kind === "ellipse") { n.setAttribute("cx", v[0]); n.setAttribute("cy", v[1]); n.setAttribute("rx", v[2]); n.setAttribute("ry", v[3]); }
+    else if (kind === "rect") { n.setAttribute("x", v[0]); n.setAttribute("y", v[1]); n.setAttribute("width", v[2]); n.setAttribute("height", v[3]); n.setAttribute("rx", v[4]); }
+    svg.append(n);
+  });
+  tile.append(svg);
+  return tile;
+}
+
 /** Tag facets present across agents, for the filter menu. */
 export const tagFacets = (agents) => [...new Set(agents.flatMap((a) => a.tags || []))].sort();
 
@@ -859,16 +919,26 @@ const CSS = `
 .hg .col {  display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .hg .list { border-right: 1px solid var(--hg-border); }
 .hg .listtop { flex: none; padding: 12px 10px 8px; background: var(--hg-bg); border-bottom: 1px solid var(--hg-border); position: relative; z-index: 3; }
-.hg .factories { margin-bottom: 10px; border: 1px solid var(--hg-border); border-radius: 12px; background: var(--hg-panel); overflow: hidden; }
-.hg .fhead { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--hg-border); }
+.hg .factories { margin-bottom: 8px; }
+.hg .fhead { display: flex; align-items: center; gap: 6px; padding: 2px 2px 6px; }
 .hg .ftitle { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--hg-muted); }
 .hg .fcount { font-size: 11px; color: var(--hg-muted); margin-right: auto; }
 .hg .fchip::after { content: ""; }
 .hg .fchip[aria-pressed="true"] { background: var(--hg-primary); color: var(--hg-on-primary); border-color: var(--hg-primary); }
 .hg .fmore { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 12px; padding: 2px 4px; }
-.hg .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; max-height: 106px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.hg .fview { display: inline-flex; gap: 1px; }
+.hg .fviewbtn { border: 0; background: transparent; color: var(--hg-muted); border-radius: 6px; padding: 1px 6px; cursor: pointer; font-size: 11px; }
+.hg .fviewbtn[aria-pressed="true"] { background: var(--hg-raised); color: var(--hg-contrast); }
+.hg .flist { max-height: 168px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; display: flex; flex-direction: column; gap: 2px; }
+.hg .flist.open { max-height: 320px; }
+.hg .frow { padding: 6px 8px; }
+.hg .ficon { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 20%, transparent); color: var(--tint); }
+.hg .ficon svg { width: 20px; height: 20px; }
+.hg .ficon.sm { width: 22px; height: 22px; border-radius: 7px; }
+.hg .ficon.sm svg { width: 13px; height: 13px; }
+.hg .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 0; max-height: 106px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .hg .fgrid.open { max-height: 260px; }
-.hg .fcard { display: block; min-width: 0; border: 1px solid transparent; background: var(--hg-bg); border-radius: 10px; padding: 5px 6px; cursor: pointer; text-align: left; }
+.hg .fcard { display: block; min-width: 0; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 5px 6px; cursor: pointer; text-align: left; }
 .hg .fcard:hover { background: var(--hg-raised); }
 .hg .fcard[aria-pressed="true"] { border-color: var(--hg-text); }
 .hg .fstack { flex: none; display: flex; }
@@ -893,9 +963,9 @@ const CSS = `
 .hg .seg button[aria-pressed="true"] { background: var(--hg-primary); color: var(--hg-on-primary); border-color: var(--hg-primary); }
 .hg .rows { flex: 1; min-height: 0; overflow: auto; padding: 6px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
 .hg .group { margin: 10px 4px 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--hg-muted); display: flex; justify-content: space-between; }
-.hg .row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 8px; border: 0; border-radius: 12px; background: transparent; text-align: left; cursor: pointer; }
-.hg .row:hover { background: var(--hg-panel); }
-.hg .row[aria-current="true"] { background: var(--hg-raised); }
+.hg .row, .hg .frow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 8px; border: 0; border-radius: 12px; background: transparent; text-align: left; cursor: pointer; }
+.hg .row:hover, .hg .frow:hover { background: var(--hg-panel); }
+.hg .row[aria-current="true"], .hg .frow[aria-current="true"] { background: var(--hg-raised); }
 .hg .twist { flex: none; width: 18px; height: 18px; border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; padding: 0; }
 .hg .avatar { flex: none; width: 40px; height: 40px; }
 .hg .avatar svg { width: 100%; height: 100%; display: block; }
@@ -1186,7 +1256,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, cardState: state.cardState, models: state.models, view: state.view, drawerOpen: state.drawerOpen, looks: state.looks }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, cardState: state.cardState, models: state.models, view: state.view, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -1314,37 +1384,70 @@ function mount(host, container) {
     const factories = factoriesOf(agents());
     const head = el("div", "fhead");
     head.append(el("span", "ftitle", "Factories"), el("span", "fcount", String(factories.length)));
-    const multi = el("button", "chip fchip", "Multi-agent");
-    multi.type = "button";
-    multi.setAttribute("aria-pressed", String(state.prefs.trees));
-    multi.title = "Only conversations with subagent trees";
-    multi.addEventListener("click", () => setPref("trees", !state.prefs.trees));
-    const all = el("button", "chip fchip", "All");
-    all.type = "button";
-    all.setAttribute("aria-pressed", String(!state.prefs.factory));
-    all.addEventListener("click", () => setPref("factory", ""));
+    const chipBtn = (label, pressed, onClick, title) => {
+      const b = el("button", "chip fchip", label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(pressed));
+      if (title) b.title = title;
+      b.addEventListener("click", onClick);
+      return b;
+    };
+    head.append(
+      chipBtn("Multi-agent", state.prefs.trees, () => setPref("trees", !state.prefs.trees), "Only conversations with subagent trees"),
+      chipBtn("All", !state.prefs.factory, () => setPref("factory", "")),
+    );
+    const layout = el("span", "fview");
+    [["list", "List"], ["grid", "Grid"]].forEach(([id, label]) => {
+      const b = el("button", "fviewbtn", label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.factoryView === id));
+      b.addEventListener("click", () => { state.factoryView = id; persist(); render(); });
+      layout.append(b);
+    });
     const more = el("button", "fmore", state.factoriesOpen ? "Less ▴" : "More ▾");
     more.type = "button";
     more.setAttribute("aria-expanded", String(state.factoriesOpen));
     more.addEventListener("click", () => { state.factoriesOpen = !state.factoriesOpen; render(); });
-    head.append(multi, all, more);
-    const grid = el("div", `fgrid${state.factoriesOpen ? " open" : ""}`);
-    factories.forEach((f) => {
-      const card = el("button", "fcard");
-      card.type = "button";
-      card.setAttribute("aria-pressed", String(state.prefs.factory === f.id));
-      card.title = `${f.name}: ${f.agents} agents, ${f.live} live, ${f.trees} subagents`;
-      const stack = el("span", "fstack");
-      f.blobs.forEach((b) => stack.append(avatar(b, true)));
-      const detail = el("span", "fdetail");
-      detail.append(stack, el("span", "fmeta", `${f.agents}${f.live ? ` · ${f.live} live` : ""}${f.trees ? ` · ${f.trees} sub` : ""}`));
-      const text = el("span", "ftext");
-      text.append(el("span", "fname", f.name), detail);
-      card.append(text);
-      card.addEventListener("click", () => setPref("factory", state.prefs.factory === f.id ? "" : f.id));
-      grid.append(card);
-    });
-    box.append(head, grid);
+    head.append(layout, more);
+    const summary = (f) => `${f.agents} agent${f.agents === 1 ? "" : "s"}${f.live ? ` · ${f.live} live` : ""}${f.trees ? ` · ${f.trees} sub` : ""}`;
+    const pick = (f) => setPref("factory", state.prefs.factory === f.id ? "" : f.id);
+    if (state.factoryView === "grid") {
+      // The earlier card grid, kept as an alternative layout.
+      const grid = el("div", `fgrid${state.factoriesOpen ? " open" : ""}`);
+      factories.forEach((f) => {
+        const card = el("button", "fcard");
+        card.type = "button";
+        card.setAttribute("aria-pressed", String(state.prefs.factory === f.id));
+        card.title = `${f.name}: ${f.agents} agents, ${f.live} live, ${f.trees} subagents`;
+        const stack = el("span", "fstack");
+        f.blobs.forEach((b) => stack.append(avatar(b, true)));
+        const detail = el("span", "fdetail");
+        detail.append(stack, el("span", "fmeta", `${f.agents}${f.live ? ` · ${f.live} live` : ""}${f.trees ? ` · ${f.trees} sub` : ""}`));
+        const text = el("span", "ftext");
+        text.append(el("span", "fname", f.name), detail);
+        card.append(text);
+        card.addEventListener("click", () => pick(f));
+        grid.append(card);
+      });
+      box.append(head, grid);
+    } else {
+      const list = el("div", `flist${state.factoriesOpen ? " open" : ""}`);
+      factories.forEach((f) => {
+        const row = el("button", "frow");
+        row.type = "button";
+        row.setAttribute("aria-current", String(state.prefs.factory === f.id));
+        const text = el("span", "rowtext");
+        const top = el("span", "rowtop");
+        const right = el("span", "rowright");
+        if (f.live) { const live = el("span", "dot live"); live.title = `${f.live} live`; right.append(live); }
+        top.append(el("span", "name", f.name), right);
+        text.append(top, el("span", "meta", summary(f)));
+        row.append(factoryIcon(f.name), text);
+        row.addEventListener("click", () => pick(f));
+        list.append(row);
+      });
+      box.append(head, list);
+    }
     return box;
   }
 
