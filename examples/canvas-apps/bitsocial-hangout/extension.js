@@ -546,20 +546,23 @@ const CSS = `
 .bh .side, .bh .members { display: flex; flex-direction: column; min-height: 0; background: var(--bh-bg); }
 .bh .side { border-right: 1px solid var(--bh-border); }
 .bh .members { border-left: 1px solid var(--bh-border); }
-.bh .brand { display: flex; align-items: center; gap: 10px; padding: 14px 14px 8px; }
+.bh .brand { display: flex; align-items: center; gap: 12px; padding: 18px 18px 10px; }
 .bh .brand h1 { margin: 0; font-size: 16px; font-weight: 600; color: var(--bh-contrast); }
-.bh .status { display: inline-flex; align-items: center; gap: 6px; margin: 0 14px 8px; padding: 3px 10px; border: 1px solid var(--bh-border); border-radius: 999px; font-size: 12px; color: var(--bh-muted); align-self: flex-start; }
+.bh .status { display: inline-flex; align-items: center; gap: 6px; margin: 0 18px 6px; padding: 3px 10px; border: 1px solid var(--bh-border); border-radius: 999px; font-size: 12px; color: var(--bh-muted); align-self: flex-start; }
 .bh .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--bh-muted); }
 .bh .status[data-state="connected"]::before { background: var(--bh-ok); }
 .bh .status[data-state="connecting"]::before { background: #f2b51d; }
 .bh .status[data-state="demo"]::before { background: #8b5cf6; }
-.bh .sectionlabel { padding: 10px 14px 4px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--bh-muted); }
-.bh .list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px; display: grid; align-content: start; gap: 2px; }
-.bh .row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border: 0; border-radius: 10px; background: transparent; cursor: pointer; text-align: left; }
+.bh .sectionlabel { padding: 14px 18px 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--bh-muted); }
+.bh .list { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 0 10px; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 2px; }
+.bh .row { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; padding: 9px 10px; border: 0; border-radius: 10px; background: transparent; cursor: pointer; text-align: left; }
 .bh .row:hover { background: var(--bh-panel); }
 .bh .row[aria-current="true"] { background: var(--bh-raised); color: var(--bh-contrast); }
-.bh .row .t { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bh .row .t small { display: block; color: var(--bh-muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.bh .row .t { min-width: 0; flex: 1; display: grid; gap: 1px; }
+.bh .row .t b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh .row .t b i { font-style: normal; color: var(--bh-muted); margin-right: 2px; }
+.bh .row .t small { color: var(--bh-muted); font-size: 12px; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh .row[aria-current="true"] .t b i { color: var(--bh-contrast); }
 .bh .avatar { flex: none; width: 36px; height: 36px; }
 .bh .avatar svg { width: 100%; height: 100%; display: block; }
 .bh .avatar.sm { width: 28px; height: 28px; }
@@ -885,7 +888,10 @@ function mount(container, options) {
       row.setAttribute("aria-current", String(state.view === "chat" && c.address === state.selected));
       row.dataset.address = c.address;
       row.append(avatar(c.address, "sm"));
-      const t = el("span", "t", `# ${c.title || c.address}`);
+      const t = el("span", "t");
+      const name = el("b");
+      name.append(el("i", "", "#"), document.createTextNode(c.title || c.address));
+      t.append(name);
       if (c.description) t.append(el("small", "", c.description));
       row.append(t);
       row.addEventListener("click", () => {
