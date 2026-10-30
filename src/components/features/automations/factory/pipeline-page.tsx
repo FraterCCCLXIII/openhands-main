@@ -6,6 +6,8 @@ import { I18nKey } from "#/i18n/declaration";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import type { FeedFactory } from "#/utils/feed-team-demo";
 import { cn } from "#/utils/utils";
+import { buildActivity } from "./pipeline-activity";
+import { ActivityDetails } from "./pipeline-activity-ui";
 import { pipelineCounts } from "./pipeline-counts";
 import {
   DEFAULT_PIPELINE_TEMPLATE_ID,
@@ -48,6 +50,11 @@ export function PipelinePage({ factory, data }: PipelinePageProps) {
   const counts = useMemo(
     () => pipelineCounts(data.conversations),
     [data.conversations],
+  );
+  const [sample, setSample] = useState(true);
+  const activity = useMemo(
+    () => (sample ? buildActivity(template.steps, factory.id) : undefined),
+    [sample, template, factory.id],
   );
   const selected = template.steps.find((step) => step.id === selectedId);
   const inUse = applied === template.id;
@@ -114,6 +121,19 @@ export function PipelinePage({ factory, data }: PipelinePageProps) {
       </aside>
 
       <section className="flex min-w-0 flex-col gap-3">
+        <label
+          className="flex items-center gap-2 px-1 text-xs text-muted"
+          title={t(I18nKey.FACTORY$ACTIVITY_SAMPLE_HINT)}
+        >
+          <input
+            type="checkbox"
+            data-testid="pipeline-sample-toggle"
+            checked={sample}
+            onChange={(event) => setSample(event.target.checked)}
+          />
+          {t(I18nKey.FACTORY$ACTIVITY_SAMPLE)}
+          <span>{`· ${t(I18nKey.FACTORY$ACTIVITY_SAMPLE_HINT)}`}</span>
+        </label>
         <div
           data-testid="pipeline-map"
           className="h-[min(48rem,calc(100vh-15rem))] min-h-[26rem] overflow-hidden rounded-xl border border-border bg-surface"
@@ -128,6 +148,7 @@ export function PipelinePage({ factory, data }: PipelinePageProps) {
             <PipelineMap
               template={template}
               counts={counts}
+              activity={activity}
               selectedId={selectedId}
               onSelect={setSelectedId}
             />
@@ -152,6 +173,9 @@ export function PipelinePage({ factory, data }: PipelinePageProps) {
                   {line}
                 </p>
               ))}
+              {activity?.[selected.id] ? (
+                <ActivityDetails activity={activity[selected.id]} sample />
+              ) : null}
             </>
           ) : (
             <p className="text-muted">

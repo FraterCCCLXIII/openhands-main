@@ -16,6 +16,8 @@ import "@xyflow/react/dist/style.css";
 import { useAgentServerUIAppearance } from "#/components/providers/agent-server-ui-root";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
+import { inFlight, type StepActivity } from "./pipeline-activity";
+import { ActivityMarks, HangingChips } from "./pipeline-activity-ui";
 import type {
   PipelineCountKind,
   PipelineStep,
@@ -25,6 +27,7 @@ import type {
 interface StepNodeData extends Record<string, unknown> {
   step: PipelineStep;
   count: number | null;
+  activity?: StepActivity;
 }
 
 type StepNode = Node<StepNodeData, "step">;
@@ -51,7 +54,7 @@ const SIDES = [
 /** A pipeline step: its title, notes and a live figure, with a handle on each side. */
 function StepNodeView({ data, selected }: NodeProps<StepNode>) {
   const { t } = useTranslation("openhands");
-  const { step, count } = data;
+  const { step, count, activity } = data;
   return (
     <div
       data-testid={`pipeline-step-${step.id}`}
@@ -61,6 +64,7 @@ function StepNodeView({ data, selected }: NodeProps<StepNode>) {
         selected && "ring-2 ring-focus",
       )}
     >
+      {activity ? <ActivityMarks activity={activity} /> : null}
       {SIDES.map(([side, position]) => (
         <span key={side}>
           <Handle
@@ -84,10 +88,11 @@ function StepNodeView({ data, selected }: NodeProps<StepNode>) {
         </span>
       ))}
       {step.count && count !== null ? (
-        <span className="mt-1 rounded-full bg-surface px-2 py-0.5 font-mono text-[11px] text-contrast">
+        <span className="mt-1 rounded-full bg-surface px-2 py-0.5 font-mono text-xs text-contrast">
           {t(COUNT_LABEL[step.count], { count })}
         </span>
       ) : null}
+      {activity ? <HangingChips activity={activity} /> : null}
     </div>
   );
 }
@@ -111,6 +116,7 @@ function linkHandles(from: PipelineStep, to: PipelineStep) {
 interface PipelineMapProps {
   template: PipelineTemplate;
   counts: Record<PipelineCountKind, number>;
+  activity?: Record<string, StepActivity>;
   selectedId: string | null;
   onSelect: (stepId: string | null) => void;
 }
@@ -119,6 +125,7 @@ interface PipelineMapProps {
 export function PipelineMap({
   template,
   counts,
+  activity,
   selectedId,
   onSelect,
 }: PipelineMapProps) {
@@ -132,9 +139,13 @@ export function PipelineMap({
         position: { x: step.x, y: step.y },
         style: { width: step.width, height: step.height },
         selected: step.id === selectedId,
-        data: { step, count: step.count ? counts[step.count] : null },
+        data: {
+          step,
+          count: step.count ? counts[step.count] : null,
+          activity: activity?.[step.id],
+        },
       })),
-    [template, counts, selectedId],
+    [template, counts, activity, selectedId],
   );
 
   const edges = useMemo<Edge[]>(() => {
@@ -144,6 +155,7 @@ export function PipelineMap({
       const to = byId.get(link.target);
       if (!from || !to) return [];
       const handles = linkHandles(from, to);
+      const waiting = inFlight(activity?.[link.target]);
       return [
         {
           id: `${link.source}-${link.target}`,
@@ -152,14 +164,14 @@ export function PipelineMap({
           sourceHandle: handles.source,
           targetHandle: handles.target,
           type: "smoothstep",
-          label: link.label,
+          label: link.label ?? (waiting > 0 ? `${waiting}` : undefined),
           animated: link.dashed,
           markerEnd: { type: MarkerType.ArrowClosed },
           style: link.dashed ? { strokeDasharray: "6 4" } : undefined,
         },
       ];
     });
-  }, [template]);
+  }, [template, activity]);
 
   return (
     <ReactFlow
