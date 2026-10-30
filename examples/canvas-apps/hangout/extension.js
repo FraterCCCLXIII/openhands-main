@@ -681,7 +681,20 @@ h2{margin:26px 0 8px}.step{display:flex;gap:12px;padding:14px 0;border-top:1px s
 <div class="step"><span></span><div>Add beta testing notes<small>Highlight the new checklist and ask testers to try shared links.</small></div></div>
 <div class="step"><span></span><div>Invite external testers<small>Send the TestFlight link to the private group.</small></div></div></main>`;
 
-export const DRAWER_TABS = [["cards", "Cards"], ["screen", "Screen"], ["files", "Files"], ["terminal", "Terminal"], ["browser", "Browser"], ["webview", "Webview"], ["vscode", "VS Code"], ["planner", "Planner"], ["tasks", "Tasks"]];
+/** The people on the sample team, with which agents each one runs or reviews. */
+export const TEAM_HUMANS = [
+  { id: "maya", name: "Maya Chen", title: "Staff engineer", online: true, tint: "#38bdf8", agents: ["chief", "ea"] },
+  { id: "dev", name: "Dev Patel", title: "Product manager", online: true, tint: "#a78bfa", agents: ["inbox", "sales"] },
+  { id: "lena", name: "Lena Fischer", title: "Designer", online: false, tint: "#f472b6", agents: ["talent", "growth"] },
+  { id: "omar", name: "Omar Haddad", title: "SRE", online: true, tint: "#34d399", agents: ["support"] },
+  { id: "sofia", name: "Sofia Rossi", title: "QA lead", online: false, tint: "#fbbf24", agents: ["expense", "invoice"] },
+];
+
+/** The humans in the loop on one agent: those who run or review it. */
+export const humansOnAgent = (agentId) => TEAM_HUMANS.filter((h) => h.agents.includes(agentId));
+export const initialsOf = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+
+export const DRAWER_TABS = [["team", "Team"], ["cards", "Cards"], ["screen", "Screen"], ["files", "Files"], ["terminal", "Terminal"], ["browser", "Browser"], ["webview", "Webview"], ["vscode", "VS Code"], ["planner", "Planner"], ["tasks", "Tasks"]];
 
 export const SLASH_COMMANDS = [
   { name: "/card", hint: "Ask for a card", text: "Show your answer as a card. Reply with one fenced json block like {\"type\":\"statCard\",\"title\":\"...\",\"stats\":[{\"label\":\"...\",\"value\":\"...\"}]}. Block types: " + BLOCK_TYPES.join(", ") + "." },
@@ -1292,6 +1305,16 @@ const CSS = `
 .hg .tab { flex: none; border: 0; background: transparent; color: var(--arco-text-secondary); padding: 8px 10px; border-bottom: 2px solid transparent; cursor: pointer; font-size: var(--arco-text-sm); }
 .hg .tab[aria-selected="true"] { color: var(--arco-text-primary); border-bottom-color: var(--arco-accent); }
 .hg .pane { flex: 1; min-height: 0; overflow: auto; padding: var(--arco-space-l); display: flex; flex-direction: column; gap: var(--arco-space-m); }
+.hg .psec { margin: 6px 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--arco-text-secondary); }
+.hg .person { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--arco-radius-m); border: 1px solid transparent; }
+.hg .person:hover { background: var(--arco-bg-hover); }
+.hg .person.here { background: var(--arco-bg-elevated); border-color: var(--arco-border); }
+.hg .pbadge { position: relative; flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--tint); background: color-mix(in srgb, var(--tint) 20%, transparent); }
+.hg .pdot { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; background: var(--arco-success); border: 2px solid var(--arco-bg-surface-solid); }
+.hg .ptext { min-width: 0; flex: 1; display: grid; gap: 1px; }
+.hg .pname { font-weight: 600; color: var(--arco-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hg .ptitle, .hg .pruns { font-size: 12px; color: var(--arco-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hg .pruns { color: var(--arco-text-tertiary); }
 .hg .acard { background: var(--arco-bg-elevated); border: 1px solid var(--arco-border); border-radius: var(--arco-radius-l); overflow: hidden; }
 .hg .achead { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--arco-border); }
 .hg .aicon { flex: none; width: 22px; height: 22px; border-radius: 6px; background: var(--arco-accent-soft); color: var(--arco-accent); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
@@ -1512,7 +1535,7 @@ function mount(host, container) {
     threads: saved.threads || {},
     prefs: { ...DEFAULT_PREFS, ...(saved.prefs || {}) },
     collapsed: saved.collapsed || {},
-    tab: saved.tab || "cards",
+    tab: saved.tabv === 2 && saved.tab ? saved.tab : "team",
     cardState: saved.cardState || {},
     models: saved.models || {},
     live: [],
@@ -1533,7 +1556,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -2333,6 +2356,31 @@ function mount(host, container) {
       pane.append(b);
     };
     switch (state.tab) {
+      case "team": {
+        const on = humansOnAgent(agent.id);
+        const person = (h, here) => {
+          const row = el("div", `person${here ? " here" : ""}`);
+          const badge = el("span", "pbadge", initialsOf(h.name));
+          badge.style.setProperty("--tint", h.tint);
+          if (h.online) badge.append(el("i", "pdot"));
+          const text = el("span", "ptext");
+          text.append(el("span", "pname", h.name), el("span", "ptitle", `${h.title} · ${h.online ? "online" : "away"}`));
+          const runs = h.agents.map((id) => agents().find((a) => a.id === id)?.name).filter(Boolean);
+          if (runs.length) text.append(el("span", "pruns", `Runs ${runs.join(", ")}`));
+          const msg = el("button", "abtn", "Message");
+          msg.type = "button";
+          msg.addEventListener("click", () => { state.draft = `@${h.name.split(" ")[0]} `; render(); root.querySelector(".field")?.focus(); });
+          row.append(badge, text, msg);
+          return row;
+        };
+        pane.append(el("h4", "psec", agent.live ? "Humans in the loop" : `On ${agent.name}`));
+        if (on.length) on.forEach((h) => pane.append(person(h, true)));
+        else pane.append(el("p", "lhint", agent.live ? "Conversations on the Agent Server do not name the people involved. Everyone on the team is listed below." : "Nobody is assigned to this agent yet."));
+        pane.append(el("h4", "psec", `Team · ${TEAM_HUMANS.length}`));
+        [...TEAM_HUMANS].sort((a, b) => Number(b.online) - Number(a.online)).forEach((h) => pane.append(person(h, false)));
+        pane.append(el("p", "lhint", "Sample team. People appear here once agents and conversations carry owners and reviewers."));
+        break;
+      }
       case "cards": {
         const ask = el("button", "abtn", "Ask for a card");
         ask.type = "button";

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, TEAM_HUMANS, humansOnAgent, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -125,6 +125,29 @@ describe("markdown in messages", () => {
   });
 });
 
+describe("team in the drawer", () => {
+  it("opens on the Team tab with the humans on the selected agent first, then everyone", async () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    await new Promise((r) => setTimeout(r, 0));
+    const welcome = container.querySelector(".wgo");
+    if (welcome) welcome.click();
+    expect(container.querySelector(".tab[aria-selected='true']").textContent).toBe("Team");
+    expect(humansOnAgent("chief").map((h) => h.name)).toEqual(["Maya Chen"]);
+    const here = [...container.querySelectorAll(".person.here .pname")].map((n) => n.textContent);
+    expect(here).toEqual(["Maya Chen"]);
+    expect(container.querySelectorAll(".person").length).toBe(1 + TEAM_HUMANS.length);
+    [...container.querySelectorAll(".person")].find((r) => r.textContent.includes("Omar")).querySelector("button").click();
+    expect(container.querySelector(".field").value).toBe("@Omar ");
+    dispose();
+  });
+});
+
 describe("factory names", () => {
   it("keeps real project names and folds scratch folders into one factory", () => {
     expect(factoryName("OpenHands")).toBe("OpenHands");
@@ -238,6 +261,7 @@ describe("Hangout page", () => {
     await tick();
     expect(container.querySelectorAll(".row").length).toBe(9);
     container.querySelector(".tab[aria-selected='true']").textContent === "Cards";
+    [...container.querySelectorAll(".tab")].find((x) => x.textContent === "Cards").click();
     expect(container.querySelectorAll(".acard").length).toBeGreaterThan(0);
     [...container.querySelectorAll(".tab")].find((t) => t.textContent === "Terminal").click();
     expect(container.querySelector("[data-block='terminalBlock']")).toBeTruthy();
@@ -261,6 +285,7 @@ describe("Hangout page", () => {
     const first = container.querySelector(".row");
     expect(first.textContent).toContain("Docs agent");
     first.click();
+    [...container.querySelectorAll(".tab")].find((x) => x.textContent === "Cards").click();
     expect(container.querySelector("[data-block='statCard']")).toBeTruthy();
     submit(container, "ship it");
     await tick(10);
