@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
+import type { FeedTeammate } from "#/utils/feed-team-demo";
 import type { PrState, StepActivity } from "./pipeline-activity";
 
 const PR_STYLE: Record<PrState, string> = {
@@ -117,6 +118,43 @@ export function ActivityMarks({ activity }: { activity: StepActivity }) {
   );
 }
 
+/** A person's avatar badge: initials on their tint, with a dot when they are online. */
+export function PersonBadge({ person }: { person: FeedTeammate }) {
+  return (
+    <span
+      data-testid="pipeline-person-badge"
+      title={`${person.name} · ${person.title}`}
+      className={cn(
+        "relative flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+        person.className,
+      )}
+    >
+      {person.initials}
+      {person.online ? (
+        <span className="absolute -bottom-0.5 -right-0.5 size-2 rounded-full border border-canvas-base bg-success" />
+      ) : null}
+    </span>
+  );
+}
+
+/** The people in the loop at a human step, as badges with names, inside the node. */
+export function HumansLine({ activity }: { activity: StepActivity }) {
+  if (!activity.humans.length) return null;
+  return (
+    <span
+      data-testid="pipeline-humans-line"
+      className="mt-0.5 flex max-w-full items-center gap-1.5 rounded-full bg-surface px-1 py-0.5 text-xs leading-4 text-contrast"
+    >
+      {activity.humans.map((person) => (
+        <span key={person.id} className="flex items-center gap-1 truncate">
+          <PersonBadge person={person} />
+          <span className="truncate font-medium">{person.name}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /** The profile and model at a step, as one quiet line inside the node. */
 export function ProfileLine({ activity }: { activity: StepActivity }) {
   const { t } = useTranslation("openhands");
@@ -135,14 +173,14 @@ export function ProfileLine({ activity }: { activity: StepActivity }) {
   );
 }
 
-/** Chips that hang off the bottom edge of a step: pull requests, tickets, agents. */
-export function HangingChips({ activity }: { activity: StepActivity }) {
+/** Pull requests, tickets and agents, as a row at the foot of a step. */
+export function ChipRow({ activity }: { activity: StepActivity }) {
   const prs = activity.prs.slice(0, 3);
   const extra = activity.prs.length - prs.length;
   if (!prs.length && !activity.tickets.length && !activity.agents.length)
     return null;
   return (
-    <span className="absolute -bottom-2.5 left-1/2 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap">
+    <span className="mt-1 flex max-w-full items-center gap-1 whitespace-nowrap">
       {activity.agents.length ? <AgentStack names={activity.agents} /> : null}
       {prs.map((p) => (
         <PrChip key={p.number} number={p.number} state={p.state} />
@@ -215,6 +253,34 @@ export function ActivityDetails({
           </span>
         ) : null}
       </div>
+      {activity.humans.length ? (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted">
+            {t(I18nKey.FACTORY$ACTIVITY_PERSON)}
+          </span>
+          {activity.humans.map((person) => (
+            <span key={person.id} className="flex items-center gap-1">
+              <PersonBadge person={person} />
+              <span className="text-contrast">{person.name}</span>
+              <span className="text-muted">{person.title}</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
+      {activity.profile ? (
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-muted">
+            {t(I18nKey.FACTORY$ACTIVITY_PROFILE)}
+          </span>
+          <span className="text-contrast">{`${activity.profile.name} (${activity.profile.role})`}</span>
+          <span className="text-muted">
+            {t(I18nKey.FACTORY$ACTIVITY_MODEL)}
+          </span>
+          <span className="text-contrast">
+            {activity.profile.model ?? t(I18nKey.FACTORY$ACTIVITY_NO_MODEL)}
+          </span>
+        </div>
+      ) : null}
       {activity.prs.length ? (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-muted">

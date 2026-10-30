@@ -9,12 +9,25 @@ import { I18nKey } from "#/i18n/declaration";
 
 interface DetectedBackendsListProps {
   onPick: (backend: DetectedBackend) => void;
+  /** Hosts already added, which are not offered again. */
+  knownHosts?: string[];
 }
 
+const sameHost = (a: string, b: string): boolean =>
+  a.trim().replace(/\/+$/, "").toLowerCase() ===
+  b.trim().replace(/\/+$/, "").toLowerCase();
+
 /** Local Agent Servers found on this machine; picking one fills the form. */
-export function DetectedBackendsList({ onPick }: DetectedBackendsListProps) {
+export function DetectedBackendsList({
+  onPick,
+  knownHosts = [],
+}: DetectedBackendsListProps) {
   const { t } = useTranslation("openhands");
-  const { data, isFetching, refetch } = useQuery({
+  const {
+    data: found,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["detected-local-backends"],
     queryFn: () => detectLocalBackends(),
     // A server can start or stop at any time, so every open rescans.
@@ -22,6 +35,10 @@ export function DetectedBackendsList({ onPick }: DetectedBackendsListProps) {
     gcTime: 0,
     retry: false,
   });
+
+  const data = found?.filter(
+    (backend) => !knownHosts.some((host) => sameHost(host, backend.host)),
+  );
 
   return (
     <section data-testid="detected-backends" className="flex flex-col gap-2">

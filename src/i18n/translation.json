@@ -61918,5 +61918,23 @@
     "tr": "model yok",
     "uk": "без моделі",
     "id": "tanpa model"
+  },
+  "FACTORY$ACTIVITY_PERSON": {
+    "en": "Person in the loop",
+    "ja": "ループ内の担当者",
+    "zh-CN": "参与审核的人员",
+    "zh-TW": "參與審核的人員",
+    "ko-KR": "검토 담당자",
+    "no": "Person i løkken",
+    "ar": "الشخص المسؤول",
+    "de": "Person im Prozess",
+    "fr": "Personne dans la boucle",
+    "it": "Persona nel ciclo",
+    "pt": "Pessoa no ciclo",
+    "es": "Persona en el proceso",
+    "ca": "Persona al circuit",
+    "tr": "Süreçteki kişi",
+    "uk": "Людина в процесі",
+    "id": "Orang dalam alur"
   }
 }

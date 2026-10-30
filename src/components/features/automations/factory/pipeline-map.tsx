@@ -16,10 +16,16 @@ import "@xyflow/react/dist/style.css";
 import { useAgentServerUIAppearance } from "#/components/providers/agent-server-ui-root";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
-import { inFlight, type StepActivity } from "./pipeline-activity";
+import {
+  extraHeight,
+  inFlight,
+  layoutShifts,
+  type StepActivity,
+} from "./pipeline-activity";
 import {
   ActivityMarks,
-  HangingChips,
+  ChipRow,
+  HumansLine,
   ProfileLine,
 } from "./pipeline-activity-ui";
 import type {
@@ -91,13 +97,17 @@ function StepNodeView({ data, selected }: NodeProps<StepNode>) {
           {line}
         </span>
       ))}
-      {activity ? <ProfileLine activity={activity} /> : null}
+      {activity?.humans.length ? (
+        <HumansLine activity={activity} />
+      ) : activity ? (
+        <ProfileLine activity={activity} />
+      ) : null}
       {step.count && count !== null ? (
         <span className="mt-1 rounded-full bg-surface px-2 py-0.5 font-mono text-xs text-contrast">
           {t(COUNT_LABEL[step.count], { count })}
         </span>
       ) : null}
-      {activity ? <HangingChips activity={activity} /> : null}
+      {activity ? <ChipRow activity={activity} /> : null}
     </div>
   );
 }
@@ -136,22 +146,24 @@ export function PipelineMap({
 }: PipelineMapProps) {
   const appearance = useAgentServerUIAppearance();
 
-  const nodes = useMemo<StepNode[]>(
-    () =>
-      template.steps.map((step) => ({
-        id: step.id,
-        type: "step",
-        position: { x: step.x, y: step.y },
-        style: { width: step.width, height: step.height },
-        selected: step.id === selectedId,
-        data: {
-          step,
-          count: step.count ? counts[step.count] : null,
-          activity: activity?.[step.id],
-        },
-      })),
-    [template, counts, activity, selectedId],
-  );
+  const nodes = useMemo<StepNode[]>(() => {
+    const shifts = layoutShifts(template.steps, activity);
+    return template.steps.map((step) => ({
+      id: step.id,
+      type: "step",
+      position: { x: step.x, y: step.y + shifts[step.id] },
+      style: {
+        width: step.width,
+        height: step.height + extraHeight(activity?.[step.id]),
+      },
+      selected: step.id === selectedId,
+      data: {
+        step,
+        count: step.count ? counts[step.count] : null,
+        activity: activity?.[step.id],
+      },
+    }));
+  }, [template, counts, activity, selectedId]);
 
   const edges = useMemo<Edge[]>(() => {
     const byId = new Map(template.steps.map((step) => [step.id, step]));

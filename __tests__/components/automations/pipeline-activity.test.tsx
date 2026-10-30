@@ -2,11 +2,15 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   buildActivity,
+  extraHeight,
+  layoutShifts,
   inFlight,
 } from "#/components/features/automations/factory/pipeline-activity";
 import {
+  ActivityDetails,
   ActivityMarks,
-  HangingChips,
+  HumansLine,
+  ChipRow,
 } from "#/components/features/automations/factory/pipeline-activity-ui";
 import { PIPELINE_TEMPLATES } from "#/components/features/automations/factory/pipeline-templates";
 
@@ -43,6 +47,31 @@ describe("pipeline activity", () => {
     ).toBe(true);
   });
 
+  it("names a person on every human step and on no automatic one", () => {
+    const activity = buildActivity(steps, "web");
+    steps.forEach((step) => {
+      const named = (activity[step.id]?.humans.length ?? 0) > 0;
+      expect(named).toBe(step.kind === "human");
+    });
+  });
+
+  it("moves steps down so grown steps never overlap the ones below", () => {
+    const activity = buildActivity(steps, "web");
+    const shifts = layoutShifts(steps, activity);
+    const box = (s: (typeof steps)[number]) => ({
+      top: s.y + shifts[s.id],
+      bottom: s.y + shifts[s.id] + s.height + extraHeight(activity[s.id]),
+    });
+    steps.forEach((a) =>
+      steps.forEach((b) => {
+        const sameColumn = a.x < b.x + b.width && b.x < a.x + a.width;
+        if (a.id !== b.id && sameColumn && a.y + a.height <= b.y) {
+          expect(box(a).bottom).toBeLessThanOrEqual(box(b).top);
+        }
+      }),
+    );
+  });
+
   it("counts everything waiting or running as in flight", () => {
     expect(
       inFlight({
@@ -52,6 +81,7 @@ describe("pipeline activity", () => {
         prs: [],
         tickets: [],
         agents: [],
+        humans: [],
         profile: null,
         waitMinutes: null,
         perDay: null,
@@ -70,6 +100,7 @@ describe("pipeline activity marks", () => {
     prs: [],
     tickets: [],
     agents: [],
+    humans: [],
     profile: null,
     waitMinutes: null,
     perDay: null,
@@ -105,8 +136,40 @@ describe("pipeline activity marks", () => {
       number,
       state: "open" as const,
     }));
-    render(<HangingChips activity={{ ...base, prs }} />);
+    render(<ChipRow activity={{ ...base, prs }} />);
     expect(screen.getAllByTestId("pipeline-pr-chip")).toHaveLength(3);
     expect(screen.getByText("+1")).toBeInTheDocument();
+  });
+
+  it("names the person in the loop on the node and the profile and model in the inspector", () => {
+    const activity = {
+      ...base,
+      humans: [
+        {
+          id: "maya",
+          name: "Maya Chen",
+          title: "Staff engineer",
+          initials: "MC",
+          online: true,
+          className: "",
+        },
+      ],
+      profile: { name: "Forge", role: "worker", model: "Opus" },
+    };
+    render(
+      <>
+        <HumansLine activity={activity} />
+        <ActivityDetails activity={activity} sample />
+      </>,
+    );
+    expect(screen.getByTestId("pipeline-humans-line")).toHaveTextContent(
+      "Maya Chen",
+    );
+    expect(screen.getAllByTestId("pipeline-person-badge")[0]).toHaveTextContent(
+      "MC",
+    );
+    const details = screen.getByTestId("pipeline-activity-details");
+    expect(details).toHaveTextContent("Forge (worker)");
+    expect(details).toHaveTextContent("Opus");
   });
 });

@@ -18,10 +18,12 @@ import { useBackendsHealth } from "#/hooks/query/use-backends-health";
 import { useAllCloudOrganizations } from "#/hooks/query/use-cloud-organizations";
 import { useCloudCurrentUserId } from "#/hooks/query/use-cloud-current-user-id";
 import { I18nKey } from "#/i18n/declaration";
+import { useAddBackendPrefillStore } from "#/stores/add-backend-prefill-store";
 import { cn } from "#/utils/utils";
 import { modalTitleLgClassName } from "#/utils/modal-classes";
 import { BackendFormModal } from "./backend-form-modal";
 import { BackendRow } from "./backend-row";
+import { DetectedBackendsList } from "./detected-backends-list";
 import { DeviceFlowAuth } from "./device-flow-auth";
 import { ManagedAgentsView } from "./managed-agents/managed-agents-view";
 import { MarsBackendRemovalModal } from "./managed-agents/mars-backend-removal-modal";
@@ -110,6 +112,7 @@ export function ManageBackendsModal({
   const [view, setView] = React.useState<ManageBackendsView>(
     showManagedAgents ? initialView : "backends",
   );
+  const setPrefill = useAddBackendPrefillStore((state) => state.setPrefill);
   const handleConfirmRemoval = () => {
     if (!pendingRemoval) return;
     removeBackend(pendingRemoval.id);
@@ -224,6 +227,20 @@ export function ManageBackendsModal({
                     </ul>
                   )}
                 </div>
+                {isLockedToCloud ? null : (
+                  <div className="pt-4">
+                    <DetectedBackendsList
+                      knownHosts={backends.map((backend) => backend.host)}
+                      onPick={(detected) => {
+                        setPrefill({
+                          name: t(I18nKey.BACKEND$DETECTED_DEFAULT_NAME),
+                          host: detected.host,
+                        });
+                        setShowAddForm(true);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 p-5">
