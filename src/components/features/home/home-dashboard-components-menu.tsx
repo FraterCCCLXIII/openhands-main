@@ -4,6 +4,8 @@ import { LayoutGrid } from "lucide-react";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { useReorderDrag } from "#/components/shared/use-reorder-drag";
 import { ReorderGrip } from "#/components/shared/reorder-grip";
+import { useFlipReorder } from "#/components/shared/use-flip-reorder";
+import { cn } from "#/utils/utils";
 import { I18nKey } from "#/i18n/declaration";
 import { getHomeDashboardWidget } from "./home-dashboard-widgets";
 import { ToggleSwitch } from "#/ui/toggle-switch";
@@ -28,7 +30,11 @@ export function HomeDashboardComponentsMenu() {
   const order = useHomeDashboardVisibilityStore((state) => state.order);
   const setHidden = useHomeDashboardVisibilityStore((state) => state.setHidden);
   const moveTo = useHomeDashboardVisibilityStore((state) => state.moveTo);
-  const { gripProps, rowProps } = useReorderDrag(order, moveTo);
+  const { draggedId, overId, gripProps, rowProps } = useReorderDrag(
+    order,
+    moveTo,
+  );
+  const listRef = useFlipReorder<HTMLDivElement>(order, open);
 
   return (
     <div className="relative flex justify-end">
@@ -45,7 +51,10 @@ export function HomeDashboardComponentsMenu() {
       </button>
       {open ? (
         <div
-          ref={menuRef}
+          ref={(node) => {
+            menuRef.current = node;
+            listRef.current = node;
+          }}
           data-testid="home-dashboard-components-menu"
           className="absolute top-full right-0 z-50 mt-1 min-w-64 divide-y divide-border-subtle rounded-xl border border-border-subtle bg-tertiary px-2 shadow-lg"
         >
@@ -56,8 +65,18 @@ export function HomeDashboardComponentsMenu() {
               <div
                 key={id}
                 data-testid={`home-dashboard-row-${id}`}
+                data-flip-id={id}
                 {...rowProps(id)}
-                className="flex items-center gap-2 py-1.5 text-sm text-contrast"
+                className={cn(
+                  "flex items-center gap-2 py-1.5 text-sm text-contrast",
+                  draggedId === id && "opacity-40",
+                  draggedId &&
+                    overId === id &&
+                    draggedId !== id &&
+                    (order.indexOf(draggedId) < order.indexOf(id)
+                      ? "shadow-[inset_0_-2px_0_0_var(--oh-focus)]"
+                      : "shadow-[inset_0_2px_0_0_var(--oh-focus)]"),
+                )}
               >
                 <ReorderGrip
                   data-testid={`home-dashboard-grip-${id}`}
@@ -68,6 +87,7 @@ export function HomeDashboardComponentsMenu() {
                 <ToggleSwitch
                   enabled={!hidden}
                   label={label}
+                  size="sm"
                   onToggle={() => setHidden(id, !hidden)}
                 />
               </div>

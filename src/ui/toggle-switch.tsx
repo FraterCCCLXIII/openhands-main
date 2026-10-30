@@ -57,6 +57,8 @@ interface ToggleSwitchProps {
   enabled: boolean;
   label: string;
   onToggle: () => void;
+  /** `sm` is the compact menu-row pill; defaults to the settings switch. */
+  size?: ToggleSwitchSize;
   /** Makes the switch inert: not focusable and ignores clicks and keys. */
   disabled?: boolean;
   className?: string;
@@ -66,6 +68,7 @@ export function ToggleSwitch({
   enabled,
   label,
   onToggle,
+  size = "md",
   disabled = false,
   className,
 }: ToggleSwitchProps) {
@@ -82,7 +85,7 @@ export function ToggleSwitch({
       }}
       className={cn("cursor-pointer", className)}
     >
-      <ToggleSwitchVisual enabled={enabled} />
+      <ToggleSwitchVisual enabled={enabled} size={size} />
     </button>
   );
 }
