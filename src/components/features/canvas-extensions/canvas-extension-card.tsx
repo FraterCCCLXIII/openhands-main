@@ -32,8 +32,17 @@ export function CanvasExtensionCard({
       className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5"
     >
       <div className="relative flex h-36 items-end bg-linear-to-br from-cool-grey-900 via-base-secondary to-canvas-base px-4 pb-4">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
-          <CanvasExtensionIcon extension={extension} size={36} />
+        <div className="relative flex size-16 items-center justify-center overflow-hidden rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
+          <CanvasExtensionIcon
+            extension={extension}
+            size={64}
+            fallbackSize={36}
+          />
+          {/* Tile shading over the icon so its colour inherits the glass look. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/25 via-white/5 to-black/20"
+          />
         </div>
         <ToggleSwitch
           enabled={extension.enabled}
