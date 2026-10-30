@@ -1168,6 +1168,10 @@ const CSS = `
 .mh .composerwrap { padding: 8px 16px 14px; }
 .mh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
 .mh .avatar { width: 32px; height: 32px; }
+/* Fewer rules: the rails separate from the page by tone, not by lines. */
+.mh .list, .mh .members { border: 0; background: var(--hg-panel); }
+.mh .lhead, .mh .chead, .mh .mhead, .mh .lpowered, .mh .acct { border: 0; }
+.mh .msg .quote { border-left: 0; }
 `;
 
 // ─── The page ─────────────────────────────────────────────────────────────────────────────

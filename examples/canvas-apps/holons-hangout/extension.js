@@ -764,6 +764,10 @@ const CSS = `
 .hh .composerwrap { padding: 8px 16px 14px; }
 .hh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
 .hh .avatar { width: 32px; height: 32px; }
+/* Fewer rules: the rails separate from the page by tone, not by lines. */
+.hh .rail, .hh .list, .hh .team { border: 0; background: var(--hh-panel); }
+.hh .lpowered, .hh .mhead, .hh .composer, .hh .note, .hh .setform { border: 0; }
+.hh .replies { border-left: 0; padding-left: 0; }
 `;
 
 export function activate(host) {

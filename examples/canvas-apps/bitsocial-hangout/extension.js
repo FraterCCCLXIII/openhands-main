@@ -962,6 +962,9 @@ const CSS = `
 .bh .composerwrap { padding: 8px 16px 14px; }
 .bh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
 .bh .avatar { width: 32px; height: 32px; }
+/* Fewer rules: the rails separate from the page by tone, not by lines. */
+.bh .side, .bh .members { border: 0; background: var(--bh-panel); }
+.bh .sidefoot, .bh .head, .bh .dlg .sep { border: 0; }
 `;
 
 function el(tag, cls, content) {
@@ -1858,7 +1861,9 @@ function mount(container, options) {
     });
     return chip;
   };
-  bar.append(fieldChip("Title", titleInput), fieldChip("Link", linkInput), errLine, el("span", "spacer"), sendBtn);
+  const titleChip = fieldChip("Title", titleInput);
+  const linkChip = fieldChip("Link", linkInput);
+  bar.append(titleChip, linkChip, errLine, el("span", "spacer"), sendBtn);
   const box = el("div", "composerbox");
   box.append(el("div", "grip"), titleInput, linkInput, textarea, bar);
   composerWrap.append(replyChip, box);
@@ -2130,6 +2135,8 @@ function mount(container, options) {
       textarea.placeholder = state.replyTo ? `Reply to ${state.replyTo.author.name}` : "Reply in thread";
       titleInput.hidden = true;
       linkInput.hidden = true;
+      titleChip.hidden = true;
+      linkChip.hidden = true;
     } else {
       head.append(el("h2", "", `# ${c.title || c.address}`), el("span", "desc", c.description || c.address), ...headActions(c));
       const list = el("div", "msgs");
@@ -2137,8 +2144,10 @@ function mount(container, options) {
       c.posts.forEach((m) => list.append(messageNode(m, { openThread: true })));
       body.append(list);
       textarea.placeholder = `Message # ${c.title || c.address}`;
-      titleInput.hidden = false;
-      linkInput.hidden = false;
+      titleChip.hidden = false;
+      linkChip.hidden = false;
+      titleInput.hidden = titleChip.getAttribute("aria-pressed") !== "true";
+      linkInput.hidden = linkChip.getAttribute("aria-pressed") !== "true";
     }
     replyChip.hidden = !state.replyTo;
     replyChipText.textContent = state.replyTo ? `Replying to ${state.replyTo.author.name}` : "";

@@ -2,17 +2,16 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   Blocks,
+  Bot,
   ChevronLeft,
-  MessagesSquare,
-  Newspaper,
+  Factory,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
   Server,
   Settings,
 } from "lucide-react";
-import { BuiltInAppNavLink } from "./built-in-app-nav-link";
-import { CanvasExtensionNavMenu } from "./canvas-extension-nav-menu";
+import { SidebarAppsList } from "./sidebar-apps-list";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { getLockedCloudHost } from "#/api/agent-server-config";
@@ -54,20 +53,17 @@ import {
   sidebarNavListClassName,
   sidebarNavRowClassName,
 } from "./sidebar-layout";
-import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
-import { CanvasExtensionIcon } from "#/components/features/canvas-extensions/canvas-extension-icon";
 import type { Backend } from "#/api/backend-registry/types";
 import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
-const FEED_PATH = "/feed";
-const TEAM_CHAT_PATH = "/team-chat";
 const APPS_PATH = "/apps";
+const FACTORY_PATH = "/factory";
+const AGENTS_PATH = "/agents";
 const TEAM_PATH = "/team";
 const ICON_SIZE = 18;
 const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
 const PLANNING_PATH = "/planning";
-const EXTENSION_ICON_SIZE = 22;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 
@@ -131,7 +127,6 @@ export function SidebarRailBody({
     (gitUserEmail && gitUserEmail !== DEFAULT_SETTINGS.git_user_email
       ? gitUserEmail
       : undefined);
-  const { pages: canvasExtensionPages } = useCanvasExtensionsRuntime();
   const backendCloseTimerRef = collapsedBackendCloseTimer;
 
   // Each backend keeps its own color theme; switching backends applies it.
@@ -268,6 +263,24 @@ export function SidebarRailBody({
             icon={<Blocks width={ICON_SIZE} height={ICON_SIZE} />}
           />
         )}
+        <SidebarNavLink
+          to={FACTORY_PATH}
+          label={t(I18nKey.NAV$FACTORY)}
+          testId="sidebar-factory-link"
+          collapsed={collapsed}
+          forceActive={
+            currentPath === FACTORY_PATH ||
+            currentPath.startsWith("/automations/factories")
+          }
+          icon={<Factory width={ICON_SIZE} height={ICON_SIZE} />}
+        />
+        <SidebarNavLink
+          to={AGENTS_PATH}
+          label={t(I18nKey.NAV$AGENTS)}
+          testId="sidebar-agents-link"
+          collapsed={collapsed}
+          icon={<Bot width={ICON_SIZE} height={ICON_SIZE} />}
+        />
         {/* The interface manifest owns this entry's label, so an absent
             manifest leaves the rail without it rather than with host copy. */}
         {hasAutomationInterface() && (
@@ -279,46 +292,7 @@ export function SidebarRailBody({
             icon={<AutomationsIcon width={ICON_SIZE} height={ICON_SIZE} />}
           />
         )}
-        <BuiltInAppNavLink
-          appName="feed"
-          to={FEED_PATH}
-          label={t(I18nKey.FEED$TITLE)}
-          testId="sidebar-feed-link"
-          collapsed={collapsed}
-          defaultBackground="orange"
-          size={EXTENSION_ICON_SIZE}
-          glyph={<Newspaper width={14} height={14} />}
-        />
-        <BuiltInAppNavLink
-          appName="team-chat"
-          to={TEAM_CHAT_PATH}
-          label={t(I18nKey.TEAM_CHAT$NAV_LABEL)}
-          testId="sidebar-team-chat-link"
-          collapsed={collapsed}
-          defaultBackground="emerald"
-          size={EXTENSION_ICON_SIZE}
-          glyph={<MessagesSquare width={14} height={14} />}
-        />
-        {canvasExtensionPages.map((page) => (
-          <CanvasExtensionNavMenu
-            key={`${page.extension.name}:${page.contribution.id}`}
-            extensionName={page.extension.name}
-            label={page.contribution.nav_label || page.contribution.title}
-          >
-            <SidebarNavLink
-              to={page.href}
-              label={page.contribution.nav_label || page.contribution.title}
-              testId={`sidebar-canvas-extension-${page.extension.name}-${page.contribution.id}`}
-              collapsed={collapsed}
-              icon={
-                <CanvasExtensionIcon
-                  extension={page.extension}
-                  size={EXTENSION_ICON_SIZE}
-                />
-              }
-            />
-          </CanvasExtensionNavMenu>
-        ))}
+        <SidebarAppsList collapsed={collapsed} />
       </nav>
 
       <SidebarConversationList collapsed={collapsed} />

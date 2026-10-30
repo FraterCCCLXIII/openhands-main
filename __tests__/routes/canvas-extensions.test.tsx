@@ -72,13 +72,19 @@ async function startPendingUpdate(user: ReturnType<typeof userEvent.setup>) {
       }),
   );
   await user.click(
+    await screen.findByTestId("canvas-extension-menu-demo-page"),
+  );
+  await user.click(
     await screen.findByTestId("canvas-extension-refresh-demo-page"),
   );
+  // The menu closes on pick; reopen it to see that Uninstall waits for the update.
+  await user.click(screen.getByTestId("canvas-extension-menu-demo-page"));
   await waitFor(() =>
     expect(
       screen.getByTestId("canvas-extension-uninstall-demo-page"),
     ).toBeDisabled(),
   );
+  await user.keyboard("{Escape}");
   return () => finishUpdate();
 }
 

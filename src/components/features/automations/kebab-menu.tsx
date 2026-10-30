@@ -14,14 +14,20 @@ export interface KebabMenuItem {
   icon: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  testId?: string;
 }
 
 interface KebabMenuProps {
   items: KebabMenuItem[];
   triggerClassName?: string;
+  triggerTestId?: string;
 }
 
-export function KebabMenu({ items, triggerClassName }: KebabMenuProps) {
+export function KebabMenu({
+  items,
+  triggerClassName,
+  triggerTestId,
+}: KebabMenuProps) {
   const { t } = useTranslation("openhands");
   const [open, setOpen] = useState(false);
   const [portalStyle, setPortalStyle] = useState<React.CSSProperties>();
@@ -106,6 +112,7 @@ export function KebabMenu({ items, triggerClassName }: KebabMenuProps) {
                 setOpen(false);
               }}
               isDisabled={item.disabled}
+              testId={item.testId}
               className="group"
             >
               <KebabMenuItemContent icon={item.icon} label={item.label} />
@@ -120,6 +127,7 @@ export function KebabMenu({ items, triggerClassName }: KebabMenuProps) {
       <button
         ref={triggerRef}
         type="button"
+        data-testid={triggerTestId}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((current) => !current);
