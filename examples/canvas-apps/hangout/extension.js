@@ -131,7 +131,7 @@ const CSS = `
 .hg .time { color: var(--hg-muted); font-size: 12px; flex: none; }
 .hg .preview { color: var(--hg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; flex: none; }
-.hg .tag { font-size: 11px; color: var(--hg-muted); border: 1px solid var(--hg-border); border-radius: 999px; padding: 0 6px; }
+.hg .dot.live { background: var(--hg-success); }
 .hg .chat { background: var(--hg-bg); }
 .hg .chathead { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--hg-border); font-weight: 600; color: var(--hg-contrast); }
 .hg .msgs { flex: 1; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
@@ -292,7 +292,11 @@ function mount(host, container) {
       text.append(top, preview);
       row.append(avatar(agent.blob), text);
       if (agent.unread) row.append(el("span", "dot"));
-      if (agent.live) row.append(el("span", "tag", "live"));
+      if (agent.live) {
+        const live = el("span", "dot live");
+        live.title = "Live conversation";
+        row.append(live);
+      }
       row.addEventListener("click", () => { state.selected = agent.id; persist(); render(); });
       col.append(row);
     });
