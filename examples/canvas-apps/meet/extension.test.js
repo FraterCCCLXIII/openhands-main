@@ -222,3 +222,39 @@ describe("built-with rail", () => {
     expect(links[0].textContent).toBe("W");
   });
 });
+
+describe("add contacts modal", () => {
+  const open = (container) => container.querySelector('.navhead [aria-label="Add contacts"]').click();
+  const type = (input, value) => { input.value = value; input.dispatchEvent(new Event("input", { bubbles: true })); };
+
+  it("opens from the rail, adds one person, and shows them in the list", () => {
+    const { container } = mountMeet();
+    open(container);
+    const dialog = container.querySelector('[role="dialog"][aria-label="Add contacts"]');
+    expect([...dialog.querySelectorAll(".sharetabs button")].map((b) => b.textContent)).toEqual(["Person", "Bulk import"]);
+    const [name, email] = dialog.querySelectorAll("input");
+    type(name, "Grace Hopper");
+    type(email, "grace@example.com");
+    [...dialog.querySelectorAll("button")].find((b) => b.textContent === "Add contact").click();
+    expect(container.querySelector('[role="dialog"]').textContent).toContain("Added Grace Hopper.");
+    expect(container.querySelector(".nav").textContent).toContain("Grace Hopper");
+  });
+
+  it("imports many people from pasted vCards on the Bulk import tab", () => {
+    const { container } = mountMeet();
+    open(container);
+    [...container.querySelectorAll(".sharetabs button")].find((b) => b.textContent === "Bulk import").click();
+    const area = container.querySelector(".importbox textarea");
+    type(area, "BEGIN:VCARD\nVERSION:3.0\nFN:Ada Lovelace\nEMAIL:ada@example.com\nEND:VCARD\nBEGIN:VCARD\nVERSION:3.0\nFN:Alan Turing\nEMAIL:alan@example.com\nEND:VCARD\n");
+    [...container.querySelectorAll(".importbox button")].find((b) => b.textContent === "Import").click();
+    expect(container.querySelector('[role="dialog"]').textContent).toContain("Added 2 of 2");
+    expect(container.querySelector(".nav").textContent).toContain("Alan Turing");
+  });
+
+  it("closes with Done", () => {
+    const { container } = mountMeet();
+    open(container);
+    [...container.querySelectorAll(".modalfoot button")].find((b) => b.textContent === "Done").click();
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+  });
+});
