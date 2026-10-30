@@ -205,9 +205,9 @@ describe("HomeAutomationRunTooltip — disabled reason", () => {
       />,
     );
 
-    expect(screen.getByTestId("automation-tooltip-disabled-reason")).toHaveTextContent(
-      reason,
-    );
+    expect(
+      screen.getByTestId("automation-tooltip-disabled-reason"),
+    ).toHaveTextContent(reason);
   });
 
   it("substitutes the manual-disable label instead of the raw 'manual' value", () => {
@@ -223,9 +223,9 @@ describe("HomeAutomationRunTooltip — disabled reason", () => {
       />,
     );
 
-    expect(screen.getByTestId("automation-tooltip-disabled-reason")).toHaveTextContent(
-      "AUTOMATIONS$DETAIL$DISABLED_MANUAL",
-    );
+    expect(
+      screen.getByTestId("automation-tooltip-disabled-reason"),
+    ).toHaveTextContent("AUTOMATIONS$DETAIL$DISABLED_MANUAL");
   });
 
   it("omits the disabled-reason row for an enabled automation", () => {

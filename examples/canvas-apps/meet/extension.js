@@ -525,7 +525,8 @@ const GRIP_CSS = `
 const CSS = `
 .mt { --mt-bg: var(--oh-color-base, #171717); --mt-panel: var(--oh-color-base-secondary, #212121); --mt-text: var(--oh-foreground, #eee);
   --mt-muted: var(--oh-muted, #9a9a9a); --mt-border: var(--oh-border-subtle, #3a3a3a); --mt-contrast: var(--oh-contrast, #fff); --mt-on-contrast: var(--oh-contrast-foreground, #111); --mt-danger: #ef4444; --mt-danger-solid: #dc2626; --mt-ok: #34d399;
-  box-sizing: border-box; color: var(--mt-text); background: var(--mt-bg); font: 14px/1.45 system-ui, sans-serif; height: 100dvh; min-height: 480px; overflow: hidden; position: relative; display: grid; grid-template-columns: var(--grip-0, 260px) minmax(0, 1fr); }
+  box-sizing: border-box; color: var(--mt-text); background: var(--mt-bg); font: 14px/1.45 system-ui, sans-serif; height: 100%; min-height: 480px; overflow: hidden; position: relative; display: grid; grid-template-columns: var(--grip-0, 260px) minmax(0, 1fr); }
+.mt [hidden] { display: none !important; }
 .mt .main { min-width: 0; display: flex; flex-direction: column; }
 .mt .nav { min-width: 0; background: transparent; display: flex; flex-direction: column; min-height: 0; }
 .mt .navtop { padding: 14px 12px 10px; display: grid; gap: 10px; }
@@ -1632,6 +1633,7 @@ function mount(container, host) {
 
   function render() {
     if (disposed) return;
+    fitRoot();
     root.replaceChildren();
     const main = el("div", "main");
     const nav = navCol();
@@ -1658,7 +1660,17 @@ function mount(container, host) {
     if (state.importing) root.append(addContactsModal());
   }
 
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fitRoot() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+  }
+  const onWinResize = () => { if (!disposed) fitRoot(); };
+  window.addEventListener("resize", onWinResize);
+  const roFit = typeof ResizeObserver === "function" && container.parentElement ? new ResizeObserver(onWinResize) : null;
+  roFit?.observe(container.parentElement || container);
+
   render();
   detectServer();
-  return () => { disposed = true; grips.forEach((g) => g.dispose()); stopDemo(); stopListening(); globalThis.speechSynthesis?.cancel(); room?.disconnect(); root.remove(); };
+  return () => { disposed = true; window.removeEventListener("resize", onWinResize); roFit?.disconnect(); grips.forEach((g) => g.dispose()); stopDemo(); stopListening(); globalThis.speechSynthesis?.cancel(); room?.disconnect(); root.remove(); };
 }

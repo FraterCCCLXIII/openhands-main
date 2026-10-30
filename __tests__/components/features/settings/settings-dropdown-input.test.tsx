@@ -84,7 +84,9 @@ describe("SettingsDropdownInput", () => {
 
     const clearButton = screen
       .getAllByRole("button")
-      .find((button) => button.getAttribute("aria-label") !== "Show suggestions");
+      .find(
+        (button) => button.getAttribute("aria-label") !== "Show suggestions",
+      );
     if (!clearButton) {
       throw new Error("Clear button not found");
     }

@@ -209,16 +209,15 @@ describe("TelemetryProvider", () => {
     sessionStorage.setItem(
       "posthog_bootstrap",
       JSON.stringify({
-        bootstrap: { distinctID: "stored-docs-id", sessionID: "stored-session" },
+        bootstrap: {
+          distinctID: "stored-docs-id",
+          sessionID: "stored-session",
+        },
         exp: Date.now() + 60_000,
         attribution: { cta_surface: "docs_link" },
       }),
     );
-    window.history.replaceState(
-      null,
-      "",
-      `/canvas?oh_ph_handoff=${encoded}`,
-    );
+    window.history.replaceState(null, "", `/canvas?oh_ph_handoff=${encoded}`);
 
     render(
       <TelemetryProvider config={runtimeConfig}>

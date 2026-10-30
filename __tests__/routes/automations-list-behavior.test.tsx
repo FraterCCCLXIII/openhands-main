@@ -1,9 +1,10 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { I18nKey } from "#/i18n/declaration";
+import { renderWithProviders } from "../../test-utils";
 import type { Automation, AutomationSpec } from "#/types/automation";
 
 const mocks = vi.hoisted(() => ({
@@ -57,7 +58,8 @@ const mocks = vi.hoisted(() => ({
   downloadBlob: vi.fn(),
 }));
 
-vi.mock("react-i18next", () => ({
+vi.mock("react-i18next", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-i18next")>()),
   useTranslation: (namespace: string) => {
     mocks.useTranslation(namespace);
     return { t: mocks.translate };
@@ -83,8 +85,12 @@ vi.mock("#/hooks/use-automation-permissions", () => ({
   useAutomationCreatorFilterUserId: () => null,
 }));
 
-vi.mock("#/context/navigation-context", () => ({
-  useNavigation: () => ({ navigate: mocks.navigate }),
+vi.mock("#/context/navigation-context", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("#/context/navigation-context")>()),
+  useNavigation: () => ({
+    currentPath: "/automations",
+    navigate: mocks.navigate,
+  }),
 }));
 
 vi.mock("#/hooks/query/use-automation-run-summaries", () => ({
@@ -441,7 +447,7 @@ function makeImportSpec(
 }
 
 function renderList() {
-  return render(<AutomationsList />);
+  return renderWithProviders(<AutomationsList />);
 }
 
 function openImportModal() {
@@ -586,7 +592,7 @@ describe("automations list states", () => {
 describe("automations list interactions", () => {
   it("admits the configured interface and opens Git Sync", () => {
     expect(clientLoader()).toBeNull();
-    render(<AutomationsList />);
+    renderWithProviders(<AutomationsList />);
     fireEvent.click(screen.getByTestId("automations-git-sync"));
     expect(mocks.navigate).toHaveBeenCalledWith("/automations/git-sync");
   });
@@ -625,7 +631,7 @@ describe("automations list interactions", () => {
     const user = userEvent.setup();
 
     renderList();
-    expect(screen.getAllByTestId(/^automation-/)).toHaveLength(5);
+    expect(screen.getAllByRole("article")).toHaveLength(5);
     expect(
       screen.queryByRole("button", { name: "retry-list" }),
     ).not.toBeInTheDocument();
@@ -633,7 +639,7 @@ describe("automations list interactions", () => {
     const search = screen.getByRole("textbox", { name: "automation-search" });
     await user.type(search, "needle name");
     expect(screen.getByTestId("automation-by-name")).toBeInTheDocument();
-    expect(screen.getAllByTestId(/^automation-/)).toHaveLength(1);
+    expect(screen.getAllByRole("article")).toHaveLength(1);
 
     await user.clear(search);
     await user.type(search, "needle prompt");
@@ -652,7 +658,7 @@ describe("automations list interactions", () => {
 
     await user.clear(search);
     await user.type(search, "absent");
-    expect(screen.queryAllByTestId(/^automation-/)).toHaveLength(0);
+    expect(screen.queryAllByRole("article")).toHaveLength(0);
   });
 
   it("enables and disables automations while tracking only enablement", async () => {
@@ -905,7 +911,7 @@ describe("automations list interactions", () => {
     mocks.canManage = false;
 
     // Act
-    render(<AutomationsList />);
+    renderWithProviders(<AutomationsList />);
 
     // Assert
     expect(

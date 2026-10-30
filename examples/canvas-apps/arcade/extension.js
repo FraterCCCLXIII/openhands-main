@@ -52,7 +52,7 @@ export const SANDBOX = "allow-scripts allow-same-origin allow-pointer-lock allow
 export const ALLOW = "fullscreen; gamepad; autoplay";
 
 const CSS = `
-.ar { container-type: inline-size; box-sizing: border-box; height: 100%; min-height: 0; display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); gap: 12px; padding: 12px;
+.ar { container-type: inline-size; box-sizing: border-box; height: 100%; min-height: 480px; display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); gap: 12px; padding: 12px;
   background: var(--oh-color-base, #0f1117); color: var(--oh-foreground, #e6e8ee); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
 .ar *, .ar *::before, .ar *::after { box-sizing: border-box; }
 .ar h1 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
@@ -118,6 +118,16 @@ export function mount(container, games = GAMES) {
   const root = el(doc, "div", { class: "ar" });
   container.append(style, root);
 
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fit() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (win.innerHeight || 800) - top)}px`;
+  }
+  const onResize = () => fit();
+  win.addEventListener("resize", onResize);
+  const ro = typeof win.ResizeObserver === "function" && container.parentElement ? new win.ResizeObserver(onResize) : null;
+  ro?.observe(container.parentElement || container);
+
   function select(id) {
     selectedId = id;
     const g = games.find((x) => x.id === id);
@@ -177,10 +187,16 @@ export function mount(container, games = GAMES) {
       el(doc, "nav", { "aria-label": "Games" }, el(doc, "h1", { text: "Arcade" }), renderList()),
       renderMain(),
     );
+    fit();
   }
 
   render();
-  return () => { root.remove(); style.remove(); };
+  return () => {
+    win.removeEventListener("resize", onResize);
+    ro?.disconnect();
+    root.remove();
+    style.remove();
+  };
 }
 
 export function activate(host) {

@@ -46,34 +46,32 @@ describe("DiffChangeList", () => {
 
     await user.click(firstToggle);
     expect(
-      screen.getAllByTestId("file-diff-viewer-outer")[0].querySelector(
-        '[data-testid="file-diff-viewer"]',
-      ),
+      screen
+        .getAllByTestId("file-diff-viewer-outer")[0]
+        .querySelector('[data-testid="file-diff-viewer"]'),
     ).toBeTruthy();
     expect(
-      screen.getAllByTestId("file-diff-viewer-outer")[1].querySelector(
-        '[data-testid="file-diff-viewer"]',
-      ),
+      screen
+        .getAllByTestId("file-diff-viewer-outer")[1]
+        .querySelector('[data-testid="file-diff-viewer"]'),
     ).toBeNull();
 
     await user.click(secondToggle);
     expect(
-      screen.getAllByTestId("file-diff-viewer-outer")[0].querySelector(
-        '[data-testid="file-diff-viewer"]',
-      ),
+      screen
+        .getAllByTestId("file-diff-viewer-outer")[0]
+        .querySelector('[data-testid="file-diff-viewer"]'),
     ).toBeNull();
     expect(
-      screen.getAllByTestId("file-diff-viewer-outer")[1].querySelector(
-        '[data-testid="file-diff-viewer"]',
-      ),
+      screen
+        .getAllByTestId("file-diff-viewer-outer")[1]
+        .querySelector('[data-testid="file-diff-viewer"]'),
     ).toBeTruthy();
   });
 
   it("collapses the open file when its header is clicked again", async () => {
     const user = userEvent.setup();
-    render(
-      <DiffChangeList changes={[{ path: "a.ts", status: "M" }]} />,
-    );
+    render(<DiffChangeList changes={[{ path: "a.ts", status: "M" }]} />);
 
     await user.click(screen.getByTestId("collapse"));
     expect(screen.getByTestId("file-diff-viewer")).toBeInTheDocument();

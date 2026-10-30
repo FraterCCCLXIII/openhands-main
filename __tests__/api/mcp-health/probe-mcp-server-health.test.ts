@@ -10,7 +10,10 @@ import {
   seedMcpServerHealth,
 } from "#/api/mcp-health/probe-mcp-server-health";
 import McpService from "#/api/mcp-service/mcp-service.api";
-import type { ExtendedMCPTestResponse, MCPServerConfig } from "#/types/mcp-server";
+import type {
+  ExtendedMCPTestResponse,
+  MCPServerConfig,
+} from "#/types/mcp-server";
 import { getMcpServerHealthKey } from "#/utils/mcp-server-health-key";
 
 /** Matches the catalog `github` entry, so the `get_me` probe spec applies. */

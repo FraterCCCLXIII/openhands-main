@@ -54,6 +54,8 @@ describe("conversation-metadata-store", () => {
     removeStoredConversationMetadata("conv-3");
 
     expect(getStoredConversationMetadata("conv-3")).toBeNull();
-    expect(toAppConversation(directInfo("conv-3")).selected_repository).toBeNull();
+    expect(
+      toAppConversation(directInfo("conv-3")).selected_repository,
+    ).toBeNull();
   });
 });

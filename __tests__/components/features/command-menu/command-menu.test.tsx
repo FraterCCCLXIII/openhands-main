@@ -649,7 +649,9 @@ describe("CommandMenu", () => {
       {},
       { timeout: 2000 },
     );
-    expect(within(section).getByText(CONVERSATIONS_GROUP_KEY)).toBeInTheDocument();
+    expect(
+      within(section).getByText(CONVERSATIONS_GROUP_KEY),
+    ).toBeInTheDocument();
 
     const result = await within(section).findByTestId(
       "command-menu-conversation-result",

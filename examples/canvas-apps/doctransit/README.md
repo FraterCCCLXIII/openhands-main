@@ -21,6 +21,10 @@ Privacy: the key is saved in this browser's `localStorage` (`canvas-extension-do
 
 The web app address can be changed in Settings (http/https only).
 
+## New Chat menu
+
+The New Chat (+) dropdown has two entries: **New document** and **New contract**. Each opens the Documents tab with the matching "from a template" form expanded and focused. Both use the same create-from-template request (the template id decides what is made); the contract entry only changes the labels.
+
 ## Prerequisites
 
 A DocTransit account and an API key (Connect walks you through it).

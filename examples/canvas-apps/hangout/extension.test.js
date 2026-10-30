@@ -984,3 +984,21 @@ describe("button colours", () => {
     }
   });
 });
+
+describe("page height", () => {
+  it("fills the visible page on mount and follows window resizes", () => {
+    const original = window.innerHeight;
+    try {
+      window.innerHeight = 900;
+      const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
+      const root = container.querySelector(".hg");
+      expect(root.style.height).toBe("900px");
+      window.innerHeight = 1100;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("1100px");
+      dispose();
+    } finally {
+      window.innerHeight = original;
+    }
+  });
+});

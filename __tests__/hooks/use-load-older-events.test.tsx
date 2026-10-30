@@ -6,10 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useLoadOlderEvents } from "#/hooks/use-load-older-events";
 import EventService from "#/api/event-service/event-service.api";
 import { useUserConversation } from "#/hooks/query/use-user-conversation";
-import { useConversationHistory } from "#/hooks/query/use-conversation-history";
+import {
+  useConversationHistory,
+  INITIAL_HISTORY_PAGE_SIZE,
+} from "#/hooks/query/use-conversation-history";
 import { useEventStore } from "#/stores/use-event-store";
 import { useModelStore } from "#/stores/model-store";
-import { INITIAL_HISTORY_PAGE_SIZE } from "#/hooks/query/use-conversation-history";
 import type { Conversation } from "#/api/open-hands.types";
 import type { OpenHandsEvent } from "#/types/agent-server/core";
 import type { EventSearchPage } from "#/api/event-service/event-service.types";

@@ -1,4 +1,3 @@
-import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import capabilitiesFixture from "@openhands/extensions/testing/automations/capabilities.json";

@@ -5,7 +5,10 @@ import { EventMessage } from "#/components/conversation-events/chat/event-messag
 import { useAgentState } from "#/hooks/use-agent-state";
 import { AgentState } from "#/types/agent-state";
 import { ActionEvent, SecurityRisk } from "#/types/agent-server/core";
-import { ThinkAction, ExecuteBashAction } from "#/types/agent-server/core/base/action";
+import {
+  ThinkAction,
+  ExecuteBashAction,
+} from "#/types/agent-server/core/base/action";
 import { renderWithProviders } from "test-utils";
 
 // Mock useConfig
@@ -117,9 +120,7 @@ describe("EventMessage - ThinkAction rendering", () => {
     );
 
     // The raw tool call text should NOT be displayed
-    expect(
-      screen.queryByText(/think: \{"thought":/),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/think: \{"thought":/)).not.toBeInTheDocument();
   });
 
   it("should render ThinkAction as a collapsible section", () => {
@@ -169,9 +170,7 @@ describe("EventMessage - ThinkAction rendering", () => {
     expect(
       screen.getByTestId("collapsible-thinking-content"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Let me analyze the problem"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Let me analyze the problem")).toBeInTheDocument();
   });
 
   it("should render ThoughtEventMessage for non-ThinkAction events", () => {
@@ -191,9 +190,7 @@ describe("EventMessage - ThinkAction rendering", () => {
     );
 
     // The thought should be displayed for non-think actions
-    expect(
-      screen.getByText("I need to run a command"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("I need to run a command")).toBeInTheDocument();
   });
 
   it("should render reasoning_content as a collapsible section", () => {

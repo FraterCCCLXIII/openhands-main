@@ -60,7 +60,10 @@ describe("useTestMcpServer", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(McpService.testServer).toHaveBeenCalledWith(SHTTP_SERVER);
-    expect(result.current.data).toEqual({ ok: true, tools: ["search", "fetch"] });
+    expect(result.current.data).toEqual({
+      ok: true,
+      tools: ["search", "fetch"],
+    });
   });
 
   it("returns ok=false with error_kind=timeout on timeout failure", async () => {

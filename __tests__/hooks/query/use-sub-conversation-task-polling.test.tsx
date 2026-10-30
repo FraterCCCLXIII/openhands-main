@@ -7,11 +7,14 @@ import { useSubConversationTaskPolling } from "#/hooks/query/use-sub-conversatio
 import type { AppConversationStartTask } from "#/api/conversation-service/agent-server-conversation-service.types";
 
 // Mock the underlying service
-vi.mock("#/api/conversation-service/agent-server-conversation-service.api", () => ({
-  default: {
-    getStartTask: vi.fn(),
-  },
-}));
+vi.mock(
+  "#/api/conversation-service/agent-server-conversation-service.api",
+  () => ({
+    default: {
+      getStartTask: vi.fn(),
+    },
+  }),
+);
 
 describe("useSubConversationTaskPolling", () => {
   let queryClient: QueryClient;
@@ -60,7 +63,9 @@ describe("useSubConversationTaskPolling", () => {
   it("should return task status when task is READY", async () => {
     // Arrange
     const mockTask = createMockTask("READY", "sub-conversation-123");
-    vi.mocked(AgentServerConversationService.getStartTask).mockResolvedValue(mockTask);
+    vi.mocked(AgentServerConversationService.getStartTask).mockResolvedValue(
+      mockTask,
+    );
 
     // Act
     const { result } = renderHook(
@@ -74,12 +79,16 @@ describe("useSubConversationTaskPolling", () => {
       expect(result.current.taskStatus).toBe("READY");
     });
     expect(result.current.subConversationId).toBe("sub-conversation-123");
-    expect(AgentServerConversationService.getStartTask).toHaveBeenCalledWith("task-123");
+    expect(AgentServerConversationService.getStartTask).toHaveBeenCalledWith(
+      "task-123",
+    );
   });
 
   it("should not poll when taskId is null", async () => {
     // Arrange
-    vi.mocked(AgentServerConversationService.getStartTask).mockResolvedValue(null);
+    vi.mocked(AgentServerConversationService.getStartTask).mockResolvedValue(
+      null,
+    );
 
     // Act
     const { result } = renderHook(
@@ -97,7 +106,9 @@ describe("useSubConversationTaskPolling", () => {
 
   it("should not poll when parentConversationId is null", async () => {
     // Arrange
-    vi.mocked(AgentServerConversationService.getStartTask).mockResolvedValue(null);
+    vi.mocked(AgentServerConversationService.getStartTask).mockResolvedValue(
+      null,
+    );
 
     // Act
     const { result } = renderHook(

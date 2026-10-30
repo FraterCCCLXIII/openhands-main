@@ -127,18 +127,6 @@ describe("handleEventForUI", () => {
     extended_content: [],
   };
 
-  const makeStreamingDelta = (
-    id: string,
-    content: string | null,
-  ): StreamingDeltaEvent => ({
-    id,
-    kind: "StreamingDeltaEvent",
-    timestamp: Date.now().toString(),
-    source: "agent",
-    content,
-    reasoning_content: null,
-  });
-
   it("should add non-observation events to the end of uiEvents", () => {
     const initialUiEvents = [mockMessageEvent];
     const result = handleEventForUI(mockActionEvent, initialUiEvents);

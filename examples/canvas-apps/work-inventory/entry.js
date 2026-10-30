@@ -52,7 +52,7 @@ export function activate(host) {
     });
     const frame = document.createElement("iframe");
     frame.title = CONFIG.title;
-    frame.style.cssText = "display:block;width:100%;height:100%;border:0;";
+    frame.style.cssText = "display:block;width:100%;height:100%;min-height:480px;border:0;";
     frame.inventoryClaude = {
       use: async (name) => (name === "db" ? store.db : null),
     };
@@ -60,7 +60,19 @@ export function activate(host) {
     frame.dataset.workInventory = "";
     container.style.height = "100%";
     container.append(frame);
+    // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+    const fit = () => {
+      const top = Math.max(0, frame.getBoundingClientRect().top);
+      frame.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+    };
+    const onResize = () => fit();
+    window.addEventListener("resize", onResize);
+    const ro = typeof window.ResizeObserver === "function" && container.parentElement ? new window.ResizeObserver(onResize) : null;
+    ro?.observe(container.parentElement || container);
+    fit();
     return () => {
+      window.removeEventListener("resize", onResize);
+      ro?.disconnect();
       store.dispose();
       frame.remove();
       if (!container.querySelector("iframe[data-work-inventory]")) {

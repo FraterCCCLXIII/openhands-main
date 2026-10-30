@@ -23,7 +23,9 @@ describe("ConversationCardPreview", () => {
       />,
     );
 
-    expect(screen.queryByTestId("conversation-card-tag-chip")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("conversation-card-tag-chip"),
+    ).not.toBeInTheDocument();
 
     const rows = screen.getAllByTestId("conversation-card-preview-tag-row");
     expect(rows).toHaveLength(2);
@@ -84,9 +86,9 @@ describe("ConversationCardPreview", () => {
       />,
     );
 
-    expect(screen.getByTestId("conversation-card-preview-tag-row")).toHaveTextContent(
-      longValue,
-    );
+    expect(
+      screen.getByTestId("conversation-card-preview-tag-row"),
+    ).toHaveTextContent(longValue);
   });
 
   it("styles the model row with the OpenHands brand icon", () => {

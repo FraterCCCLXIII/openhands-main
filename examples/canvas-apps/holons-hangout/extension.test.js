@@ -595,3 +595,21 @@ describe("button colours", () => {
     }
   });
 });
+
+describe("page height", () => {
+  it("fills the visible page on mount and follows window resizes", () => {
+    const original = window.innerHeight;
+    try {
+      window.innerHeight = 900;
+      const { container, dispose } = mountApp();
+      const root = container.querySelector(".hh");
+      expect(root.style.height).toBe("900px");
+      window.innerHeight = 1100;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("1100px");
+      dispose();
+    } finally {
+      window.innerHeight = original;
+    }
+  });
+});

@@ -3,24 +3,25 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DeleteProfileModal } from "#/components/features/settings/llm-profiles/delete-profile-modal";
-import { ProfileInfo } from "#/api/profiles-service/profiles-service.api";
-import ProfilesService from "#/api/profiles-service/profiles-service.api";
+import ProfilesService, {
+  ProfileInfo,
+} from "#/api/profiles-service/profiles-service.api";
 import * as toastHandlers from "#/utils/custom-toast-handlers";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string>) => {
       const translations: Record<string, string> = {
-        "SETTINGS$PROFILE_DELETE_TITLE": "Delete Profile",
-        "SETTINGS$PROFILE_DELETE_CONFIRMATION": params?.name
+        SETTINGS$PROFILE_DELETE_TITLE: "Delete Profile",
+        SETTINGS$PROFILE_DELETE_CONFIRMATION: params?.name
           ? `Are you sure you want to delete "${params.name}"?`
           : "Are you sure you want to delete this profile?",
-        "SETTINGS$PROFILE_DELETED": params?.name
+        SETTINGS$PROFILE_DELETED: params?.name
           ? `Profile "${params.name}" deleted`
           : "Profile deleted",
-        "BUTTON$DELETE": "Delete",
-        "BUTTON$CANCEL": "Cancel",
-        "ERROR$GENERIC": "An error occurred",
+        BUTTON$DELETE: "Delete",
+        BUTTON$CANCEL: "Cancel",
+        ERROR$GENERIC: "An error occurred",
       };
       return translations[key] || key;
     },
@@ -40,10 +41,7 @@ const mockProfile: ProfileInfo = {
 describe("DeleteProfileModal", () => {
   let queryClient: QueryClient;
 
-  const renderModal = (
-    profile: ProfileInfo | null,
-    onClose = vi.fn(),
-  ) => {
+  const renderModal = (profile: ProfileInfo | null, onClose = vi.fn()) => {
     return render(
       <QueryClientProvider client={queryClient}>
         <DeleteProfileModal profile={profile} onClose={onClose} />
@@ -94,10 +92,9 @@ describe("DeleteProfileModal", () => {
     const danger = screen.getByTestId("delete-profile-confirm");
 
     // Assert: Cancel precedes the dominant Delete action in DOM order.
-    // eslint-disable-next-line no-bitwise
+
     expect(
-      cancel.compareDocumentPosition(danger) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      cancel.compareDocumentPosition(danger) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 

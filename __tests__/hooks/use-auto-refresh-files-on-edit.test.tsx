@@ -21,8 +21,9 @@ function makeObservationEvent(
 ): OHEvent {
   return {
     id,
-    timestamp: new Date(Date.now() + Number(id.replace(/\D/g, "")) * 1000)
-      .toISOString(),
+    timestamp: new Date(
+      Date.now() + Number(id.replace(/\D/g, "")) * 1000,
+    ).toISOString(),
     source: "environment",
     tool_name: "str_replace_based_edit_tool",
     tool_call_id: `tc-${id}`,
@@ -184,11 +185,7 @@ describe("useAutoRefreshFilesOnEdit", () => {
       useEventStore
         .getState()
         .addEvent(
-          makeObservationEvent(
-            "2",
-            "StrReplaceEditorObservation",
-            "create",
-          ),
+          makeObservationEvent("2", "StrReplaceEditorObservation", "create"),
         );
     });
     expect(useWorkspaceMutationCounter.getState().count).toBe(2);
@@ -207,9 +204,7 @@ describe("useAutoRefreshFilesOnEdit", () => {
         .addEvent(makeObservationEvent("1", "FileEditorObservation", "view"));
       useEventStore
         .getState()
-        .addEvent(
-          makeObservationEvent("2", "ExecuteBashObservation", "ls"),
-        );
+        .addEvent(makeObservationEvent("2", "ExecuteBashObservation", "ls"));
     });
 
     expect(useWorkspaceMutationCounter.getState().count).toBe(0);
@@ -234,10 +229,14 @@ describe("useAutoRefreshFilesOnEdit", () => {
     act(() => {
       useEventStore
         .getState()
-        .addEvent(makeObservationEvent("10", "FileEditorObservation", "create"));
+        .addEvent(
+          makeObservationEvent("10", "FileEditorObservation", "create"),
+        );
       useEventStore
         .getState()
-        .addEvent(makeObservationEvent("20", "FileEditorObservation", "create"));
+        .addEvent(
+          makeObservationEvent("20", "FileEditorObservation", "create"),
+        );
     });
     const callsAfterInitial = spy.mock.calls.length;
     expect(callsAfterInitial).toBeGreaterThan(0);

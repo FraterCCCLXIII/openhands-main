@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type {
-  MCPConfig,
-  MCPServer,
-} from "@openhands/typescript-client";
+import type { MCPConfig, MCPServer } from "@openhands/typescript-client";
 
 import {
   allocateMcpSettingsKey,
@@ -105,7 +102,10 @@ describe("hasRedactedMcpSecretLeaf", () => {
 
   it("recurses into arrays", () => {
     expect(
-      hasRedactedMcpSecretLeaf(["plain", { nested: REDACTED_MCP_SECRET_VALUE }]),
+      hasRedactedMcpSecretLeaf([
+        "plain",
+        { nested: REDACTED_MCP_SECRET_VALUE },
+      ]),
     ).toBe(true);
     expect(hasRedactedMcpSecretLeaf(["plain", "other"])).toBe(false);
   });
@@ -120,9 +120,9 @@ describe("hasRedactedMcpSecretLeaf", () => {
 
 describe("getMcpServerEnabled", () => {
   it("returns false only for an explicit disabled flag", () => {
-    expect(getMcpServerEnabled({ enabled: false } as unknown as MCPServer)).toBe(
-      false,
-    );
+    expect(
+      getMcpServerEnabled({ enabled: false } as unknown as MCPServer),
+    ).toBe(false);
   });
 
   it("returns undefined when enabled is true or absent", () => {
@@ -294,10 +294,11 @@ describe("canonical MCP configuration integration", () => {
       filesystem: { command: "npx" },
     });
 
-    expect(flattenMcpConfig(config).map(({ id }) => id).sort()).toEqual([
-      "filesystem",
-      "github",
-    ]);
+    expect(
+      flattenMcpConfig(config)
+        .map(({ id }) => id)
+        .sort(),
+    ).toEqual(["filesystem", "github"]);
   });
 });
 

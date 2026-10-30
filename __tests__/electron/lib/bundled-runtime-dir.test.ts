@@ -54,8 +54,6 @@ describe("resolveBundledRuntimeDir", () => {
   });
 
   it("returns null when neither candidate exists", () => {
-    expect(
-      resolveBundledRuntimeDir(resourcesPath, "node", "arm64"),
-    ).toBeNull();
+    expect(resolveBundledRuntimeDir(resourcesPath, "node", "arm64")).toBeNull();
   });
 });

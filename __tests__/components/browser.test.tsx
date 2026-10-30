@@ -103,6 +103,8 @@ describe("Browser", () => {
 
     expect(useBrowserStore.getState().screenshotSrc).toBe(screenshotSrc);
     expect(screen.getByAltText("BROWSER$SCREENSHOT_ALT")).toBeInTheDocument();
-    expect(screen.queryByText("BROWSER$NO_PAGE_LOADED")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("BROWSER$NO_PAGE_LOADED"),
+    ).not.toBeInTheDocument();
   });
 });

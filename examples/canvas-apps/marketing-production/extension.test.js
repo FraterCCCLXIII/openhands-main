@@ -151,6 +151,28 @@ describe("page", () => {
     cleanup();
   });
 
+  it("sizes the page to fill the viewport and follows window resizes, never below 480px", () => {
+    const originalHeight = window.innerHeight;
+    try {
+      let mount;
+      activate(hostWith((_, m) => { mount = m; }));
+      window.innerHeight = 900;
+      mount({ container });
+      const root = container.querySelector(".mp");
+      expect(root.style.height).toBe("900px");
+
+      window.innerHeight = 1000;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("1000px");
+
+      window.innerHeight = 300;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("480px");
+    } finally {
+      window.innerHeight = originalHeight;
+    }
+  });
+
   it("switches views from the tabs", () => {
     let mount;
     activate(hostWith((_, m) => { mount = m; }));

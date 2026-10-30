@@ -1175,8 +1175,9 @@ const CSS = `
   --hg-on-contrast: var(--oh-contrast-foreground, #111);
   --hg-ok: var(--oh-success, #34d399); --hg-warn: var(--oh-warning-soft-foreground, #f2b51d); --hg-bad: var(--oh-danger-soft-foreground, #ef4444); --hg-info: var(--oh-info-soft-foreground, #7c9dff);
   box-sizing: border-box; position: sticky; top: 0; color: var(--hg-text); background: var(--hg-bg); font: 14px/1.45 system-ui, sans-serif;
-  height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
+  height: 100%; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
 .mh *, .mh *::before, .mh *::after { box-sizing: border-box; }
+.mh [hidden] { display: none !important; }
 .mh button, .mh input, .mh textarea, .mh select { font: inherit; color: inherit; }
 .mh button { cursor: pointer; }
 .mh .shell { position: relative; display: grid; grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px); height: 100%; min-height: 0; }
@@ -3161,6 +3162,7 @@ function mount(host, container) {
 
   function renderAll() {
     if (disposed) return;
+    fitRoot();
     const welcoming = !cfg.welcomed;
     shell.classList.toggle("welcoming", welcoming);
     memCol.style.display = welcoming || state.docs.open ? "none" : "";
@@ -3176,8 +3178,18 @@ function mount(host, container) {
     renderMembers();
   }
 
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fitRoot() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+  }
+  const onWinResize = () => { if (!disposed) fitRoot(); };
+  window.addEventListener("resize", onWinResize);
+  const roFit = typeof ResizeObserver === "function" && container.parentElement ? new ResizeObserver(onWinResize) : null;
+  roFit?.observe(container.parentElement || container);
+
   renderAll();
   connect();
   pollTimer = setInterval(() => { if (state.mode === "connected" && cfg.welcomed && !state.loading && !state.draft && !state.overlay) loadChannel({ quiet: true }); }, 20_000);
-  return () => { disposed = true; grip.dispose(); clearInterval(pollTimer); clearTimeout(toastTimer); root.remove(); style.remove(); };
+  return () => { disposed = true; window.removeEventListener("resize", onWinResize); roFit?.disconnect(); grip.dispose(); clearInterval(pollTimer); clearTimeout(toastTimer); root.remove(); style.remove(); };
 }

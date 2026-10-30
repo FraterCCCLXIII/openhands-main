@@ -28,7 +28,11 @@ vi.mock("#/hooks/query/use-unified-git-diff", () => ({
 
 vi.mock("@monaco-editor/react", () => ({
   DiffEditor: (props: Record<string, unknown>) => (
-    <div data-testid="file-diff-viewer" data-original={props.original} data-modified={props.modified} />
+    <div
+      data-testid="file-diff-viewer"
+      data-original={props.original}
+      data-modified={props.modified}
+    />
   ),
   Editor: (props: Record<string, unknown>) => (
     <div data-testid="file-single-viewer" data-value={props.value} />
@@ -98,7 +102,10 @@ describe("FileDiffViewer", () => {
     await user.click(screen.getByTestId("view-mode-new"));
 
     expect(screen.getByTestId("file-single-viewer")).toBeInTheDocument();
-    expect(screen.getByTestId("file-single-viewer")).toHaveAttribute("data-value", "new content");
+    expect(screen.getByTestId("file-single-viewer")).toHaveAttribute(
+      "data-value",
+      "new content",
+    );
     expect(screen.queryByTestId("file-diff-viewer")).not.toBeInTheDocument();
   });
 
@@ -110,7 +117,10 @@ describe("FileDiffViewer", () => {
     await user.click(screen.getByTestId("view-mode-old"));
 
     expect(screen.getByTestId("file-single-viewer")).toBeInTheDocument();
-    expect(screen.getByTestId("file-single-viewer")).toHaveAttribute("data-value", "old content");
+    expect(screen.getByTestId("file-single-viewer")).toHaveAttribute(
+      "data-value",
+      "old content",
+    );
   });
 
   it("returns to diff editor when switching back to 'diff' mode", async () => {
@@ -134,7 +144,9 @@ describe("FileDiffViewer", () => {
     await user.click(screen.getByTestId("view-mode-new"));
 
     expect(screen.getByTestId("markdown-preview")).toBeInTheDocument();
-    expect(screen.getByTestId("markdown-renderer")).toHaveTextContent(/New Heading/);
+    expect(screen.getByTestId("markdown-renderer")).toHaveTextContent(
+      /New Heading/,
+    );
     expect(screen.getByTestId("markdown-renderer")).toHaveTextContent(/bold/);
     expect(screen.queryByTestId("file-single-viewer")).not.toBeInTheDocument();
   });
@@ -147,7 +159,9 @@ describe("FileDiffViewer", () => {
     await expand(user);
     await user.click(screen.getByTestId("view-mode-old"));
 
-    expect(screen.getByTestId("markdown-renderer")).toHaveTextContent(MOCK_MD_DIFF.original);
+    expect(screen.getByTestId("markdown-renderer")).toHaveTextContent(
+      MOCK_MD_DIFF.original,
+    );
   });
 
   it("shows diff editor for .md files in 'diff' mode", async () => {

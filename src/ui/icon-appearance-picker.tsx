@@ -3,12 +3,7 @@ import { AppearancePortal } from "#/components/shared/appearance-portal";
 import * as LucideIcons from "lucide-react";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { cn } from "#/utils/utils";
-import {
-  ICON_BACKGROUND_PRESETS,
-  type IconBackgroundPresetKey,
-  StyledIcon,
-  resolveBackgroundColor,
-} from "./styled-icon";
+import { ICON_BACKGROUND_PRESETS, StyledIcon } from "./styled-icon";
 
 /** Common emojis for quick selection. */
 const COMMON_EMOJIS = [

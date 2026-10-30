@@ -194,5 +194,4 @@ describe("TelemetryConsentBanner", () => {
     expect(setTelemetryConsentMock).not.toHaveBeenCalled();
     expect(screen.getByTestId("telemetry-consent-form")).toBeInTheDocument();
   });
-
 });

@@ -1746,8 +1746,9 @@ const CSS = `
   --hg-on-contrast: var(--oh-contrast-foreground, #111);
   --hg-success: var(--oh-success, #34d399); --hg-link: var(--oh-info-soft-foreground, #7c9dff);
   box-sizing: border-box; position: sticky; top: 0; color: var(--hg-text); background: var(--hg-bg); font: 14px/1.45 system-ui, sans-serif;
-  height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
+  height: 100%; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
 .hg *, .hg *::before, .hg *::after { box-sizing: border-box; }
+.hg [hidden] { display: none !important; }
 .hg button { font: inherit; color: inherit; }
 .hg .shell { position: relative; display: grid; grid-template-columns: 56px var(--grip-0, 320px) minmax(0, 1fr) var(--grip-1, 360px); height: 100%; min-height: 0; }
 .hg .rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; border-right: 1px solid var(--hg-border); background: var(--hg-bg); min-height: 0; overflow-y: auto; scrollbar-width: none; }
@@ -3454,6 +3455,7 @@ function mount(host, container) {
   let grips = { dispose() {} };
   function render() {
     if (disposed) return;
+    fitRoot();
     const activeEl = document.activeElement;
     const hadField = activeEl && activeEl.classList?.contains("field");
     const hadSearch = activeEl && activeEl.classList?.contains("search");
@@ -3498,10 +3500,22 @@ function mount(host, container) {
   document.addEventListener("click", onDocClick);
   document.addEventListener("keydown", onKey);
 
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fitRoot() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+  }
+  const onWinResize = () => { if (!disposed) fitRoot(); };
+  window.addEventListener("resize", onWinResize);
+  const roFit = typeof ResizeObserver === "function" && container.parentElement ? new ResizeObserver(onWinResize) : null;
+  roFit?.observe(container.parentElement || container);
+
   render();
   loadLive();
   return () => {
     disposed = true;
+    window.removeEventListener("resize", onWinResize);
+    roFit?.disconnect();
     stopWelcome();
     stopKeys();
     grips.dispose();

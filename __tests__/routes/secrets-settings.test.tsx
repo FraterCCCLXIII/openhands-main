@@ -9,9 +9,11 @@ function renderSecretsSettingsScreen() {
   return render(<SecretsSettingsScreen />, {
     wrapper: ({ children }) => (
       <QueryClientProvider
-        client={new QueryClient({
-          defaultOptions: { queries: { retry: false } },
-        })}
+        client={
+          new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+          })
+        }
       >
         {children}
       </QueryClientProvider>

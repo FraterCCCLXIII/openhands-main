@@ -6,11 +6,7 @@ import {
 } from "#/api/backend-registry/active-store";
 import type { Backend } from "#/api/backend-registry/types";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
-import {
-  getFetchCall,
-  getJsonBody,
-  mockJsonResponse,
-} from "./fetch-test-utils";
+import { getFetchCall, mockJsonResponse } from "./fetch-test-utils";
 
 const cloudBackend: Backend = {
   id: "prod",

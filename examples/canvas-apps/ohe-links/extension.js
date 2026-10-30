@@ -33,7 +33,7 @@ const el = (tag, cls, text) => {
 };
 
 const CSS = `
-.ol { font: 14px/20px system-ui, sans-serif; color: var(--oh-foreground, #eee); background: var(--oh-color-base, #171717); min-height: 100%; padding: 32px 16px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.ol { font: 14px/20px system-ui, sans-serif; color: var(--oh-foreground, #eee); background: var(--oh-color-base, #171717); height: 100%; min-height: 480px; padding: 32px 16px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 16px; overflow: auto; }
 .ol * { box-sizing: border-box; }
 .ol .card { width: min(560px, 100%); display: grid; gap: 12px; }
 .ol h1 { margin: 0; font-size: 20px; font-weight: 600; color: var(--oh-contrast, #fff); }
@@ -45,7 +45,9 @@ const CSS = `
 .ol button.primary { background: var(--oh-color-primary, #fff); color: var(--oh-accent-foreground, #111); border-color: transparent; }
 .ol button:disabled { opacity: .4; cursor: default; }
 .ol .err { color: #f87171; font-size: 12px; min-height: 16px; }
-.ol iframe { width: min(1100px, 100%); height: 70vh; border: 1px solid var(--oh-border-subtle, #3a3a3a); border-radius: 12px; background: #fff; }
+.ol .holder { flex: 1; min-height: 0; width: min(1100px, 100%); display: flex; }
+.ol iframe { flex: 1; width: 100%; min-height: 240px; border: 1px solid var(--oh-border-subtle, #3a3a3a); border-radius: 12px; background: #fff; }
+.ol [hidden] { display: none !important; }
 `;
 
 function readSaved() {
@@ -86,9 +88,14 @@ export function mountTarget(container, id) {
   row.append(save, open, embed);
   card.append(el("h1", "", target.title), el("p", "", target.blurb), label, row, err);
   root.append(card);
-  const holder = el("div");
+  const holder = el("div", "holder");
   root.append(holder);
 
+  // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+  function fit() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+  }
   const current = () => cleanAddress(input.value);
   const refresh = () => {
     const ok = Boolean(cleanAddress(address));
@@ -96,6 +103,7 @@ export function mountTarget(container, id) {
     embed.disabled = !ok;
     embed.textContent = framed ? "Hide" : "Show here";
     holder.replaceChildren();
+    fit();
     if (framed && ok) {
       const frame = el("iframe");
       frame.src = cleanAddress(address);
@@ -119,8 +127,16 @@ export function mountTarget(container, id) {
   });
   embed.addEventListener("click", () => { framed = !framed; refresh(); });
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") save.click(); });
+  const onResize = () => fit();
+  window.addEventListener("resize", onResize);
+  const ro = typeof window.ResizeObserver === "function" && container.parentElement ? new window.ResizeObserver(onResize) : null;
+  ro?.observe(container.parentElement || container);
   refresh();
-  return () => root.remove();
+  return () => {
+    window.removeEventListener("resize", onResize);
+    ro?.disconnect();
+    root.remove();
+  };
 }
 
 export function activate(host) {

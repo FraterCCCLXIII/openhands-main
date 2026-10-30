@@ -497,3 +497,21 @@ describe("solid button legibility", () => {
     dispose();
   });
 });
+
+describe("page height", () => {
+  it("fills the visible page on mount and follows window resizes", () => {
+    const original = window.innerHeight;
+    try {
+      window.innerHeight = 900;
+      const { container, dispose } = mountMeet();
+      const root = container.querySelector(".mt");
+      expect(root.style.height).toBe("900px");
+      window.innerHeight = 1100;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("1100px");
+      dispose();
+    } finally {
+      window.innerHeight = original;
+    }
+  });
+});

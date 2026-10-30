@@ -6,11 +6,14 @@ import AgentServerConversationService from "#/api/conversation-service/agent-ser
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { useUpdateConversationPublicFlag } from "#/hooks/mutation/use-update-conversation-public-flag";
 
-vi.mock("#/api/conversation-service/agent-server-conversation-service.api", () => ({
-  default: {
-    updateConversationPublicFlag: vi.fn(),
-  },
-}));
+vi.mock(
+  "#/api/conversation-service/agent-server-conversation-service.api",
+  () => ({
+    default: {
+      updateConversationPublicFlag: vi.fn(),
+    },
+  }),
+);
 
 describe("useUpdateConversationPublicFlag", () => {
   let queryClient: QueryClient;

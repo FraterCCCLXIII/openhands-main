@@ -10,9 +10,9 @@ describe("connect-hosts", () => {
     expect(
       isConnectHostsRequest({ method: "GET", url: CONNECT_HOSTS_PATH }),
     ).toBe(true);
-    expect(isConnectHostsRequest({ method: "POST", url: CONNECT_HOSTS_PATH })).toBe(
-      false,
-    );
+    expect(
+      isConnectHostsRequest({ method: "POST", url: CONNECT_HOSTS_PATH }),
+    ).toBe(false);
   });
 
   it("never advertises loopback or USB link-local addresses", () => {

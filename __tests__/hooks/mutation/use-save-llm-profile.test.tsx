@@ -5,14 +5,21 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSaveLlmProfile } from "#/hooks/mutation/use-save-llm-profile";
 import ProfilesService from "#/api/profiles-service/profiles-service.api";
 import SettingsService from "#/api/settings-service/settings-service.api";
-import { LLM_PROFILES_QUERY_KEYS, SETTINGS_QUERY_KEYS } from "#/hooks/query/query-keys";
+import {
+  LLM_PROFILES_QUERY_KEYS,
+  SETTINGS_QUERY_KEYS,
+} from "#/hooks/query/query-keys";
 
 vi.mock("#/api/profiles-service/profiles-service.api");
 vi.mock("#/api/settings-service/settings-service.api");
 
 describe("useSaveLlmProfile", () => {
   let queryClient: QueryClient;
-  let wrapper: ({ children }: { children: React.ReactNode }) => React.ReactElement;
+  let wrapper: ({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) => React.ReactElement;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -80,10 +87,13 @@ describe("useSaveLlmProfile", () => {
       });
     });
 
-    expect(ProfilesService.saveProfile).toHaveBeenCalledWith("snapshot-profile", {
-      llm: { model: "openai/gpt-4" },
-      include_secrets: true,
-    });
+    expect(ProfilesService.saveProfile).toHaveBeenCalledWith(
+      "snapshot-profile",
+      {
+        llm: { model: "openai/gpt-4" },
+        include_secrets: true,
+      },
+    );
   });
 
   it("invalidates all relevant caches on success", async () => {

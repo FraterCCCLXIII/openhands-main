@@ -1,6 +1,9 @@
 import { useLocation } from "react-router";
 import { getLockedCloudHost } from "#/api/agent-server-config";
-import { isNoBackend, NO_BACKEND_ID } from "#/api/backend-registry/active-store";
+import {
+  isNoBackend,
+  NO_BACKEND_ID,
+} from "#/api/backend-registry/active-store";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { SEEDED_DEFAULT_BACKEND_ID } from "#/api/backend-registry/default-backend";
 import { useSettings } from "#/hooks/query/use-settings";

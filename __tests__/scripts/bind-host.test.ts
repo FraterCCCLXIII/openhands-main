@@ -15,9 +15,7 @@ describe("bind-host", () => {
   });
 
   it("prefers --host over OH_BIND_HOST", () => {
-    expect(
-      resolveBindHost({ flag: "0.0.0.0", env: "::" }),
-    ).toBe("0.0.0.0");
+    expect(resolveBindHost({ flag: "0.0.0.0", env: "::" })).toBe("0.0.0.0");
   });
 
   it("treats :: and 0.0.0.0 as non-loopback", () => {

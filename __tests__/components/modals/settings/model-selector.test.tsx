@@ -14,7 +14,9 @@ const mockProviders: LLMProvider[] = [
   { name: "vertex_ai", verified: false },
 ];
 
-const model = (partial: Partial<LLMModel> & Pick<LLMModel, "name">): LLMModel => ({
+const model = (
+  partial: Partial<LLMModel> & Pick<LLMModel, "name">,
+): LLMModel => ({
   provider: null,
   verified: false,
   free: false,
@@ -154,5 +156,4 @@ describe("ModelSelector", () => {
     expect(providerInput.getAttribute("placeholder") ?? "").toBe("");
     expect(modelInput.getAttribute("placeholder") ?? "").toBe("");
   });
-
 });

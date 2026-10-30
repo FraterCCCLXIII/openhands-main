@@ -75,9 +75,8 @@ const setupMocks = () => {
 describe("AgentProfilesService", () => {
   it("exports the seeded default profile name", async () => {
     vi.resetModules();
-    const { WELL_KNOWN_DEFAULT_AGENT_PROFILE_NAME } = await import(
-      "#/api/agent-profiles-service/agent-profiles-service.api"
-    );
+    const { WELL_KNOWN_DEFAULT_AGENT_PROFILE_NAME } =
+      await import("#/api/agent-profiles-service/agent-profiles-service.api");
     expect(WELL_KNOWN_DEFAULT_AGENT_PROFILE_NAME).toBe("default");
   });
 

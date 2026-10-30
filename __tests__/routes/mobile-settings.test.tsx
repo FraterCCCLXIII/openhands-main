@@ -22,7 +22,8 @@ vi.mock("#/contexts/active-backend-context", () => ({
 }));
 
 vi.mock("#/utils/mobile-connect-qr", () => ({
-  mobileConnectQrDataUrl: async (url: string) => `data:image/png;base64,${btoa(url)}`,
+  mobileConnectQrDataUrl: async (url: string) =>
+    `data:image/png;base64,${btoa(url)}`,
 }));
 
 describe("MobileSettingsScreen", () => {
@@ -31,19 +32,28 @@ describe("MobileSettingsScreen", () => {
     activeBackendState.apiKey = "session-secret";
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = String(input);
-        if (url.includes("/__oh/connect-tunnel") && init?.method === "POST") {
-          return {
-            ok: true,
-            json: async () => ({ url: "https://abc-123.trycloudflare.com" }),
-          };
-        }
-        return {
-          ok: true,
-          json: async () => ({ origins: ["http://172.20.0.234:8000"] }),
-        };
-      }),
+      vi
+        .fn()
+        .mockImplementation(
+          async (input: RequestInfo | URL, init?: RequestInit) => {
+            const url = String(input);
+            if (
+              url.includes("/__oh/connect-tunnel") &&
+              init?.method === "POST"
+            ) {
+              return {
+                ok: true,
+                json: async () => ({
+                  url: "https://abc-123.trycloudflare.com",
+                }),
+              };
+            }
+            return {
+              ok: true,
+              json: async () => ({ origins: ["http://172.20.0.234:8000"] }),
+            };
+          },
+        ),
     );
   });
 
@@ -76,7 +86,11 @@ describe("MobileSettingsScreen", () => {
     activeBackendState.apiKey = "";
     render(<MobileSettingsScreen />);
 
-    expect(screen.queryByTestId("mobile-connect-show-qr")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("mobile-connect-create-link")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("mobile-connect-show-qr"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("mobile-connect-create-link"),
+    ).not.toBeInTheDocument();
   });
 });

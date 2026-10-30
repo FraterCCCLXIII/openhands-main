@@ -69,7 +69,9 @@ describe("CommitList", () => {
     expect(screen.getByTestId("uncommitted-changes-count")).toHaveTextContent(
       "1 file",
     );
-    const rows = screen.getAllByTestId(/^(uncommitted-changes-row|commit-row)$/);
+    const rows = screen.getAllByTestId(
+      /^(uncommitted-changes-row|commit-row)$/,
+    );
     expect(rows[0]).toHaveAttribute("data-testid", "uncommitted-changes-row");
   });
 

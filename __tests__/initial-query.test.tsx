@@ -8,7 +8,7 @@ describe("Initial Query Behavior", () => {
   });
 
   it("should clear initial query when clearInitialPrompt is called", () => {
-    const { setInitialPrompt, clearInitialPrompt, initialPrompt } =
+    const { setInitialPrompt, clearInitialPrompt } =
       useInitialQueryStore.getState();
 
     // Set up initial query in the store

@@ -139,15 +139,14 @@ export function FactoryAgentRail({
             content={t(I18nKey.FACTORY$COORDINATOR_HINT)}
             placement="bottom"
           >
-            <span
+            <button
+              type="button"
               data-testid="factory-coordinator-info"
-              role="img"
-              tabIndex={0}
               aria-label={t(I18nKey.FACTORY$COORDINATOR_HINT)}
               className="flex text-muted hover:text-contrast"
             >
               <Info size={12} aria-hidden />
-            </span>
+            </button>
           </StyledTooltip>
         </div>
         <div className="mt-2">

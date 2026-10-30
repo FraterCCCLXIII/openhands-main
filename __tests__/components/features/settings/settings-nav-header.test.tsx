@@ -5,7 +5,9 @@ import { I18nKey } from "#/i18n/declaration";
 
 describe("SettingsNavHeader", () => {
   it("should render the translated header text", () => {
-    render(<SettingsNavHeader text={I18nKey.SETTINGS$PERSONAL_SETTINGS_HEADER} />);
+    render(
+      <SettingsNavHeader text={I18nKey.SETTINGS$PERSONAL_SETTINGS_HEADER} />,
+    );
 
     expect(
       screen.getByText("SETTINGS$PERSONAL_SETTINGS_HEADER"),

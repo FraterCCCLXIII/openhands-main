@@ -46,7 +46,9 @@ describe("buildWebSocketUrl", () => {
         "http://agent-server.com:9000/api/conversations/conv-456",
       );
 
-      expect(result).toBe("ws://agent-server.com:9000/sockets/session/conv-456");
+      expect(result).toBe(
+        "ws://agent-server.com:9000/sockets/session/conv-456",
+      );
     });
 
     it("should use wss:// for external HTTPS hosts when page is HTTP", () => {

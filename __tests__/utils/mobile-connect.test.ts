@@ -26,7 +26,9 @@ describe("mobile connect payload", () => {
 
   it("rejects localhost-looking garbage and missing keys", () => {
     expect(parseMobileConnectUrl("https://example.com")).toBeNull();
-    expect(parseMobileConnectUrl("openhands://connect?v=1&host=ftp://x&key=a")).toBeNull();
+    expect(
+      parseMobileConnectUrl("openhands://connect?v=1&host=ftp://x&key=a"),
+    ).toBeNull();
     expect(
       parseMobileConnectUrl("openhands://connect?v=1&host=http://x:8000"),
     ).toBeNull();

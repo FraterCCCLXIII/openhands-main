@@ -742,8 +742,9 @@ describe("AgentServerConversationService", () => {
         searchConversations: searchSpy,
       });
 
-      const result =
-        await AgentServerConversationService.searchConversations({ limit: 10 });
+      const result = await AgentServerConversationService.searchConversations({
+        limit: 10,
+      });
 
       expect(result.items[0]?.metrics?.accumulated_cost).toBe(1.25);
       expect(

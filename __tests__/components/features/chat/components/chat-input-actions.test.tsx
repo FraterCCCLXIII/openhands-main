@@ -86,7 +86,6 @@ vi.mock("#/hooks/mutation/conversation-mutation-utils", () => ({
   invalidateConversationQueries: vi.fn(),
 }));
 
-// eslint-disable-next-line import/first
 import { ChatInputActions } from "#/components/features/chat/components/chat-input-actions";
 
 const cloudBackend: Backend = {

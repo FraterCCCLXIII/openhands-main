@@ -462,9 +462,18 @@ const TAB_DEFS = [
   { id: "signup", label: "Create account", route: "signup" },
 ];
 
+/** New Chat intents (see `registerCreateAction`) -> the create form they open. */
+const CREATE_KINDS = { "create:document": "document", "create:contract": "contract" };
+
+/** Mounted pages, so a subscribed `onIntent` reaches the page that is already open. */
+const openMounts = new Set();
+
+const DOCUMENT_ICON = '<svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M3 1h6.5L13 4.5V15H3zM4.5 2.5v11h7V5.5H9V2.5z"/><path fill="currentColor" d="M7.25 7h1.5v1.75H10.5v1.5H8.75V12h-1.5v-1.75H5.5v-1.5h1.75z"/></svg>';
+const CONTRACT_ICON = '<svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M3 1h6.5L13 4.5V15H3zM4.5 2.5v11h7V5.5H9V2.5z"/><path fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" d="M5.5 11.5c.9-2.2 1.6-2.2 2-.6.4 1.3 1 1 1.6-.3.3-.6.6-.5.9.3h1.2"/></svg>';
+
 const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])';
 
-export function mountDocTransit(container, { initialTab = "documents" } = {}) {
+export function mountDocTransit(container, { initialTab = "documents", intent = null } = {}) {
   const win = container.ownerDocument.defaultView || window;
   let store = loadStore(win);
   let tab = TAB_DEFS.some((t) => t.id === initialTab) ? initialTab : "documents";
@@ -492,6 +501,8 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
     menuOpen: false,
     creating: false,
     createMsg: "",
+    createKind: "document", // document | contract: which New Chat entry opened the form
+    createOpen: false,
   };
   let d = null; // connect / manage dialog state
 
@@ -928,9 +939,11 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
   }
 
   function renderCreate() {
-    const form = el("form", { class: "row", "aria-label": "New document" });
+    const contract = s.createKind === "contract";
+    const noun = contract ? "contract" : "document";
+    const form = el("form", { class: "row", "aria-label": contract ? "New contract" : "New document" });
     const template = el("input", { name: "template", id: "dt-template", placeholder: "template_id", required: true });
-    const docname = el("input", { name: "docname", id: "dt-docname", placeholder: "Document name (optional)" });
+    const docname = el("input", { name: "docname", id: "dt-docname", placeholder: `${contract ? "Contract" : "Document"} name (optional)` });
     const signers = el("textarea", { name: "signers", id: "dt-signers", rows: "3", placeholder: "Ada Lovelace <ada@example.com>\nbob@example.com" });
     const send = el("input", { type: "checkbox", name: "send", id: "dt-send" });
     form.template = template; form.docname = docname; form.signers = signers; form.send = send;
@@ -942,12 +955,15 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
       el("label", { class: "wide" }, "Signers, one per line", signers),
       el("label", { style: "flex-direction:row;align-items:center;gap:6px" }, send, "Send to signers now (asks to confirm)"),
       submit);
-    return el("details", {},
-      el("summary", { text: "New document from a template" }),
+    const details = el("details", {},
+      el("summary", { text: `New ${noun} from a template` }),
       form,
       el("div", { class: "note", style: "margin-top:8px", text: "Creates a draft that is not sent unless you tick the box. Find template ids in DocTransit under Templates." }),
       s.createMsg ? el("div", { class: "note", role: "status", text: s.createMsg }) : null,
     );
+    details.open = Boolean(s.createOpen);
+    details.addEventListener("toggle", () => { s.createOpen = details.open; });
+    return details;
   }
 
   function renderDrawer() {
@@ -1103,6 +1119,19 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
     root.style.height = `${h}px`;
   }
 
+  /** Open the Documents tab with the New document or New contract form expanded. Returns false for other intents. */
+  function openIntent(next) {
+    const kind = CREATE_KINDS[next?.action];
+    if (!kind || disposed) return false;
+    tab = "documents";
+    s.createKind = kind;
+    s.createOpen = true;
+    s.createMsg = "";
+    s.focusCreate = true;
+    render();
+    return true;
+  }
+
   function render() {
     if (disposed) return;
     const focusedId = root.ownerDocument.activeElement?.id;
@@ -1135,6 +1164,9 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
     } else if (s.focusDrawer && s.selected) {
       root.querySelector("#dt-drawer-close")?.focus();
       s.focusDrawer = false;
+    } else if (s.focusCreate && tab === "documents") {
+      root.querySelector("#dt-template")?.focus();
+      s.focusCreate = false;
     } else if (focusedId && focusedId !== "dt-search") root.querySelector(`#${focusedId}`)?.focus?.();
 
     // Load documents once for a key saved earlier.
@@ -1156,11 +1188,17 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
   });
   const onResize = () => fit();
   win.addEventListener("resize", onResize);
+  const observer = typeof win.ResizeObserver === "function" ? new win.ResizeObserver(() => fit()) : null;
+  observer?.observe(container);
 
-  render();
+  const instance = { openIntent };
+  openMounts.add(instance);
+  if (!openIntent(intent)) render();
 
   return () => {
     disposed = true;
+    openMounts.delete(instance);
+    observer?.disconnect();
     win.removeEventListener("resize", onResize);
     aborts.forEach((c) => c.abort());
     aborts.clear();
@@ -1171,5 +1209,28 @@ export function mountDocTransit(container, { initialTab = "documents" } = {}) {
 }
 
 export function activate(host) {
-  return host.registerPage("doctransit", ({ container }) => mountDocTransit(container));
+  const disposers = [host.registerPage("doctransit", ({ container, intent }) => mountDocTransit(container, { intent }))];
+  // Host API additions; an older host has neither, and the page still works.
+  if (typeof host.onIntent === "function") {
+    disposers.push(host.onIntent((intent) => openMounts.forEach((m) => m.openIntent(intent))));
+  }
+  if (typeof host.registerCreateAction === "function") {
+    disposers.push(host.registerCreateAction({
+      id: "new-document",
+      label: "New document",
+      description: "Start a document from a DocTransit template",
+      icon: { svg: DOCUMENT_ICON },
+      pageId: "doctransit",
+      intent: "create:document",
+    }));
+    disposers.push(host.registerCreateAction({
+      id: "new-contract",
+      label: "New contract",
+      description: "Start a contract from a DocTransit template",
+      icon: { svg: CONTRACT_ICON },
+      pageId: "doctransit",
+      intent: "create:contract",
+    }));
+  }
+  return () => disposers.forEach((dispose) => dispose?.());
 }

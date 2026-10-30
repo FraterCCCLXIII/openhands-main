@@ -26,7 +26,11 @@ vi.mock("@openhands/extensions/automations", async (importOriginal) => {
     },
     {
       id: "impact-unknown-basis",
-      impact: { basis: "run-counter", one: "1 widget", other: "{{count}} widgets" },
+      impact: {
+        basis: "run-counter",
+        one: "1 widget",
+        other: "{{count}} widgets",
+      },
     },
     {
       id: "impact-markup",
@@ -38,7 +42,11 @@ vi.mock("@openhands/extensions/automations", async (importOriginal) => {
     },
     {
       id: "impact-no-count",
-      impact: { basis: "completed-runs", one: "one check", other: "many checks" },
+      impact: {
+        basis: "completed-runs",
+        one: "one check",
+        other: "many checks",
+      },
     },
     {
       id: "impact-foreign-placeholder",

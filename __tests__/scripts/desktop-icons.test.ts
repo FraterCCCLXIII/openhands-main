@@ -68,9 +68,7 @@ describe("electron-builder icon wiring", () => {
   it("points buildResources at the directory holding the committed icons", () => {
     // Auto-discovery contract: icon.icns (mac), icon.ico (win) and icon.png
     // (linux) are all picked up from directories.buildResources by name.
-    expect(config.directories?.buildResources).toBe(
-      "electron/build-resources",
-    );
+    expect(config.directories?.buildResources).toBe("electron/build-resources");
   });
 
   it("ships both runtime window icons into the packaged app", () => {

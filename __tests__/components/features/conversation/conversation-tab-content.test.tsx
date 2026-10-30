@@ -18,15 +18,14 @@ vi.mock("#/hooks/use-conversation-id", () => ({
   }),
 }));
 
-
-
 // Mock lazy-loaded components
 vi.mock("#/routes/files-tab", () => ({
   default: () => <div data-testid="files-tab-content">Files Tab Content</div>,
 }));
 
 // Control for lazy loading test
-let pendingBrowserTab: { promise: Promise<void>; resolve: () => void } | null = null;
+let pendingBrowserTab: { promise: Promise<void>; resolve: () => void } | null =
+  null;
 vi.mock("#/routes/browser-tab", () => ({
   default: () => {
     if (pendingBrowserTab) {
@@ -61,7 +60,9 @@ describe("ConversationTabContent", () => {
   const createWrapper = () => {
     return ({ children }: { children: React.ReactNode }) => (
       <MemoryRouter initialEntries={["/conversations/test-conversation-id"]}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       </MemoryRouter>
     );
   };

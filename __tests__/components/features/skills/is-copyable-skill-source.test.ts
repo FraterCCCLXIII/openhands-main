@@ -12,8 +12,8 @@ describe("isCopyableSkillSource", () => {
   it("returns true for filesystem paths and URLs", () => {
     expect(isCopyableSkillSource("/skills/deno/SKILL.md")).toBe(true);
     expect(isCopyableSkillSource(".agents/skills/foo/SKILL.md")).toBe(true);
-    expect(
-      isCopyableSkillSource("https://github.com/example/skills"),
-    ).toBe(true);
+    expect(isCopyableSkillSource("https://github.com/example/skills")).toBe(
+      true,
+    );
   });
 });

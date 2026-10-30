@@ -56,11 +56,9 @@ describe("main app cookie authentication", () => {
     await expect(authenticateWithMainAppCookie()).resolves.toBe(false);
 
     expect(postMock).toHaveBeenCalledOnce();
-    expect(postMock).toHaveBeenCalledWith(
-      MAIN_APP_AUTHENTICATE_PATH,
-      null,
-      { withCredentials: true },
-    );
+    expect(postMock).toHaveBeenCalledWith(MAIN_APP_AUTHENTICATE_PATH, null, {
+      withCredentials: true,
+    });
   });
 
   it("isolates analytics failures from application startup", async () => {

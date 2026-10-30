@@ -107,5 +107,4 @@ describe("GitProviderItemsService", () => {
     expect(items).toHaveLength(1);
     expect(items[0].title).toBe("Real issue");
   });
-
 });

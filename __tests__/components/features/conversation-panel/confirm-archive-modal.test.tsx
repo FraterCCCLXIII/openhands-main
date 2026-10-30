@@ -46,7 +46,6 @@ describe("ConfirmArchiveModal", () => {
     const cancel = screen.getByText("BUTTON$CANCEL");
     const confirm = screen.getByText("ACTION$CONFIRM_ARCHIVE");
 
-    // eslint-disable-next-line no-bitwise
     expect(
       cancel.compareDocumentPosition(confirm) &
         Node.DOCUMENT_POSITION_FOLLOWING,

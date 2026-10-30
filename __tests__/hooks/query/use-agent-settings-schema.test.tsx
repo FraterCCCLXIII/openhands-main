@@ -8,8 +8,10 @@ import {
   NO_BACKEND_ID,
 } from "#/api/backend-registry/active-store";
 import SettingsService from "#/api/settings-service/settings-service.api";
-import { ActiveBackendProvider } from "#/contexts/active-backend-context";
-import { useActiveBackendContext } from "#/contexts/active-backend-context";
+import {
+  ActiveBackendProvider,
+  useActiveBackendContext,
+} from "#/contexts/active-backend-context";
 import { useAgentSettingsSchema } from "#/hooks/query/use-agent-settings-schema";
 import type { SettingsSchema } from "#/types/settings";
 import { withLlmSubscriptionSchemaFields } from "#/utils/llm-subscription-schema";

@@ -79,7 +79,10 @@ export function SkillCard({
     >
       <header className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <SkillIconBadge skillName={skill.name} className="h-6 w-6 [&>svg]:h-3 [&>svg]:w-3" />
+          <SkillIconBadge
+            skillName={skill.name}
+            className="h-6 w-6 [&>svg]:h-3 [&>svg]:w-3"
+          />
           <h3
             data-testid={`skill-name-${skill.name}`}
             className="truncate text-sm font-semibold text-contrast"

@@ -13,7 +13,10 @@ import {
 import { InstalledServerCard } from "#/components/features/mcp-page/installed-server-card";
 import { ActiveBackendProvider } from "#/contexts/active-backend-context";
 import { MOCK_DEFAULT_USER_SETTINGS } from "#/mocks/handlers";
-import type { ExtendedMCPTestResponse, MCPServerConfig } from "#/types/mcp-server";
+import type {
+  ExtendedMCPTestResponse,
+  MCPServerConfig,
+} from "#/types/mcp-server";
 
 const CUSTOM_SERVER: MCPServerConfig = {
   id: "custom",
@@ -104,7 +107,10 @@ describe("InstalledServerCard connection health", () => {
 
     resolveProbe({ ok: true, tools: ["a", "b"] });
     await waitFor(() =>
-      expect(healthDot()).toHaveAttribute("data-status", "healthy-connectivity"),
+      expect(healthDot()).toHaveAttribute(
+        "data-status",
+        "healthy-connectivity",
+      ),
     );
     // The explicit "proves connectivity only" hint must accompany the result.
     expect(
@@ -128,9 +134,10 @@ describe("InstalledServerCard connection health", () => {
     // Probing must not have bubbled into the card's edit action.
     expect(onEdit).not.toHaveBeenCalled();
     expect(probeButton(GITHUB_SERVER.id)).toHaveTextContent("MCP$HEALTH_RETRY");
-    expect(
-      screen.getByRole("link", { name: "MCP$VIEW_DOCS" }),
-    ).toHaveAttribute("href", "https://github.com/github/github-mcp-server");
+    expect(screen.getByRole("link", { name: "MCP$VIEW_DOCS" })).toHaveAttribute(
+      "href",
+      "https://github.com/github/github-mcp-server",
+    );
 
     fireEvent.click(
       screen.getByTestId(`mcp-health-update-credentials-${GITHUB_SERVER.id}`),
@@ -155,7 +162,10 @@ describe("InstalledServerCard connection health", () => {
 
     fireEvent.click(probeButton(CUSTOM_SERVER.id));
     await waitFor(() =>
-      expect(healthDot()).toHaveAttribute("data-status", "healthy-connectivity"),
+      expect(healthDot()).toHaveAttribute(
+        "data-status",
+        "healthy-connectivity",
+      ),
     );
   });
 
@@ -176,9 +186,9 @@ describe("InstalledServerCard connection health", () => {
 
       // i18n keys are returned as-is in tests.
       await waitFor(() =>
-        expect(screen.getByTestId(`mcp-health-label-${server.id}`)).toHaveTextContent(
-          expectedLabel,
-        ),
+        expect(
+          screen.getByTestId(`mcp-health-label-${server.id}`),
+        ).toHaveTextContent(expectedLabel),
       );
     },
   );
@@ -261,7 +271,10 @@ describe("InstalledServerCard connection health", () => {
     );
 
     await waitFor(() =>
-      expect(healthDot()).toHaveAttribute("data-status", "healthy-connectivity"),
+      expect(healthDot()).toHaveAttribute(
+        "data-status",
+        "healthy-connectivity",
+      ),
     );
     expect(McpService.authorizeOAuth).toHaveBeenCalledTimes(1);
     // The refreshed oauth_state is persisted, not dropped on the floor.

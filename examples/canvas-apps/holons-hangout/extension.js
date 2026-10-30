@@ -793,8 +793,9 @@ const CSS = `
   --hh-on-contrast: var(--oh-contrast-foreground, #111);
   --hh-success: var(--oh-success, #34d399); --hh-warn: #f2b51d; --hh-link: var(--oh-info-soft-foreground, #7c9dff);
   box-sizing: border-box; position: sticky; top: 0; color: var(--hh-text); background: var(--hh-bg); font: 14px/1.45 system-ui, sans-serif;
-  height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; }
+  height: 100%; min-height: 480px; overflow: hidden; }
 .hh *, .hh *::before, .hh *::after { box-sizing: border-box; }
+.hh [hidden] { display: none !important; }
 .hh button, .hh input, .hh textarea { font: inherit; color: inherit; }
 .hh .shell { position: relative; display: grid; grid-template-columns: 56px var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px); height: 100%; min-height: 0; }
 .hh .rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; border-right: 1px solid var(--hh-border); overflow-y: auto; scrollbar-width: none; }
@@ -1642,6 +1643,7 @@ function mount(container) {
   let grips = { dispose() {} };
   function render() {
     if (disposed) return;
+    fitRoot();
     grips.dispose();
     const shell = el("div", "shell");
     shell.classList.toggle("docsopen", state.docs.open);
@@ -1661,7 +1663,17 @@ function mount(container) {
     if (ta && state.refocus && !state.dialog) { ta.focus(); state.refocus = false; }
   }
 
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fitRoot() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+  }
+  const onWinResize = () => { if (!disposed) fitRoot(); };
+  window.addEventListener("resize", onWinResize);
+  const roFit = typeof ResizeObserver === "function" && container.parentElement ? new ResizeObserver(onWinResize) : null;
+  roFit?.observe(container.parentElement || container);
+
   render();
   connect(saved);
-  return () => { disposed = true; grips.dispose(); root.remove(); };
+  return () => { disposed = true; window.removeEventListener("resize", onWinResize); roFit?.disconnect(); grips.dispose(); root.remove(); };
 }

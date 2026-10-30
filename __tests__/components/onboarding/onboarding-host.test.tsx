@@ -367,7 +367,9 @@ describe("OnboardingHost", () => {
     renderHost();
 
     // While settings is loading, the modal should not be visible
-    expect(screen.queryByTestId("onboarding-modal-stub")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("onboarding-modal-stub"),
+    ).not.toBeInTheDocument();
 
     // Resolve settings with no LLM configured
     settingsPromise.resolve({

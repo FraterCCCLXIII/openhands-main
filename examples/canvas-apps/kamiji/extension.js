@@ -6,6 +6,9 @@
 const STORAGE_KEY = "canvas-extension-kamiji:v1";
 const SCHEMA = "kamiji.studio.character/1";
 const LIBRARY_SCHEMA = "kamiji.studio.library/1";
+const NEW_CREATURE_INTENT = "create:creature";
+/** New Chat icon: a creature head with a plus, drawn with strokes in currentColor. */
+const NEW_CREATURE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10 3 4l5 3"/><path d="m19 10 2-6-5 3"/><path d="M11 9c4.5 0 7 2.5 7 6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5c0-3.5 2.5-6 7-6Z"/><path d="M19 18v4M17 20h4"/></svg>';
 
 /** Slot -> part ids. The first id in each list is "none" or the plain option. */
 export const PARTS = {
@@ -312,7 +315,7 @@ const GRIP_CSS = `
 const CSS = `
 .kj { --kj-bg: var(--oh-color-base, #171717); --kj-panel: var(--oh-color-base-secondary, #212121); --kj-text: var(--oh-foreground, #eee);
   --kj-muted: var(--oh-muted, #9a9a9a); --kj-border: var(--oh-border-subtle, #3a3a3a); --kj-contrast: var(--oh-contrast, #fff); --kj-on-contrast: var(--oh-contrast-foreground, #111);
-  box-sizing: border-box; color: var(--kj-text); background: var(--kj-bg); font: 14px/1.45 system-ui, sans-serif; min-height: 100%; padding: 20px; display: grid; gap: 20px; grid-template-columns: minmax(260px, 1fr) var(--grip-0, 380px); align-items: start; position: relative; }
+  box-sizing: border-box; color: var(--kj-text); background: var(--kj-bg); font: 14px/1.45 system-ui, sans-serif; height: 100%; min-height: 480px; padding: 20px; display: grid; gap: 20px; grid-template-columns: minmax(260px, 1fr) var(--grip-0, 380px); align-items: start; position: relative; }
 .kj > .grip-right { margin-right: 30px; }
 .kj * { box-sizing: border-box; }
 .kj h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
@@ -359,7 +362,11 @@ function readStore() {
   }
 }
 
-function mount(container) {
+/** Mounted builders, so a subscribed `onIntent` reaches the page that is already open. */
+const openMounts = new Set();
+
+function mount(container, { intent = null } = {}) {
+  const win = container.ownerDocument.defaultView || window;
   const root = el("div", "kj");
   container.append(el("style", "", CSS), root);
   let disposed = false;
@@ -367,6 +374,23 @@ function mount(container) {
   const state = { ...readStore(), importing: false, importText: "", note: "", error: "" };
   const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ current: state.current, roster: state.roster })); } catch { /* storage unavailable */ } };
   const change = (fn) => { fn(state.current); state.current = sanitizeCharacter(state.current); state.note = ""; state.error = ""; save(); render(); };
+  // New Chat "New Kamiji": a fresh default creature. The roster is kept.
+  const startFresh = () => { state.current = defaultCharacter(); state.importing = false; state.importText = ""; state.note = ""; state.error = ""; save(); render(); };
+  const openIntent = (next) => {
+    if (next?.action !== NEW_CREATURE_INTENT || disposed) return false;
+    startFresh();
+    return true;
+  };
+
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fit() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (win.innerHeight || 800) - top)}px`;
+  }
+  const onResize = () => fit();
+  win.addEventListener("resize", onResize);
+  const observer = typeof win.ResizeObserver === "function" ? new win.ResizeObserver(() => fit()) : null;
+  observer?.observe(container);
 
   const group = (title, ...children) => { const g = el("div", "group"); g.append(el("b", "", title), ...children); return g; };
   const choice = (items, isOn, onPick) => {
@@ -394,6 +418,7 @@ function mount(container) {
 
   function render() {
     if (disposed) return;
+    fit();
     const c = state.current;
     root.replaceChildren();
 
@@ -496,10 +521,34 @@ function mount(container) {
     grip = gripColumns({ grid: root, columns: [{ el: panel, edge: "right", min: 280, max: 520, initial: 380, label: "panel" }], storageKey: "grip:kamiji" });
   }
 
-  render();
-  return () => { disposed = true; grip?.dispose(); root.remove(); };
+  const instance = { openIntent };
+  openMounts.add(instance);
+  if (!openIntent(intent)) render();
+  return () => {
+    disposed = true;
+    openMounts.delete(instance);
+    observer?.disconnect();
+    win.removeEventListener("resize", onResize);
+    grip?.dispose();
+    root.remove();
+  };
 }
 
 export function activate(host) {
-  return host.registerPage("creature-builder", ({ container }) => mount(container));
+  const disposers = [host.registerPage("creature-builder", ({ container, intent }) => mount(container, { intent }))];
+  // Host API additions; an older host has neither, and the page still works.
+  if (typeof host.onIntent === "function") {
+    disposers.push(host.onIntent((intent) => openMounts.forEach((m) => m.openIntent(intent))));
+  }
+  if (typeof host.registerCreateAction === "function") {
+    disposers.push(host.registerCreateAction({
+      id: "new-kamiji",
+      label: "New Kamiji",
+      description: "Start a fresh creature in the builder",
+      icon: { svg: NEW_CREATURE_ICON },
+      pageId: "creature-builder",
+      intent: NEW_CREATURE_INTENT,
+    }));
+  }
+  return () => disposers.forEach((dispose) => dispose?.());
 }

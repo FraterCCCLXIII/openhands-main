@@ -11,7 +11,6 @@ import { useModelInterceptor } from "#/hooks/chat/use-model-interceptor";
 import { useLlmConfigured } from "#/hooks/use-llm-configured";
 import { HOME_PROMPT_DRAFT_KEY } from "#/hooks/chat/use-draft-persistence";
 import { useChatAttachmentUpload } from "#/hooks/chat/use-chat-attachment-upload";
-import { useConversationStore } from "#/stores/conversation-store";
 import { useModelStore } from "#/stores/model-store";
 import { useConversationComposer } from "#/hooks/use-conversation-composer";
 import type { WorkspaceMode } from "#/api/conversation-metadata-store";

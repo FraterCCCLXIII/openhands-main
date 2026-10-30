@@ -295,7 +295,7 @@ function HeaderChips({ details }: { details: FeedUpdateDetails }) {
       </Chip>,
     );
   }
-  if (changes && changes.length) {
+  if (changes?.length) {
     const added = changes.reduce((n, c) => n + c.added, 0);
     const removed = changes.reduce((n, c) => n + c.removed, 0);
     chips.push(

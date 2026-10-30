@@ -65,7 +65,6 @@ function TestSeed({
   const ctx = useActiveBackendContext();
   React.useEffect(() => {
     onMount(ctx);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return children as React.ReactElement;
 }

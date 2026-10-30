@@ -55,7 +55,11 @@ describe("error message store", () => {
     getState().setErrorMessage("boom");
     expect(getState().errorCode).toBeNull();
 
-    getState().setErrorMessage("auth failed", "conversation", "ACPAuthRequired");
+    getState().setErrorMessage(
+      "auth failed",
+      "conversation",
+      "ACPAuthRequired",
+    );
     expect(getState().errorCode).toBe("ACPAuthRequired");
   });
 
@@ -79,7 +83,11 @@ describe("error message store", () => {
   });
 
   it("removeErrorMessage clears the error code too", () => {
-    getState().setErrorMessage("auth failed", "conversation", "ACPAuthRequired");
+    getState().setErrorMessage(
+      "auth failed",
+      "conversation",
+      "ACPAuthRequired",
+    );
     getState().removeErrorMessage();
     expect(getState().errorCode).toBeNull();
   });

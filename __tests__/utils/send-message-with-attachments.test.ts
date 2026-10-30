@@ -71,10 +71,7 @@ describe("sendMessageWithAttachments", () => {
     mocks.resolveRuntime.mockResolvedValue({ kind: "remote" });
     mocks.upload.mockResolvedValue({
       skipped_files: [{ reason: "large.png was skipped" }],
-      uploaded_files: [
-        "/workspace/notes.txt",
-        "/workspace/large.png",
-      ],
+      uploaded_files: ["/workspace/notes.txt", "/workspace/large.png"],
     });
     mocks.sendMessage.mockResolvedValue(undefined);
   });

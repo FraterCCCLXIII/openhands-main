@@ -44,7 +44,7 @@ export function GitActionList({ actions }: { actions: GitAction[] }) {
       {actions.map((a, index) => (
         <li
           // The same command can run twice; order is the identity.
-          // eslint-disable-next-line react/no-array-index-key
+
           key={index}
           className="flex flex-wrap items-center gap-1.5"
         >

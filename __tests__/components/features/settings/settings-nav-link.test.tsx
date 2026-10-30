@@ -74,6 +74,9 @@ describe("SettingsNavLink", () => {
 
     // Assert
     expect(screen.getByText("SETTINGS$NAV_SECRETS")).toBeInTheDocument();
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/settings/secrets");
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "/settings/secrets",
+    );
   });
 });

@@ -18,10 +18,11 @@ const STYLE = `
   --cm-border: var(--oh-border-subtle, #383F50); --cm-primary: var(--oh-color-primary, #C9B974); --cm-on-primary: var(--oh-accent-foreground, #0B0E14);
   --cm-danger: var(--oh-danger, #E76A5E); --cm-success: var(--oh-success, #A5E75E);
   color: var(--cm-text); font: 14px/1.45 system-ui, sans-serif; display: flex; flex-direction: column; gap: 16px;
-  box-sizing: border-box; height: 100%; overflow-y: auto; padding: 24px 12px 32px 24px; scrollbar-color: var(--cm-border) var(--cm-panel); overscroll-behavior-x: contain;
+  box-sizing: border-box; height: 100%; min-height: 480px; overflow-y: auto; padding: 24px 12px 32px 24px; scrollbar-color: var(--cm-border) var(--cm-panel); overscroll-behavior-x: contain;
 }
 .connectome-memory *, .connectome-memory *::before, .connectome-memory *::after { box-sizing: border-box; }
 .connectome-memory > * { width: 100%; }
+.connectome-memory [hidden] { display: none !important; }
 .connectome-memory h1 { font-size: 22px; margin: 0; font-weight: 600; color: var(--cm-contrast); }
 .connectome-memory h2 { font-size: 15px; margin: 0; font-weight: 600; color: var(--cm-contrast); }
 .connectome-memory p { margin: 0; }
@@ -107,7 +108,19 @@ export function mountMemory({ container, path, navigate, base, host, fetchImpl }
   };
 
   fillText(regions.status, "Checking the local memory service…");
-  const refresh = () => loadAll({ regions, screen, host, fetchImpl, state, base, navigate });
+  // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+  const fit = () => {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (globalThis.innerHeight || 800) - top)}px`;
+  };
+  const onResize = () => fit();
+  if (typeof globalThis.addEventListener === "function") globalThis.addEventListener("resize", onResize);
+  const ro = typeof globalThis.ResizeObserver === "function" && container.parentElement ? new globalThis.ResizeObserver(onResize) : null;
+  ro?.observe(container.parentElement || container);
+  const refresh = () => {
+    fit();
+    return loadAll({ regions, screen, host, fetchImpl, state, base, navigate }).then(() => { if (!state.disposed) fit(); });
+  };
   root.addEventListener("click", (event) => onClick(event, { regions, refresh, fetchImpl, state, base, navigate }));
   refresh();
   state.timer = setInterval(() => {
@@ -118,6 +131,8 @@ export function mountMemory({ container, path, navigate, base, host, fetchImpl }
   return () => {
     state.disposed = true;
     clearInterval(state.timer);
+    if (typeof globalThis.removeEventListener === "function") globalThis.removeEventListener("resize", onResize);
+    ro?.disconnect();
     for (const controller of state.controllers) controller.abort();
     root.remove();
     style.remove();

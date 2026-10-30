@@ -3,9 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { TextShimmer } from "#/components/shared/text-shimmer";
 
 vi.mock("framer-motion", async () => {
-  const actual = await vi.importActual<typeof import("framer-motion")>(
-    "framer-motion",
-  );
+  const actual =
+    await vi.importActual<typeof import("framer-motion")>("framer-motion");
   return {
     ...actual,
     useReducedMotion: () => false,
@@ -21,7 +20,9 @@ describe("TextShimmer", () => {
     );
 
     const shimmer = screen.getByTestId("shimmer");
-    expect(shimmer.style.backgroundImage).toContain("repeating-linear-gradient");
+    expect(shimmer.style.backgroundImage).toContain(
+      "repeating-linear-gradient",
+    );
     expect(shimmer.style.backgroundImage).toContain("var(--oh-foreground)");
     expect(shimmer.style.backgroundImage).toContain("var(--oh-muted)");
     expect(shimmer.style.backgroundSize).toBe("200% 100%");

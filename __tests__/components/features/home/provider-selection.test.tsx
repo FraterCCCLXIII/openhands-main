@@ -176,7 +176,9 @@ describe("git provider selection", () => {
 
   it("keeps provider options uniquely keyed when their order changes", async () => {
     const user = userEvent.setup();
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const { rerender } = render(
       <GitProviderDropdown
         {...createProps({ providers: ["github", "gitlab"] })}
@@ -389,15 +391,9 @@ describe("git provider selection", () => {
     });
     expect(selectedOption).toHaveAttribute("aria-selected", "true");
     expect(selectedOption).toHaveClass("bg-interactive-selected");
-    expect(selectedOption).not.toHaveClass(
-      "hover:bg-interactive-hover",
-    );
+    expect(selectedOption).not.toHaveClass("hover:bg-interactive-hover");
     expect(unselectedOption).toHaveAttribute("aria-selected", "false");
-    expect(unselectedOption).toHaveClass(
-      "hover:bg-interactive-hover",
-    );
-    expect(unselectedOption).not.toHaveClass(
-      "bg-interactive-selected",
-    );
+    expect(unselectedOption).toHaveClass("hover:bg-interactive-hover");
+    expect(unselectedOption).not.toHaveClass("bg-interactive-selected");
   });
 });

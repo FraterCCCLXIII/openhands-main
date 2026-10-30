@@ -9,5 +9,6 @@ creature builder in [FraterCCCLXIII/kamiji](https://github.com/FraterCCCLXIII/ka
 - **Shape and face**: width, height, eye size and eye gap sliders, five expressions, four colour regions.
 - **Roster**: save creatures in this browser, reopen or delete them, download the roster.
 - **Export**: copy or download character JSON (`kamiji.studio.character/1`, the schema Studio uses) or download the SVG.
+- **New Chat**: the New Chat (+) dropdown has a **New Kamiji** entry that opens the builder with a fresh default creature. The roster is kept.
 
 Part ids here are the simple 2D ones; the 3D Studio's own part ids are not produced. Tests: `npm install && npm test`.

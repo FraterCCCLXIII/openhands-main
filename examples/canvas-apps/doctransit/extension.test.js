@@ -472,3 +472,50 @@ describe("solid button legibility", () => {
     dispose();
   });
 });
+
+describe("New Chat actions", () => {
+  const hostMock = () => {
+    const host = { registerPage: vi.fn(() => () => {}), onIntent: vi.fn(() => () => {}), registerCreateAction: vi.fn(() => () => {}) };
+    activate(host);
+    return { host, mount: host.registerPage.mock.calls[0][1] };
+  };
+  const mountConnected = (mount, intent = null) => {
+    localStorage.setItem(STORE, JSON.stringify({ appUrl: "https://app.doctransit.com", apiKey: KEY }));
+    vi.stubGlobal("fetch", vi.fn(async () => json(DOCS)));
+    const container = document.createElement("div");
+    document.body.append(container);
+    return { container, dispose: mount({ container, intent }) };
+  };
+
+  it("registers New document and New contract with labels, icons and intents", () => {
+    const { host } = hostMock();
+    expect(host.registerCreateAction.mock.calls.map(([a]) => [a.id, a.label, a.pageId, a.intent])).toEqual([
+      ["new-document", "New document", "doctransit", "create:document"],
+      ["new-contract", "New contract", "doctransit", "create:contract"],
+    ]);
+    host.registerCreateAction.mock.calls.forEach(([a]) => expect(a.icon.svg.startsWith("<svg")).toBe(true));
+  });
+
+  it("opens the New contract form when a mounted page receives that intent", async () => {
+    const { host, mount } = hostMock();
+    const { container, dispose } = mountConnected(mount);
+    await flush();
+    host.onIntent.mock.calls[0][0]({ id: "new-contract", action: "create:contract", at: Date.now() });
+
+    expect(container.querySelector("details").open).toBe(true);
+    expect(container.querySelector("details summary").textContent).toBe("New contract from a template");
+    expect(container.querySelector("form[aria-label='New contract']")).not.toBeNull();
+    expect(document.activeElement).toBe(container.querySelector("#dt-template"));
+    dispose();
+  });
+
+  it("opens the New document form when the page is mounted with that intent", async () => {
+    const { mount } = hostMock();
+    const { container, dispose } = mountConnected(mount, { action: "create:document" });
+    await flush();
+
+    expect(container.querySelector("details summary").textContent).toBe("New document from a template");
+    expect(container.querySelector("form[aria-label='New document']")).not.toBeNull();
+    dispose();
+  });
+});

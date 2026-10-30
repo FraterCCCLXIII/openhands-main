@@ -554,7 +554,7 @@ const STYLE = `
   --rt-text: var(--oh-foreground, #EEF2F7); --rt-contrast: var(--oh-contrast, #FFFFFF); --rt-muted: var(--oh-muted, #A3B0C4);
   --rt-border: var(--oh-border-subtle, #383F50); --rt-primary: var(--oh-color-primary, #C9B974);
   --rt-danger: var(--oh-danger, #E76A5E); --rt-success: var(--oh-success, #A5E75E); --rt-info: #6AA8F0; --rt-warn: #E0B050;
-  color: var(--rt-text); font: 14px/1.45 system-ui, sans-serif; height: 100%; overflow: auto; padding: 24px; box-sizing: border-box; scrollbar-color: var(--rt-border) var(--rt-panel); }
+  color: var(--rt-text); font: 14px/1.45 system-ui, sans-serif; height: 100%; min-height: 480px; overflow: auto; padding: 24px; box-sizing: border-box; scrollbar-color: var(--rt-border) var(--rt-panel); }
 .rt *, .rt *::before, .rt *::after { box-sizing: border-box; }
 .rt h1 { font-size: 22px; margin: 0; font-weight: 600; color: var(--rt-contrast); }
 .rt h2 { font-size: 15px; margin: 0 0 8px; font-weight: 600; color: var(--rt-contrast); }
@@ -1051,6 +1051,17 @@ function mountTimeline(host, { container }) {
   document.head.append(style);
   const root = el("div", "rt");
   container.append(root);
+
+  // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+  const win = window;
+  function fit() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (win.innerHeight || 800) - top)}px`;
+  }
+  const onResize = () => fit();
+  win.addEventListener("resize", onResize);
+  const ro = typeof win.ResizeObserver === "function" && container.parentElement ? new win.ResizeObserver(onResize) : null;
+  ro?.observe(container.parentElement || container);
 
   const readNav = () => { try { return { ...DEFAULT_NAV, ...JSON.parse(window.localStorage.getItem("run-timeline:nav") ?? "{}") }; } catch { return { ...DEFAULT_NAV }; } };
   const readMode = () => { try { return window.localStorage.getItem("run-timeline:cost") === "estimated" ? "estimated" : "reported"; } catch { return "reported"; } };
@@ -1605,6 +1616,7 @@ function mountTimeline(host, { container }) {
     const main = el("div", "main");
     shell.append(nav, main);
     root.append(shell);
+    fit();
     grip = gripColumns({ grid: shell, storageKey: "grip:run-timeline", narrowQuery: "(max-width: 900px)", columns: [{ el: nav, edge: "left", min: 200, max: 480, initial: 290, label: "conversation list" }] });
 
     const navHead = el("div", "navhead");
@@ -1783,6 +1795,8 @@ function mountTimeline(host, { container }) {
     disposed = true;
     grip?.dispose();
     window.clearInterval(pollTimer);
+    win.removeEventListener("resize", onResize);
+    ro?.disconnect();
     style.remove();
     root.remove();
   };

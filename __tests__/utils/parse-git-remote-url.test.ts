@@ -95,9 +95,7 @@ describe("parseGitRemoteUrl", () => {
   });
 
   it("parses Bitbucket Cloud URLs", () => {
-    const result = parseGitRemoteUrl(
-      "https://bitbucket.org/owner/repo.git",
-    );
+    const result = parseGitRemoteUrl("https://bitbucket.org/owner/repo.git");
     expect(result?.provider).toBe("bitbucket");
     expect(result?.repository).toBe("owner/repo");
   });

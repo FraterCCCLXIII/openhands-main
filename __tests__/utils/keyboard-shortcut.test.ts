@@ -38,7 +38,11 @@ describe("keyboard-shortcut", () => {
     ).toBe(true);
     expect(
       matchesPrimaryModifierShortcut(
-        new KeyboardEvent("keydown", { key: "k", metaKey: true, shiftKey: true }),
+        new KeyboardEvent("keydown", {
+          key: "k",
+          metaKey: true,
+          shiftKey: true,
+        }),
         "k",
       ),
     ).toBe(false);

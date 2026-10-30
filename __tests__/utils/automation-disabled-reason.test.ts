@@ -11,7 +11,9 @@ const t = (key: I18nKey) => key as string;
 const identity = vi.fn((key: I18nKey) => key as string);
 
 function automation(
-  overrides: Partial<Pick<Automation, "enabled" | "disabled_reason" | "disabled_detail">>,
+  overrides: Partial<
+    Pick<Automation, "enabled" | "disabled_reason" | "disabled_detail">
+  >,
 ) {
   return { enabled: true, ...overrides } as Automation;
 }
@@ -30,7 +32,9 @@ describe("hasDisablementReason", () => {
 
   it("is false for an inactive automation with no recorded reason", () => {
     expect(
-      hasDisablementReason(automation({ enabled: false, disabled_reason: null })),
+      hasDisablementReason(
+        automation({ enabled: false, disabled_reason: null }),
+      ),
     ).toBe(false);
   });
 
@@ -81,7 +85,10 @@ describe("isManualDisable", () => {
         automation({
           disabled_reason:
             "Paused automatically: the last 5 runs all failed and nothing has succeeded in 2 days.",
-          disabled_detail: { reason: "consecutive_failures", source: "consecutive_failures" },
+          disabled_detail: {
+            reason: "consecutive_failures",
+            source: "consecutive_failures",
+          },
         }),
       ),
     ).toBe(false);
@@ -91,10 +98,16 @@ describe("isManualDisable", () => {
 describe("getDisablementReasonDisplay", () => {
   it("returns null when there is no recorded disablement reason", () => {
     expect(
-      getDisablementReasonDisplay(automation({ enabled: false, disabled_reason: null }), identity),
+      getDisablementReasonDisplay(
+        automation({ enabled: false, disabled_reason: null }),
+        identity,
+      ),
     ).toBeNull();
     expect(
-      getDisablementReasonDisplay(automation({ enabled: true, disabled_reason: "manual" }), identity),
+      getDisablementReasonDisplay(
+        automation({ enabled: true, disabled_reason: "manual" }),
+        identity,
+      ),
     ).toBeNull();
   });
 
@@ -118,7 +131,10 @@ describe("getDisablementReasonDisplay", () => {
       automation({
         enabled: false,
         disabled_reason: reason,
-        disabled_detail: { reason: "consecutive_permanent_failures", source: "consecutive_permanent_failures" },
+        disabled_detail: {
+          reason: "consecutive_permanent_failures",
+          source: "consecutive_permanent_failures",
+        },
       }),
       identity,
     );
@@ -128,7 +144,11 @@ describe("getDisablementReasonDisplay", () => {
   it("treats an automatic disable with an unknown source as automatic", () => {
     const reason = "Paused automatically: the last 5 runs all failed.";
     const display = getDisablementReasonDisplay(
-      automation({ enabled: false, disabled_reason: reason, disabled_detail: null }),
+      automation({
+        enabled: false,
+        disabled_reason: reason,
+        disabled_detail: null,
+      }),
       t,
     );
     expect(display?.text).toBe(reason);

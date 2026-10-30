@@ -15,6 +15,25 @@ describe("cleanAddress", () => {
   });
 });
 
+describe("page height", () => {
+  it("fills the visible height on mount and again after a window resize", () => {
+    const innerHeight = window.innerHeight;
+    window.innerHeight = 900;
+    try {
+      const c = document.createElement("div");
+      document.body.append(c);
+      mountTarget(c, "ohe");
+      const root = c.querySelector(".ol");
+      expect(root.style.height).toBe("900px");
+      window.innerHeight = 1200;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("1200px");
+    } finally {
+      window.innerHeight = innerHeight;
+    }
+  });
+});
+
 describe("pages", () => {
   const mount = (id) => { const c = document.createElement("div"); mountTarget(c, id); return c; };
   const btn = (c, text) => [...c.querySelectorAll("button")].find((b) => b.textContent === text);

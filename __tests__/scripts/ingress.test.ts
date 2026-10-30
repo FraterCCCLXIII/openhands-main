@@ -6,7 +6,7 @@ import { once } from "node:events";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll } from "vitest";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

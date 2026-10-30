@@ -94,6 +94,26 @@ describe("arcade", () => {
   });
 });
 
+describe("page height", () => {
+  afterEach(() => { window.innerHeight = 768; });
+
+  it("fills the viewport below the app's top edge and follows window resizes, never below 480px", () => {
+    window.innerHeight = 900;
+    const { container, dispose } = mountPage();
+    const root = container.querySelector(".ar");
+    expect(root.style.height).toBe("900px");
+
+    window.innerHeight = 1000;
+    window.dispatchEvent(new Event("resize"));
+    expect(root.style.height).toBe("1000px");
+
+    window.innerHeight = 300;
+    window.dispatchEvent(new Event("resize"));
+    expect(root.style.height).toBe("480px");
+    dispose();
+  });
+});
+
 // --- text/background legibility of solid buttons, resolved through the real cascade ---
 // The host's own tokens for dark and light (src/tailwind.css, light-plus.ts); jsdom resolves the
 // cascade but not var(), so chains are followed by hand.

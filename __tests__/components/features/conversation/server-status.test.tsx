@@ -70,7 +70,9 @@ describe("ServerStatus", () => {
   it("should render server status with RUNNING conversation status", () => {
     mockAgentStore(AgentState.RUNNING);
 
-    renderWithProviders(<ServerStatus executionStatus={ExecutionStatus.RUNNING} />);
+    renderWithProviders(
+      <ServerStatus executionStatus={ExecutionStatus.RUNNING} />,
+    );
 
     expect(screen.getByTestId("server-status")).toBeInTheDocument();
     expect(screen.getByText("Running")).toBeInTheDocument();
@@ -79,7 +81,9 @@ describe("ServerStatus", () => {
   it("should render server status with STOPPED conversation status", () => {
     mockAgentStore(AgentState.RUNNING);
 
-    renderWithProviders(<ServerStatus executionStatus={ExecutionStatus.PAUSED} />);
+    renderWithProviders(
+      <ServerStatus executionStatus={ExecutionStatus.PAUSED} />,
+    );
 
     expect(screen.getByTestId("server-status")).toBeInTheDocument();
     expect(screen.getByText("Server Stopped")).toBeInTheDocument();
@@ -88,7 +92,9 @@ describe("ServerStatus", () => {
   it("should render STARTING status when agent state is LOADING", () => {
     mockAgentStore(AgentState.LOADING);
 
-    renderWithProviders(<ServerStatus executionStatus={ExecutionStatus.IDLE} />);
+    renderWithProviders(
+      <ServerStatus executionStatus={ExecutionStatus.IDLE} />,
+    );
 
     expect(screen.getByTestId("server-status")).toBeInTheDocument();
     expect(screen.getByText("Starting")).toBeInTheDocument();
@@ -97,7 +103,9 @@ describe("ServerStatus", () => {
   it("should render STARTING status when agent state is INIT", () => {
     mockAgentStore(AgentState.INIT);
 
-    renderWithProviders(<ServerStatus executionStatus={ExecutionStatus.IDLE} />);
+    renderWithProviders(
+      <ServerStatus executionStatus={ExecutionStatus.IDLE} />,
+    );
 
     expect(screen.getByTestId("server-status")).toBeInTheDocument();
     expect(screen.getByText("Starting")).toBeInTheDocument();
@@ -106,7 +114,9 @@ describe("ServerStatus", () => {
   it("should render ERROR status when agent state is ERROR", () => {
     mockAgentStore(AgentState.ERROR);
 
-    renderWithProviders(<ServerStatus executionStatus={ExecutionStatus.RUNNING} />);
+    renderWithProviders(
+      <ServerStatus executionStatus={ExecutionStatus.RUNNING} />,
+    );
 
     expect(screen.getByTestId("server-status")).toBeInTheDocument();
     expect(screen.getByText("Error")).toBeInTheDocument();
@@ -116,7 +126,10 @@ describe("ServerStatus", () => {
     mockAgentStore(AgentState.RUNNING);
 
     renderWithProviders(
-      <ServerStatus executionStatus={ExecutionStatus.RUNNING} isPausing={true} />,
+      <ServerStatus
+        executionStatus={ExecutionStatus.RUNNING}
+        isPausing={true}
+      />,
     );
 
     expect(screen.getByTestId("server-status")).toBeInTheDocument();
@@ -136,7 +149,10 @@ describe("ServerStatus", () => {
     mockAgentStore(AgentState.RUNNING);
 
     renderWithProviders(
-      <ServerStatus executionStatus={ExecutionStatus.RUNNING} className="custom-class" />,
+      <ServerStatus
+        executionStatus={ExecutionStatus.RUNNING}
+        className="custom-class"
+      />,
     );
 
     const container = screen.getByTestId("server-status");

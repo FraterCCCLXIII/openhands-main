@@ -115,7 +115,7 @@ export function activate(host) {
     });
     const frame = document.createElement("iframe");
     frame.title = CONFIG.title;
-    frame.style.cssText = "display:block;width:100%;height:100%;border:0;";
+    frame.style.cssText = "display:block;width:100%;height:100%;min-height:480px;border:0;";
     // srcdoc keeps the page's global styles and ids out of Canvas while
     // letting it share Canvas' origin, which the frameElement handoff needs.
     frame.hubClaude = claudeShim(store, host);
@@ -126,7 +126,19 @@ export function activate(host) {
     frame.dataset.projectsHub = "";
     container.style.height = "100%";
     container.append(frame);
+    // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+    const fit = () => {
+      const top = Math.max(0, frame.getBoundingClientRect().top);
+      frame.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+    };
+    const onResize = () => fit();
+    window.addEventListener("resize", onResize);
+    const ro = typeof window.ResizeObserver === "function" && container.parentElement ? new window.ResizeObserver(onResize) : null;
+    ro?.observe(container.parentElement || container);
+    fit();
     return () => {
+      window.removeEventListener("resize", onResize);
+      ro?.disconnect();
       store.dispose();
       frame.remove();
       // Canvas can dispose an earlier mount after a later one has started in

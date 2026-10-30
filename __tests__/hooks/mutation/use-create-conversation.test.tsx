@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
 import { useCreateConversation } from "#/hooks/mutation/use-create-conversation";
 import { SuggestedTask } from "#/utils/types";
@@ -8,7 +8,6 @@ import {
   getStoredConversationMetadata,
   removeStoredConversationMetadata,
 } from "#/api/conversation-metadata-store";
-import { AGENT_PROFILES_QUERY_KEYS } from "#/hooks/query/query-keys";
 
 vi.mock("#/hooks/use-tracking", () => ({
   useTracking: () => ({

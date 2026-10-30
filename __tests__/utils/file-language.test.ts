@@ -37,15 +37,11 @@ describe("getPrismLanguageForFile", () => {
   });
 
   it("falls back on mime type when no extension matches", () => {
-    expect(
-      getPrismLanguageForFile("LICENSE", "text/markdown"),
-    ).toBe("markdown");
-    expect(
-      getPrismLanguageForFile("data", "application/json"),
-    ).toBe("json");
-    expect(
-      getPrismLanguageForFile("config", "text/yaml"),
-    ).toBe("yaml");
+    expect(getPrismLanguageForFile("LICENSE", "text/markdown")).toBe(
+      "markdown",
+    );
+    expect(getPrismLanguageForFile("data", "application/json")).toBe("json");
+    expect(getPrismLanguageForFile("config", "text/yaml")).toBe("yaml");
   });
 
   it("returns null for unknown extensions and unknown mime types", () => {

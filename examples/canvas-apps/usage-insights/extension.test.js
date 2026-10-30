@@ -244,6 +244,29 @@ describe("Usage Insights extension", () => {
     cleanup();
   });
 
+  it("sizes the app to fill the viewport and follows window resizes, never below 480px", async () => {
+    const originalHeight = window.innerHeight;
+    try {
+      const { mountPage, navigate } = setup();
+      const container = document.createElement("div");
+      window.innerHeight = 900;
+      const cleanup = mountPage({ container, path: "", navigate });
+      const root = container.querySelector(".usage-insights");
+      expect(root.style.height).toBe("900px");
+
+      window.innerHeight = 1000;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("1000px");
+
+      window.innerHeight = 300;
+      window.dispatchEvent(new Event("resize"));
+      expect(root.style.height).toBe("480px");
+      cleanup();
+    } finally {
+      window.innerHeight = originalHeight;
+    }
+  });
+
   it("disposes DOM, styles, and timers on cleanup", async () => {
     const { mountPage, navigate } = setup();
     const container = document.createElement("div");

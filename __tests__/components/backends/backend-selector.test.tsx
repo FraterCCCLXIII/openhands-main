@@ -104,7 +104,6 @@ function TestSeed({
   const ctx = useActiveBackendContext();
   React.useEffect(() => {
     onMount(ctx);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return children as React.ReactElement;
 }
@@ -922,7 +921,9 @@ describe("BackendSelector", () => {
 
     const user = await openDropdown();
     const before = activeBackendSnapshot();
-    await user.click(screen.getAllByTestId("backend-dropdown-row-menu-trigger")[0]);
+    await user.click(
+      screen.getAllByTestId("backend-dropdown-row-menu-trigger")[0],
+    );
     await user.click(screen.getByTestId("backend-dropdown-row-manage"));
 
     expect(

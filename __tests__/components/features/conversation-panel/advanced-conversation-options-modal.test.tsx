@@ -146,7 +146,9 @@ describe("AdvancedConversationOptionsModal", () => {
 
     const scroller = screen.getByTestId("advanced-options-scroll");
     const topEdge = screen.getByTestId("advanced-options-scroll-edge-top");
-    const bottomEdge = screen.getByTestId("advanced-options-scroll-edge-bottom");
+    const bottomEdge = screen.getByTestId(
+      "advanced-options-scroll-edge-bottom",
+    );
 
     mockVerticalScrollMetrics(scroller, {
       scrollHeight: 900,

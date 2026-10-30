@@ -54,7 +54,6 @@ vi.mock("#/components/shared/buttons/styled-tooltip", () => ({
   ),
 }));
 
-// eslint-disable-next-line import/first
 import { ContextWindowMeter } from "#/components/features/chat/components/context-window-meter";
 
 describe("ContextWindowMeter", () => {

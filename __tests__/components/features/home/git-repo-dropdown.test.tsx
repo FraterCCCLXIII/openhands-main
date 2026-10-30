@@ -119,12 +119,7 @@ const renderDropdown = (
   setupDefaultMocks(repositoryDataOverrides, urlSearchOverrides);
 
   return render(
-    <GitRepoDropdown
-      provider="github"
-      onChange={mockOnChange}
-      // eslint-disable-next-line react/jsx-props-no-spreading
-      {...props}
-    />,
+    <GitRepoDropdown provider="github" onChange={mockOnChange} {...props} />,
     {
       wrapper: ({ children }) => (
         <QueryClientProvider
@@ -249,7 +244,9 @@ describe("GitRepoDropdown", () => {
 
     it("keeps repository options uniquely keyed when results reorder", async () => {
       const user = userEvent.setup();
-      const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       const view = renderDropdown();
       const input = screen.getByTestId("git-repo-dropdown");
 
@@ -491,9 +488,7 @@ describe("GitRepoDropdown", () => {
       expect(selectedOption).toHaveAttribute("aria-selected", "true");
       expect(selectedOption).toHaveClass("bg-interactive-selected");
       expect(unselectedOption).toHaveAttribute("aria-selected", "false");
-      expect(unselectedOption).toHaveClass(
-        "hover:bg-interactive-hover",
-      );
+      expect(unselectedOption).toHaveClass("hover:bg-interactive-hover");
     });
 
     it("uses the latest callback when a selected repository is cleared", async () => {

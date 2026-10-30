@@ -21,9 +21,10 @@ describe("PromptSection", () => {
   });
 
   it("collapses long prompts with a fade and expands on toggle", () => {
-    const longPrompt = Array.from({ length: 40 }, (_, index) => `Line ${index + 1}.`).join(
-      "\n",
-    );
+    const longPrompt = Array.from(
+      { length: 40 },
+      (_, index) => `Line ${index + 1}.`,
+    ).join("\n");
 
     Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
       configurable: true,
@@ -35,7 +36,9 @@ describe("PromptSection", () => {
     render(<PromptSection prompt={longPrompt} />);
 
     expect(screen.getByTestId("automation-prompt-fade")).toBeInTheDocument();
-    expect(screen.getByTestId("automation-prompt-content")).toHaveClass("max-h-60");
+    expect(screen.getByTestId("automation-prompt-content")).toHaveClass(
+      "max-h-60",
+    );
     expect(screen.getByTestId("automation-prompt-toggle")).toHaveTextContent(
       I18nKey.COMMON$VIEW_MORE,
     );

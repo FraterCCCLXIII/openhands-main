@@ -111,9 +111,10 @@ vi.mock("#/api/conversation-metadata-store", () => ({
 vi.mock(
   "#/components/features/conversation/conversation-overview-drawer-context",
   async (importOriginal) => {
-    const actual = await importOriginal<
-      typeof import("#/components/features/conversation/conversation-overview-drawer-context")
-    >();
+    const actual =
+      await importOriginal<
+        typeof import("#/components/features/conversation/conversation-overview-drawer-context")
+      >();
     return {
       ...actual,
       useConversationOverviewDrawerOptional: () => ({
@@ -151,12 +152,18 @@ describe("ConversationOverviewPanel", () => {
   it("renders workspace and git changes but no Issues row", () => {
     renderPanel();
 
-    expect(screen.getByTestId("conversation-overview-panel")).toBeInTheDocument();
-    expect(screen.getByTestId("conversation-overview-workspace")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-panel"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-workspace"),
+    ).toBeInTheDocument();
     expect(
       screen.queryByTestId("conversation-overview-git-title"),
     ).not.toBeInTheDocument();
-    expect(screen.getByTestId("conversation-overview-diffs")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-diffs"),
+    ).toBeInTheDocument();
     expect(
       screen.queryByTestId("conversation-overview-issues"),
     ).not.toBeInTheDocument();
@@ -220,7 +227,9 @@ describe("ConversationOverviewPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    expect(screen.getByTestId("conversation-overview-diffs")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-diffs"),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByTestId("conversation-overview-ellipsis"));
     expect(
@@ -248,7 +257,9 @@ describe("ConversationOverviewPanel", () => {
       screen.getByTestId("conversation-overview-menu-pin-git-changes"),
     );
 
-    expect(screen.getByTestId("conversation-overview-diffs")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-diffs"),
+    ).toBeInTheDocument();
     expect(
       screen.getByTestId("conversation-overview-menu-pin-git-changes"),
     ).toHaveAttribute("aria-pressed", "true");

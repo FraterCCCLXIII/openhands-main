@@ -58,7 +58,6 @@ vi.mock("#/hooks/mutation/sync-agent-profiles", async (importOriginal) => ({
   updateAgentProfile: updateAgentProfileMock,
 }));
 
-// eslint-disable-next-line import/first
 import { useChatInputLlmProfileState } from "#/hooks/use-chat-input-llm-profile-state";
 
 // The hook reads the switch's pending state via `useIsMutating`, which needs a

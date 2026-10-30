@@ -91,10 +91,7 @@ export function HomeHeaderTitle() {
         <span className="sr-only">{t(I18nKey.HOME$WHAT_TO_WORK_ON)}</span>
         <WelcomeBackHeading message={welcomeMessage} />
       </Typography.H1>
-      <p
-        data-testid="home-header-subtitle"
-        className="text-center text-muted"
-      >
+      <p data-testid="home-header-subtitle" className="text-center text-muted">
         {subtitle}
       </p>
       <div className="mt-3 flex w-full justify-center">

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PARTS,
   activate,
@@ -170,5 +170,52 @@ describe("solid button legibility", () => {
     const solid = [...container.querySelectorAll('button[aria-pressed="true"], button.primary')];
     expect(solid.length).toBeGreaterThan(1);
     for (const b of solid) expect(contrastRatio(b), b.textContent).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("New Chat action", () => {
+  const hostMock = () => {
+    const host = { registerPage: vi.fn(() => () => {}), onIntent: vi.fn(() => () => {}), registerCreateAction: vi.fn(() => () => {}) };
+    activate(host);
+    return { host, mount: host.registerPage.mock.calls[0][1] };
+  };
+  const nameOf = (container) => container.querySelector('input[aria-label="Creature name"]').value;
+
+  it("registers New Kamiji with its label, icon and page intent", () => {
+    const { host } = hostMock();
+    expect(host.registerCreateAction).toHaveBeenCalledWith(expect.objectContaining({
+      id: "new-kamiji",
+      label: "New Kamiji",
+      pageId: "creature-builder",
+      intent: "create:creature",
+      icon: { svg: expect.stringMatching(/^<svg/) },
+    }));
+  });
+
+  it("opens a fresh creature in an open builder and keeps the roster", () => {
+    localStorage.clear();
+    localStorage.setItem("canvas-extension-kamiji:v1", JSON.stringify({ current: { ...defaultCharacter("fox"), name: "Mira" }, roster: [{ ...defaultCharacter(), name: "Saved" }] }));
+    const { host, mount } = hostMock();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mount({ container, intent: null });
+    expect(nameOf(container)).toBe("Mira");
+
+    host.onIntent.mock.calls[0][0]({ id: "new-kamiji", action: "create:creature", at: Date.now() });
+
+    expect(nameOf(container)).toBe(defaultCharacter().name);
+    expect(container.querySelector(".roster .card").textContent).toContain("Saved");
+    dispose();
+  });
+
+  it("starts fresh when the page is mounted with the intent", () => {
+    localStorage.clear();
+    localStorage.setItem("canvas-extension-kamiji:v1", JSON.stringify({ current: { ...defaultCharacter("fox"), name: "Mira" }, roster: [] }));
+    const { mount } = hostMock();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mount({ container, intent: { action: "create:creature" } });
+    expect(nameOf(container)).toBe(defaultCharacter().name);
+    dispose();
   });
 });

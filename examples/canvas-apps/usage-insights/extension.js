@@ -85,7 +85,9 @@ const STYLE = `
   --ui-on-primary: var(--oh-accent-foreground, #0B0E14);
   --ui-danger: var(--oh-danger, #E76A5E);
   --ui-success: var(--oh-success, #A5E75E);
-  min-height: 100%;
+  height: 100%;
+  min-height: 480px;
+  overflow: auto;
   color: var(--ui-text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -1461,6 +1463,17 @@ function mountUsage(host, { container, path, navigate }) {
   const root = el("div", "usage-insights");
   container.append(root);
 
+  // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+  const win = window;
+  function fit() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (win.innerHeight || 800) - top)}px`;
+  }
+  const onResize = () => fit();
+  win.addEventListener("resize", onResize);
+  const ro = typeof win.ResizeObserver === "function" && container.parentElement ? new win.ResizeObserver(onResize) : null;
+  ro?.observe(container.parentElement || container);
+
   const backendId = host.backend?.id || "default";
   const state = {
     conversations: [],
@@ -1502,6 +1515,7 @@ function mountUsage(host, { container, path, navigate }) {
     } else {
       renderNotFound(root, navigate);
     }
+    fit();
   };
 
   async function loadData() {
@@ -1637,6 +1651,8 @@ function mountUsage(host, { container, path, navigate }) {
   return () => {
     disposed = true;
     if (pollTimer !== null) window.clearInterval(pollTimer);
+    win.removeEventListener("resize", onResize);
+    ro?.disconnect();
     style.remove();
     root.remove();
   };

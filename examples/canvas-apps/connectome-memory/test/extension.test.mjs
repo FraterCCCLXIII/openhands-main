@@ -24,7 +24,12 @@ class El {
     this.value = "";
     this.checked = false;
     this.min = "";
+    this.style = {};
     this._text = "";
+  }
+
+  getBoundingClientRect() {
+    return { top: 0 };
   }
 
   set textContent(value) {
@@ -211,4 +216,29 @@ test("a malformed Agent Server body does not throw and renders a fallback", asyn
   assert.ok(container.textContent.includes("did not return settings"));
   assert.ok(container.textContent.includes("Memory options"));
   stop();
+});
+
+test("the root fills the visible height on mount and again after a window resize", async () => {
+  installDocument();
+  const listeners = new Map();
+  globalThis.addEventListener = (type, fn) => listeners.set(type, fn);
+  globalThis.removeEventListener = () => listeners.delete("resize");
+  globalThis.innerHeight = 900;
+  globalThis.fetch = async () => ({ ok: false, json: async () => ({ error: "down" }) });
+  try {
+    const host = hostDouble(async () => ({}));
+    activate(host);
+    const container = new El("div");
+    const stop = host.pages.get("memory")({ container, path: "", navigate() {} });
+    const root = container.childNodes.find((node) => node.className === "connectome-memory");
+    assert.equal(root.style.height, "900px");
+    globalThis.innerHeight = 1200;
+    listeners.get("resize")();
+    assert.equal(root.style.height, "1200px");
+    stop();
+  } finally {
+    delete globalThis.addEventListener;
+    delete globalThis.removeEventListener;
+    delete globalThis.innerHeight;
+  }
 });

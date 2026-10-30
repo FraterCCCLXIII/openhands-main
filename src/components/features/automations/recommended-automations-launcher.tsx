@@ -300,10 +300,7 @@ export function RecommendedAutomationsLauncher({
     // GitHub/Slack responders poll continuously; let the user choose where the
     // responder runs before committing to the local setup flow. On a cloud
     // backend the responder already runs in the cloud, so there is no choice.
-    if (
-      false &&
-      isResponderAutomation(automation)
-    ) {
+    if (false && isResponderAutomation(automation)) {
       setDeploymentChoiceAutomation(automation);
       return;
     }

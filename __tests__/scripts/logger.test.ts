@@ -12,7 +12,9 @@ vi.mock("winston", () => {
   throw new Error("winston is not installed in the packaged app");
 });
 vi.mock("winston-daily-rotate-file", () => {
-  throw new Error("winston-daily-rotate-file is not installed in the packaged app");
+  throw new Error(
+    "winston-daily-rotate-file is not installed in the packaged app",
+  );
 });
 
 describe("logger without winston", () => {

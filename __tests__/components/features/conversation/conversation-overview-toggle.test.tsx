@@ -16,11 +16,14 @@ vi.mock("#/hooks/use-is-archived-conversation", () => ({
   useIsArchivedConversation: () => false,
 }));
 
-vi.mock("#/components/features/conversation/conversation-overview-panel", () => ({
-  ConversationOverviewPanel: () => (
-    <div data-testid="conversation-overview-panel" />
-  ),
-}));
+vi.mock(
+  "#/components/features/conversation/conversation-overview-panel",
+  () => ({
+    ConversationOverviewPanel: () => (
+      <div data-testid="conversation-overview-panel" />
+    ),
+  }),
+);
 
 describe("ConversationOverviewToggle", () => {
   beforeEach(() => {
@@ -88,7 +91,9 @@ describe("ConversationOverviewToggle", () => {
 
     expect(useConversationStore.getState().isOverviewPanelPeeked).toBe(true);
     expect(useConversationStore.getState().isOverviewPanelShown).toBe(false);
-    expect(screen.getByTestId("conversation-overview-peek")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("conversation-overview-peek"),
+    ).toBeInTheDocument();
     expect(
       screen.getByTestId("conversation-overview-panel"),
     ).toBeInTheDocument();

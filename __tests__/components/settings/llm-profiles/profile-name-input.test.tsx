@@ -7,11 +7,11 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
-        "SETTINGS$PROFILE_NAME_LABEL": "Profile Name",
-        "SETTINGS$PROFILE_NAME_PLACEHOLDER": "Enter profile name",
-        "SETTINGS$PROFILE_NAME_RULE":
+        SETTINGS$PROFILE_NAME_LABEL: "Profile Name",
+        SETTINGS$PROFILE_NAME_PLACEHOLDER: "Enter profile name",
+        SETTINGS$PROFILE_NAME_RULE:
           "1-64 chars, start with alphanumeric, then alphanumerics or . _ -",
-        "COMMON$OPTIONAL": "Optional",
+        COMMON$OPTIONAL: "Optional",
       };
       return translations[key] || key;
     },
@@ -107,11 +107,7 @@ describe("ProfileNameInput", () => {
 
   it("treats an empty optional value as valid", () => {
     render(
-      <ProfileNameInput
-        testId="profile-name"
-        value=""
-        onChange={() => {}}
-      />,
+      <ProfileNameInput testId="profile-name" value="" onChange={() => {}} />,
     );
 
     expect(screen.getByTestId("profile-name")).toHaveAttribute(
@@ -181,11 +177,7 @@ describe("ProfileNameInput", () => {
 
   it("shows default placeholder when not provided", () => {
     render(
-      <ProfileNameInput
-        testId="profile-name"
-        value=""
-        onChange={() => {}}
-      />,
+      <ProfileNameInput testId="profile-name" value="" onChange={() => {}} />,
     );
 
     expect(screen.getByTestId("profile-name")).toHaveAttribute(
@@ -195,9 +187,7 @@ describe("ProfileNameInput", () => {
   });
 
   it("shows optional label when isOptional is true", () => {
-    render(
-      <ProfileNameInput value="" onChange={() => {}} isOptional />,
-    );
+    render(<ProfileNameInput value="" onChange={() => {}} isOptional />);
 
     expect(screen.getByText("Profile Name (Optional)")).toBeInTheDocument();
   });

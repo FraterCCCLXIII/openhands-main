@@ -62,10 +62,7 @@ import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 const APPS_PATH = "/apps";
 const FACTORY_PATH = "/factory";
 const AGENTS_PATH = "/agents";
-const TEAM_PATH = "/team";
 const ICON_SIZE = 18;
-const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
-const PLANNING_PATH = "/planning";
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
 

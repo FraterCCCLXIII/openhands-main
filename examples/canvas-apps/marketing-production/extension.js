@@ -659,7 +659,7 @@ const STYLE = `
   --mp-text: var(--oh-foreground, #EEF2F7); --mp-contrast: var(--oh-contrast, #FFFFFF); --mp-muted: var(--oh-muted, #A3B0C4);
   --mp-border: var(--oh-border-subtle, #383F50); --mp-primary: var(--oh-color-primary, #C9B974); --mp-on-primary: var(--oh-accent-foreground, #0B0E14);
   --mp-danger: var(--oh-danger, #E76A5E); --mp-success: var(--oh-success, #A5E75E); --mp-info: #6AA8F0; --mp-today: #E76A5E;
-  color: var(--mp-text); font: 14px/1.45 system-ui, sans-serif; height: 100%; overflow: auto; padding: 24px; box-sizing: border-box; }
+  color: var(--mp-text); font: 14px/1.45 system-ui, sans-serif; height: 100%; min-height: 480px; overflow: auto; padding: 24px; box-sizing: border-box; }
 .mp *, .mp *::before, .mp *::after { box-sizing: border-box; }
 .mp h1 { font-size: 22px; margin: 0; font-weight: 600; color: var(--mp-contrast); }
 .mp h2 { font-size: 15px; margin: 0 0 8px; font-weight: 600; color: var(--mp-contrast); }
@@ -834,6 +834,17 @@ function mountProduction(host, { container }) {
   document.head.append(style);
   const root = el("div", "mp");
   container.append(root);
+
+  // Fill the visible page below wherever the host put us (hosts may not give a definite height).
+  const win = window;
+  function fit() {
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (win.innerHeight || 800) - top)}px`;
+  }
+  const onResize = () => fit();
+  win.addEventListener("resize", onResize);
+  const ro = typeof win.ResizeObserver === "function" && container.parentElement ? new win.ResizeObserver(onResize) : null;
+  ro?.observe(container.parentElement || container);
 
   const st = loadState();
   const ads = sampleAds();
@@ -1719,12 +1730,15 @@ function mountProduction(host, { container }) {
     if (ui.editing) root.append(editor());
     if (ui.dialog) root.append(dialog());
     if (ui.toast) { const t = el("div", `toast${ui.toast.err ? " err" : ""}`, ui.toast.text); t.setAttribute("role", "status"); root.append(t); }
+    fit();
   }
 
   render();
   return () => {
     disposed = true;
     window.clearTimeout(toastTimer);
+    win.removeEventListener("resize", onResize);
+    ro?.disconnect();
     style.remove();
     root.remove();
   };

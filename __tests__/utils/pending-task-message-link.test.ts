@@ -16,15 +16,9 @@ describe("pending-task-message-link", () => {
   it("matches pending messages linked from a task placeholder route", () => {
     linkPendingTaskMessages("conv-real", "task-abc");
 
-    expect(
-      matchesPendingConversationId("conv-real", "task-abc"),
-    ).toBe(true);
-    expect(
-      matchesPendingConversationId("conv-real", "conv-real"),
-    ).toBe(true);
-    expect(
-      matchesPendingConversationId("conv-real", "task-other"),
-    ).toBe(false);
+    expect(matchesPendingConversationId("conv-real", "task-abc")).toBe(true);
+    expect(matchesPendingConversationId("conv-real", "conv-real")).toBe(true);
+    expect(matchesPendingConversationId("conv-real", "task-other")).toBe(false);
   });
 
   it("schedules and consumes a pending reassign once for the target conversation", () => {
@@ -42,8 +36,6 @@ describe("pending-task-message-link", () => {
     linkPendingTaskMessages("conv-real", "task-abc");
     clearPendingTaskMessageLink("conv-real");
 
-    expect(
-      matchesPendingConversationId("conv-real", "task-abc"),
-    ).toBe(false);
+    expect(matchesPendingConversationId("conv-real", "task-abc")).toBe(false);
   });
 });

@@ -18,10 +18,8 @@ vi.mock("@openhands/typescript-client/clients", () => ({
   // Real class so `new MCPClient(...)` works; testServer delegates to the
   // shared spy so each test can configure the return value independently.
   MCPClient: class {
-    // eslint-disable-next-line class-methods-use-this
     testServer = mockTestServer;
 
-    // eslint-disable-next-line class-methods-use-this
     close = vi.fn();
   },
 }));

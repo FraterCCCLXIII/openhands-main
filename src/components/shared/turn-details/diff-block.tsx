@@ -51,7 +51,7 @@ export function DiffBlock({ change }: { change: FileChange }) {
         {shown.map((line, index) => (
           <div
             // Diff lines have no stable id; their position is the identity.
-            // eslint-disable-next-line react/no-array-index-key
+
             key={index}
             data-diff={line.type}
             className={cn(

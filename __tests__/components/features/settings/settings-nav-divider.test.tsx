@@ -16,7 +16,9 @@ describe("SettingsNavDivider", () => {
   // element.
   it("should accept custom className", () => {
     // Arrange & Act
-    const { container } = render(<SettingsNavDivider className="custom-class" />);
+    const { container } = render(
+      <SettingsNavDivider className="custom-class" />,
+    );
 
     // Assert
     const divider = container.firstChild;

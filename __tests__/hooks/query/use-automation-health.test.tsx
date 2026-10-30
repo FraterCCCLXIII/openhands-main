@@ -36,7 +36,9 @@ describe("useAutomationHealth", () => {
   });
 
   it("should return healthy status when backend is available", async () => {
-    vi.mocked(AutomationService.checkHealth).mockResolvedValue({ status: "ok" });
+    vi.mocked(AutomationService.checkHealth).mockResolvedValue({
+      status: "ok",
+    });
 
     const { result } = renderHook(() => useAutomationHealth(), {
       wrapper: createWrapper(),

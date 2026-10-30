@@ -39,7 +39,6 @@ const renderDropdown = (
       provider="github"
       selectedBranch={null}
       onBranchSelect={mockOnBranchSelect}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     />,
     {

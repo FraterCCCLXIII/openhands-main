@@ -5,24 +5,25 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HttpError } from "@openhands/typescript-client";
 import { RenameProfileModal } from "#/components/features/settings/llm-profiles/rename-profile-modal";
-import { ProfileInfo } from "#/api/profiles-service/profiles-service.api";
-import ProfilesService from "#/api/profiles-service/profiles-service.api";
+import ProfilesService, {
+  ProfileInfo,
+} from "#/api/profiles-service/profiles-service.api";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string>) => {
       const translations: Record<string, string> = {
-        "SETTINGS$PROFILE_RENAME_TITLE": "Rename Profile",
-        "SETTINGS$PROFILE_NAME_LABEL": "Profile Name",
-        "SETTINGS$PROFILE_NAME_PLACEHOLDER": "Enter profile name",
-        "SETTINGS$PROFILE_NAME_RULE":
+        SETTINGS$PROFILE_RENAME_TITLE: "Rename Profile",
+        SETTINGS$PROFILE_NAME_LABEL: "Profile Name",
+        SETTINGS$PROFILE_NAME_PLACEHOLDER: "Enter profile name",
+        SETTINGS$PROFILE_NAME_RULE:
           "1-64 chars, start with alphanumeric, then alphanumerics or . _ -",
-        "SETTINGS$PROFILE_RENAMED": params?.name
+        SETTINGS$PROFILE_RENAMED: params?.name
           ? `Profile renamed to ${params.name}`
           : "Profile renamed",
-        "BUTTON$RENAME": "Rename",
-        "BUTTON$CANCEL": "Cancel",
-        "ERROR$GENERIC": "An error occurred",
+        BUTTON$RENAME: "Rename",
+        BUTTON$CANCEL: "Cancel",
+        ERROR$GENERIC: "An error occurred",
       };
       return translations[key] || key;
     },
@@ -102,10 +103,9 @@ describe("RenameProfileModal", () => {
     const submit = screen.getByTestId("rename-profile-submit");
 
     // Assert: Cancel precedes the dominant Rename action in DOM order.
-    // eslint-disable-next-line no-bitwise
+
     expect(
-      cancel.compareDocumentPosition(submit) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      cancel.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
@@ -210,9 +210,7 @@ describe("RenameProfileModal", () => {
 
   it("shows error toast and keeps modal open on rename failure", async () => {
     const user = userEvent.setup();
-    const { displayErrorToast } = await import(
-      "#/utils/custom-toast-handlers"
-    );
+    const { displayErrorToast } = await import("#/utils/custom-toast-handlers");
     vi.mocked(ProfilesService.renameProfile).mockRejectedValue(
       new Error("Name already exists"),
     );
@@ -238,9 +236,7 @@ describe("RenameProfileModal", () => {
     // Arrange — the agent-server refuses a duplicate name with a FastAPI 409,
     // which the shared TypeScript client throws as an HttpError.
     const user = userEvent.setup();
-    const { displayErrorToast } = await import(
-      "#/utils/custom-toast-handlers"
-    );
+    const { displayErrorToast } = await import("#/utils/custom-toast-handlers");
     vi.mocked(ProfilesService.renameProfile).mockRejectedValue(
       new HttpError(
         409,

@@ -1,17 +1,20 @@
-import { describe, expect, it } from 'vitest';
-import fs from 'fs';
-import path from 'path';
-import translationChecker from '../../scripts/check-translation-completeness.cjs';
+import { describe, expect, it } from "vitest";
+import fs from "fs";
+import path from "path";
+import translationChecker from "../../scripts/check-translation-completeness.cjs";
 
-const { IDENTICAL_VALUE_ALLOWLIST, getSupportedLanguageCodes, checkTranslations } =
-  translationChecker;
+const {
+  IDENTICAL_VALUE_ALLOWLIST,
+  getSupportedLanguageCodes,
+  checkTranslations,
+} = translationChecker;
 
 type TranslationMap = Record<string, Record<string, string>>;
 
 const translationJson: TranslationMap = JSON.parse(
   fs.readFileSync(
-    path.join(__dirname, '../../src/i18n/translation.json'),
-    'utf-8',
+    path.join(__dirname, "../../src/i18n/translation.json"),
+    "utf-8",
   ),
 );
 
@@ -20,51 +23,59 @@ const supportedLanguageCodes = getSupportedLanguageCodes();
 const getPlaceholders = (value: string) =>
   (value.match(/{{\s*[^}]+}}/g) ?? []).sort();
 
-describe('checkTranslations', () => {
-  const languages = ['en', 'fr', 'ja'];
+describe("checkTranslations", () => {
+  const languages = ["en", "fr", "ja"];
 
-  it('reports languages missing from a key', () => {
+  it("reports languages missing from a key", () => {
     const { missingTranslations } = checkTranslations(
-      { 'SOME$KEY': { en: 'Hello', fr: 'Bonjour' } },
+      { SOME$KEY: { en: "Hello", fr: "Bonjour" } },
       languages,
     );
 
-    expect(missingTranslations).toEqual({ 'SOME$KEY': ['ja'] });
+    expect(missingTranslations).toEqual({ SOME$KEY: ["ja"] });
   });
 
-  it('reports languages not in the supported list', () => {
+  it("reports languages not in the supported list", () => {
     const { extraLanguages } = checkTranslations(
-      { 'SOME$KEY': { en: 'Hello', fr: 'Bonjour', ja: 'こんにちは', xx: 'Hello' } },
+      {
+        SOME$KEY: { en: "Hello", fr: "Bonjour", ja: "こんにちは", xx: "Hello" },
+      },
       languages,
     );
 
-    expect(extraLanguages).toEqual({ 'SOME$KEY': ['xx'] });
+    expect(extraLanguages).toEqual({ SOME$KEY: ["xx"] });
   });
 
-  it('flags keys where every non-English value is the English value', () => {
+  it("flags keys where every non-English value is the English value", () => {
     const { untranslatedKeys } = checkTranslations(
-      { 'SOME$KEY': { en: 'Hello', fr: 'Hello', ja: 'Hello' } },
+      { SOME$KEY: { en: "Hello", fr: "Hello", ja: "Hello" } },
       languages,
     );
 
-    expect(untranslatedKeys).toEqual({ 'SOME$KEY': 'Hello' });
+    expect(untranslatedKeys).toEqual({ SOME$KEY: "Hello" });
   });
 
-  it('does not flag allowlisted keys with identical values', () => {
+  it("does not flag allowlisted keys with identical values", () => {
     const { untranslatedKeys } = checkTranslations(
-      { BRANDING$OPENHANDS: { en: 'OpenHands', fr: 'OpenHands', ja: 'OpenHands' } },
+      {
+        BRANDING$OPENHANDS: {
+          en: "OpenHands",
+          fr: "OpenHands",
+          ja: "OpenHands",
+        },
+      },
       languages,
     );
 
     expect(untranslatedKeys).toEqual({});
   });
 
-  it('does not flag keys translated in at least one language', () => {
+  it("does not flag keys translated in at least one language", () => {
     // Cognates legitimately match English in some languages (e.g. "Terminal"
     // in French); only the copied-everywhere pattern signals a missing
     // translation.
     const { untranslatedKeys } = checkTranslations(
-      { 'SOME$KEY': { en: 'Terminal', fr: 'Terminal', ja: 'ターミナル' } },
+      { SOME$KEY: { en: "Terminal", fr: "Terminal", ja: "ターミナル" } },
       languages,
     );
 
@@ -72,13 +83,13 @@ describe('checkTranslations', () => {
   });
 });
 
-describe('translation.json', () => {
-  it('exposes the supported language codes including English', () => {
-    expect(supportedLanguageCodes).toContain('en');
+describe("translation.json", () => {
+  it("exposes the supported language codes including English", () => {
+    expect(supportedLanguageCodes).toContain("en");
     expect(supportedLanguageCodes.length).toBeGreaterThan(1);
   });
 
-  it('has complete, translated coverage for every key', () => {
+  it("has complete, translated coverage for every key", () => {
     const { missingTranslations, extraLanguages, untranslatedKeys } =
       checkTranslations(translationJson, supportedLanguageCodes);
 
@@ -88,7 +99,7 @@ describe('translation.json', () => {
     expect(untranslatedKeys).toEqual({});
   });
 
-  it('has no stale entries in the identical-value allowlist', () => {
+  it("has no stale entries in the identical-value allowlist", () => {
     const staleKeys = [...IDENTICAL_VALUE_ALLOWLIST].filter(
       (key) => !(key in translationJson),
     );
@@ -96,17 +107,17 @@ describe('translation.json', () => {
     expect(staleKeys).toEqual([]);
   });
 
-  it('keeps the keys from #1218 translated', () => {
+  it("keeps the keys from #1218 translated", () => {
     const keys = [
-      'SETTINGS$SAVE_AND_RECONNECT',
-      'SETTINGS$MCP_ERROR_URL_DUPLICATE',
-      'SETTINGS$MCP_ERROR_ENV_INVALID_FORMAT',
+      "SETTINGS$SAVE_AND_RECONNECT",
+      "SETTINGS$MCP_ERROR_URL_DUPLICATE",
+      "SETTINGS$MCP_ERROR_ENV_INVALID_FORMAT",
     ];
 
     keys.forEach((key) => {
       const translations = translationJson[key];
       expect(translations, `missing key ${key}`).toBeDefined();
-      ['ja', 'zh-CN', 'fr'].forEach((lang) => {
+      ["ja", "zh-CN", "fr"].forEach((lang) => {
         expect(
           translations[lang],
           `${key} is not translated for ${lang}`,
@@ -115,28 +126,28 @@ describe('translation.json', () => {
     });
   });
 
-  it('stores line breaks as newlines, not a literal backslash-n', () => {
+  it("stores line breaks as newlines, not a literal backslash-n", () => {
     const escapedNewlines = Object.entries(translationJson).flatMap(
       ([key, translations]) =>
         Object.entries(translations)
-          .filter(([, value]) => value.includes('\\n'))
+          .filter(([, value]) => value.includes("\\n"))
           .map(([lang]) => `${key} (${lang})`),
     );
 
     expect(escapedNewlines).toEqual([]);
   });
 
-  it('preserves interpolation placeholders in every translation', () => {
+  it("preserves interpolation placeholders in every translation", () => {
     const mismatches: string[] = [];
 
     Object.entries(translationJson).forEach(([key, translations]) => {
-      const expected = getPlaceholders(translations.en ?? '').join(',');
+      const expected = getPlaceholders(translations.en ?? "").join(",");
 
       Object.entries(translations).forEach(([lang, value]) => {
-        if (lang === 'en') {
+        if (lang === "en") {
           return;
         }
-        if (getPlaceholders(value).join(',') !== expected) {
+        if (getPlaceholders(value).join(",") !== expected) {
           mismatches.push(`${key} (${lang})`);
         }
       });

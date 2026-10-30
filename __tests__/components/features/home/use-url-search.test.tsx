@@ -58,7 +58,12 @@ describe("useUrlSearch", () => {
     it("should clear results when provider becomes null", async () => {
       mockSearchGitRepositories.mockResolvedValue({
         items: [
-          { id: "1", full_name: "owner/repo", git_provider: "github", is_public: true },
+          {
+            id: "1",
+            full_name: "owner/repo",
+            git_provider: "github",
+            is_public: true,
+          },
         ],
         next_page_id: null,
       });
@@ -66,7 +71,8 @@ describe("useUrlSearch", () => {
       type TestProps = { inputValue: string; provider: "github" | null };
 
       const { result, rerender } = renderHook(
-        ({ inputValue, provider }: TestProps) => useUrlSearch(inputValue, provider),
+        ({ inputValue, provider }: TestProps) =>
+          useUrlSearch(inputValue, provider),
         {
           initialProps: {
             inputValue: "https://github.com/owner/repo",
@@ -97,7 +103,12 @@ describe("useUrlSearch", () => {
     it("should call GitService when input is a valid URL and provider is set", async () => {
       mockSearchGitRepositories.mockResolvedValue({
         items: [
-          { id: "1", full_name: "owner/repo", git_provider: "github", is_public: true },
+          {
+            id: "1",
+            full_name: "owner/repo",
+            git_provider: "github",
+            is_public: true,
+          },
         ],
         next_page_id: null,
       });
@@ -176,10 +187,12 @@ describe("useUrlSearch", () => {
         resolveSearch = resolve;
       });
 
-      mockSearchGitRepositories.mockReturnValue(searchPromise as Promise<{
-        items: [];
-        next_page_id: null;
-      }>);
+      mockSearchGitRepositories.mockReturnValue(
+        searchPromise as Promise<{
+          items: [];
+          next_page_id: null;
+        }>,
+      );
 
       const { result } = renderHook(() =>
         useUrlSearch("https://github.com/owner/repo", "github"),
@@ -206,7 +219,12 @@ describe("useUrlSearch", () => {
     it("should clear results when input changes from URL to non-URL", async () => {
       mockSearchGitRepositories.mockResolvedValue({
         items: [
-          { id: "1", full_name: "owner/repo", git_provider: "github", is_public: true },
+          {
+            id: "1",
+            full_name: "owner/repo",
+            git_provider: "github",
+            is_public: true,
+          },
         ],
         next_page_id: null,
       });

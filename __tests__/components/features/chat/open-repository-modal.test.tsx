@@ -188,10 +188,9 @@ describe("OpenRepositoryModal", () => {
     const launch = screen.getByText("BUTTON$LAUNCH");
 
     // Assert: Cancel precedes the dominant Launch action in DOM order.
-    // eslint-disable-next-line no-bitwise
+
     expect(
-      cancel.compareDocumentPosition(launch) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      cancel.compareDocumentPosition(launch) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
@@ -347,9 +346,7 @@ describe("OpenRepositoryModal", () => {
         />,
       );
 
-      expect(
-        screen.getByTestId("git-provider-dropdown"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("git-provider-dropdown")).toBeInTheDocument();
       expect(screen.getByTestId("provider-github")).toBeInTheDocument();
       expect(screen.getByTestId("provider-gitlab")).toBeInTheDocument();
     });

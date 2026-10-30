@@ -37,7 +37,9 @@ describe("canvas extension icon colors", () => {
       keys: "[MouseRight]",
       target: screen.getByText("Demo app"),
     });
-    await user.click(await screen.findByTestId("canvas-extension-nav-customize"));
+    await user.click(
+      await screen.findByTestId("canvas-extension-nav-customize"),
+    );
 
     expect(await screen.findByTestId("feed-icon-modal")).toBeInTheDocument();
   });

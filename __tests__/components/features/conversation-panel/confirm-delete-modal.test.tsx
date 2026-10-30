@@ -51,7 +51,7 @@ describe("ConfirmDeleteModal", () => {
     const confirm = screen.getByText("ACTION$CONFIRM_DELETE");
 
     // Assert: Cancel precedes the dominant Confirm action in DOM order.
-    // eslint-disable-next-line no-bitwise
+
     expect(
       cancel.compareDocumentPosition(confirm) &
         Node.DOCUMENT_POSITION_FOLLOWING,
