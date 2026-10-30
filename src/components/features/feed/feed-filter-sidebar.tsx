@@ -18,6 +18,13 @@ import {
 } from "#/utils/feed-team-demo";
 import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
 import { agentTint } from "#/utils/feed-agent-identity";
+import { FeedSection } from "./feed-section";
+import { FeedSectionAddMenu } from "./feed-section-add-menu";
+import { FeedInboxPanel } from "./feed-inbox-panel";
+import {
+  countUnreadInboxItems,
+  useFactoryInboxStore,
+} from "#/stores/factory-inbox-store";
 import { FeedConversationList } from "./feed-conversation-list";
 import { FeedFilterRow } from "./feed-filter-row";
 import { FeedCustomIcon } from "./feed-custom-icon";
@@ -64,6 +71,9 @@ export function FeedFilterSidebar({
   const factories = useFeedFactories();
   const resolveFactory = useFactoryResolver();
   const agentConfigs = useFeedAgentConfigStore((state) => state.configs);
+  const unreadInbox = useFactoryInboxStore((state) =>
+    countUnreadInboxItems(state.items, state.lastSeenAt),
+  );
   const teamDemo = isFeedTeamDemoEnabled(window.location.search);
   const stats = (group: AppConversation[]) => (
     <FeedRowStats conversations={group} />
@@ -101,206 +111,245 @@ export function FeedFilterSidebar({
           />
         </span>
       </div>
-      <section data-testid="feed-factories">
-        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
-          {t(I18nKey.FEED$FACTORIES)}
-        </h2>
-        <ul className="flex flex-col gap-0.5">
-          <FeedFilterRow
-            testId="feed-filter-factory-all"
-            label={t(I18nKey.FEED$ALL)}
-            icon={<LayoutGrid size={20} />}
-            meta={stats(conversations)}
-            count={conversations.length}
-            selected={filter.factoryId === null}
-            onSelect={() => onChange({ ...filter, factoryId: null })}
-          />
-          {factories.map(({ id, name, Icon, className }) => (
-            <FeedFilterRow
-              key={id}
-              testId="feed-filter-factory"
-              label={name}
-              count={inFactory(id).length}
-              meta={stats(inFactory(id))}
-              icon={
-                <FeedCustomIcon
-                  iconKey={factoryIconKey(id)}
-                  size={36}
-                  radius={12}
-                  glyph={<Icon size={20} />}
-                  fallback={
-                    <FeedIconTile className={className}>
-                      <Icon size={20} />
-                    </FeedIconTile>
-                  }
-                />
-              }
-              action={
-                <FeedIconMenu iconKey={factoryIconKey(id)} subject={name} />
-              }
-              selected={filter.factoryId === id}
-              onSelect={() => onChange({ ...filter, factoryId: id })}
-            />
-          ))}
-        </ul>
-        {factories.length === 0 ? (
-          <p
-            data-testid="feed-factories-empty"
-            className="px-2 pt-1 text-sm text-muted"
-          >
-            {t(I18nKey.FEED$FACTORIES_EMPTY)}
-          </p>
-        ) : null}
-      </section>
-
-      <section>
-        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
-          {t(I18nKey.FEED$PROJECTS)}
-        </h2>
-        <ul className="flex flex-col gap-0.5">
-          <FeedFilterRow
-            testId="feed-filter-project-all"
-            label={t(I18nKey.FEED$ALL)}
-            icon={<Folders size={20} />}
-            meta={stats(conversations)}
-            count={conversations.length}
-            selected={filter.project === null}
-            onSelect={() => onChange({ ...filter, project: null })}
-          />
-          {projects.map(({ project, count }) => (
-            <FeedProjectRow
-              key={project}
-              project={project}
-              count={count}
-              meta={stats(
-                conversations.filter((c) => getFeedProject(c) === project),
-              )}
-              selected={filter.project === project}
-              onSelect={() => onChange({ ...filter, project })}
-            />
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
-          {t(I18nKey.FEED$AGENTS)}
-        </h2>
-        <ul className="flex flex-col gap-0.5">
-          <FeedFilterRow
-            testId="feed-filter-agent-all"
-            label={t(I18nKey.FEED$ALL)}
-            meta={stats(conversations)}
-            icon={<Bot size={20} />}
-            selected={filter.agentProfileId === null}
-            onSelect={() => onChange({ ...filter, agentProfileId: null })}
-          />
-          {profiles.map((profile) => (
-            <FeedFilterRow
-              key={profile.id}
-              testId="feed-filter-agent"
-              label={profile.name}
-              count={profileCounts.get(profile.id) ?? 0}
-              meta={stats(
-                conversations.filter(
-                  (c) =>
-                    c.launched_agent_profile?.agent_profile_id === profile.id,
-                ),
-              )}
-              icon={
-                <FeedCustomIcon
-                  iconKey={agentIconKey(profile.id)}
-                  size={36}
-                  radius={12}
-                  glyph={
-                    <AgentBrandIcon
-                      kind={
-                        profile.agent_kind === "acp"
-                          ? ACP_PROVIDER_FALLBACK_ICON
-                          : "openhands"
+      <FeedSection
+        id="inbox"
+        testId="feed-inbox-section"
+        title={t(I18nKey.FEED$INBOX)}
+        badge={
+          unreadInbox > 0 ? (
+            <span
+              data-testid="feed-inbox-badge"
+              aria-label={t(I18nKey.FEED$INBOX_UNREAD, { count: unreadInbox })}
+              className="ml-1 rounded-full bg-[var(--oh-interactive-hover)] px-2 py-0.5 text-xs font-medium text-contrast"
+            >
+              {unreadInbox}
+            </span>
+          ) : null
+        }
+      >
+        {(open) => (
+          <FeedInboxPanel filter={filter} onChange={onChange} visible={open} />
+        )}
+      </FeedSection>
+      <FeedSection
+        id="factories"
+        testId="feed-factories"
+        title={t(I18nKey.FEED$FACTORIES)}
+        action={<FeedSectionAddMenu primary="factory" />}
+      >
+        {() => (
+          <>
+            <ul className="flex flex-col gap-0.5">
+              <FeedFilterRow
+                testId="feed-filter-factory-all"
+                label={t(I18nKey.FEED$ALL)}
+                icon={<LayoutGrid size={20} />}
+                meta={stats(conversations)}
+                count={conversations.length}
+                selected={filter.factoryId === null}
+                onSelect={() => onChange({ ...filter, factoryId: null })}
+              />
+              {factories.map(({ id, name, Icon, className }) => (
+                <FeedFilterRow
+                  key={id}
+                  testId="feed-filter-factory"
+                  label={name}
+                  count={inFactory(id).length}
+                  meta={stats(inFactory(id))}
+                  icon={
+                    <FeedCustomIcon
+                      iconKey={factoryIconKey(id)}
+                      size={36}
+                      radius={12}
+                      glyph={<Icon size={20} />}
+                      fallback={
+                        <FeedIconTile className={className}>
+                          <Icon size={20} />
+                        </FeedIconTile>
                       }
-                      size={20}
                     />
                   }
-                  fallback={
-                    <FeedIconTile
-                      className={agentTint(
+                  action={
+                    <FeedIconMenu iconKey={factoryIconKey(id)} subject={name} />
+                  }
+                  selected={filter.factoryId === id}
+                  onSelect={() => onChange({ ...filter, factoryId: id })}
+                />
+              ))}
+            </ul>
+            {factories.length === 0 ? (
+              <p
+                data-testid="feed-factories-empty"
+                className="px-2 pt-1 text-sm text-muted"
+              >
+                {t(I18nKey.FEED$FACTORIES_EMPTY)}
+              </p>
+            ) : null}
+          </>
+        )}
+      </FeedSection>
+
+      <FeedSection
+        id="projects"
+        title={t(I18nKey.FEED$PROJECTS)}
+        action={<FeedSectionAddMenu primary="project" />}
+      >
+        {() => (
+          <>
+            <ul className="flex flex-col gap-0.5">
+              <FeedFilterRow
+                testId="feed-filter-project-all"
+                label={t(I18nKey.FEED$ALL)}
+                icon={<Folders size={20} />}
+                meta={stats(conversations)}
+                count={conversations.length}
+                selected={filter.project === null}
+                onSelect={() => onChange({ ...filter, project: null })}
+              />
+              {projects.map(({ project, count }) => (
+                <FeedProjectRow
+                  key={project}
+                  project={project}
+                  count={count}
+                  meta={stats(
+                    conversations.filter((c) => getFeedProject(c) === project),
+                  )}
+                  selected={filter.project === project}
+                  onSelect={() => onChange({ ...filter, project })}
+                />
+              ))}
+            </ul>
+          </>
+        )}
+      </FeedSection>
+
+      <FeedSection
+        id="agents"
+        title={t(I18nKey.FEED$AGENTS)}
+        action={<FeedSectionAddMenu primary="agent" />}
+      >
+        {() => (
+          <>
+            <ul className="flex flex-col gap-0.5">
+              <FeedFilterRow
+                testId="feed-filter-agent-all"
+                label={t(I18nKey.FEED$ALL)}
+                meta={stats(conversations)}
+                icon={<Bot size={20} />}
+                selected={filter.agentProfileId === null}
+                onSelect={() => onChange({ ...filter, agentProfileId: null })}
+              />
+              {profiles.map((profile) => (
+                <FeedFilterRow
+                  key={profile.id}
+                  testId="feed-filter-agent"
+                  label={profile.name}
+                  count={profileCounts.get(profile.id) ?? 0}
+                  meta={stats(
+                    conversations.filter(
+                      (c) =>
+                        c.launched_agent_profile?.agent_profile_id ===
                         profile.id,
-                        agentConfigs[profile.name],
-                      )}
-                    >
-                      <AgentBrandIcon
-                        kind={
-                          profile.agent_kind === "acp"
-                            ? ACP_PROVIDER_FALLBACK_ICON
-                            : "openhands"
-                        }
-                        size={20}
-                      />
-                    </FeedIconTile>
+                    ),
+                  )}
+                  icon={
+                    <FeedCustomIcon
+                      iconKey={agentIconKey(profile.id)}
+                      size={36}
+                      radius={12}
+                      glyph={
+                        <AgentBrandIcon
+                          kind={
+                            profile.agent_kind === "acp"
+                              ? ACP_PROVIDER_FALLBACK_ICON
+                              : "openhands"
+                          }
+                          size={20}
+                        />
+                      }
+                      fallback={
+                        <FeedIconTile
+                          className={agentTint(
+                            profile.id,
+                            agentConfigs[profile.name],
+                          )}
+                        >
+                          <AgentBrandIcon
+                            kind={
+                              profile.agent_kind === "acp"
+                                ? ACP_PROVIDER_FALLBACK_ICON
+                                : "openhands"
+                            }
+                            size={20}
+                          />
+                        </FeedIconTile>
+                      }
+                    />
+                  }
+                  action={
+                    <FeedIconMenu
+                      iconKey={agentIconKey(profile.id)}
+                      subject={profile.name}
+                    />
+                  }
+                  selected={filter.agentProfileId === profile.id}
+                  onSelect={() =>
+                    onChange({ ...filter, agentProfileId: profile.id })
                   }
                 />
-              }
-              action={
-                <FeedIconMenu
-                  iconKey={agentIconKey(profile.id)}
-                  subject={profile.name}
-                />
-              }
-              selected={filter.agentProfileId === profile.id}
-              onSelect={() =>
-                onChange({ ...filter, agentProfileId: profile.id })
-              }
-            />
-          ))}
-          {profiles.length === 0 && !teamDemo ? (
-            <p
-              data-testid="feed-agents-empty"
-              className="px-2 pt-1 text-sm text-muted"
-            >
-              {t(I18nKey.FEED$AGENTS_EMPTY)}
-            </p>
-          ) : null}
-          {teamDemo
-            ? FEED_DEMO_AGENTS.map(({ name, Icon, className }) => {
-                const id = `${FEED_DEMO_AGENT_FILTER_PREFIX}${name}`;
-                const own = conversations.filter(
-                  (c) => pickFeedDemoAgent(c.id).name === name,
-                );
-                return (
-                  <FeedFilterRow
-                    key={id}
-                    testId="feed-filter-agent-persona"
-                    label={name}
-                    count={own.length}
-                    meta={stats(own)}
-                    icon={
-                      <FeedCustomIcon
-                        iconKey={agentIconKey(`demo:${name}`)}
-                        size={36}
-                        radius={12}
-                        glyph={<Icon size={20} />}
-                        fallback={
-                          <FeedIconTile className={className}>
-                            <Icon size={20} />
-                          </FeedIconTile>
+              ))}
+              {profiles.length === 0 && !teamDemo ? (
+                <p
+                  data-testid="feed-agents-empty"
+                  className="px-2 pt-1 text-sm text-muted"
+                >
+                  {t(I18nKey.FEED$AGENTS_EMPTY)}
+                </p>
+              ) : null}
+              {teamDemo
+                ? FEED_DEMO_AGENTS.map(({ name, Icon, className }) => {
+                    const id = `${FEED_DEMO_AGENT_FILTER_PREFIX}${name}`;
+                    const own = conversations.filter(
+                      (c) => pickFeedDemoAgent(c.id).name === name,
+                    );
+                    return (
+                      <FeedFilterRow
+                        key={id}
+                        testId="feed-filter-agent-persona"
+                        label={name}
+                        count={own.length}
+                        meta={stats(own)}
+                        icon={
+                          <FeedCustomIcon
+                            iconKey={agentIconKey(`demo:${name}`)}
+                            size={36}
+                            radius={12}
+                            glyph={<Icon size={20} />}
+                            fallback={
+                              <FeedIconTile className={className}>
+                                <Icon size={20} />
+                              </FeedIconTile>
+                            }
+                          />
+                        }
+                        action={
+                          <FeedIconMenu
+                            iconKey={agentIconKey(`demo:${name}`)}
+                            subject={name}
+                          />
+                        }
+                        selected={filter.agentProfileId === id}
+                        onSelect={() =>
+                          onChange({ ...filter, agentProfileId: id })
                         }
                       />
-                    }
-                    action={
-                      <FeedIconMenu
-                        iconKey={agentIconKey(`demo:${name}`)}
-                        subject={name}
-                      />
-                    }
-                    selected={filter.agentProfileId === id}
-                    onSelect={() => onChange({ ...filter, agentProfileId: id })}
-                  />
-                );
-              })
-            : null}
-        </ul>
-      </section>
+                    );
+                  })
+                : null}
+            </ul>
+          </>
+        )}
+      </FeedSection>
       <FeedConversationList conversations={conversations} filter={filter} />
     </nav>
   );

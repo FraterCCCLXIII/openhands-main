@@ -18,6 +18,7 @@ export default [
     route("team-chat", "routes/team-chat.tsx"),
     route("factory", "routes/factory.tsx"),
     route("agents", "routes/agents.tsx"),
+    route("llms", "routes/llms.tsx"),
     route("feed/people/:personId", "routes/feed-profile.tsx"),
     route("launch", "routes/launch.tsx"),
     route("kanban", "routes/kanban.tsx"),

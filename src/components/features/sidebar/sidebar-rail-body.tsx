@@ -63,7 +63,7 @@ import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 const APPS_PATH = "/apps";
 const FACTORY_PATH = "/factory";
 const AGENTS_PATH = "/agents";
-const LLMS_PATH = "/settings/llm";
+const LLMS_PATH = "/llms";
 const ICON_SIZE = 18;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);

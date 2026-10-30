@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateConversation } from "#/hooks/mutation/use-create-conversation";
 import { FEED_QUERY_KEYS } from "#/hooks/query/query-keys";
 import { useKnownFeedAgents } from "#/hooks/use-known-feed-agents";
+import { useFeedPendingStore } from "#/stores/feed-pending-store";
 import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
@@ -59,6 +60,21 @@ export function useFactoryDispatch() {
           createdAt: new Date().toISOString(),
         });
 
+      // A new conversation shows in the Tower feed at once, as a card that
+      // the real one replaces when the list refreshes.
+      const pendingId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const startsNew = !(
+        decision.kind === "existing" && decision.conversationId
+      );
+      if (startsNew) {
+        useFeedPendingStore.getState().add({
+          id: pendingId,
+          text,
+          factoryId,
+          agentName: decision.agentName,
+          createdAt: Date.now(),
+        });
+      }
       try {
         let conversationId = decision.conversationId;
         if (decision.kind === "existing" && conversationId) {
@@ -84,6 +100,7 @@ export function useFactoryDispatch() {
             )?.profileId,
           });
           conversationId = created.conversation_id;
+          useFeedPendingStore.getState().attach(pendingId, conversationId);
           // Place it before it reaches the lists, so it lands in this factory.
           assignConversation(conversationId, {
             factoryId,
@@ -96,6 +113,7 @@ export function useFactoryDispatch() {
           queryKey: ["user", "conversations"],
         });
       } catch (error) {
+        useFeedPendingStore.getState().remove(pendingId);
         const fallback = error instanceof Error ? error.message : "";
         displayErrorToast(getApiErrorMessage(error, fallback) || null);
         log("failed", null);

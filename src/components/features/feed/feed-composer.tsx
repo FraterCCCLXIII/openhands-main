@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Bot, Cpu, Inbox } from "lucide-react";
@@ -29,6 +30,8 @@ import { useFactoryConductor } from "#/hooks/use-factory-conductor";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
+import { useFeedPendingStore } from "#/stores/feed-pending-store";
+import { FEED_QUERY_KEYS } from "#/hooks/query/query-keys";
 import { buildFactoryTags, TASK_ID_PREFIX } from "#/utils/factory-placement";
 import { resolveTowerLaunch } from "#/utils/resolve-tower-launch";
 import { FeedComposerMenu } from "./feed-composer-menu";
@@ -95,6 +98,8 @@ export function FeedComposer() {
     (state) => state.assignConversation,
   );
   const addInboxItem = useFactoryInboxStore((state) => state.addItem);
+  const queryClient = useQueryClient();
+  const setFilter = useFeedFilterStore((state) => state.setFilter);
 
   const handleSubmit = (message: string) => {
     const text = message.trim();
@@ -109,6 +114,23 @@ export function FeedComposer() {
 
     const placedFactory = factory;
     const launchedAs = launch;
+    // The card appears in the feed now, before the conversation exists.
+    const pendingId = `pending-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const pendingAgent =
+      launchedAs.profile?.name ?? conductor?.name ?? "OpenHands";
+    useFeedPendingStore.getState().add({
+      id: pendingId,
+      text:
+        text || attachments.files[0]?.name || attachments.images[0]?.name || "",
+      factoryId: placedFactory?.id ?? null,
+      agentName: pendingAgent,
+      createdAt: Date.now(),
+    });
+    // A filter on another factory would hide the new card.
+    const currentFilter = useFeedFilterStore.getState().filter;
+    if (currentFilter.factoryId !== (placedFactory?.id ?? null)) {
+      setFilter({ ...currentFilter, factoryId: placedFactory?.id ?? null });
+    }
     void (async () => {
       try {
         // With attachments the first message is sent afterwards, so the
@@ -127,6 +149,12 @@ export function FeedComposer() {
         });
         toast.dismiss(toastId);
         const conversationId = created.conversation_id;
+        useFeedPendingStore.getState().attach(pendingId, conversationId);
+        // Pull the new conversation into the feed, list, counts and sidebar.
+        void queryClient.invalidateQueries({ queryKey: FEED_QUERY_KEYS.all });
+        void queryClient.invalidateQueries({
+          queryKey: ["user", "conversations"],
+        });
         const isTask = conversationId.startsWith(TASK_ID_PREFIX);
 
         if (placedFactory) {
@@ -216,6 +244,7 @@ export function FeedComposer() {
           });
         }
       } catch (error) {
+        useFeedPendingStore.getState().remove(pendingId);
         toast.dismiss(toastId);
         const fallback = error instanceof Error ? error.message : "";
         displayErrorToast(getApiErrorMessage(error, fallback) || null);

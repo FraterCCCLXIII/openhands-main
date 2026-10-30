@@ -609,3 +609,21 @@ export function toFeedUpdates(
     .filter((update): update is FeedUpdate => update !== null)
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
+
+/**
+ * Combines the updates read over REST with those that arrived live. A live
+ * update wins when both hold the same event, and the newest come first.
+ */
+export function mergeFeedUpdates(
+  fetched: FeedUpdate[],
+  live: FeedUpdate[],
+  limit = FEED_UPDATE_LIMIT,
+): FeedUpdate[] {
+  if (live.length === 0) return fetched;
+  const byId = new Map<string, FeedUpdate>();
+  fetched.forEach((update) => byId.set(update.id, update));
+  live.forEach((update) => byId.set(update.id, update));
+  return [...byId.values()]
+    .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+    .slice(0, limit);
+}

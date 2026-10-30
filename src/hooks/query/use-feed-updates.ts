@@ -5,8 +5,10 @@ import { ExecutionStatus } from "#/types/agent-server/core";
 import { FEED_UPDATE_LIMIT, toFeedUpdates } from "#/utils/feed-updates";
 import { FEED_QUERY_KEYS } from "./query-keys";
 
-// How often a card whose agent is working re-reads its latest updates.
-const LIVE_REFRESH_MS = 8_000;
+// How often a card whose agent is working re-reads its latest updates when no
+// live socket feeds it, and how often as a safety net when one does.
+export const LIVE_POLL_MS = 2_500;
+export const LIVE_POLL_WITH_SOCKET_MS = 20_000;
 
 // Newest events include chatty non-message ones (state updates, observations),
 // so read a wider window than the number of updates a card shows.
@@ -21,6 +23,7 @@ const EVENT_WINDOW = FEED_UPDATE_LIMIT * 4;
 export const useFeedUpdates = (
   conversation: AppConversation,
   enabled: boolean,
+  socketConnected = false,
 ) =>
   useQuery({
     queryKey: FEED_QUERY_KEYS.updates(
@@ -46,7 +49,9 @@ export const useFeedUpdates = (
     meta: { disableToast: true },
     refetchInterval:
       conversation.execution_status === ExecutionStatus.RUNNING
-        ? LIVE_REFRESH_MS
+        ? socketConnected
+          ? LIVE_POLL_WITH_SOCKET_MS
+          : LIVE_POLL_MS
         : false,
     refetchIntervalInBackground: false,
   });

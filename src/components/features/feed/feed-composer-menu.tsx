@@ -46,7 +46,7 @@ export function FeedComposerMenu({
   useCloseOnEscape(open, () => setOpen(false), triggerRef);
 
   return (
-    <div ref={triggerRef} className="relative min-w-0 shrink-0">
+    <div ref={triggerRef} className="relative min-w-0 max-w-44 shrink">
       <button
         type="button"
         data-testid={testId}
@@ -56,7 +56,7 @@ export function FeedComposerMenu({
         disabled={Boolean(disabledReason)}
         title={disabledReason ?? value}
         onClick={() => setOpen((current) => !current)}
-        className="flex max-w-44 items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-xs text-contrast hover:bg-base-secondary disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex min-w-0 max-w-full items-center gap-1.5 rounded-xl bg-surface px-3 py-2 text-xs text-contrast hover:bg-base-secondary disabled:cursor-not-allowed disabled:opacity-50"
       >
         {icon}
         <span className="truncate">{value}</span>

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FeedComposer } from "#/components/features/feed/feed-composer";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
+import { useFeedPendingStore } from "#/stores/feed-pending-store";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { ALL_FEED_FILTER } from "#/utils/feed-filters";
 import { renderWithProviders } from "../../../../test-utils";
@@ -114,6 +115,7 @@ beforeEach(() => {
   localStorage.clear();
   useFeedFactoriesStore.setState(useFeedFactoriesStore.getInitialState());
   useFactoryInboxStore.setState({ items: [] });
+  useFeedPendingStore.setState({ items: [] });
   useFeedFilterStore.setState({ filter: ALL_FEED_FILTER });
   listAgentProfiles.mockResolvedValue(profilesResponse);
   launchConversation.mockResolvedValue({
@@ -187,6 +189,17 @@ describe("FeedComposer", () => {
     await waitFor(() => expect(launchConversation).toHaveBeenCalled());
     expect(launchConversation.mock.calls[0][1]).not.toHaveProperty("tags");
     expect(useFeedFactoriesStore.getState().assignments).toEqual({});
+    // The feed gets an optimistic card for it, tied to the created conversation.
+    expect(useFeedPendingStore.getState().items).toHaveLength(1);
+    expect(useFeedPendingStore.getState().items[0]).toMatchObject({
+      text: "fix the build",
+      status: "starting",
+    });
+    await waitFor(() =>
+      expect(
+        useFeedPendingStore.getState().items[0].conversationId,
+      ).not.toBeNull(),
+    );
   });
 
   it("disables the model picker for an agent that runs its own model", async () => {
@@ -209,6 +222,7 @@ describe("FeedComposer", () => {
 
     await waitFor(() => expect(errorToast).toHaveBeenCalledWith("boom"));
     expect(useFeedFactoriesStore.getState().assignments).toEqual({});
+    expect(useFeedPendingStore.getState().items).toEqual([]);
   });
 
   it("disables the agent picker when there are no agent profiles", async () => {

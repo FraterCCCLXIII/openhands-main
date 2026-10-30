@@ -18,6 +18,8 @@ import { useConversationDiffStatsStore } from "#/stores/conversation-diff-stats-
 import { isEffectivelyArchivedConversation } from "#/utils/conversation-archive-status";
 import { filterConversationsByQuery } from "#/utils/conversation-search-filter";
 import { matchesFeedFilter, type FeedFilter } from "#/utils/feed-filters";
+import { FeedSection } from "./feed-section";
+import { FeedSectionAddMenu } from "./feed-section-add-menu";
 import { cn } from "#/utils/utils";
 
 interface FeedConversationListProps {
@@ -62,75 +64,83 @@ export function FeedConversationList({
   }, [conversations, archivedIds, filter, resolveFactory, query]);
 
   return (
-    <section data-testid="feed-conversation-list">
-      <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
-        {t(I18nKey.FEED$CONVERSATIONS)}
-      </h2>
-      <label className="relative mb-1 block px-2">
-        <Search
-          size={14}
-          aria-hidden
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
-        />
-        <input
-          type="search"
-          data-testid="feed-conversation-search"
-          aria-label={t(I18nKey.FEED$CONVERSATIONS_SEARCH)}
-          placeholder={t(I18nKey.FEED$CONVERSATIONS_SEARCH)}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          className="w-full rounded-md border border-border bg-transparent py-1.5 pl-8 pr-2 text-sm text-contrast placeholder:text-muted"
-        />
-      </label>
-      {rows.length === 0 ? (
-        <p
-          data-testid="feed-conversation-list-empty"
-          className="px-2 pt-1 text-sm text-muted"
-        >
-          {t(I18nKey.FEED$CONVERSATIONS_EMPTY)}
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-0.5">
-          {rows.map((conversation) => (
-            <li key={conversation.id} data-testid="feed-conversation-row">
-              <NavigationLink
-                to={backendScopedPath(feedConversationPath(conversation.id))}
-                aria-current={
-                  conversation.id === currentId ? "true" : undefined
-                }
-                className={cn(
-                  "block rounded-md transition-colors hover:bg-surface",
-                  conversation.id === currentId && "bg-surface",
-                )}
-              >
-                <ConversationCard
-                  title={conversation.title ?? ""}
-                  selectedRepository={{
-                    selected_repository: conversation.selected_repository,
-                    selected_branch: conversation.selected_branch,
-                    git_provider: conversation.git_provider as Provider,
-                  }}
-                  lastUpdatedAt={conversation.updated_at}
-                  createdAt={conversation.created_at}
-                  executionStatus={conversation.execution_status}
-                  sandboxStatus={conversation.sandbox_status}
-                  conversationId={conversation.id}
-                  isActive={conversation.id === currentId}
-                  workspaceWorkingDir={
-                    conversation.selected_workspace ??
-                    conversation.workspace?.working_dir
-                  }
-                  llmModel={conversation.llm_model}
-                  agentKind={conversation.agent_kind}
-                  acpServer={conversation.acp_server}
-                  tags={conversation.tags}
-                  diffStats={diffTotals[conversation.id] ?? null}
-                />
-              </NavigationLink>
-            </li>
-          ))}
-        </ul>
+    <FeedSection
+      id="conversations"
+      testId="feed-conversation-list"
+      title={t(I18nKey.FEED$CONVERSATIONS)}
+      action={<FeedSectionAddMenu primary="conversation" />}
+    >
+      {() => (
+        <>
+          <label className="relative mb-1 block px-2">
+            <Search
+              size={14}
+              aria-hidden
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+            />
+            <input
+              type="search"
+              data-testid="feed-conversation-search"
+              aria-label={t(I18nKey.FEED$CONVERSATIONS_SEARCH)}
+              placeholder={t(I18nKey.FEED$CONVERSATIONS_SEARCH)}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="w-full rounded-md border border-border bg-transparent py-1.5 pl-8 pr-2 text-sm text-contrast placeholder:text-muted"
+            />
+          </label>
+          {rows.length === 0 ? (
+            <p
+              data-testid="feed-conversation-list-empty"
+              className="px-2 pt-1 text-sm text-muted"
+            >
+              {t(I18nKey.FEED$CONVERSATIONS_EMPTY)}
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-0.5">
+              {rows.map((conversation) => (
+                <li key={conversation.id} data-testid="feed-conversation-row">
+                  <NavigationLink
+                    to={backendScopedPath(
+                      feedConversationPath(conversation.id),
+                    )}
+                    aria-current={
+                      conversation.id === currentId ? "true" : undefined
+                    }
+                    className={cn(
+                      "block rounded-md transition-colors hover:bg-surface",
+                      conversation.id === currentId && "bg-surface",
+                    )}
+                  >
+                    <ConversationCard
+                      title={conversation.title ?? ""}
+                      selectedRepository={{
+                        selected_repository: conversation.selected_repository,
+                        selected_branch: conversation.selected_branch,
+                        git_provider: conversation.git_provider as Provider,
+                      }}
+                      lastUpdatedAt={conversation.updated_at}
+                      createdAt={conversation.created_at}
+                      executionStatus={conversation.execution_status}
+                      sandboxStatus={conversation.sandbox_status}
+                      conversationId={conversation.id}
+                      isActive={conversation.id === currentId}
+                      workspaceWorkingDir={
+                        conversation.selected_workspace ??
+                        conversation.workspace?.working_dir
+                      }
+                      llmModel={conversation.llm_model}
+                      agentKind={conversation.agent_kind}
+                      acpServer={conversation.acp_server}
+                      tags={conversation.tags}
+                      diffStats={diffTotals[conversation.id] ?? null}
+                    />
+                  </NavigationLink>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
-    </section>
+    </FeedSection>
   );
 }

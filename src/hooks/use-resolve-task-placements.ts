@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
+import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
+import { useFeedPendingStore } from "#/stores/feed-pending-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { isTaskConversationId, taskIdOf } from "#/utils/factory-placement";
 
@@ -17,9 +19,28 @@ const abandoned = new Set<string>();
 export function useResolveTaskPlacements(): void {
   const queryClient = useQueryClient();
   const assignments = useFeedFactoriesStore((state) => state.assignments);
-  const pending = Object.keys(assignments)
-    .filter(isTaskConversationId)
-    .join(",");
+  // Optimistic feed cards wait on the same temporary ids, including sends that
+  // were not placed in a factory.
+  const pendingCards = useFeedPendingStore((state) =>
+    state.items
+      .map((item) => item.conversationId)
+      .filter((id): id is string => !!id && isTaskConversationId(id))
+      .join(","),
+  );
+  const inboxTasks = useFactoryInboxStore((state) =>
+    state.items
+      .map((item) => item.conversationId)
+      .filter((id): id is string => !!id && isTaskConversationId(id))
+      .join(","),
+  );
+  const pending = [
+    ...new Set(
+      Object.keys(assignments)
+        .filter(isTaskConversationId)
+        .concat(pendingCards ? pendingCards.split(",") : [])
+        .concat(inboxTasks ? inboxTasks.split(",") : []),
+    ),
+  ].join(",");
 
   useEffect(() => {
     if (!pending) return undefined;
@@ -35,10 +56,22 @@ export function useResolveTaskPlacements(): void {
             }
             if (task.status === "ERROR") {
               abandoned.add(placedId);
+              useFeedPendingStore
+                .getState()
+                .items.filter((item) => item.conversationId === placedId)
+                .forEach((item) =>
+                  useFeedPendingStore.getState().fail(item.id),
+                );
               return;
             }
             if (task.app_conversation_id) {
               useFeedFactoriesStore
+                .getState()
+                .replaceConversationId(placedId, task.app_conversation_id);
+              useFactoryInboxStore
+                .getState()
+                .replaceConversationId(placedId, task.app_conversation_id);
+              useFeedPendingStore
                 .getState()
                 .replaceConversationId(placedId, task.app_conversation_id);
               void queryClient.invalidateQueries({

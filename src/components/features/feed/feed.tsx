@@ -24,6 +24,8 @@ import { groupConsecutive } from "#/utils/feed-stacks";
 import { useOpenFeedConversation } from "#/hooks/use-open-feed-conversation";
 import { FeedStack } from "./feed-stack";
 import { FeedCard } from "./feed-card";
+import { FeedPendingCard } from "./feed-pending-card";
+import { useFeedPendingStore } from "#/stores/feed-pending-store";
 import { FeedNotificationCard } from "./feed-notification-card";
 import { FeedComposer } from "./feed-composer";
 import { FeedColumns } from "./feed-columns";
@@ -108,18 +110,50 @@ export function Feed() {
     ];
   }, [conversations, filter, sort, pinnedIds, archivedIds, resolveFactory]);
 
+  // Optimistic cards for conversations still starting. Each goes as soon as the
+  // real conversation is in the list, so the two are never shown together.
+  const pendingItems = useFeedPendingStore((state) => state.items);
+  const dismissPending = useFeedPendingStore((state) => state.remove);
+  useEffect(() => {
+    if (pendingItems.length === 0) return;
+    useFeedPendingStore
+      .getState()
+      .removeArrived(new Set(conversations.map((c) => c.id)));
+  }, [pendingItems, conversations]);
+  const pendingCards = pendingItems.filter(
+    (item) =>
+      (!item.conversationId ||
+        !conversations.some((c) => c.id === item.conversationId)) &&
+      (!filter.factoryId || item.factoryId === filter.factoryId),
+  );
+  const newestPendingId = pendingCards.at(-1)?.id ?? null;
+  const pendingCount = pendingCards.length;
+
+  // A message just sent: show it at the top of the feed and move focus to it.
+  useEffect(() => {
+    if (!newestPendingId) return;
+    setView("feed");
+    const scroller = scrollRef.current;
+    scroller?.scrollTo?.({ top: 0 });
+    scroller
+      ?.querySelector<HTMLElement>(`[data-pending-id="${newestPendingId}"]`)
+      ?.focus({ preventScroll: true });
+  }, [newestPendingId]);
+
   let body;
   if (isLoading) {
     body = null;
   } else if (isError) {
     body = <p className="text-sm text-muted">{t(I18nKey.FEED$LOAD_ERROR)}</p>;
+  } else if (pendingCount > 0 && conversations.length === 0) {
+    body = null;
   } else if (conversations.length === 0) {
     body = (
       <p data-testid="feed-empty" className="text-sm text-muted">
         {t(I18nKey.FEED$EMPTY)}
       </p>
     );
-  } else if (visible.length === 0) {
+  } else if (visible.length === 0 && pendingCount === 0) {
     body = (
       <p data-testid="feed-no-matches" className="text-sm text-muted">
         {t(I18nKey.FEED$NO_MATCHES)}
@@ -226,6 +260,17 @@ export function Feed() {
                 view === "feed" ? "gap-4" : "gap-2",
               )}
             >
+              {view === "feed"
+                ? [...pendingCards]
+                    .reverse()
+                    .map((item) => (
+                      <FeedPendingCard
+                        key={item.id}
+                        item={item}
+                        onDismiss={dismissPending}
+                      />
+                    ))
+                : null}
               {body}
             </section>
             {hasNextPage ? (

@@ -23,8 +23,13 @@ const MAX_INPUT_HEIGHT_PX = 120;
  */
 export function FeedCardReply({
   conversation,
+  onOptimistic,
+  onRevert,
 }: {
   conversation: AppConversation;
+  /** Shows the reply in the thread at once; returns a handle to take it back. */
+  onOptimistic?: (text: string) => string;
+  onRevert?: (handle: string) => void;
 }) {
   const { t } = useTranslation("openhands");
   const queryClient = useQueryClient();
@@ -65,6 +70,8 @@ export function FeedCardReply({
   const send = async () => {
     if (!canSend) return;
     setIsSending(true);
+    const handle = trimmed ? onOptimistic?.(trimmed) : undefined;
+    if (handle) setText("");
     try {
       await sendMessageWithAttachments({
         conversationId: conversation.id,
@@ -82,6 +89,10 @@ export function FeedCardReply({
       void queryClient.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: METRICS_QUERY_KEY });
     } catch (error) {
+      if (handle) {
+        onRevert?.(handle);
+        setText(trimmed);
+      }
       const fallback = error instanceof Error ? error.message : "";
       displayErrorToast(getApiErrorMessage(error, fallback) || null);
     } finally {

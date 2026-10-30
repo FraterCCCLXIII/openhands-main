@@ -1,9 +1,11 @@
-import { useRef, useState } from "react";
+import { cn } from "#/utils/utils";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
   ChevronRight,
   ExternalLink,
+  Loader2,
   Pin,
   Wrench,
 } from "lucide-react";
@@ -20,6 +22,9 @@ import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
 import { useFeedUpdates } from "#/hooks/query/use-feed-updates";
 import { useFeedConversation } from "#/hooks/query/use-feed-conversation";
 import { useInView } from "#/hooks/use-in-view";
+import { useIsVisible } from "#/hooks/use-is-visible";
+import { useFeedLiveStream } from "#/hooks/use-feed-live-stream";
+import { MarkdownRenderer } from "#/components/features/markdown/markdown-renderer";
 import { ExecutionStatus } from "#/types/agent-server/core";
 import { I18nKey } from "#/i18n/declaration";
 import { formatRelativeTime } from "#/utils/format-relative-time";
@@ -32,7 +37,14 @@ import { FeedAgentAvatar } from "./feed-agent-avatar";
 import { TurnDetailsPanel } from "#/components/shared/turn-details-panel";
 import { FeedTeamThread } from "./feed-team-thread";
 import { isFeedTeamDemoEnabled } from "#/utils/feed-team-demo";
-import type { FeedUpdate, FeedUpdateKind } from "#/utils/feed-updates";
+import {
+  mergeFeedUpdates,
+  type FeedUpdate,
+  type FeedUpdateKind,
+} from "#/utils/feed-updates";
+
+const STREAMING_ID = "feed-streaming";
+const OPTIMISTIC_PREFIX = "feed-optimistic-";
 
 const KIND_LABEL: Record<FeedUpdateKind, I18nKey> = {
   user: I18nKey.FEED$ROLE_YOU,
@@ -67,13 +79,22 @@ function UpdateAvatar({
 function FeedUpdateRow({
   update,
   agent,
+  streaming = false,
 }: {
   update: FeedUpdate;
   agent: FeedAgent;
+  /** The message is still being written: show a caret. */
+  streaming?: boolean;
 }) {
   const { t, i18n } = useTranslation("openhands");
   const author = update.kind === "agent" ? agent.name : null;
   const [showDetails, setShowDetails] = useState(false);
+  const textRef = useRef<HTMLDivElement>(null);
+  // Keep the newest streamed words in view inside the bounded bubble.
+  useEffect(() => {
+    const el = textRef.current;
+    if (streaming && el) el.scrollTop = el.scrollHeight;
+  }, [streaming, update.text]);
   return (
     <li
       data-testid="feed-update"
@@ -90,9 +111,29 @@ function FeedUpdateRow({
             {formatRelativeTime(update.timestamp, i18n.language, t)}
           </span>
         </p>
-        <p className="mt-0.5 break-words text-sm text-contrast">
-          {update.text}
-        </p>
+        <div
+          ref={textRef}
+          data-testid="feed-update-text"
+          className={cn(
+            "mt-0.5 break-words text-sm text-contrast",
+            streaming && "custom-scrollbar max-h-72 overflow-y-auto",
+          )}
+        >
+          {update.kind === "agent" ? (
+            <MarkdownRenderer includeStandard streaming={streaming}>
+              {update.text}
+            </MarkdownRenderer>
+          ) : (
+            update.text
+          )}
+          {streaming ? (
+            <span
+              aria-hidden
+              data-testid="feed-stream-caret"
+              className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse bg-current motion-reduce:animate-none"
+            />
+          ) : null}
+        </div>
         {update.details ? (
           <>
             <button
@@ -155,17 +196,48 @@ interface FeedCardProps {
  * One conversation as a social-style post: the agent is the author, the
  * conversation title is the post, and recent activity reads as comments.
  */
-export function FeedCard({ conversation }: FeedCardProps) {
+function FeedCardView({ conversation }: FeedCardProps) {
   const { t, i18n } = useTranslation("openhands");
   const backendScopedPath = useBackendScopedPath();
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref);
   const [expanded, setExpanded] = useState(false);
   const [conversationOpen, setConversationOpen] = useState(false);
-  const { data: updates = [], isLoading } = useFeedUpdates(
+  const isLive = conversation.execution_status === ExecutionStatus.RUNNING;
+  const visible = useIsVisible(ref);
+  // Only a visible, running card holds a socket; others poll or sit idle.
+  const live = useFeedLiveStream(conversation, isLive && visible);
+  const { data: fetched = [], isLoading } = useFeedUpdates(
     conversation,
     inView,
+    live.connected,
   );
+  const [optimistic, setOptimistic] = useState<FeedUpdate[]>([]);
+  const streamStartedAt = useRef<string | null>(null);
+  if (live.streamingText === null) streamStartedAt.current = null;
+  else streamStartedAt.current ??= new Date().toISOString();
+  const updates = useMemo(() => {
+    const merged = mergeFeedUpdates(fetched, live.updates);
+    // A reply shows at once and gives way to the real message when it lands.
+    const pending = optimistic.filter(
+      (reply) =>
+        !merged.some(
+          (update) => update.kind === "user" && update.text === reply.text,
+        ),
+    );
+    const streaming: FeedUpdate[] =
+      live.streamingText && streamStartedAt.current
+        ? [
+            {
+              id: STREAMING_ID,
+              kind: "agent",
+              timestamp: streamStartedAt.current,
+              text: live.streamingText,
+            },
+          ]
+        : [];
+    return [...streaming, ...pending, ...merged];
+  }, [fetched, live.updates, live.streamingText, optimistic]);
 
   const { isPinned } = useFeedConversationFlags(conversation.id);
   const agent = getFeedAgent(
@@ -177,7 +249,6 @@ export function FeedCard({ conversation }: FeedCardProps) {
     `/conversations/${conversation.id}`,
   );
   const [latest, ...earlier] = updates;
-  const isLive = conversation.execution_status === ExecutionStatus.RUNNING;
   const actionCount = updates.filter((u) => u.kind === "action").length;
 
   return (
@@ -286,7 +357,11 @@ export function FeedCard({ conversation }: FeedCardProps) {
         <div data-testid="feed-card-preview">
           {latest ? (
             <ul>
-              <FeedUpdateRow update={latest} agent={agent} />
+              <FeedUpdateRow
+                update={latest}
+                agent={agent}
+                streaming={latest.id === STREAMING_ID}
+              />
             </ul>
           ) : (
             <p className="text-sm text-muted">
@@ -299,8 +374,45 @@ export function FeedCard({ conversation }: FeedCardProps) {
           <FeedTeamThread conversation={conversation} />
         ) : null}
 
-        <FeedCardReply conversation={conversation} />
+        {isLive && live.streamingText === null ? (
+          <p
+            data-testid="feed-card-working"
+            className="flex items-center gap-1.5 text-xs text-muted"
+          >
+            <Loader2
+              size={12}
+              aria-hidden
+              className="animate-spin motion-reduce:animate-none"
+            />
+            {t(I18nKey.FEED$WORKING)}
+          </p>
+        ) : null}
+
+        <FeedCardReply
+          conversation={conversation}
+          onOptimistic={(text) => {
+            const handle = `${OPTIMISTIC_PREFIX}${Date.now()}`;
+            setOptimistic((current) => [
+              ...current,
+              {
+                id: handle,
+                kind: "user",
+                timestamp: new Date().toISOString(),
+                text,
+              },
+            ]);
+            return handle;
+          }}
+          onRevert={(handle) =>
+            setOptimistic((current) =>
+              current.filter((reply) => reply.id !== handle),
+            )
+          }
+        />
       </div>
     </article>
   );
 }
+
+/** Memoised so one card's streamed tokens never re-render the others. */
+export const FeedCard = memo(FeedCardView);

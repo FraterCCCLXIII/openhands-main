@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Import the named export LlmSettingsScreen directly for testing the form component.
 // The default export now renders LlmSettingsLocalView (the profiles manager view).
 import LlmSettingsRoute, { LlmSettingsScreen } from "#/routes/llm-settings";
+import LlmsScreen from "#/routes/llms";
 import ConfigService from "#/api/config-service/config-service.api";
 import SettingsService from "#/api/settings-service/settings-service.api";
 import { MOCK_DEFAULT_USER_SETTINGS } from "#/mocks/handlers";
@@ -761,6 +762,26 @@ describe("LlmSettingsRoute - backend mode rendering", () => {
     // Local mode shows the "Add LLM Profile" button from LlmProfilesManager
     await screen.findByTestId("add-llm-profile");
     expect(screen.getByTestId("add-llm-profile")).toBeInTheDocument();
+  });
+
+  it("renders the standalone /llms page with the profile manager and no settings nav", async () => {
+    // Arrange
+    render(<LlmsScreen />, {
+      wrapper: ({ children }) => (
+        <MemoryRouter>
+          <QueryClientProvider client={new QueryClient()}>
+            {children}
+          </QueryClientProvider>
+        </MemoryRouter>
+      ),
+    });
+
+    // Assert
+    await screen.findByTestId("add-llm-profile");
+    expect(screen.getByRole("heading", { name: I18nKey.NAV$LLMS })).toBeInTheDocument();
+    expect(screen.queryByTestId("settings-screen")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Agent Context")).not.toBeInTheDocument();
   });
 
   it("renders LlmSettingsLocalView (profile manager) for cloud backends", async () => {

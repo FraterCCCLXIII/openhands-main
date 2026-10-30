@@ -569,7 +569,7 @@ describe("Sidebar", () => {
     );
   });
 
-  it("places the LLMs row under Agents and navigates to LLM settings on click", () => {
+  it("places the LLMs row under Agents and navigates to the LLMs page on click", () => {
     // Arrange
     const { navigate } = renderSidebar("/agents");
     const agents = screen.getByTestId("sidebar-agents-link");
@@ -583,11 +583,11 @@ describe("Sidebar", () => {
       agents.compareDocumentPosition(llms) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(llms).toHaveTextContent("LLMs");
-    expect(navigate).toHaveBeenCalledWith("/settings/llm", { replace: false });
+    expect(navigate).toHaveBeenCalledWith("/llms", { replace: false });
   });
 
-  it("marks the LLMs row as the current page on the LLM settings route", () => {
-    renderSidebar("/settings/llm");
+  it("marks the LLMs row as the current page on the LLMs route", () => {
+    renderSidebar("/llms");
 
     expect(screen.getByTestId("sidebar-llms-link")).toHaveAttribute(
       "aria-current",
