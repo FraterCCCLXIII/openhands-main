@@ -64,6 +64,8 @@ import {
 } from "./conversation-panel-list-helpers";
 import { useArchivedConversationsStore } from "#/stores/archived-conversations-store";
 import { usePinnedConversationsStore } from "#/stores/pinned-conversations-store";
+import { useSidebarFactoryStore } from "#/stores/sidebar-factory-store";
+import { getFeedFactory } from "#/utils/feed-team-demo";
 import { uniqueById } from "#/utils/unique-by-id";
 import {
   isEffectivelyArchivedConversation,
@@ -326,14 +328,23 @@ export function ConversationPanel({
   // Display collection: same loaded pages, with effectively-archived rows
   // (explicitly archived or missing-runtime) filtered out unless the user has
   // opted into "Show archived".
+  const sidebarFactoryId = useSidebarFactoryStore((state) => state.factoryId);
   const conversations = React.useMemo(() => {
-    if (showArchivedConversations) {
-      return allLoadedConversations;
-    }
-    return allLoadedConversations.filter(
-      (conversation) => !isRowArchived(conversation),
-    );
-  }, [allLoadedConversations, isRowArchived, showArchivedConversations]);
+    const visible = showArchivedConversations
+      ? allLoadedConversations
+      : allLoadedConversations.filter(
+          (conversation) => !isRowArchived(conversation),
+        );
+    // The factory list above narrows this to one factory's agents.
+    return sidebarFactoryId
+      ? visible.filter((c) => getFeedFactory(c.id).id === sidebarFactoryId)
+      : visible;
+  }, [
+    allLoadedConversations,
+    isRowArchived,
+    showArchivedConversations,
+    sidebarFactoryId,
+  ]);
 
   // Facets derive from the unfiltered list so the automation-name rows in the
   // advanced-options modal don't vanish while a narrowing selection is active.

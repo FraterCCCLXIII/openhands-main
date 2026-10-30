@@ -142,7 +142,9 @@ export function SidebarSettingsPopover({
                   className={linkRowClassName}
                 >
                   <Bug aria-hidden className="size-5" />
-                  <span className="text-sm">{t(I18nKey.SIDEBAR$REPORT_BUG)}</span>
+                  <span className="text-sm">
+                    {t(I18nKey.SIDEBAR$REPORT_BUG)}
+                  </span>
                 </a>
               </div>
             </div>,

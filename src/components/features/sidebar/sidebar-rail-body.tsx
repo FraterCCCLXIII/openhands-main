@@ -2,10 +2,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
-  ChevronRight,
   MessagesSquare,
   Newspaper,
-  KanbanSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
