@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MessagesSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RelayConnection, TeamClient } from "#/chat-transport/nostr";
 import {
@@ -35,10 +36,62 @@ const slug = (name: string) =>
     .replace(/^-|-$/g, "") || "team";
 const randomSuffix = () => Math.random().toString(36).slice(2, 8);
 
+/** The form area of the dialog: fields stacked, nothing boxed inside the dialog itself. */
 function Card({ children }: { children: React.ReactNode }) {
+  return <div className="flex w-full flex-col gap-4">{children}</div>;
+}
+
+const wideButton = "w-full py-2.5";
+
+/** Icon tile, title and one line on what team chat is, at the top of the dialog. */
+function DialogHeading({ title }: { title: string }) {
+  const { t } = useTranslation("openhands");
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-xl border border-border bg-surface-raised p-6">
-      {children}
+    <header className="flex flex-col items-center gap-2 text-center">
+      <span className="flex size-11 items-center justify-center rounded-xl bg-surface-raised text-contrast">
+        <MessagesSquare size={22} aria-hidden />
+      </span>
+      <h1 className="text-xl font-semibold text-contrast">{title}</h1>
+      <p className="max-w-xs text-sm text-muted">
+        {t(I18nKey.TEAM_CHAT$GATE_SUBTITLE)}
+      </p>
+    </header>
+  );
+}
+
+/** Tabs drawn as one segmented control. */
+function SegmentedTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: Array<{ id: T; label: string }>;
+  value: T;
+  onChange: (id: T) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      className="grid gap-1 rounded-xl bg-surface p-1"
+      style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+    >
+      {tabs.map(({ id, label }) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={value === id}
+          onClick={() => onChange(id)}
+          className={cn(
+            "rounded-lg px-3 py-1.5 text-sm transition-colors",
+            value === id
+              ? "bg-surface-raised text-contrast shadow-sm"
+              : "text-muted hover:text-contrast",
+          )}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -51,7 +104,7 @@ function Labeled({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm text-muted">
+    <label className="flex flex-col gap-1.5 text-xs font-medium text-contrast">
       {label}
       {children}
     </label>
@@ -115,7 +168,7 @@ function SaveKeyStep({
       </label>
       <button
         type="button"
-        className={primaryButtonClassName}
+        className={cn(primaryButtonClassName, wideButton)}
         disabled={!saved}
         onClick={onContinue}
       >
@@ -149,7 +202,7 @@ function CreateTab({ relayUrl }: { relayUrl: string }) {
       </Labeled>
       <button
         type="button"
-        className={primaryButtonClassName}
+        className={cn(primaryButtonClassName, wideButton)}
         disabled={!name.trim()}
         onClick={() => setAccount(generateAccount(name.trim()))}
       >
@@ -209,7 +262,7 @@ function SignInTab({
       <ErrorNote error={error} />
       <button
         type="button"
-        className={primaryButtonClassName}
+        className={cn(primaryButtonClassName, wideButton)}
         disabled={busy || !secret.trim()}
         onClick={submit}
       >
@@ -262,7 +315,7 @@ function JoinFields({
       <ErrorNote error={error} />
       <button
         type="button"
-        className={primaryButtonClassName}
+        className={cn(primaryButtonClassName, wideButton)}
         disabled={busy || !invite.trim() || (!account && !name.trim())}
         onClick={submit}
       >
@@ -321,33 +374,20 @@ export function TeamChooser({ account }: { account: Account }) {
       openTeam(groupId);
     });
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <h2 className="text-center text-lg font-medium text-contrast">
-        {t(I18nKey.TEAM_CHAT$CHOOSE_TITLE)}
-      </h2>
-      <div role="tablist" className="mx-auto flex gap-2">
-        {CHOOSER_MODES.map((id) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={mode === id}
-            onClick={() => setMode(id)}
-            className={cn(
-              "rounded-lg px-3 py-1.5 text-sm",
-              mode === id
-                ? "bg-surface-raised text-contrast"
-                : "text-muted hover:text-contrast",
-            )}
-          >
-            {t(
-              id === "start"
-                ? I18nKey.TEAM_CHAT$START_TEAM
-                : I18nKey.TEAM_CHAT$TAB_JOIN,
-            )}
-          </button>
-        ))}
-      </div>
+    <div data-testid="team-chooser" className="flex flex-col gap-5 p-6 pt-8">
+      <DialogHeading title={t(I18nKey.TEAM_CHAT$CHOOSE_TITLE)} />
+      <SegmentedTabs
+        tabs={CHOOSER_MODES.map((id) => ({
+          id,
+          label: t(
+            id === "start"
+              ? I18nKey.TEAM_CHAT$START_TEAM
+              : I18nKey.TEAM_CHAT$TAB_JOIN,
+          ),
+        }))}
+        value={mode}
+        onChange={setMode}
+      />
       {mode === "start" ? (
         <Card>
           <Labeled label={t(I18nKey.TEAM_CHAT$TEAM_NAME)}>
@@ -360,7 +400,7 @@ export function TeamChooser({ account }: { account: Account }) {
           <ErrorNote error={error} />
           <button
             type="button"
-            className={primaryButtonClassName}
+            className={cn(primaryButtonClassName, wideButton)}
             disabled={busy || !teamName.trim()}
             onClick={start}
           >
@@ -386,32 +426,13 @@ export function TeamChatGate() {
   const [tab, setTab] = useState<GateTab>("create");
   const [relay, setRelay] = useState(relayUrl);
   return (
-    <div
-      data-testid="team-chat-gate"
-      className="custom-scrollbar flex h-full flex-col gap-4 overflow-y-auto p-6"
-    >
-      <h1 className="text-center text-xl font-medium text-contrast">
-        {t(I18nKey.TEAM_CHAT$TITLE)}
-      </h1>
-      <div role="tablist" className="mx-auto flex gap-2">
-        {TABS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={cn(
-              "rounded-lg px-3 py-1.5 text-sm",
-              tab === id
-                ? "bg-surface-raised text-contrast"
-                : "text-muted hover:text-contrast",
-            )}
-          >
-            {t(label)}
-          </button>
-        ))}
-      </div>
+    <div data-testid="team-chat-gate" className="flex flex-col gap-5 p-6 pt-8">
+      <DialogHeading title={t(I18nKey.TEAM_CHAT$TITLE)} />
+      <SegmentedTabs
+        tabs={TABS.map(({ id, label }) => ({ id, label: t(label) }))}
+        value={tab}
+        onChange={setTab}
+      />
       {tab === "create" && <CreateTab relayUrl={relay} />}
       {tab === "signIn" && (
         <SignInTab relayUrl={relay} setRelayUrl={setRelay} />

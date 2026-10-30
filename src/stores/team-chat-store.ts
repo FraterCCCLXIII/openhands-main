@@ -1,4 +1,9 @@
-import { create } from "zustand";
+import {
+  create,
+  type StateCreator,
+  type StoreApi,
+  type UseBoundStore,
+} from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Account } from "#/chat-transport/nostr/keys";
 
@@ -46,62 +51,81 @@ interface TeamChatActions {
  * and which agent requests were handled. Components read from here; the actions are the
  * only writers.
  */
-export const useTeamChatStore = create<TeamChatState & TeamChatActions>()(
-  persist(
-    (set, get) => ({
-      account: null,
-      relayUrl: DEFAULT_RELAY_URL,
-      groupId: null,
-      agentsByOwner: {},
-      replyModes: {},
-      requests: {},
-      teamsByPubkey: {},
-      signIn: (account, relayUrl) => {
-        const last = get().teamsByPubkey[account.pubkey];
-        set({
-          account: { ...account, name: account.name || last?.name || "" },
-          relayUrl: last?.relayUrl ?? relayUrl,
-          groupId: last?.groupId ?? null,
-        });
-      },
-      openTeam: (groupId) =>
-        set((state) => ({
-          groupId,
-          teamsByPubkey: state.account
-            ? {
-                ...state.teamsByPubkey,
-                [state.account.pubkey]: {
-                  relayUrl: state.relayUrl,
-                  groupId,
-                  name: state.account.name,
-                },
-              }
-            : state.teamsByPubkey,
-        })),
-      addAgent: (agent) =>
-        set((state) => {
-          const owner = agent.ownerPubkey ?? "";
-          const others = (state.agentsByOwner[owner] ?? []).filter(
-            (a) => a.pubkey !== agent.pubkey,
-          );
-          return {
-            agentsByOwner: {
-              ...state.agentsByOwner,
-              [owner]: [...others, agent],
+const initializer: StateCreator<TeamChatState & TeamChatActions> = (
+  set,
+  get,
+) => ({
+  account: null,
+  relayUrl: DEFAULT_RELAY_URL,
+  groupId: null,
+  agentsByOwner: {},
+  replyModes: {},
+  requests: {},
+  teamsByPubkey: {},
+  signIn: (account, relayUrl) => {
+    const last = get().teamsByPubkey[account.pubkey];
+    set({
+      account: { ...account, name: account.name || last?.name || "" },
+      relayUrl: last?.relayUrl ?? relayUrl,
+      groupId: last?.groupId ?? null,
+    });
+  },
+  openTeam: (groupId) =>
+    set((state) => ({
+      groupId,
+      teamsByPubkey: state.account
+        ? {
+            ...state.teamsByPubkey,
+            [state.account.pubkey]: {
+              relayUrl: state.relayUrl,
+              groupId,
+              name: state.account.name,
             },
-          };
-        }),
-      setReplyMode: (agentPubkey, mode) =>
-        set((state) => ({
-          replyModes: { ...state.replyModes, [agentPubkey]: mode },
-        })),
-      setRequestProgress: (key, progress) =>
-        set((state) => ({ requests: { ...state.requests, [key]: progress } })),
-      signOut: () => set({ account: null, groupId: null }),
+          }
+        : state.teamsByPubkey,
+    })),
+  addAgent: (agent) =>
+    set((state) => {
+      const owner = agent.ownerPubkey ?? "";
+      const others = (state.agentsByOwner[owner] ?? []).filter(
+        (a) => a.pubkey !== agent.pubkey,
+      );
+      return {
+        agentsByOwner: {
+          ...state.agentsByOwner,
+          [owner]: [...others, agent],
+        },
+      };
     }),
-    { name: "team-chat", storage: createJSONStorage(() => localStorage) },
-  ),
+  setReplyMode: (agentPubkey, mode) =>
+    set((state) => ({
+      replyModes: { ...state.replyModes, [agentPubkey]: mode },
+    })),
+  setRequestProgress: (key, progress) =>
+    set((state) => ({ requests: { ...state.requests, [key]: progress } })),
+  signOut: () => set({ account: null, groupId: null }),
+});
+
+export const useTeamChatStore = create<TeamChatState & TeamChatActions>()(
+  persist(initializer, {
+    name: "team-chat",
+    storage: createJSONStorage(() => localStorage),
+  }),
 );
+
+/**
+ * A separate in-memory copy of the session for the sample team, so exploring it never
+ * touches the saved account, agents or requests.
+ */
+export const createSampleTeamChatStore = (seed: Partial<TeamChatState>) =>
+  create<TeamChatState & TeamChatActions>()((set, get, api) => ({
+    ...initializer(set, get, api),
+    ...seed,
+  }));
+
+export type TeamChatStoreHook = UseBoundStore<
+  StoreApi<TeamChatState & TeamChatActions>
+>;
 
 const NO_AGENTS: Account[] = [];
 

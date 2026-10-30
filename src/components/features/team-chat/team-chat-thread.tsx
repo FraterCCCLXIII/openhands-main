@@ -163,33 +163,35 @@ function TeamComposer({
   };
 
   return (
-    <div className="flex flex-col gap-2 border-t border-border p-3">
-      {replyTo && (
-        <div className="flex items-center gap-2 text-xs text-muted">
-          {t(I18nKey.TEAM_CHAT$REPLYING_TO, {
-            name: client.nameOf(replyTo.pubkey),
-          })}
-          <button
-            type="button"
-            className="hover:text-contrast"
-            onClick={onClearReply}
-          >
-            {t(I18nKey.TEAM_CHAT$CANCEL)}
-          </button>
-        </div>
-      )}
-      <ErrorNote error={error} />
-      {/* The input is a contenteditable; this wrapper watches it for a trailing @. */}
-      {}
-      <div ref={wrapperRef} className="relative" onInput={onInput}>
-        {query !== null && (
-          <MentionPicker client={client} query={query} onPick={pick} />
+    <div className="border-t border-border px-4 py-3">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+        {replyTo && (
+          <div className="flex items-center gap-2 text-xs text-muted">
+            {t(I18nKey.TEAM_CHAT$REPLYING_TO, {
+              name: client.nameOf(replyTo.pubkey),
+            })}
+            <button
+              type="button"
+              className="hover:text-contrast"
+              onClick={onClearReply}
+            >
+              {t(I18nKey.TEAM_CHAT$CANCEL)}
+            </button>
+          </div>
         )}
-        <CustomChatInput
-          onSubmit={submit}
-          persistDraft={false}
-          placeholder={t(I18nKey.TEAM_CHAT$COMPOSER_PLACEHOLDER)}
-        />
+        <ErrorNote error={error} />
+        {/* The input is a contenteditable; this wrapper watches it for a trailing @. */}
+        {}
+        <div ref={wrapperRef} className="relative" onInput={onInput}>
+          {query !== null && (
+            <MentionPicker client={client} query={query} onPick={pick} />
+          )}
+          <CustomChatInput
+            onSubmit={submit}
+            persistDraft={false}
+            placeholder={t(I18nKey.TEAM_CHAT$COMPOSER_PLACEHOLDER)}
+          />
+        </div>
       </div>
     </div>
   );
@@ -219,24 +221,26 @@ export function TeamChatThread({ client }: { client: TeamClient }) {
         data-testid="team-thread"
         className="custom-scrollbar flex-1 overflow-y-auto px-4 py-2"
       >
-        {roots.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted">
-            {t(I18nKey.TEAM_CHAT$NO_MESSAGES)}
-          </p>
-        ) : (
-          <ul>
-            {roots.map((m) => (
-              <MessageRow
-                key={m.id}
-                message={m}
-                client={client}
-                depth={0}
-                replies={replyMap}
-                onReply={setReplyTo}
-              />
-            ))}
-          </ul>
-        )}
+        <div className="mx-auto w-full max-w-3xl">
+          {roots.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted">
+              {t(I18nKey.TEAM_CHAT$NO_MESSAGES)}
+            </p>
+          ) : (
+            <ul>
+              {roots.map((m) => (
+                <MessageRow
+                  key={m.id}
+                  message={m}
+                  client={client}
+                  depth={0}
+                  replies={replyMap}
+                  onReply={setReplyTo}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
       <TeamComposer
         client={client}

@@ -5,6 +5,7 @@ import { shortNpub } from "#/chat-transport/nostr/keys";
 import { I18nKey } from "#/i18n/declaration";
 import { useTeamClient } from "#/hooks/team-chat/use-team-client";
 import { selectMyAgents, useTeamChatStore } from "#/stores/team-chat-store";
+import { useTeamStore } from "#/stores/team-chat-store-context";
 import { AddMemberModal } from "./add-member-modal";
 import { AgentInbox, ReplyModeSwitch, useAgentRequests } from "./agent-inbox";
 import { TeamChatThread } from "./team-chat-thread";
@@ -69,8 +70,8 @@ function MyAgents({
   waiting: Record<string, number>;
 }) {
   const { t } = useTranslation("openhands");
-  const agents = useTeamChatStore(selectMyAgents);
-  const addAgentToStore = useTeamChatStore((s) => s.addAgent);
+  const agents = useTeamStore(selectMyAgents);
+  const addAgentToStore = useTeamStore((s) => s.addAgent);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<unknown>(null);
@@ -188,7 +189,14 @@ function SignOutDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Workspace({ client }: { client: TeamClient }) {
+/** The team screen for a connected team, or for the in-memory sample team when `sample` is set. */
+export function Workspace({
+  client,
+  sample = false,
+}: {
+  client: TeamClient;
+  sample?: boolean;
+}) {
   const { t } = useTranslation("openhands");
   const [adding, setAdding] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -222,13 +230,15 @@ function Workspace({ client }: { client: TeamClient }) {
         </section>
         <MyAgents client={client} waiting={waiting} />
         <AgentInbox client={client} pending={pending} />
-        <button
-          type="button"
-          className="mt-auto text-left text-xs text-muted hover:text-contrast"
-          onClick={() => setSigningOut(true)}
-        >
-          {t(I18nKey.TEAM_CHAT$SIGN_OUT)}
-        </button>
+        {sample ? null : (
+          <button
+            type="button"
+            className="mt-auto text-left text-xs text-muted hover:text-contrast"
+            onClick={() => setSigningOut(true)}
+          >
+            {t(I18nKey.TEAM_CHAT$SIGN_OUT)}
+          </button>
+        )}
       </aside>
       <TeamChatThread client={client} />
       {adding && (
