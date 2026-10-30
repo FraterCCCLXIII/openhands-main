@@ -36,7 +36,7 @@ export function LlmNotConfiguredBanner() {
     >
       <div className="flex min-w-0 items-start sm:items-center">
         <div className="flex-shrink-0">
-          <FaHand size={12} className="align-middle text-muted" aria-hidden />
+          <FaHand size={12} className="align-middle text-warning" aria-hidden />
         </div>
         <Typography.Text className="ml-3 text-sm font-medium">
           {t(I18nKey.HOME$LLM_NOT_CONFIGURED_MESSAGE)}
