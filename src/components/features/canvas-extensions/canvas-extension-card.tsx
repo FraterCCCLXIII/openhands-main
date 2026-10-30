@@ -5,6 +5,7 @@ import { ToggleSwitch } from "#/ui/toggle-switch";
 import { I18nKey } from "#/i18n/declaration";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 import { CanvasExtensionIcon } from "./canvas-extension-icon";
+import { useNavigation } from "#/context/navigation-context";
 import { canvasExtensionBannerUrl } from "#/utils/canvas-extension-banner";
 import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
 
@@ -14,6 +15,9 @@ interface CanvasExtensionCardProps {
   onToggle: () => void;
   onRefresh: () => void;
   onUninstall: () => void;
+  onDetails: () => void;
+  /** Where the app lives; absent while the app is off or has no page. */
+  openHref?: string | null;
 }
 
 export function CanvasExtensionCard({
@@ -22,8 +26,11 @@ export function CanvasExtensionCard({
   onToggle,
   onRefresh,
   onUninstall,
+  onDetails,
+  openHref,
 }: CanvasExtensionCardProps) {
   const { t } = useTranslation("openhands");
+  const { navigate } = useNavigation();
   const pages = extension.manifest?.contributes?.pages ?? [];
   const displayName = extension.manifest?.display_name || extension.name;
   const description = extension.description || extension.manifest?.description;
@@ -31,7 +38,13 @@ export function CanvasExtensionCard({
   return (
     <article
       data-testid={`canvas-extension-card-${extension.name}`}
-      className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5"
+      className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5 ${openHref ? "cursor-pointer transition-colors hover:ring-white/15" : ""}`}
+      onClick={(event) => {
+        if (!openHref) return;
+        if ((event.target as HTMLElement).closest("button, a, [role=switch]"))
+          return;
+        navigate(openHref);
+      }}
     >
       <div
         className="relative flex h-36 items-end bg-(image:--banner-url) bg-cover bg-center px-4 pb-4"
@@ -118,6 +131,14 @@ export function CanvasExtensionCard({
       <footer className="flex justify-end gap-2 px-4 pb-4">
         <BrandButton
           type="button"
+          variant="tertiary"
+          testId={`canvas-extension-details-button-${extension.name}`}
+          onClick={onDetails}
+        >
+          {t(I18nKey.SETTINGS$APPS_DETAILS)}
+        </BrandButton>
+        <BrandButton
+          type="button"
           variant="ghost-danger"
           className="no-underline"
           testId={`canvas-extension-uninstall-${extension.name}`}
@@ -134,6 +155,15 @@ export function CanvasExtensionCard({
           onClick={onRefresh}
         >
           {t(I18nKey.SETTINGS$PLUGINS_REFRESH)}
+        </BrandButton>
+        <BrandButton
+          type="button"
+          variant="primary"
+          testId={`canvas-extension-open-${extension.name}`}
+          isDisabled={!openHref}
+          onClick={() => openHref && navigate(openHref)}
+        >
+          {t(I18nKey.SETTINGS$APPS_OPEN)}
         </BrandButton>
       </footer>
     </article>

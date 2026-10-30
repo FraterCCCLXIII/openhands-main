@@ -2,6 +2,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, ShieldCheck, X } from "lucide-react";
 import { AddCanvasExtensionModal } from "#/components/features/canvas-extensions/add-canvas-extension-modal";
+import { CanvasExtensionDetailsModal } from "#/components/features/canvas-extensions/canvas-extension-details-modal";
+import { useNavigation } from "#/context/navigation-context";
 import { CanvasExtensionCard } from "#/components/features/canvas-extensions/canvas-extension-card";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { ConfirmationModal } from "#/components/shared/modals/confirmation-modal";
@@ -11,6 +13,7 @@ import {
 } from "#/api/canvas-extensions-service";
 import { isNoBackend } from "#/api/backend-registry/active-store";
 import { useActiveBackend } from "#/contexts/active-backend-context";
+import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { useCanvasExtensions } from "#/hooks/query/use-canvas-extensions";
 import {
   useRefreshCanvasExtension,
@@ -63,10 +66,14 @@ export default function CanvasExtensionsScreen() {
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [isTrustNoticeDismissed, setIsTrustNoticeDismissed] =
     React.useState(false);
+  const [detailsFor, setDetailsFor] =
+    React.useState<InstalledCanvasExtensionInfo | null>(null);
+  const { navigate } = useNavigation();
   const [sort, setSort] = React.useState<AppSort>("name");
   const [pendingAction, setPendingAction] =
     React.useState<PendingAction | null>(null);
   const query = useCanvasExtensions();
+  const { pages: appPages } = useCanvasExtensionsRuntime();
   const setEnabled = useSetCanvasExtensionEnabled();
   const uninstall = useUninstallCanvasExtension();
   const refresh = useRefreshCanvasExtension();
@@ -239,6 +246,10 @@ export default function CanvasExtensionsScreen() {
                   <CanvasExtensionCard
                     key={extension.name}
                     extension={extension}
+                    openHref={
+                      appPages.find((p) => p.extension.name === extension.name)
+                        ?.href ?? null
+                    }
                     isBusy={isBusy}
                     onToggle={() => {
                       if (extension.enabled) {
@@ -250,6 +261,7 @@ export default function CanvasExtensionsScreen() {
                         setPendingAction({ type: "enable", extension });
                       }
                     }}
+                    onDetails={() => setDetailsFor(extension)}
                     onRefresh={() => refresh.mutate(extension)}
                     onUninstall={() =>
                       setPendingAction({ type: "uninstall", extension })
@@ -268,6 +280,25 @@ export default function CanvasExtensionsScreen() {
         </div>
       </main>
 
+      {detailsFor ? (
+        <CanvasExtensionDetailsModal
+          extension={detailsFor}
+          openHref={
+            appPages.find((p) => p.extension.name === detailsFor.name)?.href ??
+            null
+          }
+          onOpen={() => {
+            const href = appPages.find(
+              (p) => p.extension.name === detailsFor.name,
+            )?.href;
+            if (href) {
+              setDetailsFor(null);
+              navigate(href);
+            }
+          }}
+          onClose={() => setDetailsFor(null)}
+        />
+      ) : null}
       {showAddModal ? (
         <AddCanvasExtensionModal onClose={() => setShowAddModal(false)} />
       ) : null}

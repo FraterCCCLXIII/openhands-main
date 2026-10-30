@@ -33,6 +33,7 @@ function makeExtension(
 function renderIcon(
   icon?: string,
   iconAppearance?: CanvasExtensionIconAppearance,
+  showBackground?: boolean,
 ) {
   const queryClient = new QueryClient();
   return render(
@@ -40,6 +41,7 @@ function renderIcon(
       <CanvasExtensionIcon
         extension={makeExtension(icon, iconAppearance)}
         size={18}
+        showBackground={showBackground}
       />
     </QueryClientProvider>,
   );
@@ -58,7 +60,7 @@ describe("CanvasExtensionIcon", () => {
   it("renders the default icon without fetching when no icon is declared", () => {
     const fetchIcon = vi.spyOn(CanvasExtensionsService, "fetchIcon");
 
-    renderIcon();
+    renderIcon(undefined, undefined, false);
 
     expect(
       screen.getByTestId("canvas-extension-default-icon"),
@@ -71,7 +73,7 @@ describe("CanvasExtensionIcon", () => {
       new Blob(["<svg/>"], { type: "image/svg+xml" }),
     );
 
-    const { unmount } = renderIcon("assets/icon.svg");
+    const { unmount } = renderIcon("assets/icon.svg", undefined, false);
 
     expect(await screen.findByTestId("canvas-extension-icon")).toHaveAttribute(
       "src",
@@ -89,7 +91,7 @@ describe("CanvasExtensionIcon", () => {
       new Error("404"),
     );
 
-    renderIcon("assets/icon.svg");
+    renderIcon("assets/icon.svg", undefined, false);
 
     await vi.waitFor(() =>
       expect(CanvasExtensionsService.fetchIcon).toHaveBeenCalled(),
@@ -98,6 +100,12 @@ describe("CanvasExtensionIcon", () => {
       screen.getByTestId("canvas-extension-default-icon"),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("canvas-extension-icon")).toBeNull();
+  });
+
+  it("gives an app that states no color a rounded tile by default", () => {
+    renderIcon();
+
+    expect(screen.getByTestId("styled-icon")).toBeInTheDocument();
   });
 
   it("renders styled icon with emoji when icon_appearance has emoji", () => {

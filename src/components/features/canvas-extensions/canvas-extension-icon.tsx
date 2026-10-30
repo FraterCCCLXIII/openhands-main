@@ -19,6 +19,29 @@ interface CanvasExtensionIconProps {
   showBackground?: boolean;
 }
 
+/** Colors a default tile can take: saturated enough to read behind a white icon. */
+const DEFAULT_TILE_COLORS = [
+  "blue",
+  "violet",
+  "pink",
+  "orange",
+  "emerald",
+  "teal",
+  "indigo",
+  "rose",
+  "sky",
+  "purple",
+] as const;
+
+/** An app that states no color gets a steady one drawn from its name. */
+function defaultIconBackground(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return DEFAULT_TILE_COLORS[hash % DEFAULT_TILE_COLORS.length];
+}
+
 // Rendered via <img> (never inlined) so the SVG cannot run scripts.
 export function CanvasExtensionIcon({
   extension,
@@ -35,7 +58,10 @@ export function CanvasExtensionIcon({
   const custom = useFeedIconsStore(
     (state) => state.icons[canvasExtensionIconKey(extension.name)],
   );
-  const appearance = custom ?? extension.manifest?.icon_appearance;
+  const appearance = custom ??
+    extension.manifest?.icon_appearance ?? {
+      background: defaultIconBackground(extension.name),
+    };
   const hasAppearance = Boolean(
     appearance?.background || appearance?.emoji || appearance?.lucide_icon,
   );
