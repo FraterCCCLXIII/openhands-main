@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign -- the canvas 2D context is a mutable drawing API: setting fillStyle and friends is how it is used. */
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessagesSquare } from "lucide-react";
 import { I18nKey } from "#/i18n/declaration";
@@ -110,6 +110,67 @@ function drawSprite(ctx: CanvasRenderingContext2D, p: Sprite, t: number) {
   paint(ctx, p.kind === "agent" ? AGENT : PERSON, x, y, p.face < 0, colors);
 }
 
+const HAND_PALM =
+  "M14.5 41C14.5 32 21 29.5 32 29.5S49.5 32 49.5 41C49.5 53 42 59 32 59S14.5 53 14.5 41Z";
+const HAND_FINGERS: [number, number, number, number, number][] = [
+  [17, 40, 8.5, 23.5, 8.4],
+  [24.5, 34, 21.5, 13, 9],
+  [32, 32, 32, 8.5, 9.6],
+  [39.5, 34, 43, 13.5, 9],
+  [47, 44, 57.5, 33, 9.4],
+];
+
+/** The Kamiji hand: a soft blob with five fingers and big eyes, drawn from the same shapes as the avatars. */
+function drawBlob(ctx: CanvasRenderingContext2D, p: Sprite, t: number) {
+  const size = 12 * CELL;
+  const k = (size * 1.15) / 64;
+  const bob = Math.sin(t * 3 + p.phase) * 2;
+  const ox = p.x - 32 * k;
+  const oy = p.y - 32 * k + bob;
+  ctx.fillStyle = "rgba(0,0,0,.28)";
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y + size / 2 + 4, size * 0.34, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const hand = (fill: string, dx: number, dy: number) => {
+    ctx.save();
+    ctx.translate(ox + dx * k, oy + dy * k);
+    ctx.scale(k * (p.face < 0 ? -1 : 1), k);
+    if (p.face < 0) ctx.translate(-64, 0);
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = fill;
+    ctx.lineCap = "round";
+    ctx.fill(new Path2D(HAND_PALM));
+    HAND_FINGERS.forEach(([x1, y1, x2, y2, w]) => {
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    });
+    ctx.restore();
+  };
+  hand(shade(p.color, -0.3), 0.9, 1.2);
+  hand(p.color, 0, 0);
+  const shut = p.blink < 0;
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(k * (p.face < 0 ? -1 : 1), k);
+  if (p.face < 0) ctx.translate(-64, 0);
+  [26.2, 37.8].forEach((cx) => {
+    ctx.fillStyle = "#eceff1";
+    ctx.beginPath();
+    ctx.ellipse(cx, 43, 3.5, shut ? 0.6 : 4.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (!shut) {
+      ctx.fillStyle = "#15171a";
+      ctx.beginPath();
+      ctx.ellipse(cx + 0.2, 43.4, 1.9, 2.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+  ctx.restore();
+}
+
 function drawBubble(ctx: CanvasRenderingContext2D, p: Sprite, t: number) {
   if (!p.bubble) return;
   const bx = Math.round(p.x - 16),
@@ -148,7 +209,26 @@ function drawBubble(ctx: CanvasRenderingContext2D, p: Sprite, t: number) {
   );
 }
 
-function render(ctx: CanvasRenderingContext2D, scene: SpriteScene) {
+type CrewStyle = "pixel" | "blobby";
+const STYLE_OPTIONS: { id: CrewStyle; label: I18nKey }[] = [
+  { id: "pixel", label: I18nKey.TEAM_CHAT$STYLE_PIXEL },
+  { id: "blobby", label: I18nKey.TEAM_CHAT$STYLE_BLOBBY },
+];
+const STYLE_KEY = "team-chat-welcome-style";
+
+function readStyle(): CrewStyle {
+  try {
+    return localStorage.getItem(STYLE_KEY) === "blobby" ? "blobby" : "pixel";
+  } catch {
+    return "pixel";
+  }
+}
+
+function render(
+  ctx: CanvasRenderingContext2D,
+  scene: SpriteScene,
+  style: CrewStyle,
+) {
   ctx.clearRect(0, 0, scene.w, scene.h);
   ctx.imageSmoothingEnabled = false;
   ctx.strokeStyle = "rgba(255,255,255,.28)";
@@ -165,7 +245,11 @@ function render(ctx: CanvasRenderingContext2D, scene: SpriteScene) {
   ctx.setLineDash([]);
   [...scene.sprites]
     .sort((a, b) => a.y - b.y)
-    .forEach((p) => drawSprite(ctx, p, scene.t));
+    .forEach((p) =>
+      style === "blobby"
+        ? drawBlob(ctx, p, scene.t)
+        : drawSprite(ctx, p, scene.t),
+    );
   scene.sprites.forEach((p) => drawBubble(ctx, p, scene.t));
 }
 
@@ -182,6 +266,20 @@ export function TeamChatWelcome({
 }) {
   const { t } = useTranslation("openhands");
   const canvas = useRef<HTMLCanvasElement>(null);
+  const [style, setStyle] = useState<CrewStyle>(readStyle);
+  const styleRef = useRef(style);
+  const redraw = useRef<() => void>(() => {});
+
+  const chooseStyle = useCallback((next: CrewStyle) => {
+    styleRef.current = next;
+    setStyle(next);
+    try {
+      localStorage.setItem(STYLE_KEY, next);
+    } catch {
+      /* storage unavailable */
+    }
+    redraw.current();
+  }, []);
 
   useEffect(() => {
     const el = canvas.current;
@@ -203,20 +301,23 @@ export function TeamChatWelcome({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       scene = createSpriteScene(w, h);
       for (let i = 0; i < 60; i += 1) stepSpriteScene(scene, 0.1);
-      if (still) render(ctx, scene);
+      if (still) render(ctx, scene, styleRef.current);
     };
     const tick = (now: number) => {
       if (!scene) return;
       const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
       last = now;
       stepSpriteScene(scene, dt);
-      render(ctx, scene);
+      render(ctx, scene, styleRef.current);
       raf = requestAnimationFrame(tick);
     };
     const start = requestAnimationFrame(() => {
       size();
       if (!still) raf = requestAnimationFrame(tick);
     });
+    redraw.current = () => {
+      if (still && scene) render(ctx, scene, styleRef.current);
+    };
     window.addEventListener("resize", size);
     return () => {
       cancelAnimationFrame(start);
@@ -235,6 +336,24 @@ export function TeamChatWelcome({
         aria-hidden="true"
         className="absolute inset-0 size-full"
       />
+      <div
+        role="group"
+        data-testid="team-welcome-style"
+        className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-surface-raised px-2.5 py-2"
+      >
+        {STYLE_OPTIONS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            data-testid={`team-welcome-style-${id}`}
+            aria-label={t(label)}
+            title={t(label)}
+            aria-pressed={style === id}
+            onClick={() => chooseStyle(id)}
+            className={`size-3 rounded-full border border-muted transition-colors ${style === id ? "bg-contrast border-contrast" : "bg-transparent hover:bg-muted"}`}
+          />
+        ))}
+      </div>
       <div className="relative flex flex-col items-center gap-3 text-center">
         <span className="flex size-12 items-center justify-center rounded-2xl bg-surface-raised text-contrast">
           <MessagesSquare size={24} aria-hidden />
