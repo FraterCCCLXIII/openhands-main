@@ -1404,7 +1404,7 @@ const CSS = `
 .hg .sreset { border: 1px solid var(--hg-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hg .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
 .hg .powered b { color: var(--hg-text); font-weight: 600; }
-.hg .welcome .wdots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.hg .welcome .wdots { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
 .hg .welcome .wdot { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: 0; cursor: pointer; transition: transform .12s; }
 .hg .welcome .wdot:hover { transform: scale(1.35); }
 .hg .welcome .wdot[aria-pressed="true"] { outline: 1.5px solid #fff; outline-offset: 2px; transform: scale(1.1); }
@@ -1693,7 +1693,7 @@ const CSS = `
 .hg .welcome .wcanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hg .welcome .wbox { position: relative; display: grid; justify-items: center; }
 .hg .welcome h1, .hg .welcome p { color: #fff; text-shadow: none; }
-.hg .welcome .wmodes { display: inline-flex; gap: 2px; margin-top: 14px; padding: 2px; border-radius: 999px; background: rgba(0,0,0,.28); }
+.hg .welcome .wmodes { display: inline-flex; gap: 2px; margin-top: 34px; padding: 2px; border-radius: 999px; background: rgba(0,0,0,.28); }
 .hg .welcome .wmode { border: 0; background: transparent; color: rgba(255,255,255,.75); border-radius: 999px; padding: 3px 12px; font-size: 12px; cursor: pointer; }
 .hg .welcome .wmode[aria-pressed="true"] { background: rgba(255,255,255,.92); color: #1a1030; }
 .hg .welcome h1 { margin: 0 0 6px; font-size: 40px; color: var(--hg-contrast); }
