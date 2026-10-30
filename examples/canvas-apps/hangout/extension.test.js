@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, factoriesOf, factoryName, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -68,6 +68,15 @@ describe("Arco blocks", () => {
     card.querySelector("input").value = "why?";
     card.querySelector("form").dispatchEvent(new Event("submit", { cancelable: true }));
     expect(onSubmit).toHaveBeenCalledWith("Ask\nq: why?");
+  });
+});
+
+describe("factory names", () => {
+  it("keeps real project names and folds scratch folders into one factory", () => {
+    expect(factoryName("OpenHands")).toBe("OpenHands");
+    expect(factoryName("3313e89a2c2d4c12b55a2d89fc8f25b0")).toBe("Scratch workspaces");
+    expect(factoryName("tmp")).toBe("Scratch workspaces");
+    expect(factoryName("")).toBe("Unassigned");
   });
 });
 
@@ -151,9 +160,21 @@ describe("list organising", () => {
     expect(flat(organizeAgents(agents, { ...DEFAULT_PREFS, source: "sample" }, "", {}, now))).toEqual([]);
   });
 
-  it("nests the sample Inbox Manager under the EA", () => {
+  it("nests the sample agents in a three-level tree", () => {
     const rows = organizeAgents(sampleAgents(now), DEFAULT_PREFS, "", {}, now).flatMap((g) => g.rows);
-    expect(rows.find((r) => r.agent.id === "inbox").depth).toBe(1);
+    expect(rows.find((r) => r.agent.id === "ea").depth).toBe(1);
+    expect(rows.find((r) => r.agent.id === "inbox").depth).toBe(2);
+  });
+
+  it("lists factories with live and subagent counts, and filters by factory or trees", () => {
+    const agents = sampleAgents(now);
+    const factories = factoriesOf([...agents, mk("x", { factory: "kosmos", live: true }), mk("y", { factory: "kosmos", live: true, parentId: "x" })]);
+    expect(factories[0]).toMatchObject({ name: "kosmos", agents: 2, live: 2, trees: 1 });
+    expect(factories.find((f) => f.name === "Web Platform")).toMatchObject({ agents: 3, trees: 2 });
+    const inFactory = organizeAgents(agents, { ...DEFAULT_PREFS, factory: "Data Pipeline" }, "", {}, now).flatMap((g) => g.rows.map((r) => r.agent.id));
+    expect(inFactory.sort()).toEqual(["expense", "support"]);
+    const trees = organizeAgents(agents, { ...DEFAULT_PREFS, trees: true }, "", {}, now).flatMap((g) => g.rows.map((r) => r.agent.id));
+    expect(trees.sort()).toEqual(["chief", "ea", "expense", "inbox", "support"]);
   });
 });
 
@@ -202,7 +223,7 @@ describe("Hangout page", () => {
     const automations = [...container.querySelectorAll(".menu h4")].find((h) => h.textContent === "Automations").nextSibling;
     [...automations.querySelectorAll("button")].find((b) => b.textContent === "Hide").click();
     expect(container.querySelectorAll(".row").length).toBe(7);
-    expect(container.querySelector(".chip").textContent).toContain("No automations");
+    expect(container.querySelector(".chips .chip").textContent).toContain("No automations");
     dispose();
   });
 
@@ -286,6 +307,26 @@ describe("Kamiji face engine", () => {
     glasses.dispatchEvent(new Event("change"));
     expect(container.querySelectorAll(".sbig svg circle").length).toBeGreaterThan(before);
     expect(LOOK_TOGGLES.length).toBeGreaterThanOrEqual(5);
+    dispose();
+  });
+});
+
+describe("factories strip", () => {
+  it("shows a pinned factories strip that filters the list and expands with More", async () => {
+    const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
+    await tick();
+    expect(container.querySelector(".listtop .factories")).toBeTruthy();
+    expect(container.querySelectorAll(".fcard").length).toBe(4);
+    const grid = () => container.querySelector(".fgrid");
+    expect(grid().classList.contains("open")).toBe(false);
+    container.querySelector(".fmore").click();
+    expect(grid().classList.contains("open")).toBe(true);
+    [...container.querySelectorAll(".fcard")].find((c) => c.textContent.includes("Data Pipeline")).click();
+    expect(container.querySelectorAll(".row").length).toBe(2);
+    expect(container.querySelector(".chips").textContent).toContain("Factory: Data Pipeline");
+    [...container.querySelectorAll(".fchip")].find((c) => c.textContent === "All").click();
+    [...container.querySelectorAll(".fchip")].find((c) => c.textContent === "Multi-agent").click();
+    expect(container.querySelectorAll(".row").length).toBe(5);
     dispose();
   });
 });

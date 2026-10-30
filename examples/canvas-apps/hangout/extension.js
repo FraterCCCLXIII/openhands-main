@@ -34,7 +34,7 @@ const SAMPLE_AGENTS = [
     ],
     routines: [["Morning briefing", "Every day at 8:00 AM", true], ["Inbox cleanup", "Weekdays at 6:00 PM", true], ["Weekly team update", "Paused", false]] },
   { id: "ea", role: "Dispatcher", model: "No model", name: "EA", blob: "blue", time: "", unread: false, thread: [["agent", "Responded in 3 threads, with two meetings moved to Thursday."]], routines: [["Calendar sweep", "Every day at 7:30 AM", true]] },
-  { id: "inbox", parentId: "ea", role: "Janitor", model: "Haiku", name: "Inbox Manager", blob: "green", time: "7:34 PM", unread: false, thread: [["agent", "Inbox at zero. 2 replies ready."]], routines: [["Triage", "Every 30 minutes", true]] },
+  { id: "inbox", role: "Janitor", model: "Haiku", name: "Inbox Manager", blob: "green", time: "7:34 PM", unread: false, thread: [["agent", "Inbox at zero. 2 replies ready."]], routines: [["Triage", "Every 30 minutes", true]] },
   { id: "sales", role: "Worker", model: "Sonnet", name: "Sales Outbound", blob: "teal", time: "11:18 AM", unread: false, thread: [["agent", "Outreach drafts queued for approval."]], routines: [["Lead refresh", "Weekdays at 9:00 AM", true]] },
   { id: "talent", role: "Scout", model: "Sonnet", name: "Talent Scout", blob: "brown", time: "", unread: true, thread: [["agent", "Shortlist of 6 candidates ready for review."]], routines: [["Sourcing run", "Mondays at 10:00 AM", true]] },
   { id: "growth", role: "Worker", model: "Sonnet", name: "Growth Marketer", blob: "orange", time: "9:04 AM", unread: false, thread: [["agent", "A/B copy variants ready to review."]], routines: [["Experiment readout", "Fridays at 4:00 PM", true]] },
@@ -346,6 +346,9 @@ export function modelOf(conversation) {
 
 const titleCase = (text) => String(text).replace(/[_-]+/g, " ").replace(/^./, (c) => c.toUpperCase());
 
+/** A factory name for a workspace: scratch folders (hash names, tmp) share one factory. */
+export const factoryName = (workspace) => (!workspace ? "Unassigned" : /^[0-9a-f]{32}$/i.test(workspace) || /^(tmp|temp|scratch)$/i.test(workspace) ? "Scratch workspaces" : workspace);
+
 /** Turns a conversation list item and its newest events into an agent row. */
 export function liveAgent(conversation, events = [], profiles = []) {
   const activity = activityOf(events);
@@ -372,6 +375,7 @@ export function liveAgent(conversation, events = [], profiles = []) {
     updatedAt: Date.parse(conversation.updated_at || conversation.created_at) || 0,
     createdAt: Date.parse(conversation.created_at) || 0,
     workspace: conversation.selected_repository || dir.split("/").filter(Boolean).at(-1) || "",
+    factory: factoryName(conversation.selected_repository || dir.split("/").filter(Boolean).at(-1) || ""),
     parentId: conversation.parent_conversation_id ? `live:${conversation.parent_conversation_id}` : "",
     childIds: list(conversation.sub_conversation_ids).map((id) => `live:${id}`),
     tags: Object.entries(tags).map(([k, v]) => (v ? `${k}:${v}` : k)),
@@ -681,11 +685,15 @@ export const MODEL_CHOICES = ["Haiku", "Sonnet", "Opus", "Fable"];
 
 
 /** Sample agents with recent-first timestamps so sorting and age filters work on them too. */
+const SAMPLE_PARENT = { ea: "chief", inbox: "ea", expense: "support" };
+const SAMPLE_FACTORY = { chief: "Web Platform", ea: "Web Platform", inbox: "Web Platform", sales: "Mobile Apps", talent: "Mobile Apps", growth: "Mobile Apps", support: "Data Pipeline", expense: "Data Pipeline", invoice: "Infrastructure" };
+
 export function sampleAgents(now = Date.now()) {
   return SAMPLE_AGENTS.map((a, i) => ({
     ...a,
-    parentId: a.parentId || "",
-    childIds: SAMPLE_AGENTS.filter((c) => c.parentId === a.id).map((c) => c.id),
+    parentId: SAMPLE_PARENT[a.id] || "",
+    childIds: Object.keys(SAMPLE_PARENT).filter((id) => SAMPLE_PARENT[id] === a.id),
+    factory: SAMPLE_FACTORY[a.id] || "Unassigned",
     workspace: "Sample agents",
     tags: i % 3 === 0 ? ["team:ops"] : [],
     automation: a.id === "invoice" || a.id === "expense",
@@ -697,7 +705,7 @@ export function sampleAgents(now = Date.now()) {
   }));
 }
 
-export const DEFAULT_PREFS = { organize: "workspace", sort: "updated", older: "all", subagents: "nested", automations: "all", source: "all", tags: [] };
+export const DEFAULT_PREFS = { organize: "workspace", sort: "updated", older: "all", subagents: "nested", automations: "all", source: "all", tags: [], factory: "", trees: false };
 const OLDER_MS = { "1h": 3_600_000, "1d": 86_400_000, "7d": 7 * 86_400_000, "30d": 30 * 86_400_000 };
 
 /**
@@ -707,7 +715,10 @@ const OLDER_MS = { "1h": 3_600_000, "1d": 86_400_000, "7d": 7 * 86_400_000, "30d
 export function organizeAgents(agents, prefs = DEFAULT_PREFS, query = "", collapsed = {}, now = Date.now()) {
   const q = query.trim().toLowerCase();
   const ids = new Set(agents.map((a) => a.id));
+  const parentsPresent = new Set(agents.filter((a) => a.parentId && ids.has(a.parentId)).map((a) => a.parentId));
   let rows = agents.filter((a) => {
+    if (prefs.factory && a.factory !== prefs.factory) return false;
+    if (prefs.trees && !parentsPresent.has(a.id) && !(a.parentId && ids.has(a.parentId))) return false;
     if (q && ![a.name, a.title, a.role, a.model, a.workspace].some((v) => String(v || "").toLowerCase().includes(q))) return false;
     if (prefs.source === "live" && !a.live) return false;
     if (prefs.source === "sample" && a.live) return false;
@@ -738,6 +749,22 @@ export function organizeAgents(agents, prefs = DEFAULT_PREFS, query = "", collap
     flatten(a, 0, groups.get(label));
   });
   return [...groups.entries()].map(([label, items]) => ({ key: label || "all", label, rows: items }));
+}
+
+/** Factories (groups of agents) with their size, live count, subagent trees and a few avatars. */
+export function factoriesOf(agents) {
+  const ids = new Set(agents.map((a) => a.id));
+  const map = new Map();
+  agents.forEach((a) => {
+    const name = a.factory || "Unassigned";
+    const f = map.get(name) || { id: name, name, agents: 0, live: 0, trees: 0, blobs: [] };
+    f.agents += 1;
+    if (a.live) f.live += 1;
+    if (a.parentId && ids.has(a.parentId)) f.trees += 1;
+    if (f.blobs.length < 3) f.blobs.push(a.blob);
+    map.set(name, f);
+  });
+  return [...map.values()].sort((x, y) => y.live - x.live || y.agents - x.agents || x.name.localeCompare(y.name));
 }
 
 /** Tag facets present across agents, for the filter menu. */
@@ -832,6 +859,25 @@ const CSS = `
 .hg .col {  display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .hg .list { border-right: 1px solid var(--hg-border); }
 .hg .listtop { flex: none; padding: 12px 10px 8px; background: var(--hg-bg); border-bottom: 1px solid var(--hg-border); position: relative; z-index: 3; }
+.hg .factories { margin-bottom: 10px; border: 1px solid var(--hg-border); border-radius: 12px; background: var(--hg-panel); overflow: hidden; }
+.hg .fhead { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--hg-border); }
+.hg .ftitle { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--hg-muted); }
+.hg .fcount { font-size: 11px; color: var(--hg-muted); margin-right: auto; }
+.hg .fchip::after { content: ""; }
+.hg .fchip[aria-pressed="true"] { background: var(--hg-primary); color: var(--hg-on-primary); border-color: var(--hg-primary); }
+.hg .fmore { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 12px; padding: 2px 4px; }
+.hg .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; max-height: 106px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.hg .fgrid.open { max-height: 260px; }
+.hg .fcard { display: block; min-width: 0; border: 1px solid transparent; background: var(--hg-bg); border-radius: 10px; padding: 5px 6px; cursor: pointer; text-align: left; }
+.hg .fcard:hover { background: var(--hg-raised); }
+.hg .fcard[aria-pressed="true"] { border-color: var(--hg-text); }
+.hg .fstack { flex: none; display: flex; }
+.hg .fdetail { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.hg .fstack .avatar { width: 18px; height: 18px; margin-left: -5px; }
+.hg .fstack .avatar:first-child { margin-left: 0; }
+.hg .ftext { min-width: 0; display: grid; gap: 2px; }
+.hg .fname { font-size: 12.5px; font-weight: 600; color: var(--hg-contrast); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hg .fmeta { font-size: 11px; color: var(--hg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .searchrow { display: flex; gap: 6px; }
 .hg .search { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--hg-border); background: var(--hg-panel); color: var(--hg-text); font: inherit; }
 .hg .iconbtn { flex: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--hg-border); background: var(--hg-panel); border-radius: 10px; padding: 0 10px; cursor: pointer; }
@@ -1252,6 +1298,8 @@ function mount(host, container) {
       chips.append(c);
     };
     const p = state.prefs;
+    if (p.factory) add(`Factory: ${p.factory}`, () => setPref("factory", ""));
+    if (p.trees) add("Multi-agent only", () => setPref("trees", false));
     if (p.source !== "all") add(p.source === "live" ? "Conversations" : "Samples", () => setPref("source", "all"));
     if (p.older !== "all") add(`Newer than ${p.older}`, () => setPref("older", "all"));
     if (p.automations !== "all") add(p.automations === "hide" ? "No automations" : "Automations only", () => setPref("automations", "all"));
@@ -1260,9 +1308,50 @@ function mount(host, container) {
     return chips.childNodes.length ? chips : null;
   }
 
+  function factoryStrip() {
+    const box = el("section", "factories");
+    box.setAttribute("aria-label", "Factories");
+    const factories = factoriesOf(agents());
+    const head = el("div", "fhead");
+    head.append(el("span", "ftitle", "Factories"), el("span", "fcount", String(factories.length)));
+    const multi = el("button", "chip fchip", "Multi-agent");
+    multi.type = "button";
+    multi.setAttribute("aria-pressed", String(state.prefs.trees));
+    multi.title = "Only conversations with subagent trees";
+    multi.addEventListener("click", () => setPref("trees", !state.prefs.trees));
+    const all = el("button", "chip fchip", "All");
+    all.type = "button";
+    all.setAttribute("aria-pressed", String(!state.prefs.factory));
+    all.addEventListener("click", () => setPref("factory", ""));
+    const more = el("button", "fmore", state.factoriesOpen ? "Less ▴" : "More ▾");
+    more.type = "button";
+    more.setAttribute("aria-expanded", String(state.factoriesOpen));
+    more.addEventListener("click", () => { state.factoriesOpen = !state.factoriesOpen; render(); });
+    head.append(multi, all, more);
+    const grid = el("div", `fgrid${state.factoriesOpen ? " open" : ""}`);
+    factories.forEach((f) => {
+      const card = el("button", "fcard");
+      card.type = "button";
+      card.setAttribute("aria-pressed", String(state.prefs.factory === f.id));
+      card.title = `${f.name}: ${f.agents} agents, ${f.live} live, ${f.trees} subagents`;
+      const stack = el("span", "fstack");
+      f.blobs.forEach((b) => stack.append(avatar(b, true)));
+      const detail = el("span", "fdetail");
+      detail.append(stack, el("span", "fmeta", `${f.agents}${f.live ? ` · ${f.live} live` : ""}${f.trees ? ` · ${f.trees} sub` : ""}`));
+      const text = el("span", "ftext");
+      text.append(el("span", "fname", f.name), detail);
+      card.append(text);
+      card.addEventListener("click", () => setPref("factory", state.prefs.factory === f.id ? "" : f.id));
+      grid.append(card);
+    });
+    box.append(head, grid);
+    return box;
+  }
+
   function listCol() {
     const col = el("div", "col list");
     const top = el("div", "listtop");
+    top.append(factoryStrip());
     const row = el("div", "searchrow");
     const search = el("input", "search");
     search.type = "search";
