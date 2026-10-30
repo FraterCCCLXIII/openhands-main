@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "name": "ohe-links",
+  "display_name": "OHE and Superadmin",
+  "version": "0.1.0",
+  "description": "Links to your OpenHands Enterprise backend and its Superadmin console, at addresses you set.",
+  "entrypoint": "extension.js",
+  "icon": "icon.svg",
+  "icon_appearance": { "background": "slate" },
+  "contributes": {
+    "pages": [
+      { "id": "ohe", "title": "OHE", "path": "/ohe", "nav_label": "OHE", "description": "Your OpenHands Enterprise backend." },
+      { "id": "superadmin", "title": "Superadmin", "path": "/superadmin", "nav_label": "Superadmin", "description": "The Superadmin console." }
+    ]
+  }
+}
