@@ -23,7 +23,7 @@ const BLOBS = [
 ];
 
 const SAMPLE_AGENTS = [
-  { id: "chief", name: "Chief of Staff", blob: "violet", time: "7:34 PM", unread: false,
+  { id: "chief", role: "Conductor", model: "Fable", name: "Chief of Staff", blob: "violet", time: "7:34 PM", unread: false,
     thread: [
       ["me", "Hey, what's the latest update we have on Brightside Health?"],
       ["agent", "From last meeting's call notes, they need to see support for Slack integration and SSO before they proceed with a pilot."],
@@ -33,14 +33,25 @@ const SAMPLE_AGENTS = [
       ["agent", "Got it! Product updates shared and linked in #brightside-shared slack channel"],
     ],
     routines: [["Morning briefing", "Every day at 8:00 AM", true], ["Inbox cleanup", "Weekdays at 6:00 PM", true], ["Weekly team update", "Paused", false]] },
-  { id: "ea", name: "EA", blob: "blue", time: "", unread: false, thread: [["agent", "Responded in 3 threads, with two meetings moved to Thursday."]], routines: [["Calendar sweep", "Every day at 7:30 AM", true]] },
-  { id: "inbox", name: "Inbox Manager", blob: "green", time: "7:34 PM", unread: false, thread: [["agent", "Inbox at zero. 2 replies ready."]], routines: [["Triage", "Every 30 minutes", true]] },
-  { id: "sales", name: "Sales Outbound", blob: "teal", time: "11:18 AM", unread: false, thread: [["agent", "Outreach drafts queued for approval."]], routines: [["Lead refresh", "Weekdays at 9:00 AM", true]] },
-  { id: "talent", name: "Talent Scout", blob: "brown", time: "", unread: true, thread: [["agent", "Shortlist of 6 candidates ready for review."]], routines: [["Sourcing run", "Mondays at 10:00 AM", true]] },
-  { id: "growth", name: "Growth Marketer", blob: "orange", time: "9:04 AM", unread: false, thread: [["agent", "A/B copy variants ready to review."]], routines: [["Experiment readout", "Fridays at 4:00 PM", true]] },
-  { id: "support", name: "Customer Support", blob: "red", time: "2:20 PM", unread: false, thread: [["agent", "12 tickets resolved, 2 escalated."]], routines: [["Queue sweep", "Every hour", true]] },
-  { id: "expense", name: "Expense Manager", blob: "pink", time: "Tuesday", unread: false, thread: [["agent", "Receipts coded. One needs a manager's approval."]], routines: [["Receipt coding", "Daily at 5:00 PM", true]] },
-  { id: "invoice", name: "Invoice Collector", blob: "indigo", time: "Yesterday", unread: false, thread: [["agent", "Pulled 9 invoices from vendor portals."]], routines: [["Vendor pull", "Weekdays at 8:30 AM", true]] },
+  { id: "ea", role: "Dispatcher", model: "No model", name: "EA", blob: "blue", time: "", unread: false, thread: [["agent", "Responded in 3 threads, with two meetings moved to Thursday."]], routines: [["Calendar sweep", "Every day at 7:30 AM", true]] },
+  { id: "inbox", role: "Janitor", model: "Haiku", name: "Inbox Manager", blob: "green", time: "7:34 PM", unread: false, thread: [["agent", "Inbox at zero. 2 replies ready."]], routines: [["Triage", "Every 30 minutes", true]] },
+  { id: "sales", role: "Worker", model: "Sonnet", name: "Sales Outbound", blob: "teal", time: "11:18 AM", unread: false, thread: [["agent", "Outreach drafts queued for approval."]], routines: [["Lead refresh", "Weekdays at 9:00 AM", true]] },
+  { id: "talent", role: "Scout", model: "Sonnet", name: "Talent Scout", blob: "brown", time: "", unread: true, thread: [["agent", "Shortlist of 6 candidates ready for review."]], routines: [["Sourcing run", "Mondays at 10:00 AM", true]] },
+  { id: "growth", role: "Worker", model: "Sonnet", name: "Growth Marketer", blob: "orange", time: "9:04 AM", unread: false, thread: [["agent", "A/B copy variants ready to review."]], routines: [["Experiment readout", "Fridays at 4:00 PM", true]] },
+  { id: "support", role: "Verifier", model: "Opus", name: "Customer Support", blob: "red", time: "2:20 PM", unread: false, thread: [["agent", "12 tickets resolved, 2 escalated."]], routines: [["Queue sweep", "Every hour", true]] },
+  { id: "expense", role: "Janitor", model: "Haiku", name: "Expense Manager", blob: "pink", time: "Tuesday", unread: false, thread: [["agent", "Receipts coded. One needs a manager's approval."]], routines: [["Receipt coding", "Daily at 5:00 PM", true]] },
+  { id: "invoice", role: "Worker", model: "Haiku", name: "Invoice Collector", blob: "indigo", time: "Yesterday", unread: false, thread: [["agent", "Pulled 9 invoices from vendor portals."]], routines: [["Vendor pull", "Weekdays at 8:30 AM", true]] },
+];
+
+// Names, roles and model tiers for conversations that carry no agent profile of their own.
+const PERSONAS = [
+  { name: "Atlas", role: "Conductor", model: "Fable" },
+  { name: "Nova", role: "Scout", model: "Sonnet" },
+  { name: "Sentinel", role: "Verifier", model: "Opus" },
+  { name: "Forge", role: "Worker", model: "Opus" },
+  { name: "Pixel", role: "Worker", model: "Sonnet" },
+  { name: "Sage", role: "Janitor", model: "Haiku" },
+  { name: "Botley", role: "Worker", model: "Haiku" },
 ];
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -71,17 +82,35 @@ export function messageText(event) {
   return parts.map((p) => (p && p.type === "text" ? p.text : "")).join("").trim();
 }
 
+/** The model a conversation runs, from whichever field the server reports it in. */
+export function modelOf(conversation) {
+  const usage = conversation.stats?.usage_to_metrics;
+  const fromUsage = usage ? Object.values(usage).map((u) => u?.model_name).find(Boolean) : null;
+  const raw = conversation.current_model_name || conversation.current_model_id || conversation.agent?.llm?.model || fromUsage || "";
+  return String(raw).replace(/^.*\//, "");
+}
+
+const titleCase = (text) => String(text).replace(/[_-]+/g, " ").replace(/^./, (c) => c.toUpperCase());
+
 /** Turns a conversation list item and its newest events into an agent row. */
-export function liveAgent(conversation, events = []) {
+export function liveAgent(conversation, events = [], profiles = []) {
   const messages = events
     .map((e) => ({ who: e.source === "user" ? "me" : "agent", text: messageText(e) }))
     .filter((m) => m.text);
   const last = messages.at(-1);
+  const profileId = conversation.launched_agent_profile?.agent_profile_id;
+  const profile = profiles.find((p) => p && (p.id === profileId || p.agent_profile_id === profileId));
+  const persona = PERSONAS[hashOf(conversation.id) % PERSONAS.length];
+  const tags = conversation.tags || {};
+  const tagRole = tags.role || tags.agent_role;
   return {
     id: `live:${conversation.id}`,
     conversationId: conversation.id,
     live: true,
-    name: conversation.title || `Conversation ${String(conversation.id).slice(0, 6)}`,
+    name: profile?.name || persona.name,
+    role: tagRole ? titleCase(tagRole) : profile?.role ? titleCase(profile.role) : persona.role,
+    model: modelOf(conversation) || persona.model,
+    title: conversation.title || `Conversation ${String(conversation.id).slice(0, 6)}`,
     blob: BLOBS[hashOf(conversation.id) % BLOBS.length].id,
     time: shortTime(conversation.updated_at || conversation.created_at),
     unread: false,
@@ -129,11 +158,16 @@ const CSS = `
 .hg .rowtop { display: flex; justify-content: space-between; gap: 8px; }
 .hg .name { font-weight: 600; color: var(--hg-contrast); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .time { color: var(--hg-muted); font-size: 12px; flex: none; }
+.hg .rowright { display: flex; align-items: center; gap: 6px; flex: none; }
+.hg .meta { display: flex; gap: 6px; font-size: 12px; color: var(--hg-muted); white-space: nowrap; overflow: hidden; }
+.hg .role { color: var(--hg-text); }
+.hg .model { overflow: hidden; text-overflow: ellipsis; }
 .hg .preview { color: var(--hg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; flex: none; }
 .hg .dot.live { background: var(--hg-success); }
 .hg .chat { background: var(--hg-bg); }
 .hg .chathead { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--hg-border); font-weight: 600; color: var(--hg-contrast); }
+.hg .headmeta { display: block; font-size: 12px; font-weight: 400; color: var(--hg-muted); }
 .hg .msgs { flex: 1; overflow: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px; }
 .hg .stamp { align-self: center; color: var(--hg-muted); font-size: 12px; margin-bottom: 4px; }
 .hg .bubble { max-width: 78%; padding: 10px 16px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -228,10 +262,12 @@ function mount(host, container) {
     try {
       const page = await host.agentServer.request({ path: "/api/conversations/search?limit=20" });
       const items = Array.isArray(page?.items) ? page.items : [];
+      const profileRes = await host.agentServer.request({ path: "/api/agent-profiles" }).catch(() => null);
+      const profiles = Array.isArray(profileRes) ? profileRes : profileRes?.items || profileRes?.profiles || [];
       const loaded = await Promise.all(items.map(async (c) => {
         const res = await host.agentServer.request({ path: `/api/conversations/${c.id}/events/search?limit=30&sort_order=TIMESTAMP_DESC` }).catch(() => null);
         const events = Array.isArray(res?.items) ? [...res.items].reverse() : [];
-        return liveAgent(c, events);
+        return liveAgent(c, events, profiles);
       }));
       state.live = loaded;
       state.liveNote = loaded.length ? "" : "No conversations on this Agent Server yet.";
@@ -286,17 +322,21 @@ function mount(host, container) {
       row.setAttribute("aria-current", String(agent.id === current().id));
       const text = el("span", "rowtext");
       const top = el("span", "rowtop");
-      top.append(el("span", "name", agent.name), el("span", "time", agent.time));
-      const last = threadOf(agent).filter((m) => m[0] !== "file").at(-1);
-      const preview = el("span", "preview", agent.preview || (last ? last[1] : ""));
-      text.append(top, preview);
-      row.append(avatar(agent.blob), text);
-      if (agent.unread) row.append(el("span", "dot"));
+      const right = el("span", "rowright");
       if (agent.live) {
         const live = el("span", "dot live");
         live.title = "Live conversation";
-        row.append(live);
+        right.append(live);
       }
+      if (agent.unread) right.append(el("span", "dot"));
+      right.append(el("span", "time", agent.time));
+      top.append(el("span", "name", agent.name), right);
+      const meta = el("span", "meta");
+      meta.append(el("span", "role", agent.role || "Agent"), el("span", "sep", "·"), el("span", "model", agent.model || "No model"));
+      const last = threadOf(agent).filter((m) => m[0] !== "file").at(-1);
+      const preview = el("span", "preview", agent.title || agent.preview || (last ? last[1] : ""));
+      text.append(top, meta, preview);
+      row.append(avatar(agent.blob), text);
       row.addEventListener("click", () => { state.selected = agent.id; persist(); render(); });
       col.append(row);
     });
@@ -308,7 +348,9 @@ function mount(host, container) {
     const agent = current();
     const col = el("div", "col chat");
     const head = el("div", "chathead");
-    head.append(avatar(agent.blob, true), el("span", "", agent.name));
+    const who = el("span");
+    who.append(el("span", "", agent.name), el("span", "headmeta", `${agent.role || "Agent"} · ${agent.model || "No model"}`));
+    head.append(avatar(agent.blob, true), who);
     const msgs = el("div", "msgs");
     msgs.setAttribute("role", "log");
     const thread = threadOf(agent);

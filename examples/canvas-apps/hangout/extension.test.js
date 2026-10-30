@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { activate, liveAgent, messageText, shortTime } from "./extension.js";
+import { activate, liveAgent, messageText, modelOf, shortTime } from "./extension.js";
 
 function mountWith(request) {
   let mountFn;
@@ -24,8 +24,28 @@ describe("message helpers", () => {
       { kind: "MessageEvent", source: "agent", llm_message: { content: [{ type: "text", text: "All green" }] } },
     ];
     const agent = liveAgent({ id: "abc123", title: "CI fixer", updated_at: "2026-01-01T10:00:00Z" }, events);
-    expect(agent).toMatchObject({ live: true, name: "CI fixer", conversationId: "abc123", preview: "All green" });
+    expect(agent).toMatchObject({ live: true, title: "CI fixer", conversationId: "abc123", preview: "All green" });
     expect(agent.thread).toEqual([["me", "run tests"], ["agent", "All green"]]);
+  });
+
+  it("names a live agent from its profile, role tag and reported model", () => {
+    const conversation = {
+      id: "c9",
+      title: "Ship docs",
+      tags: { role: "worker" },
+      launched_agent_profile: { agent_profile_id: "p1" },
+      stats: { usage_to_metrics: { default: { model_name: "ollama/qwen3:32b" } } },
+    };
+    const agent = liveAgent(conversation, [], [{ id: "p1", name: "Docs Bot" }]);
+    expect(agent).toMatchObject({ name: "Docs Bot", role: "Worker", model: "qwen3:32b" });
+    expect(modelOf({ current_model_id: "anthropic/claude-sonnet-5-5" })).toBe("claude-sonnet-5-5");
+  });
+
+  it("falls back to a persona when the conversation carries no profile", () => {
+    const agent = liveAgent({ id: "zzz" }, []);
+    expect(agent.name).toBeTruthy();
+    expect(agent.role).toBeTruthy();
+    expect(agent.model).toBeTruthy();
   });
 
   it("labels today by time and yesterday by name", () => {
@@ -63,6 +83,8 @@ describe("Hangout page", () => {
     await new Promise((r) => setTimeout(r, 10));
     const first = container.querySelector(".row");
     expect(first.textContent).toContain("Docs agent");
+    expect(first.querySelector(".role").textContent).toBeTruthy();
+    expect(first.querySelector(".model").textContent).toBeTruthy();
     first.click();
     const input = container.querySelector(".composer input");
     input.value = "ship it";
