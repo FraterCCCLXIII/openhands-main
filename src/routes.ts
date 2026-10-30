@@ -15,6 +15,7 @@ export default [
     ),
     route("conversations/:conversationId", "routes/conversation.tsx"),
     route("feed", "routes/feed.tsx"),
+    route("team-chat", "routes/team-chat.tsx"),
     route("feed/people/:personId", "routes/feed-profile.tsx"),
     route("launch", "routes/launch.tsx"),
     route("kanban", "routes/kanban.tsx"),

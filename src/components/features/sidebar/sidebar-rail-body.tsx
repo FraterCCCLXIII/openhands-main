@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
+  MessagesSquare,
   Newspaper,
   KanbanSquare,
   PanelLeftClose,
@@ -59,6 +60,7 @@ import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 
 const FEED_PATH = "/feed";
+const TEAM_CHAT_PATH = "/team-chat";
 const TEAM_PATH = "/team";
 const ICON_SIZE = 18;
 const REPORT_BUG_URL = "https://github.com/OpenHands/OpenHands/issues/new";
@@ -253,6 +255,13 @@ export function SidebarRailBody({
           testId="sidebar-feed-link"
           collapsed={collapsed}
           icon={<Newspaper width={ICON_SIZE} height={ICON_SIZE} />}
+        />
+        <SidebarNavLink
+          to={TEAM_CHAT_PATH}
+          label={t(I18nKey.TEAM_CHAT$NAV_LABEL)}
+          testId="sidebar-team-chat-link"
+          collapsed={collapsed}
+          icon={<MessagesSquare width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
           to={CUSTOMIZE_PATH}
