@@ -2,7 +2,13 @@ import React from "react";
 import { PanelsTopLeft } from "lucide-react";
 import { useCanvasExtensionIcon } from "#/hooks/query/use-canvas-extension-icon";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
-import { StyledIcon } from "#/ui/styled-icon";
+import {
+  StyledIcon,
+  resolveBackgroundColor,
+  needsLightForeground,
+} from "#/ui/styled-icon";
+import { useFeedIconsStore } from "#/stores/feed-icons-store";
+import { canvasExtensionIconKey } from "#/utils/feed-icon-keys";
 import { cn } from "#/utils/utils";
 
 interface CanvasExtensionIconProps {
@@ -11,6 +17,29 @@ interface CanvasExtensionIconProps {
   className?: string;
   /** Whether to show the styled background (default: true when appearance is set). */
   showBackground?: boolean;
+}
+
+/** Colors a default tile can take: saturated enough to read behind a white icon. */
+const DEFAULT_TILE_COLORS = [
+  "blue",
+  "violet",
+  "pink",
+  "orange",
+  "emerald",
+  "teal",
+  "indigo",
+  "rose",
+  "sky",
+  "purple",
+] as const;
+
+/** An app that states no color gets a steady one drawn from its name. */
+function defaultIconBackground(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  }
+  return DEFAULT_TILE_COLORS[hash % DEFAULT_TILE_COLORS.length];
 }
 
 // Rendered via <img> (never inlined) so the SVG cannot run scripts.
@@ -25,7 +54,14 @@ export function CanvasExtensionIcon({
     Boolean(extension.manifest?.icon),
   );
   const [src, setSrc] = React.useState<string | null>(null);
-  const appearance = extension.manifest?.icon_appearance;
+  // The person's own choice (right-click in the nav) wins over the app's preference.
+  const custom = useFeedIconsStore(
+    (state) => state.icons[canvasExtensionIconKey(extension.name)],
+  );
+  const appearance = custom ??
+    extension.manifest?.icon_appearance ?? {
+      background: defaultIconBackground(extension.name),
+    };
   const hasAppearance = Boolean(
     appearance?.background || appearance?.emoji || appearance?.lucide_icon,
   );
@@ -60,6 +96,13 @@ export function CanvasExtensionIcon({
             height={Math.round(size * 0.6)}
             alt=""
             aria-hidden
+            className={
+              needsLightForeground(
+                resolveBackgroundColor(appearance?.background),
+              )
+                ? "brightness-0 invert"
+                : "brightness-0"
+            }
             onError={() => setSrc(null)}
           />
         ) : (

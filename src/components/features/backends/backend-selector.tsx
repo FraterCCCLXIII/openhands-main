@@ -468,6 +468,25 @@ export function BackendSelector({
             {t(I18nKey.BACKEND$LEFT_RAIL)}
           </button>
         ) : null}
+        {identityHeader ? (
+          <NavigationLink
+            to="/settings"
+            data-testid="backend-dropdown-settings"
+            onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            className={cn(
+              dropdownFooterActionClassName,
+              "cursor-pointer rounded-md",
+            )}
+          >
+            <span className={dropdownMenuRowIconWrapperClassName} aria-hidden>
+              <Settings width={16} height={16} />
+            </span>
+            {settingsLabel}
+          </NavigationLink>
+        ) : null}
         <button
           type="button"
           data-testid="manage-backends-menu-item"
@@ -531,16 +550,6 @@ export function BackendSelector({
             className="-ml-2.5 w-[calc(100%+0.625rem)] h-10 [&_input]:text-[15px] [&_input]:font-normal [&_input::placeholder]:text-contrast text-contrast [&_[data-testid=dropdown-trigger]]:text-muted pl-1.5 pr-2 py-0 bg-base-secondary border-transparent hover:bg-surface-raised focus-within:bg-surface-raised focus-within:border-transparent focus-within:ring-0"
           />
         </div>
-        {identityHeader ? (
-          <NavigationLink
-            to="/settings"
-            data-testid="backend-selector-header-settings"
-            aria-label={settingsLabel}
-            className="absolute right-9 top-1/2 z-10 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md bg-surface-raised text-muted opacity-0 transition-opacity hover:text-contrast group-hover:opacity-100 focus-visible:opacity-100"
-          >
-            <Settings width={16} height={16} />
-          </NavigationLink>
-        ) : null}
         {!hideTrigger && !identityHeader ? (
           <StyledTooltip
             content={settingsLabel}

@@ -16,5 +16,8 @@
         "description": "Video meetings with your team."
       }
     ]
+  },
+  "icon_appearance": {
+    "background": "blue"
   }
 }

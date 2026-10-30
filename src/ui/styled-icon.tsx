@@ -43,7 +43,7 @@ export function resolveBackgroundColor(
 }
 
 /** Determine if the background is dark enough to need white foreground text. */
-function needsLightForeground(bgColor: string): boolean {
+export function needsLightForeground(bgColor: string): boolean {
   // Simple heuristic: check if it's a hex color and calculate luminance
   if (bgColor.startsWith("#")) {
     const hex = bgColor.slice(1);

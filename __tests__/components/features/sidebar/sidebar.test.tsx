@@ -569,7 +569,7 @@ describe("Sidebar", () => {
     );
   });
 
-  it.each(["/customize", "/mcp", "/skills", "/plugins", "/apps"])(
+  it.each(["/customize", "/mcp", "/skills", "/plugins"])(
     "marks the Customize row as the current page on %s",
     (path) => {
       renderSidebar(path);
@@ -580,6 +580,18 @@ describe("Sidebar", () => {
       );
     },
   );
+
+  it("marks the Apps row, not Customize, as current on /apps", () => {
+    renderSidebar("/apps");
+
+    expect(screen.getByTestId("sidebar-apps-link")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByTestId("sidebar-skills-link")).not.toHaveAttribute(
+      "aria-current",
+    );
+  });
 
   it.each(["/conversations", "/automations"])(
     "does not mark the Customize row as current on %s",

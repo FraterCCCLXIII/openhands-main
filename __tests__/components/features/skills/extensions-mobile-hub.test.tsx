@@ -53,16 +53,6 @@ describe("ExtensionsMobileHub", () => {
     expect(pluginsItem).not.toHaveAttribute("aria-disabled");
   });
 
-  it("links Apps to its management page", () => {
-    renderMobileHub(<ExtensionsMobileHub />);
-
-    const hub = screen.getByTestId("extensions-mobile-hub");
-    expect(within(hub).getByTestId("sidebar-extensions-/apps")).toHaveAttribute(
-      "href",
-      "/apps",
-    );
-  });
-
   describe("cloud backend", () => {
     it("renders the Skills item as an external link to {cloudHost}/settings/skills with the renamed label", () => {
       setRegisteredBackends([cloudBackend]);

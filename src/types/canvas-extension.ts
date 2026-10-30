@@ -36,6 +36,14 @@ export interface CanvasExtensionManifest {
   icon?: string | null;
   /** Icon appearance settings for sidebar and cards. */
   icon_appearance?: CanvasExtensionIconAppearance | null;
+  /** Who made the app. */
+  author?: string | null;
+  /** Project or product page. */
+  homepage?: string | null;
+  /** Where to get help. */
+  support_url?: string | null;
+  /** SPDX identifier or name of the licence. */
+  license?: string | null;
 }
 
 export interface InstalledCanvasExtensionInfo {

@@ -5,6 +5,10 @@ import { ToggleSwitch } from "#/ui/toggle-switch";
 import { I18nKey } from "#/i18n/declaration";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 import { CanvasExtensionIcon } from "./canvas-extension-icon";
+import { Check, RefreshCw, Trash2 } from "lucide-react";
+import { KebabMenu } from "#/components/features/automations/kebab-menu";
+import { useDockedAppsStore } from "#/stores/docked-apps-store";
+import { useNavigation } from "#/context/navigation-context";
 import { canvasExtensionBannerUrl } from "#/utils/canvas-extension-banner";
 import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
 
@@ -14,6 +18,9 @@ interface CanvasExtensionCardProps {
   onToggle: () => void;
   onRefresh: () => void;
   onUninstall: () => void;
+  onDetails: () => void;
+  /** Where the app lives; absent while the app is off or has no page. */
+  openHref?: string | null;
 }
 
 export function CanvasExtensionCard({
@@ -22,16 +29,29 @@ export function CanvasExtensionCard({
   onToggle,
   onRefresh,
   onUninstall,
+  onDetails,
+  openHref,
 }: CanvasExtensionCardProps) {
   const { t } = useTranslation("openhands");
+  const { navigate } = useNavigation();
+  const docked = useDockedAppsStore((s) => !s.undocked[extension.name]);
+  const setDocked = useDockedAppsStore((s) => s.setDocked);
   const pages = extension.manifest?.contributes?.pages ?? [];
   const displayName = extension.manifest?.display_name || extension.name;
   const description = extension.description || extension.manifest?.description;
 
   return (
+    // The whole card opens the app for pointer users; keyboard users have the Open button.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <article
       data-testid={`canvas-extension-card-${extension.name}`}
-      className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5"
+      className={`flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5 ${openHref ? "cursor-pointer transition-colors hover:ring-white/15" : ""}`}
+      onClick={(event) => {
+        if (!openHref) return;
+        if ((event.target as HTMLElement).closest("button, a, [role=switch]"))
+          return;
+        navigate(openHref);
+      }}
     >
       <div
         className="relative flex h-36 items-end bg-(image:--banner-url) bg-cover bg-center px-4 pb-4"
@@ -42,7 +62,7 @@ export function CanvasExtensionCard({
         }
       >
         <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 to-black/10" />
-        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
+        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-linear-to-b from-white/20 to-white/5 inset-shadow-xs inset-shadow-white/40 shadow-md shadow-black/20 ring-1 ring-white/10">
           <CanvasExtensionIcon extension={extension} size={36} />
         </div>
         <ToggleSwitch
@@ -115,26 +135,49 @@ export function CanvasExtensionCard({
         ) : null}
       </div>
 
-      <footer className="flex justify-end gap-2 px-4 pb-4">
+      <footer className="flex items-center gap-2 px-4 pb-4">
         <BrandButton
           type="button"
-          variant="secondary"
-          testId={`canvas-extension-refresh-${extension.name}`}
-          isDisabled={isBusy}
-          onClick={onRefresh}
+          variant="primary"
+          testId={`canvas-extension-open-${extension.name}`}
+          isDisabled={!openHref}
+          onClick={() => openHref && navigate(openHref)}
         >
-          {t(I18nKey.SETTINGS$PLUGINS_REFRESH)}
+          {t(I18nKey.SETTINGS$APPS_OPEN)}
         </BrandButton>
         <BrandButton
           type="button"
-          variant="ghost-danger"
-          className="no-underline"
-          testId={`canvas-extension-uninstall-${extension.name}`}
-          isDisabled={isBusy}
-          onClick={onUninstall}
+          variant="tertiary"
+          testId={`canvas-extension-details-button-${extension.name}`}
+          onClick={onDetails}
         >
-          {t(I18nKey.SETTINGS$PLUGINS_UNINSTALL)}
+          {t(I18nKey.SETTINGS$APPS_DETAILS)}
         </BrandButton>
+        <KebabMenu
+          triggerTestId={`canvas-extension-menu-${extension.name}`}
+          items={[
+            {
+              label: t(I18nKey.SETTINGS$PLUGINS_REFRESH),
+              icon: <RefreshCw />,
+              disabled: isBusy,
+              testId: `canvas-extension-refresh-${extension.name}`,
+              onClick: onRefresh,
+            },
+            {
+              label: t(I18nKey.SETTINGS$APPS_ADD_TO_DOCK),
+              icon: docked ? <Check /> : <span className="size-4" />,
+              testId: `canvas-extension-dock-${extension.name}`,
+              onClick: () => setDocked(extension.name, !docked),
+            },
+            {
+              label: t(I18nKey.SETTINGS$PLUGINS_UNINSTALL),
+              icon: <Trash2 />,
+              disabled: isBusy,
+              testId: `canvas-extension-uninstall-${extension.name}`,
+              onClick: onUninstall,
+            },
+          ]}
+        />
       </footer>
     </article>
   );
