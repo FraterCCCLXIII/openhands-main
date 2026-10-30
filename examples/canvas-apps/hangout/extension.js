@@ -1160,9 +1160,10 @@ export function drawEyes(ctx, s, color) {
 
 export function createBlobScene(w, h, rand = Math.random) {
   const base = Math.min(w, h) * 0.105;
-  const lobes = Array.from({ length: 6 }, (_, i) => ({ a: (i / 6) * Math.PI * 2, d: base * 0.4, r: base * (0.58 + 0.14 * (i % 3)), sp: 0.45 + i * 0.12, ph: i * 1.7 }));
-  const scene = { w, h, base, rand, t: 0, lobes, minis: [], next: 0.6, bump: 0, balls: [], melted: 0, shed: 0, eyes: createEyes(rand), fx: w / 2, fy: h * 0.4, eyeR: base * 2, variant: null };
+  const lobes = Array.from({ length: LOBE_COUNT }, (_, i) => ({ a: (i / LOBE_COUNT) * Math.PI * 2, d: base * 0.42, r: base * (0.5 + 0.12 * (i % 3)), sp: 0.4 + i * 0.07, ph: i * 1.3, ox: null, oy: null, or: base * 0.5 }));
+  const scene = { w, h, base, rand, t: 0, lobes, minis: [], next: 0.6, bump: 0, balls: [], melted: 0, shed: 0, eyes: createEyes(rand), fx: w / 2, fy: h * 0.4, eyeR: base * 2, variant: null, shape: null, mainR: base };
   setBlobVariant(scene, "solid");
+  scene.shape = BLOB_SHAPES[0];
   stepBlobScene(scene, 0);
   return scene;
 }
@@ -1226,10 +1227,27 @@ export function stepBlobScene(s, dt) {
   s.minis = s.minis.filter((m) => !(m.state === "in" && m.r < base * 0.035));
   const baseRgb = (s.variant && s.variant.base) || BLOB_RGB;
   const grow = 1 + s.bump * 0.3;
-  const balls = [{ x: cx, y: cy, r: base * grow * (1 + 0.05 * Math.sin(t * 1.9)), rgb: baseRgb }];
-  s.lobes.forEach((l) => {
-    const reach = l.d * (1 + 0.28 * Math.sin(t * 1.3 + l.ph)) * grow;
-    balls.push({ x: cx + Math.cos(l.a + t * l.sp) * reach, y: cy + Math.sin(l.a + t * l.sp * 0.9) * reach, r: l.r * (1 + 0.14 * Math.sin(t * 2.1 + l.ph)), rgb: baseRgb });
+  const sh = s.shape || BLOB_SHAPES[0];
+  const ease = dt === 0 ? 1 : Math.min(1, dt * 6);
+  const mainTarget = base * grow * (sh.pts ? sh.main : 1) * (1 + 0.05 * Math.sin(t * 1.9));
+  s.mainR += (mainTarget - s.mainR) * ease;
+  const balls = [{ x: cx, y: cy, r: s.mainR, rgb: baseRgb }];
+  s.lobes.forEach((l, i) => {
+    let tx, ty, tr;
+    if (sh.pts) {
+      const p = sh.pts[i % sh.pts.length];
+      tx = p[0] * base * sh.k + Math.sin(t * 1.3 + l.ph) * base * 0.07;
+      ty = p[1] * base * sh.k + Math.cos(t * 1.1 + l.ph) * base * 0.07;
+      tr = base * sh.lr * (1 + 0.1 * Math.sin(t * 2.1 + l.ph));
+    } else {
+      const reach = l.d * (1 + 0.28 * Math.sin(t * 1.3 + l.ph)) * grow;
+      tx = Math.cos(l.a + t * l.sp) * reach;
+      ty = Math.sin(l.a + t * l.sp * 0.9) * reach;
+      tr = l.r * (1 + 0.14 * Math.sin(t * 2.1 + l.ph));
+    }
+    if (l.ox === null) { l.ox = tx; l.oy = ty; l.or = tr; }
+    l.ox += (tx - l.ox) * ease; l.oy += (ty - l.oy) * ease; l.or += (tr - l.or) * ease;
+    balls.push({ x: cx + l.ox, y: cy + l.oy, r: l.or, rgb: baseRgb });
   });
   s.minis.forEach((m) => {
     // Violet at the surface, its own hue once it is clear of the mass, violet again as it melts back in.
@@ -1332,6 +1350,79 @@ export function variantColorAt(scene, x, y) {
   return v.color ? v.color(x, y, scene.t, scene) : blobColorAt(scene.balls, x, y, v.base || BLOB_RGB);
 }
 
+
+// ─── Shapes the mass can take: each is an SVG outline, and the lobes glide to points along it ──
+
+const perimeter = (poly, n) => {
+  const pts = [...poly, poly[0]];
+  const lens = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+  const total = lens.reduce((a, b) => a + b, 0);
+  return Array.from({ length: n }, (_, k) => {
+    let d = (k / n) * total;
+    let i = 0;
+    while (i < lens.length - 1 && d > lens[i]) { d -= lens[i]; i += 1; }
+    const f = lens[i] ? d / lens[i] : 0;
+    return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f];
+  });
+};
+const around = (n, f) => Array.from({ length: n }, (_, i) => f((i / n) * Math.PI * 2, i));
+const LOBE_COUNT = 10;
+
+/** The outlines, in unit coordinates (about -1 to 1), as polygons. The same points draw the rail icons and place the lobes. */
+const SHAPE_POLYS = {
+  square: [[-0.95, -0.95], [0.95, -0.95], [0.95, 0.95], [-0.95, 0.95]],
+  triangle: [[0, -1.12], [1.05, 0.82], [-1.05, 0.82]],
+  star: around(10, (a, i) => { const r = i % 2 ? 0.42 : 1.2; const t = a - Math.PI / 2; return [Math.cos(t) * r, Math.sin(t) * r]; }),
+  heart: around(32, (a) => [(16 * Math.sin(a) ** 3) / 16 * 1.05, -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) / 16 * 1.05 + 0.08]),
+  cross: [[-0.36, -1], [0.36, -1], [0.36, -0.36], [1, -0.36], [1, 0.36], [0.36, 0.36], [0.36, 1], [-0.36, 1], [-0.36, 0.36], [-1, 0.36], [-1, -0.36], [-0.36, -0.36]],
+  pill: [...Array.from({ length: 11 }, (_, i) => { const a = -Math.PI / 2 + (i / 10) * Math.PI; return [0.95 + Math.cos(a) * 0.46, Math.sin(a) * 0.46]; }), ...Array.from({ length: 11 }, (_, i) => { const a = Math.PI / 2 + (i / 10) * Math.PI; return [-0.95 + Math.cos(a) * 0.46, Math.sin(a) * 0.46]; })],
+  hexagon: around(6, (a) => { const t = a - Math.PI / 2; return [Math.cos(t) * 1.08, Math.sin(t) * 1.08]; }),
+  drop: around(32, (a) => [Math.sin(a) * Math.sin(a / 2) * 1.2, -Math.cos(a) * 1.08]),
+};
+
+// How each outline is built from blobs: how far out the lobes sit (k), how big they are (lr) and how much the centre fills (main).
+const SHAPE_TUNING = {
+  square: { k: 1.25, lr: 0.6, main: 0.75 },
+  triangle: { k: 1.45, lr: 0.5, main: 0.5 },
+  star: { k: 1.7, lr: 0.4, main: 0.3 },
+  heart: { k: 1.45, lr: 0.52, main: 0.55 },
+  cross: { k: 1.6, lr: 0.5, main: 0.55 },
+  pill: { k: 1.6, lr: 0.56, main: 0.6 },
+  hexagon: { k: 1.35, lr: 0.6, main: 0.7 },
+  drop: { k: 1.5, lr: 0.5, main: 0.55 },
+};
+
+export const BLOB_SHAPES = [
+  { id: "blob", label: "Blob" },
+  ...Object.keys(SHAPE_POLYS).map((id) => ({ id, label: id[0].toUpperCase() + id.slice(1), poly: SHAPE_POLYS[id], pts: perimeter(SHAPE_POLYS[id], LOBE_COUNT), ...SHAPE_TUNING[id] })),
+];
+
+export function setBlobShape(scene, id) {
+  scene.shape = BLOB_SHAPES.find((sh) => sh.id === id) || BLOB_SHAPES[0];
+  scene.bump = Math.min(0.4, scene.bump + 0.25);
+}
+
+/** An SVG icon for a shape: its outline, or a loose blob for the organic one. */
+export function shapeIcon(shape) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("fill", "currentColor");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linejoin", "round");
+  if (shape.poly) {
+    const poly = document.createElementNS(SVG_NS, "polygon");
+    poly.setAttribute("points", shape.poly.map(([x, y]) => `${(12 + x * 9).toFixed(1)},${(12 + y * 9).toFixed(1)}`).join(" "));
+    svg.append(poly);
+  } else {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", "M12 3c4 0 8 2.2 8.6 6.4.5 3.5-1.7 4.6-1.6 7C18.8 20 14.8 21.5 11 21 6.6 20.4 3.4 17.6 3.5 13.4 3.6 10 6 8.8 6.4 6.6 6.8 4.4 9 3 12 3Z");
+    svg.append(path);
+  }
+  return svg;
+}
+
 /** The flat colour at a point: each blob's colour weighted by how much of the field it supplies there. */
 export function blobColorAt(balls, x, y, fallback = BLOB_RGB) {
   let f = 0, r = 0, g = 0, b = 0;
@@ -1404,11 +1495,11 @@ const CSS = `
 .hg .sreset { border: 1px solid var(--hg-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hg .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
 .hg .powered b { color: var(--hg-text); font-weight: 600; }
-.hg .welcome .wdots { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
+.hg .welcome .wdots { display: flex; justify-content: flex-start; gap: 8px; margin-top: 2px; padding-left: 3px; }
 .hg .welcome .wdot { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: 0; cursor: pointer; transition: transform .12s; }
 .hg .welcome .wdot:hover { transform: scale(1.35); }
 .hg .welcome .wdot[aria-pressed="true"] { outline: 1.5px solid #fff; outline-offset: 2px; transform: scale(1.1); }
-.hg .welcome .wvariant { margin-top: 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+.hg .welcome .wvariant { margin-top: -2px; padding-left: 3px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }
 .hg .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: rgba(255,255,255,.62); }
 .hg .welcome .wpowered b { color: #fff; }
 .hg .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hg-border); background: var(--hg-bg); }
@@ -1693,12 +1784,18 @@ const CSS = `
 .hg .welcome .wcanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hg .welcome .wbox { position: relative; display: grid; justify-items: center; }
 .hg .welcome h1, .hg .welcome p { color: #fff; text-shadow: none; }
-.hg .welcome .wmodes { display: inline-flex; gap: 2px; margin-top: 34px; padding: 2px; border-radius: 999px; background: rgba(0,0,0,.28); }
+.hg .welcome .wcorner { position: absolute; left: 18px; bottom: 18px; display: grid; justify-items: start; gap: 10px; text-align: left; }
+.hg .welcome .wshapes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(255,255,255,.07); }
+.hg .welcome .wshape { width: 26px; height: 26px; padding: 4px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,.55); cursor: pointer; display: grid; place-items: center; }
+.hg .welcome .wshape svg { width: 100%; height: 100%; display: block; }
+.hg .welcome .wshape:hover { color: #fff; background: rgba(255,255,255,.08); }
+.hg .welcome .wshape[aria-pressed="true"] { color: #fff; background: rgba(139,92,246,.45); }
+.hg .welcome .wmodes { display: inline-flex; gap: 2px; margin-top: 0; padding: 2px; border-radius: 999px; background: rgba(0,0,0,.28); }
 .hg .welcome .wmode { border: 0; background: transparent; color: rgba(255,255,255,.75); border-radius: 999px; padding: 3px 12px; font-size: 12px; cursor: pointer; }
 .hg .welcome .wmode[aria-pressed="true"] { background: rgba(255,255,255,.92); color: #1a1030; }
-.hg .welcome h1 { margin: 0 0 6px; font-size: 40px; color: var(--hg-contrast); }
-.hg .welcome p { margin: 0 0 18px; max-width: 260px; }
-.hg .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 10px 22px; font-weight: 600; cursor: pointer; }
+.hg .welcome h1 { margin: 0 0 6px; font-size: 40px; font-weight: 300; letter-spacing: -.01em; color: var(--hg-contrast); }
+.hg .welcome p { margin: 0 0 18px; max-width: 260px; font-weight: 300; }
+.hg .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 10px 22px; font-weight: 400; cursor: pointer; }
 @media (max-width: 640px) {
   .hg .computercol .mbar { display: flex !important; }
   .hg .shell, .hg .shell.nodrawer, .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: minmax(0, 1fr); }
@@ -1882,6 +1979,7 @@ function mount(host, container) {
     pane: "list",
     welcomed: Boolean(saved.welcomed),
     welcomeStyle: saved.welcomeStyle === "voxel" ? "voxel" : "smooth",
+    welcomeShape: BLOB_SHAPES.some((x) => x.id === saved.welcomeShape) ? saved.welcomeShape : "blob",
     welcomeVariant: BLOB_VARIANTS.some((v) => v.id === saved.welcomeVariant) ? saved.welcomeVariant : "solid",
     looks: saved.looks || {},
     drawerOpen: saved.drawerOpen !== false,
@@ -1892,7 +1990,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, welcomeShape: state.welcomeShape, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -2845,16 +2943,27 @@ function mount(host, container) {
       dots.querySelectorAll(".wdot").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.variant === id)));
       vlabel.textContent = BLOB_VARIANTS.find((v) => v.id === id)?.label || "";
     };
+    const pickShape = (id) => {
+      state.welcomeShape = id;
+      persist();
+      if (liveScene) setBlobShape(liveScene, id);
+      shapes.querySelectorAll(".wshape").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.shape === id)));
+    };
+    const stepShape = (dir) => {
+      const i = BLOB_SHAPES.findIndex((x) => x.id === state.welcomeShape);
+      pickShape(BLOB_SHAPES[(i + dir + BLOB_SHAPES.length) % BLOB_SHAPES.length].id);
+    };
     const step = (dir) => {
       const i = BLOB_VARIANTS.findIndex((v) => v.id === state.welcomeVariant);
       choose(BLOB_VARIANTS[(i + dir + BLOB_VARIANTS.length) % BLOB_VARIANTS.length].id);
     };
     const onKeys = (ev) => {
-      if ((ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+      if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(ev.key) || ev.metaKey || ev.ctrlKey || ev.altKey) return;
       const tag = ev.target && ev.target.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || ev.target?.isContentEditable) return;
       ev.preventDefault();
-      step(ev.key === "ArrowRight" ? 1 : -1);
+      if (ev.key === "ArrowUp" || ev.key === "ArrowDown") stepShape(ev.key === "ArrowDown" ? 1 : -1);
+      else step(ev.key === "ArrowRight" ? 1 : -1);
     };
     document.addEventListener("keydown", onKeys);
     stopKeys = () => document.removeEventListener("keydown", onKeys);
@@ -2869,8 +2978,24 @@ function mount(host, container) {
       d.addEventListener("click", () => choose(v.id));
       dots.append(d);
     });
-    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go, modes, dots, vlabel);
-    w.append(box, poweredBy("wpowered"));
+    const shapes = el("div", "wshapes");
+    shapes.setAttribute("role", "group");
+    shapes.setAttribute("aria-label", "Blob shape");
+    BLOB_SHAPES.forEach((sh) => {
+      const b = el("button", "wshape");
+      b.type = "button";
+      b.title = sh.label;
+      b.dataset.shape = sh.id;
+      b.setAttribute("aria-label", sh.label);
+      b.setAttribute("aria-pressed", String(state.welcomeShape === sh.id));
+      b.append(shapeIcon(sh));
+      b.addEventListener("click", () => pickShape(sh.id));
+      shapes.append(b);
+    });
+    const corner = el("div", "wcorner");
+    corner.append(shapes, modes, dots, vlabel);
+    box.append(el("h1", "", "Hangout"), el("p", "", "Your team of always-on agents that finish the work."), go);
+    w.append(box, corner, poweredBy("wpowered"));
 
     const ctx = canvas.getContext?.("2d");
     if (ctx) {
@@ -2887,6 +3012,7 @@ function mount(host, container) {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         scene = createBlobScene(cw, ch);
         setBlobVariant(scene, state.welcomeVariant);
+        scene.shape = BLOB_SHAPES.find((x) => x.id === state.welcomeShape) || BLOB_SHAPES[0];
         liveScene = scene;
         for (let n = 0; n < 40; n += 1) stepBlobScene(scene, 0.1);
         if (still) { drawBlobScene(ctx, off, scene, state.welcomeStyle, [139, 92, 246]); drawEyes(ctx, scene, scene.variant.eye); }

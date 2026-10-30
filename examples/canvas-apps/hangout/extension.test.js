@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, BLOB_SHAPES, setBlobShape, shapeIcon, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -217,7 +217,7 @@ describe("blob eyes", () => {
     for (let t = 0; t < 30; t += 0.05) {
       stepBlobScene(s, 0.05);
       if (Math.round(t * 20) % 20 === 0) {
-        const mass = s.balls.slice(0, 7);
+        const mass = s.balls.slice(0, 1 + s.lobes.length);
         let sx = 0, sy = 0, n = 0;
         for (let y = 0; y < 800; y += 4) for (let x = 0; x < 1200; x += 4) if (blobField(mass, x, y) >= 1) { sx += x; sy += y; n += 1; }
         expect(Math.abs(sx / n - s.fx)).toBeLessThan(s.eyeR * 0.08);
@@ -232,7 +232,7 @@ describe("blob eyes", () => {
     for (let t = 0; t < 40; t += 0.05) {
       stepBlobScene(s, 0.05);
       if (Math.round(t * 20) % 8 === 0) {
-        eyesOf(s).flat().forEach((p) => { worst = Math.min(worst, blobField(s.balls.slice(0, 7), p.x, p.y)); });
+        eyesOf(s).flat().forEach((p) => { worst = Math.min(worst, blobField(s.balls.slice(0, 1 + s.lobes.length), p.x, p.y)); });
       }
     }
     expect(worst).toBeGreaterThan(0.85);
@@ -248,6 +248,44 @@ describe("blob eyes", () => {
     s.eyes.pointer = { x: s.fx + 400, y: s.fy, at: s.t };
     for (let t = 0; t < 1; t += 0.02) stepBlobScene(s, 0.02);
     expect(s.eyes.yaw).toBeGreaterThan(0.3);
+  });
+});
+
+describe("blob shapes", () => {
+  const shaped = (id) => { const s = createBlobScene(1200, 800, seededRandom(6)); setBlobShape(s, id); for (let t = 0; t < 5; t += 0.05) stepBlobScene(s, 0.05); return s; };
+  const extent = (s) => {
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    const mass = s.balls.slice(0, 1 + s.lobes.length);
+    for (let y = 0; y < 800; y += 5) for (let x = 0; x < 1200; x += 5) if (blobField(mass, x, y) >= 1) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    return { w: x1 - x0, h: y1 - y0 };
+  };
+
+  it("has at least nine shapes, each an SVG outline with points for the lobes", () => {
+    expect(BLOB_SHAPES.length).toBeGreaterThanOrEqual(9);
+    BLOB_SHAPES.slice(1).forEach((sh) => { expect(sh.poly.length).toBeGreaterThanOrEqual(3); expect(sh.pts).toHaveLength(10); });
+    BLOB_SHAPES.forEach((sh) => { const svg = shapeIcon(sh); expect(svg.querySelector("polygon, path")).toBeTruthy(); });
+  });
+
+  it("morphs the mass into the chosen outline and stays one solid body", () => {
+    const pill = extent(shaped("pill"));
+    expect(pill.w).toBeGreaterThan(pill.h * 1.35);
+    const square = extent(shaped("square"));
+    expect(Math.abs(square.w - square.h)).toBeLessThan(square.w * 0.25);
+    BLOB_SHAPES.forEach((sh) => {
+      const s = shaped(sh.id);
+      expect(blobField(s.balls, s.fx, s.fy)).toBeGreaterThan(1);
+      expect(s.eyeR).toBeGreaterThan(s.base * 0.8);
+    });
+  });
+
+  it("glides rather than jumping when the shape changes", () => {
+    const s = shaped("blob");
+    const before = s.lobes.map((l) => [l.ox, l.oy]);
+    setBlobShape(s, "star");
+    stepBlobScene(s, 0.016);
+    const moved = s.lobes.map((l, i) => Math.hypot(l.ox - before[i][0], l.oy - before[i][1]));
+    expect(Math.max(...moved)).toBeLessThan(s.base * 0.9);
+    expect(Math.max(...moved)).toBeGreaterThan(0);
   });
 });
 
@@ -323,6 +361,30 @@ describe("blob variations", () => {
     expect(container.querySelector(".wdot[data-variant='solid']").getAttribute("aria-pressed")).toBe("false");
     expect(container.querySelector(".wvariant").textContent).toBe("Rainbow");
     expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeVariant).toBe("rainbow");
+    dispose();
+  });
+
+  it("puts the controls in the lower-left corner with a rail of SVG shapes that changes the blob", () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    const corner = container.querySelector(".welcome .wcorner");
+    expect(corner.querySelector(".wmodes")).toBeTruthy();
+    expect(corner.querySelector(".wdots")).toBeTruthy();
+    expect(container.querySelector(".wbox .wmodes")).toBeNull();
+    const buttons = [...corner.querySelectorAll(".wshape")];
+    expect(buttons.length).toBe(BLOB_SHAPES.length);
+    buttons.forEach((b) => expect(b.querySelector("svg")).toBeTruthy());
+    expect(buttons[0].getAttribute("aria-pressed")).toBe("true");
+    corner.querySelector('.wshape[data-shape="heart"]').click();
+    expect(corner.querySelector('.wshape[data-shape="heart"]').getAttribute("aria-pressed")).toBe("true");
+    expect(JSON.parse(localStorage.getItem("hangout:v1")).welcomeShape).toBe("heart");
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    expect(corner.querySelector(".wshape[aria-pressed='true']").dataset.shape).toBe(BLOB_SHAPES[BLOB_SHAPES.findIndex((x) => x.id === "heart") + 1].id);
     dispose();
   });
 
