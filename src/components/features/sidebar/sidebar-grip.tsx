@@ -74,7 +74,7 @@ export function SidebarGrip({
         drag.current = null;
       }}
       className={cn(
-        "group flex w-full cursor-row-resize touch-none flex-col items-center gap-1 rounded-lg px-2 pb-1 pt-1.5 text-xs text-muted",
+        "group flex w-full shrink-0 cursor-row-resize touch-none flex-col items-center gap-1 rounded-lg px-2 pb-1 pt-1.5 text-xs text-muted",
         "hover:text-contrast focus-visible:text-contrast",
       )}
     >
