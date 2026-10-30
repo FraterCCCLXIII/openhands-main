@@ -335,7 +335,7 @@ const CSS = `
 .mt .cname { font-weight: 600; color: var(--mt-contrast); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mt .csub { display: block; font-size: 12px; font-weight: 400; color: var(--mt-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mt .mini { white-space: nowrap; border: 1px solid var(--mt-border); background: var(--mt-panel); border-radius: 8px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
-.mt .importbox { display: grid; gap: 6px; padding: 10px; border-bottom: 1px solid var(--mt-border); min-width: 0; }
+.mt .importbox { display: grid; gap: 8px; min-width: 0; }
 .mt .importbox > * { min-width: 0; max-width: 100%; width: 100%; }
 .mt .importbox input[type="file"] { font-size: 12px; padding: 6px; }
 .mt .importbox textarea { min-height: 90px; resize: vertical; padding: 8px; border-radius: 10px; border: 1px solid var(--mt-border); background: var(--mt-panel); color: var(--mt-text); font: 12px ui-monospace, monospace; }
@@ -637,6 +637,110 @@ function mount(container, host) {
     renderSettings();
   }
 
+  /** Add one person, or bring in many at once. */
+  function addContactsModal() {
+    const scrim = el("div", "scrim");
+    const close = () => { state.importing = false; render(); };
+    scrim.addEventListener("click", (ev) => { if (ev.target === scrim) close(); });
+    const modal = el("div", "modal");
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-label", "Add contacts");
+    modal.append(el("h2", "", "Add contacts"));
+    const tabs = el("div", "sharetabs");
+    [["person", "Person"], ["bulk", "Bulk import"]].forEach(([id, label]) => {
+      const t = el("button", "mini", label);
+      t.type = "button";
+      t.setAttribute("aria-pressed", String((state.addTab || "person") === id));
+      t.addEventListener("click", () => { state.addTab = id; state.importNote = ""; render(); });
+      tabs.append(t);
+    });
+    modal.append(tabs);
+    if ((state.addTab || "person") === "person") {
+      const draft = state.draft || (state.draft = { name: "", email: "", phone: "" });
+      [["Name", "name", "text"], ["Email", "email", "email"], ["Phone", "phone", "tel"]].forEach(([label, key, type]) => {
+        const wrap = el("label", "", label);
+        const input = el("input");
+        input.type = type;
+        input.value = draft[key];
+        input.addEventListener("input", () => { draft[key] = input.value; });
+        wrap.append(input);
+        modal.append(wrap);
+      });
+      const add = el("button", "primary", "Add contact");
+      add.type = "button";
+      add.addEventListener("click", () => {
+        if (!draft.name.trim()) { state.importNote = "Enter a name."; render(); return; }
+        const { book, added } = mergeContacts(state.contacts, [{ name: draft.name.trim(), email: draft.email.trim(), phone: draft.phone.trim() }]);
+        state.contacts = book;
+        state.importNote = added ? `Added ${draft.name.trim()}.` : "That person is already in your contacts.";
+        if (added) { state.draft = { name: "", email: "", phone: "" }; persist(); }
+        render();
+      });
+      modal.append(add);
+    } else {
+      const box = el("div", "importbox");
+    const area = el("textarea");
+    area.placeholder = "Paste CSV (Name, Email, Phone) or vCard text";
+    area.setAttribute("aria-label", "Contacts to import");
+    area.value = state.importText;
+    area.addEventListener("input", () => { state.importText = area.value; });
+    const file = el("input");
+    file.type = "file";
+    file.accept = ".csv,.vcf,text/csv,text/vcard";
+    file.setAttribute("aria-label", "Contacts file");
+    file.addEventListener("change", async () => { const f = file.files?.[0]; if (f) { state.importText = await f.text(); area.value = state.importText; } });
+    const go = el("button", "primary", "Import");
+    go.type = "button";
+    go.addEventListener("click", () => {
+      const found = parseContacts(state.importText);
+      const { book, added } = mergeContacts(state.contacts, found);
+      state.contacts = book;
+      state.importNote = found.length ? `Added ${added} of ${found.length} (skipped duplicates).` : "No contacts found in that text.";
+      if (added) { state.importText = ""; persist(); }
+      render();
+    });
+    box.append(area, file, go);
+    const gh = el("input");
+    gh.type = "text";
+    gh.name = "meet-github-ref";
+    gh.autocomplete = "off";
+    gh.setAttribute("data-1p-ignore", "true");
+    gh.setAttribute("data-lpignore", "true");
+    gh.placeholder = "GitHub repo or PR, e.g. OpenHands/OpenHands#123";
+    gh.setAttribute("aria-label", "GitHub repo or pull request");
+    gh.value = state.ghRef;
+    gh.addEventListener("input", () => { state.ghRef = gh.value; });
+    const ghGo = el("button", "mini", "Import from GitHub");
+    ghGo.type = "button";
+    ghGo.addEventListener("click", async () => {
+      const ref = parseGithubRef(state.ghRef);
+      if (!ref) { state.importNote = "Enter owner/repo, owner/repo#12, or a GitHub repo or pull request URL."; render(); return; }
+      state.importNote = "Fetching people from GitHub…"; render();
+      try {
+        const token = await connectedGithubToken((req) => host.agentServer.request(req));
+        const people = await fetchGithubPeople(fetch, ref, { token });
+        const { book, added } = mergeContacts(state.contacts, people, "github");
+        state.contacts = book;
+        state.importNote = `Added ${added} of ${people.length} from ${ref.owner}/${ref.repo}${ref.pr ? `#${ref.pr}` : ""}.`;
+        if (added) persist();
+      } catch (err) { state.importNote = String(err?.message || err); }
+      render();
+    });
+    box.append(gh, ghGo, el("p", "note", "Uses the GitHub account connected to OpenHands when there is one; otherwise public repos and PRs only."));
+    if (state.importNote) box.append(el("p", "note", state.importNote));
+      modal.append(box);
+    }
+    if (state.importNote) modal.append(el("p", "note", state.importNote));
+    const foot = el("div", "modalfoot");
+    const done = el("button", "mini", "Done");
+    done.type = "button";
+    done.addEventListener("click", close);
+    foot.append(done);
+    modal.append(foot);
+    scrim.append(modal);
+    return scrim;
+  }
+
   function settingsModal() {
     const scrim = el("div", "scrim");
     scrim.addEventListener("click", (ev) => { if (ev.target === scrim) { state.settings = false; render(); } });
@@ -719,7 +823,7 @@ function mount(container, host) {
       return b;
     };
     head.append(
-      icon(state.importing ? "Close import" : "Import contacts", ["M12 4v11", "m7 10 5 5 5-5", "M5 20h14"], () => { state.importing = !state.importing; render(); }, state.importing),
+      icon(state.importing ? "Close" : "Add contacts", ["M12 4v11", "m7 10 5 5 5-5", "M5 20h14"], () => { state.importing = !state.importing; render(); }, state.importing),
       icon("Settings", ["M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z", "M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"], () => { state.settings = true; render(); if (!Object.keys(state.checks).length) runChecks(); }),
     );
     const search = el("input");
@@ -730,59 +834,6 @@ function mount(container, host) {
     search.addEventListener("input", () => { state.query = search.value; renderNav(); });
     top.append(head, search);
     nav.append(top);
-    if (state.importing) {
-      const box = el("div", "importbox");
-      const area = el("textarea");
-      area.placeholder = "Paste CSV (Name, Email, Phone) or vCard text";
-      area.setAttribute("aria-label", "Contacts to import");
-      area.value = state.importText;
-      area.addEventListener("input", () => { state.importText = area.value; });
-      const file = el("input");
-      file.type = "file";
-      file.accept = ".csv,.vcf,text/csv,text/vcard";
-      file.setAttribute("aria-label", "Contacts file");
-      file.addEventListener("change", async () => { const f = file.files?.[0]; if (f) { state.importText = await f.text(); area.value = state.importText; } });
-      const go = el("button", "primary", "Import");
-      go.type = "button";
-      go.addEventListener("click", () => {
-        const found = parseContacts(state.importText);
-        const { book, added } = mergeContacts(state.contacts, found);
-        state.contacts = book;
-        state.importNote = found.length ? `Added ${added} of ${found.length} (skipped duplicates).` : "No contacts found in that text.";
-        if (added) { state.importText = ""; persist(); }
-        render();
-      });
-      box.append(area, file, go);
-      const gh = el("input");
-      gh.type = "text";
-      gh.name = "meet-github-ref";
-      gh.autocomplete = "off";
-      gh.setAttribute("data-1p-ignore", "true");
-      gh.setAttribute("data-lpignore", "true");
-      gh.placeholder = "GitHub repo or PR, e.g. OpenHands/OpenHands#123";
-      gh.setAttribute("aria-label", "GitHub repo or pull request");
-      gh.value = state.ghRef;
-      gh.addEventListener("input", () => { state.ghRef = gh.value; });
-      const ghGo = el("button", "mini", "Import from GitHub");
-      ghGo.type = "button";
-      ghGo.addEventListener("click", async () => {
-        const ref = parseGithubRef(state.ghRef);
-        if (!ref) { state.importNote = "Enter owner/repo, owner/repo#12, or a GitHub repo or pull request URL."; render(); return; }
-        state.importNote = "Fetching people from GitHub…"; render();
-        try {
-          const token = await connectedGithubToken((req) => host.agentServer.request(req));
-          const people = await fetchGithubPeople(fetch, ref, { token });
-          const { book, added } = mergeContacts(state.contacts, people, "github");
-          state.contacts = book;
-          state.importNote = `Added ${added} of ${people.length} from ${ref.owner}/${ref.repo}${ref.pr ? `#${ref.pr}` : ""}.`;
-          if (added) persist();
-        } catch (err) { state.importNote = String(err?.message || err); }
-        render();
-      });
-      box.append(gh, ghGo, el("p", "note", "Uses the GitHub account connected to OpenHands when there is one; otherwise public repos and PRs only."));
-      if (state.importNote) box.append(el("p", "note", state.importNote));
-      nav.append(box);
-    }
     nav.append(el("div", "clist"));
     nav.append(techRail(["webrtc", "livekit", "github"]));
     return nav;
@@ -1080,6 +1131,7 @@ function mount(container, host) {
     }
     renderNav();
     if (state.settings) root.append(settingsModal());
+    if (state.importing) root.append(addContactsModal());
   }
 
   render();
