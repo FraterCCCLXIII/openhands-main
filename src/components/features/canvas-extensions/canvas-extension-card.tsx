@@ -1,9 +1,11 @@
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { ToggleSwitch } from "#/ui/toggle-switch";
 import { I18nKey } from "#/i18n/declaration";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 import { CanvasExtensionIcon } from "./canvas-extension-icon";
+import { canvasExtensionBannerUrl } from "#/utils/canvas-extension-banner";
 import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
 
 interface CanvasExtensionCardProps {
@@ -31,8 +33,16 @@ export function CanvasExtensionCard({
       data-testid={`canvas-extension-card-${extension.name}`}
       className="flex min-w-0 flex-col overflow-hidden rounded-2xl bg-base-secondary ring-1 ring-white/5"
     >
-      <div className="relative flex h-36 items-end bg-linear-to-br from-cool-grey-900 via-base-secondary to-canvas-base px-4 pb-4">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
+      <div
+        className="relative flex h-36 items-end bg-(image:--banner-url) bg-cover bg-center px-4 pb-4"
+        style={
+          {
+            "--banner-url": `url("${canvasExtensionBannerUrl(extension.name)}")`,
+          } as React.CSSProperties
+        }
+      >
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 to-black/10" />
+        <div className="relative flex size-16 items-center justify-center rounded-2xl bg-white/10 shadow-xl ring-1 ring-white/10">
           <CanvasExtensionIcon extension={extension} size={36} />
         </div>
         <ToggleSwitch
@@ -50,8 +60,6 @@ export function CanvasExtensionCard({
         <h3 className="truncate text-base font-semibold text-contrast">
           {displayName}
         </h3>
-        <p className="truncate text-xs text-tertiary-alt">{extension.source}</p>
-
         {description ? (
           <p className="line-clamp-2 text-xs leading-relaxed text-tertiary-light">
             {description}
@@ -120,6 +128,7 @@ export function CanvasExtensionCard({
         <BrandButton
           type="button"
           variant="ghost-danger"
+          className="no-underline"
           testId={`canvas-extension-uninstall-${extension.name}`}
           isDisabled={isBusy}
           onClick={onUninstall}

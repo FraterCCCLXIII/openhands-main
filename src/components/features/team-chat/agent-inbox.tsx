@@ -3,11 +3,8 @@ import { useTranslation } from "react-i18next";
 import type { TeamClient } from "#/chat-transport/nostr";
 import { I18nKey } from "#/i18n/declaration";
 import { useOpenHandsReply } from "#/hooks/team-chat/use-openhands-reply";
-import {
-  selectMyAgents,
-  useTeamChatStore,
-  type ReplyMode,
-} from "#/stores/team-chat-store";
+import { selectMyAgents, type ReplyMode } from "#/stores/team-chat-store";
+import { useTeamStore } from "#/stores/team-chat-store-context";
 import {
   pendingAgentRequests,
   requestText,
@@ -21,10 +18,10 @@ import {
 
 /** The requests that wait on me, with the agent's "waiting" reply posted once for each. */
 export function useAgentRequests(client: TeamClient) {
-  const account = useTeamChatStore((s) => s.account);
-  const agents = useTeamChatStore(selectMyAgents);
-  const requests = useTeamChatStore((s) => s.requests);
-  const setRequestProgress = useTeamChatStore((s) => s.setRequestProgress);
+  const account = useTeamStore((s) => s.account);
+  const agents = useTeamStore(selectMyAgents);
+  const requests = useTeamStore((s) => s.requests);
+  const setRequestProgress = useTeamStore((s) => s.setRequestProgress);
   const { t } = useTranslation("openhands");
   const messages = client.messages();
   const pending = useMemo(
@@ -70,9 +67,9 @@ function RequestCard({
   client: TeamClient;
 }) {
   const { t } = useTranslation("openhands");
-  const account = useTeamChatStore((s) => s.account);
-  const mode = useTeamChatStore((s) => s.replyModes[request.agent.pubkey]);
-  const setRequestProgress = useTeamChatStore((s) => s.setRequestProgress);
+  const account = useTeamStore((s) => s.account);
+  const mode = useTeamStore((s) => s.replyModes[request.agent.pubkey]);
+  const setRequestProgress = useTeamStore((s) => s.setRequestProgress);
   const askOpenHands = useOpenHandsReply();
   const [busy, setBusy] = useState(false);
   const owner = account?.name ?? "";
@@ -185,8 +182,8 @@ const MODES: Array<{ id: ReplyMode; label: I18nKey }> = [
 /** The "Reply with" switch for one agent. */
 export function ReplyModeSwitch({ agentPubkey }: { agentPubkey: string }) {
   const { t } = useTranslation("openhands");
-  const mode = useTeamChatStore((s) => s.replyModes[agentPubkey] ?? "demo");
-  const setReplyMode = useTeamChatStore((s) => s.setReplyMode);
+  const mode = useTeamStore((s) => s.replyModes[agentPubkey] ?? "demo");
+  const setReplyMode = useTeamStore((s) => s.setReplyMode);
   return (
     <div
       role="radiogroup"

@@ -1,7 +1,9 @@
 import { getMarsBridge } from "#/api/mars/mars-tunnel-backend";
 import { ConversationPanel } from "#/components/features/conversation-panel/conversation-panel";
 import { useActiveBackend } from "#/contexts/active-backend-context";
+import { isFeedTeamDemoEnabled } from "#/utils/feed-team-demo";
 import { MarsSessionPanel } from "./mars-session-panel";
+import { SidebarFactories } from "./sidebar-factories";
 
 interface SidebarConversationListProps {
   /**
@@ -47,7 +49,12 @@ export function SidebarConversationList({
         {showMarsSessions ? (
           <MarsSessionPanel backend={backend} />
         ) : (
-          <ConversationPanel />
+          <>
+            {isFeedTeamDemoEnabled(window.location.search) ? (
+              <SidebarFactories />
+            ) : null}
+            <ConversationPanel />
+          </>
         )}
       </div>
     </div>
