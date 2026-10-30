@@ -1,0 +1,37 @@
+{
+  "stash:stash@{0}": {
+    "status": "explore", "priority": "low", "tags": ["ui", "canvas-extensions"],
+    "notes": "One-line fix: SVG extension icons render black in an <img> on dark theme, so add invert + opacity-65. Not on any branch or main. Saved as branch stash/canvas-extension-icon-invert."
+  },
+  "stash:stash@{1}": {
+    "status": "duplicate", "priority": "low", "tags": ["agent-notifications"],
+    "notes": "Save-for-later bookmark on agent notifications. Strict subset of stash@{2}; nothing unique. Safe to drop once stash@{2} is reviewed."
+  },
+  "stash:stash@{2}": {
+    "status": "explore", "priority": "medium", "tags": ["ui", "agent-notifications", "skills"],
+    "notes": "Three things: (1) run-command button on code blocks, identical to branch feat/run-command-button; (2) save-for-later on agent notifications; (3) compact skill-card header. None merged. Saved as branch stash/run-command-notif-skillcard."
+  },
+  "stash:stash@{3}": {
+    "status": "explore", "priority": "high", "tags": ["kosmic", "webview", "team", "feed"],
+    "notes": "37-file grab-bag on kosmic-app-cards-integration. Some files already live on paul/automation-modal-wip, paul/setup-choice-modal-tabs, paul/template-chip-rail and fix/onboarding-modal-race-condition. Unique parts: webview chrome bar, canvas-ui client tool, HMR overlay, /team route, feed-card-reply, KOSMIC_APP_CARDS_SPEC.md, kosmos cost/process HTML. .env.local was left out of the branch on purpose. Saved as branch stash/kosmic-cards-webview-team; split before any PR."
+  },
+  "stash:stash@{4}": {
+    "status": "keep", "priority": "low", "tags": ["demo", "usal-token-demo"],
+    "notes": "Demo scaffolding parked before reviewing PR 18566: forced subagent mock, live.py changes, two 10-seed result JSONs, search button removed from the conversation panel, banner icon colour. Not product code. Saved as branch stash/usal-forced-subagent-mock."
+  },
+  "stash:stash@{5}": { "status": "unreviewed", "tags": ["pricing"], "notes": "Made before switching to PR 17688 (Sep 24). Not yet explored." },
+  "stash:stash@{6}": { "status": "unreviewed", "tags": ["mockup"], "notes": "Labelled unrelated-wip on mockup/third-party-backend-modals (Sep 17). Not yet explored." },
+  "stash:stash@{7}": { "status": "unreviewed", "tags": ["automations", "mock-data"], "notes": "Automations demo mock data (Aug 19). Likely obsolete; check against polish/home-rail-and-pinned." },
+  "stash:stash@{8}": { "status": "unreviewed", "tags": ["backup"], "notes": "lint-staged automatic backup (Aug 18). Almost certainly obsolete." },
+  "stash:stash@{9}": { "status": "unreviewed", "tags": ["dev-config"], "notes": "Local seed-automation-ux-data defaults for :8000 (Aug 18). Local-only config." },
+  "branch:stash/canvas-extension-icon-invert": { "status": "explore", "notes": "From stash@{0}." },
+  "branch:stash/run-command-notif-skillcard": { "status": "explore", "notes": "From stash@{2}; supersedes feat/run-command-button." },
+  "branch:stash/kosmic-cards-webview-team": { "status": "explore", "priority": "high", "notes": "From stash@{3}. Needs splitting." },
+  "branch:stash/usal-forced-subagent-mock": { "status": "keep", "notes": "From stash@{4}. Demo only." },
+  "branch:feat/run-command-button": { "status": "duplicate", "notes": "Same change as the run-command part of stash/run-command-notif-skillcard. Never pushed." },
+  "branch:paul/all-apps-preview": { "status": "keep", "priority": "high", "notes": "46 commits, never pushed. Back it up first." },
+  "branch:usal-token-demo": { "status": "keep", "priority": "high", "notes": "36 commits, never pushed." },
+  "branch:combined-all-work": { "status": "keep", "priority": "high", "notes": "53 commits, not pushed." },
+  "branch:popouts-on-main": { "status": "explore", "notes": "Only 3 ahead of main, but 888 commits not on its remote: probably rebased. Check what the 3 are." },
+  "branch:openhands-proto": { "status": "explore", "notes": "Only 11 ahead of main but 137 not on the remote: probably rebased." }
+}
