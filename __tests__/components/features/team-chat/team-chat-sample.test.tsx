@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "test-utils";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -60,5 +60,18 @@ describe("Team chat before you are in a team", () => {
     await user.click(await screen.findByRole("button", { name: /APPROVE/ }));
     expect(useTeamChatStore.getState().account).toBeNull();
     expect(Object.keys(useTeamChatStore.getState().requests)).toEqual([]);
+  });
+
+  it("has the team switcher over the sample, whose create action opens the form", async () => {
+    const user = userEvent.setup();
+    renderScreen();
+    await user.click(screen.getByTestId("team-welcome-explore"));
+
+    const switcher = screen.getByTestId("team-switcher");
+    await user.click(within(switcher).getByRole("button"));
+    await user.click(screen.getByTestId("team-switcher-join"));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByTestId("team-chat-gate")).toBeInTheDocument();
   });
 });

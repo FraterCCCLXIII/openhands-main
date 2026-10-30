@@ -13,7 +13,11 @@ import {
   type IconAppearanceValue,
 } from "#/ui/icon-appearance-picker";
 import { factoryIconKey } from "#/utils/feed-icon-keys";
-import { FEED_TEAMMATES } from "#/utils/feed-team-demo";
+import {
+  FEED_ME_ID,
+  FEED_TEAMMATES,
+  isFeedTeamDemoEnabled,
+} from "#/utils/feed-team-demo";
 
 interface AddFactoryModalProps {
   onClose: () => void;
@@ -34,7 +38,7 @@ export function AddFactoryModal({ onClose, onCreated }: AddFactoryModalProps) {
   const setIcon = useFeedIconsStore((state) => state.setIcon);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [ownerId, setOwnerId] = useState(FEED_TEAMMATES[0].id);
+  const [ownerId, setOwnerId] = useState(FEED_ME_ID);
   const [icon, setIconValue] = useState<IconAppearanceValue>({});
   const canCreate = name.trim().length > 0;
 
@@ -96,7 +100,11 @@ export function AddFactoryModal({ onClose, onCreated }: AddFactoryModalProps) {
                 onChange={(event) => setOwnerId(event.target.value)}
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-contrast"
               >
-                {FEED_TEAMMATES.map((member) => (
+                <option value={FEED_ME_ID}>{t(I18nKey.FEED$ROLE_YOU)}</option>
+                {(isFeedTeamDemoEnabled(window.location.search)
+                  ? FEED_TEAMMATES
+                  : []
+                ).map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.name}
                   </option>

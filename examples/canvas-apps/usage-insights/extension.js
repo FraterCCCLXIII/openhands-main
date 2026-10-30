@@ -126,7 +126,9 @@ const STYLE = `
 .usage-insights__button--primary {
   border: 0; background: var(--ui-primary); color: var(--ui-on-primary); font-weight: 500;
 }
-.usage-insights__button--primary:hover { opacity: .85; }
+.usage-insights__button--primary:hover {
+  background: color-mix(in srgb, var(--ui-primary) 88%, var(--ui-contrast)); color: var(--ui-on-primary);
+}
 .usage-insights__button--small { min-height: 1.75rem; padding: .25rem .5rem; font-size: .72rem; }
 .usage-insights__filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .usage-insights__filter-group { display: flex; align-items: center; gap: .35rem; }
@@ -156,12 +158,12 @@ const STYLE = `
 .usage-insights__table tr:hover td { background: var(--ui-raised); }
 .usage-insights__table--scroll { display: block; overflow-x: auto; }
 .usage-insights__table--scroll table { width: 100%; }
-.usage-insights__link { color: var(--ui-primary); text-decoration: none; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; text-align: left; }
+.usage-insights__link { color: color-mix(in srgb, var(--ui-primary) 75%, var(--ui-contrast)); text-decoration: none; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; text-align: left; }
 .usage-insights__link:hover { text-decoration: underline; }
-.usage-insights__badge { display: inline-block; padding: .12rem .4rem; border: 1px solid var(--ui-border); border-radius: 999px; font-size: .62rem; color: var(--ui-dim); }
+.usage-insights__badge { display: inline-block; padding: .12rem .4rem; border: 1px solid var(--ui-border); border-radius: 999px; font-size: .62rem; color: var(--ui-muted); }
 .usage-insights__badge--reported { border-color: color-mix(in srgb, var(--ui-success) 50%, var(--ui-border)); color: var(--ui-success); }
 .usage-insights__badge--catalog { border-color: color-mix(in srgb, var(--ui-primary) 50%, var(--ui-border)); color: var(--ui-primary); }
-.usage-insights__badge--unpriced { border-color: var(--ui-border); color: var(--ui-dim); }
+.usage-insights__badge--unpriced { border-color: var(--ui-border); color: var(--ui-muted); }
 .usage-insights__badge--mixed { border-color: color-mix(in srgb, var(--ui-muted) 40%, var(--ui-border)); color: var(--ui-muted); }
 .usage-insights__notice { padding: 1rem 1.25rem; border: 1px dashed var(--ui-border); border-radius: .5rem; color: var(--ui-muted); font-size: .82rem; text-align: center; }
 .usage-insights__notice--error { border-style: solid; border-color: color-mix(in srgb, var(--ui-danger) 50%, var(--ui-border)); color: var(--ui-danger); }

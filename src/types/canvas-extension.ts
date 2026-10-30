@@ -70,11 +70,27 @@ export interface InstallCanvasExtensionRequest {
 
 export type CanvasExtensionDispose = () => void;
 
+/**
+ * What a create action asks of its page. `id` is the registered create action's
+ * id, `action` is the action's opaque `intent` string (the action id when it
+ * gave none), and `at` is the epoch-millisecond time the user picked it.
+ */
+export interface CanvasExtensionIntent {
+  id: string;
+  action: string;
+  at: number;
+}
+
 export interface CanvasExtensionPageMountContext {
   container: HTMLElement;
   /** Remainder of the route below the page contribution's declared path. */
   path: string;
   navigate: (path: string) => void;
+  /**
+   * Set when the page was opened from a create action (New Chat menu). It is
+   * delivered once; a later plain visit sees `null`/`undefined`.
+   */
+  intent?: CanvasExtensionIntent | null;
 }
 
 export type CanvasExtensionPageMount = (
@@ -98,6 +114,29 @@ export interface CanvasExtensionAppBackendViewHost {
   ) => CanvasExtensionDispose;
 }
 
+/** Limits the host enforces on `registerCreateAction`. */
+export const CANVAS_EXTENSION_CREATE_ACTION_LABEL_MAX_LENGTH = 40;
+export const CANVAS_EXTENSION_CREATE_ACTION_ICON_MAX_LENGTH = 4096;
+
+/** An entry an extension adds to the left nav's New Chat menu. */
+export interface CanvasExtensionCreateAction {
+  /** Lowercase letters, digits, and hyphens; unique within the extension. */
+  id: string;
+  /** Short, sentence case (1-40 characters), e.g. "New document". */
+  label: string;
+  /** Shown as the row's tooltip. */
+  description?: string;
+  /**
+   * Inline SVG markup that paints with `currentColor` (max 4096 characters).
+   * Rendered as a mask, never as HTML. Omit it to show the extension's icon.
+   */
+  icon?: { svg: string };
+  /** A page this extension declared; the host navigates there. */
+  pageId: string;
+  /** Opaque string delivered to the page as `intent.action`. */
+  intent?: string;
+}
+
 export interface CanvasExtensionHost {
   readonly apiVersion: typeof CANVAS_EXTENSION_HOST_API_VERSION;
   readonly extension: Readonly<{
@@ -113,6 +152,20 @@ export interface CanvasExtensionHost {
   registerPage: (
     contributionId: string,
     mount: CanvasExtensionPageMount,
+  ) => CanvasExtensionDispose;
+  /**
+   * Adds an entry to the New Chat menu. Throws on an invalid registration;
+   * the returned function removes the entry.
+   */
+  registerCreateAction: (
+    action: CanvasExtensionCreateAction,
+  ) => CanvasExtensionDispose;
+  /**
+   * Called when a create action targets a page of this extension that is
+   * already mounted, so the page can start its create flow without remounting.
+   */
+  onIntent: (
+    callback: (intent: CanvasExtensionIntent) => void,
   ) => CanvasExtensionDispose;
   navigate: (path: string) => void;
   agentServer: {

@@ -1,6 +1,6 @@
 import { webcrypto } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { activate, addressFromPublicKey, base58btcEncode, base64ToBytes, buildComment, cborEncode, createBitsocialApi, createRpcClient, decodeFrame, demoCommunities, demoDirectory, ed25519Supported, encodeRequest, extractPrivateKey, generateIdentity, identityFromPrivateKey, normalizeEntry, postsFromCommunity, relativeTime, renderMarkdown, repliesFromRaw, signPublication, validateCommunityAddress, validateComposer } from "./extension.js";
+import { BAN_DURATIONS, INVITE_ONLY_MESSAGE, LOCK_MESSAGE, PRIVATE_HONESTY, SEEDED_COMMUNITIES, accessChallenges, activate, inviteChallenge, inviteMessage, lockChallenge, mergeRoles, moderationFor, parseAddressList, readAccess, validateAuthorAddress, withAllowList, withLock, addressFromPublicKey, base58btcEncode, base64ToBytes, buildComment, cborEncode, createBitsocialApi, createRpcClient, decodeFrame, demoCommunities, demoDirectory, ed25519Supported, explainPublishError, encodeRequest, extractPrivateKey, generateIdentity, identityFromPrivateKey, normalizeEntry, postsFromCommunity, relativeTime, renderMarkdown, repliesFromRaw, signPublication, validateCommunityAddress, validateComposer } from "./extension.js";
 
 /** A scriptable WebSocket stand-in. `respond(method, params)` returns the result for a request. */
 function fakeServer(respond = () => null) {
@@ -29,7 +29,7 @@ function fakeServer(respond = () => null) {
 const unreachableFactory = () => { const ws = { send() {}, close() {} }; queueMicrotask(() => ws.onerror && ws.onerror(new Error("refused"))); return ws; };
 const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
 
-function mountApp(opts = {}, saved, identity) {
+function mountApp(opts = {}, saved, identity, ctx = {}) {
   localStorage.clear();
   if (saved) localStorage.setItem("bitsocial-hangout:v1", JSON.stringify(saved));
   if (identity) localStorage.setItem("bitsocial-hangout:identity:v1", JSON.stringify(identity));
@@ -37,7 +37,7 @@ function mountApp(opts = {}, saved, identity) {
   activate({ apiVersion: "1", registerPage: (_id, fn) => { mountFn = fn; return () => {}; } }, opts);
   const container = document.createElement("div");
   document.body.append(container);
-  return { container, dispose: mountFn({ container }) };
+  return { container, dispose: mountFn({ container, ...ctx }) };
 }
 beforeEach(() => { vi.stubGlobal("crypto", webcrypto); });
 afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
@@ -65,7 +65,7 @@ describe("JSON-RPC framing", () => {
   });
   it("reports an unreachable node with the URL in the text", async () => {
     const client = createRpcClient("ws://nope:1", { socketFactory: unreachableFactory });
-    await expect(client.call("getComment", [])).rejects.toThrow(/Can't reach a Bitsocial node at ws:\/\/nope:1/);
+    await expect(client.call("getComment", [])).rejects.toThrow(/Can't reach the node at ws:\/\/nope:1/);
   });
   it("delivers subscription notifications, including ones that arrive before the handler", async () => {
     const server = fakeServer((m) => (m === "subplebbitsSubscribe" ? 5 : true));
@@ -97,7 +97,7 @@ describe("JSON-RPC framing", () => {
   });
 });
 
-describe("Bitsocial data mapping", () => {
+describe("Community data mapping", () => {
   const sub = { posts: { pages: { hot: { comments: [
     { comment: { author: { address: "12D3KooWabc123456789", displayName: "Ada" }, title: "T", content: "body", timestamp: 200 }, commentUpdate: { cid: "Qm2", replyCount: 1, upvoteCount: 3, replies: { pages: { best: { comments: [{ comment: { author: { address: "r.eth" }, content: "reply", timestamp: 300 }, commentUpdate: { cid: "Qm3", replies: { pages: { best: { comments: [{ comment: { author: { address: "z.eth" }, content: "deep", timestamp: 400 }, commentUpdate: { cid: "Qm4" } }] } } } } }] } } } } },
     { comment: { author: { address: "old.eth" }, content: "first", timestamp: 100 }, commentUpdate: { cid: "Qm1", removed: true } },
@@ -125,16 +125,23 @@ describe("rendering and demo mode", () => {
     const { container } = mountApp();
     expect(container.querySelector(".status").textContent).toBe("Demo mode");
     expect(container.querySelector("#bh-rpc-url").value).toBe("ws://localhost:9138");
-    expect(container.querySelector(".powered").textContent).toContain("Powered by");
-    expect(container.querySelector(".powered").textContent).toContain("Kosmos");
+    const built = container.querySelector(".powered");
+    expect(built.textContent).toContain("Built with");
+    expect(built.textContent).not.toContain("Powered by");
+    const kamiji = built.querySelector('a[aria-label="Kamiji"]');
+    const kosmos = built.querySelector('a[aria-label="Kosmos"]');
+    expect(kamiji.getAttribute("href")).toBe("https://github.com/FraterCCCLXIII/kamiji");
+    expect(kosmos.getAttribute("href")).toBe("https://kosmos.computer");
+    expect(kamiji.querySelector("svg")).not.toBeNull();
+    expect(kosmos.querySelector("svg")).not.toBeNull();
     expect(container.querySelectorAll(".side .row")).toHaveLength(demoCommunities().length);
   });
   it("opens a demo community, renders markdown, and posts into a thread", async () => {
     const { container } = mountApp({ socketFactory: unreachableFactory, autoConnect: false }, { welcomed: true, url: "ws://localhost:9138" });
     // saved + welcomed triggers a quiet connect; use an unreachable socket factory so we stay in demo
-    container.querySelector('.row[data-address="bitsocial.eth"]').click();
-    expect(container.querySelector(".head h2").textContent).toBe("# Bitsocial");
-    expect(container.querySelector(".msg strong").textContent).toBe("Bitsocial");
+    container.querySelector('.row[data-address="ai.bitkin"]').click();
+    expect(container.querySelector(".head h2").textContent).toBe("# AI");
+    expect(container.querySelector(".msg strong").textContent).toBe("AI");
     expect(container.querySelector(".members .mhead").textContent).toMatch(/^Members \(\d+\)$/);
     container.querySelector(".linkbtn").click();
     expect(container.querySelector(".head h2").textContent).toBe("Thread");
@@ -203,7 +210,7 @@ const fill = (input, value) => { input.value = value; input.dispatchEvent(new Ev
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 describe("signing is byte-identical to plebbit-js", () => {
-  it("derives the same public key and Bitsocial address from the private key", async () => {
+  it("derives the same public key and community address from the private key", async () => {
     const id = await identityFromPrivateKey(VECTORS.privateKey);
     expect(id).toMatchObject({ type: "ed25519", publicKey: VECTORS.publicKey, address: VECTORS.address, privateKey: VECTORS.privateKey });
     expect(addressFromPublicKey(base64ToBytes(VECTORS.publicKey))).toBe(VECTORS.address);
@@ -300,7 +307,7 @@ describe("demo mode, end to end and in memory", () => {
 
   it("validates, then publishes a post with title, link and markdown body", async () => {
     const { container } = demo();
-    container.querySelector('.row[data-address="bitsocial.eth"]').click();
+    container.querySelector('.row[data-address="ai.bitkin"]').click();
     const f = composer(container);
     f.send.click();
     expect(f.err.textContent).toMatch(/title, some text or a link/);
@@ -320,7 +327,7 @@ describe("demo mode, end to end and in memory", () => {
   });
   it("replies to the post and to a reply, then votes, edits and deletes its own post", async () => {
     const { container } = demo();
-    container.querySelector('.row[data-address="bitsocial.eth"]').click();
+    container.querySelector('.row[data-address="ai.bitkin"]').click();
     container.querySelector(".linkbtn").click();
     const f = composer(container);
     fill(f.text, "first reply");
@@ -359,7 +366,7 @@ describe("demo mode, end to end and in memory", () => {
   });
   it("walks through a community challenge: wrong answer is rejected, right answer publishes", async () => {
     const { container } = demo();
-    container.querySelector('.row[data-address="plebtoken.eth"]').click();
+    container.querySelector('.row[data-address="news.bitkin"]').click();
     const f = composer(container);
     fill(f.text, "anyone here?");
     f.send.click();
@@ -418,7 +425,7 @@ describe("demo mode, end to end and in memory", () => {
     fill(input, "nowhere.eth");
     btn(dialog(), "Join").click();
     await waitFor(() => /Can't reach nowhere.eth in demo mode/.test(dialog().querySelector(".errtext").textContent));
-    fill(input, "bitsocial.eth");
+    fill(input, "ai.bitkin");
     btn(dialog(), "Join").click();
     await waitFor(() => /already have/.test(dialog().querySelector(".errtext").textContent));
     fill(input, "Music.eth");
@@ -442,7 +449,7 @@ function scriptedNode(overrides = {}) {
     let out;
     if (overrides[method]) out = overrides[method](params);
     else if (method === "subplebbitsSubscribe") out = 1;
-    else if (/^(subplebbitUpdateSubscribe|publishComment|publishVote|publishCommentEdit|startSubplebbit)$/.test(method)) out = next++;
+    else if (/^(subplebbitUpdateSubscribe|publishComment|publishVote|publishCommentEdit|publishCommentModeration|startSubplebbit)$/.test(method)) out = next++;
     else if (method === "createSubplebbit") out = { address: "12D3KooWNewCommunity" };
     else if (method === "editSubplebbit") out = {};
     else out = true;
@@ -672,5 +679,573 @@ describe("connected mode: communities", () => {
     expect([...container.querySelectorAll(".side .row")].map((r) => r.dataset.address)).toEqual(["mine.eth", "music.eth"]);
     expect(container.querySelector('.side .row[data-address="mine.eth"] .tag')).toBeTruthy();
     expect(container.querySelector('.side .row[data-address="music.eth"] .tag')).toBeNull();
+  });
+});
+
+describe("draggable column dividers", () => {
+  it("renders separators, resizes a column by dragging and restores the saved width after a remount", async () => {
+    const { container, dispose } = mountApp({ autoConnect: false });
+    await tick();
+    const grid = container.querySelector(".shell");
+    const handle = grid.querySelector(":scope > .colgrip");
+    expect(handle.getAttribute("role")).toBe("separator");
+    expect(grid.style.getPropertyValue("--grip-0")).toBe("260px");
+    handle.dispatchEvent(new MouseEvent("pointerdown", { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 150, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointerup", { bubbles: true }));
+    expect(grid.style.getPropertyValue("--grip-0")).toBe("310px");
+    const handleCount = grid.querySelectorAll(".colgrip").length;
+    dispose();
+    container.remove();
+    // The mount helper clears storage first; keep the saved width for the remount.
+    vi.spyOn(Storage.prototype, "clear").mockImplementation(() => {});
+    const again = mountApp({ autoConnect: false });
+    await tick();
+    const grid2 = again.container.querySelector(".shell");
+    expect(grid2.style.getPropertyValue("--grip-0")).toBe("310px");
+    expect(grid2.querySelectorAll(".colgrip").length).toBe(handleCount);
+    vi.restoreAllMocks();
+  });
+});
+
+describe("button colours", () => {
+  it("gives every solid contrast or primary fill its own foreground token, and fixed dark panels their own text colour", () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    const css = container.querySelector("style").textContent;
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => ({ sel: sel.trim(), body }));
+    const decl = (body, prop) => new RegExp(`(?:^|[;\\s])${prop}\\s*:\\s*([^;]+)`).exec(body)?.[1].trim();
+    const darkHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "") && [1, 3, 5].reduce((n, i) => n + parseInt(v.slice(i, i + 2), 16), 0) < 150;
+    for (const { sel, body } of rules) {
+      if (/::|\binput\b/.test(sel)) continue; // pseudo-element marks and switch tracks carry no text
+      const bg = decl(body, "background");
+      const color = decl(body, "color");
+      if (bg === "var(--bh-contrast)") expect(color, sel).toBe("var(--bh-on-contrast)");
+      if (bg === "var(--bh-primary)") expect(color, sel).toBe("var(--bh-on-primary)");
+      if (darkHex(bg)) expect(color, sel).toMatch(/^#[0-9a-f]{3,6}$/i);
+    }
+  });
+});
+
+describe("seeded topic communities", () => {
+  it("defines six public topic communities as plain data the demo is built from", () => {
+    expect(SEEDED_COMMUNITIES.map((c) => c.title)).toEqual(["AI", "News", "Tech", "Science", "Business", "Design"]);
+    SEEDED_COMMUNITIES.forEach((c) => expect(c).toMatchObject({ id: expect.any(String), address: expect.stringMatching(/\.bitkin$/), topic: expect.any(String), visibility: "public" }));
+    expect(demoCommunities().map((c) => c.address)).toEqual(SEEDED_COMMUNITIES.map((c) => c.address));
+  });
+  it("shows no old product name anywhere a person can see it", () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: false });
+    container.querySelector(".side .row").click();
+    expect(container.textContent).not.toMatch(/bitsocial|plebbit|seedit|plebs/i);
+    expect(document.body.innerHTML).not.toMatch(/aria-label="[^"]*(bitsocial|plebbit|seedit)|title="[^"]*(bitsocial|plebbit|seedit)/i);
+  });
+});
+
+describe("remote communities and sharing", () => {
+  it("reads a community update wrapped as {subplebbit, updateCid, updatingState}", async () => {
+    const wrapped = { subplebbit: postUpdate({ title: "Wrapped" }), updateCid: "QmU", updatingState: "succeeded" };
+    const { container } = await connectedApp({ update: wrapped });
+    expect(container.querySelector(".head h2").textContent).toBe("# Wrapped");
+    expect(container.querySelector(".msg .ptitle").textContent).toBe("A post");
+    expect(container.querySelector(".members .mhead").textContent).toMatch(/\(1\)/);
+  });
+  it("only counts a join once an update with real data arrives, showing a loading state meanwhile", async () => {
+    const { container, node } = await connectedApp({ opts: { joinTimeoutMs: 400 } });
+    btn(container, "Join").click();
+    fill(dialog().querySelector("input"), "remote.eth");
+    btn(dialog(), "Join").click();
+    await waitFor(() => node.calls("subplebbitUpdateSubscribe").length === 2);
+    const sub = node.returned.subplebbitUpdateSubscribe[1];
+    node.ws().notify(sub, "update", { subplebbit: { address: "remote.eth" }, updatingState: "fetching-ipns" });
+    await waitFor(() => btn(dialog(), "Loading community…"));
+    await sleep(30);
+    expect(dialog()).not.toBeNull();
+    expect(container.querySelector('.row[data-address="remote.eth"]')).toBeNull();
+    node.ws().notify(sub, "update", { subplebbit: { title: "Remote", description: "far away", posts: { pages: {} } }, updateCid: "QmR" });
+    await waitFor(() => dialog() === null);
+    expect(container.querySelector('.row[data-address="remote.eth"]')).toBeTruthy();
+  });
+  it("explains a join that only ever got empty updates", async () => {
+    const { container, node } = await connectedApp({ opts: { joinTimeoutMs: 60 } });
+    btn(container, "Join").click();
+    fill(dialog().querySelector("input"), "slow.eth");
+    btn(dialog(), "Join").click();
+    await waitFor(() => node.calls("subplebbitUpdateSubscribe").length === 2);
+    node.ws().notify(node.returned.subplebbitUpdateSubscribe[1], "update", { subplebbit: {}, updatingState: "stopped" });
+    await waitFor(() => /data did not arrive in time/.test(dialog().querySelector(".errtext").textContent));
+  });
+  it("shows preloaded replies on the first open of a thread", async () => {
+    const reply = { comment: { author: { address: "12D3KooWreplier" }, content: "preloaded reply", timestamp: 1699999100 }, commentUpdate: { cid: "QmR1" } };
+    const update = postUpdate({ posts: { pages: { hot: { comments: [{ comment: { author: { address: "12D3KooWsomeoneelse" }, title: "T", content: "hi", timestamp: 1699999000 }, commentUpdate: { cid: "QmT1", replyCount: 1, replies: { pages: { best: { comments: [reply] } } } } }] } } } });
+    const { container } = await connectedApp({ update });
+    container.querySelector(".linkbtn").click();
+    expect(container.querySelector(".main .sectionlabel").textContent).toBe("1 replies");
+    expect(container.textContent).toContain("preloaded reply");
+  });
+  it("lets the owner remove spam challenges after a confirmation, sending editSubplebbit with settings.challenges []", async () => {
+    const { container, node } = await connectedApp();
+    btn(container, "Edit community").click();
+    btn(dialog(), "Edit").click();
+    const toggle = dialog().querySelector('.settings input[type="checkbox"]');
+    expect(dialog().querySelector(".settings").textContent).toContain("Allow anyone to post (remove spam challenges)");
+    toggle.checked = true;
+    toggle.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    const confirm = [...document.querySelectorAll('[role="dialog"]')].at(-1);
+    btn(confirm, "Allow anyone to post").click();
+    await waitFor(() => node.calls("editSubplebbit").length === 1);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { settings: { challenges: [] } }]);
+    await waitFor(() => toggle.checked && toggle.disabled);
+  });
+  it("replaces the node's challenge failure with a plain explanation and shows other node errors as they are", async () => {
+    const { container, node } = await connectedApp();
+    const f = composerOf(container);
+    fill(f.text, "first");
+    f.send.click();
+    await waitFor(() => node.calls("publishComment").length);
+    node.ws().notify(node.returned.publishComment[0], "error", { code: "ERR_INVALID_RESULT_FROM_GET_CHALLENGE_FUNCTION", message: "One of the challenges is misconfigured" });
+    await waitFor(() => container.querySelector(".msg.failed .note"));
+    expect(container.querySelector(".msg.failed .note").textContent).toContain("open Community settings and allow anyone to post");
+    expect(explainPublishError("ERR_X: disk full")).toBe("ERR_X: disk full");
+  });
+  it("copies the community address from the header", async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    container.querySelector(".side .row").click();
+    btn(container.querySelector(".head"), "Copy address").click();
+    expect(writeText).toHaveBeenCalledWith(SEEDED_COMMUNITIES[0].address);
+    await waitFor(() => /Share it/.test(container.querySelector(".notice").textContent));
+  });
+});
+
+describe("full-height layout", () => {
+  it("fills the window below its top edge, never under 480px, and follows resizes", () => {
+    const { container, dispose } = mountApp({ autoConnect: false });
+    const root = container.querySelector(".bh");
+    vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ top: 100 });
+    vi.stubGlobal("innerHeight", 900);
+    window.dispatchEvent(new Event("resize"));
+    expect(root.style.height).toBe("800px");
+    vi.stubGlobal("innerHeight", 400);
+    window.dispatchEvent(new Event("resize"));
+    expect(root.style.height).toBe("480px");
+    dispose();
+  });
+});
+
+// ─── Seeded communities, spaces, invitations and room control ──────────────────────────────
+
+const ME = VECTORS.address;
+const PEER_A = `12D3KooW${"A".repeat(44)}`;
+const PEER_B = `12D3KooW${"B".repeat(44)}`;
+const spaceUpdate = (challenges, roles = { [ME]: { role: "owner" } }, extra = {}) => postUpdate({ settings: { challenges }, roles, rules: ["Be kind"], ...extra });
+async function connectedAs({ own = true, update, ctx = {} }) {
+  vi.spyOn(Date, "now").mockReturnValue(1700000000000);
+  const node = scriptedNode();
+  const app = mountApp({ socketFactory: node.factory }, { welcomed: true, url: "ws://node:9138", name: "Zoë ✓", joined: own ? [] : ["vectors.eth"] }, IDENTITY, ctx);
+  await waitFor(() => node.sockets[0] && node.calls("subplebbitsSubscribe").length);
+  node.ws().notify(1, "subplebbitschange", own ? ["vectors.eth"] : []);
+  await waitFor(() => node.calls("subplebbitUpdateSubscribe").length);
+  node.ws().notify(node.returned.subplebbitUpdateSubscribe[0], "update", update);
+  await waitFor(() => app.container.querySelector(".msg"));
+  return { ...app, node };
+}
+const head = (c) => c.querySelector(".head");
+const topDialog = () => [...document.querySelectorAll('[role="dialog"]')].at(-1);
+const settle = () => tick(20);
+
+describe("space access helpers", () => {
+  it("validates author addresses, dedupes pasted lists and reports the bad entries", () => {
+    expect(validateAuthorAddress(PEER_A)).toEqual({ ok: true, address: PEER_A });
+    expect(validateAuthorAddress(" Alice.ETH ")).toEqual({ ok: true, address: "alice.eth" });
+    expect(validateAuthorAddress("hello").ok).toBe(false);
+    expect(validateAuthorAddress("").ok).toBe(false);
+    expect(parseAddressList(`${PEER_A}, alice.eth\n${PEER_A} nope`)).toEqual({ valid: [PEER_A, "alice.eth"], invalid: ["nope"] });
+  });
+  it("builds and reads the access challenges, keeps unrelated challenges, and never changes an owner's role", () => {
+    const other = { name: "question", options: { question: "2+2", answer: "4" } };
+    expect(accessChallenges({ visibility: "public" })).toEqual([]);
+    expect(accessChallenges({ visibility: "private", allow: [ME], locked: true })).toEqual([inviteChallenge([ME]), lockChallenge()]);
+    const list = withAllowList([other, inviteChallenge([ME])], [ME, PEER_A]);
+    expect(list).toEqual([other, inviteChallenge([ME, PEER_A])]);
+    expect(readAccess(withLock(list, true))).toEqual({ private: true, locked: true, allow: [ME, PEER_A] });
+    expect(withLock(withLock(list, true), false)).toEqual(list);
+    expect(readAccess([{ name: "whitelist", options: { urls: "https://x/y.json" } }])).toEqual({ private: false, locked: false, allow: [] });
+    expect(mergeRoles({ [ME]: { role: "owner" } }, PEER_A, "moderator")).toEqual({ [ME]: { role: "owner" }, [PEER_A]: { role: "moderator" } });
+    expect(mergeRoles({ [ME]: { role: "owner" }, [PEER_A]: { role: "admin" } }, PEER_A, null)).toEqual({ [ME]: { role: "owner" } });
+    expect(mergeRoles({ [ME]: { role: "owner" } }, ME, "moderator")).toEqual({ [ME]: { role: "owner" } });
+    expect(moderationFor({ remove: true, banSeconds: BAN_DURATIONS[1].seconds, reason: " spam ", now: 1700000000000 })).toEqual({ removed: true, author: { banExpiresAt: 1700086400 }, reason: "spam" });
+  });
+  it("signs a moderation in the order the node's own signer used", async () => {
+    const pub = await signPublication("commentModeration", { subplebbitAddress: "vectors.eth", commentCid: CID, commentModeration: { removed: true }, author: {} }, IDENTITY, { now: 1700000000000 });
+    expect(pub.signature.signedPropertyNames).toEqual(["author", "subplebbitAddress", "protocolVersion", "timestamp", "commentModeration", "commentCid"]);
+    expect(pub.author).toEqual({ address: ME });
+  });
+});
+
+describe("activating seeded communities", () => {
+  it("creates the community on the node, makes it public, starts it, shows the address and lists it as yours", async () => {
+    const { container, node } = await connectedAs({ update: postUpdate() });
+    const row = container.querySelector('.seedrow[data-seed="ai"]');
+    expect(row.textContent).toContain("Seeded");
+    expect(container.querySelector('.row[data-address="ai.bitkin"]')).toBeNull();
+    row.querySelector("button").click();
+    await waitFor(() => node.calls("startSubplebbit").length);
+    expect(node.calls("createSubplebbit")[0].params).toEqual([{ title: "AI", description: SEEDED_COMMUNITIES[0].description }]);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["12D3KooWNewCommunity", { title: "AI", description: SEEDED_COMMUNITIES[0].description, roles: { [ME]: { role: "owner" } }, settings: { challenges: [] } }]);
+    expect(node.calls("startSubplebbit")[0].params).toEqual([{ address: "12D3KooWNewCommunity" }]);
+    await waitFor(() => /Done\. Address: 12D3KooWNewCommunity/.test(dialog().textContent));
+    node.ws().notify(1, "subplebbitschange", ["vectors.eth", "12D3KooWNewCommunity"]);
+    await waitFor(() => container.querySelector('.row[data-address="12D3KooWNewCommunity"] .tag'));
+    expect(container.querySelector('.row[data-address="12D3KooWNewCommunity"] .tag').textContent).toBe("yours");
+    expect(container.querySelector('.seedrow[data-seed="ai"]')).toBeNull();
+    expect(container.querySelector('.seedrow[data-seed="news"]')).not.toBeNull();
+    expect(JSON.parse(localStorage.getItem("bitsocial-hangout:v1")).activated).toEqual({ ai: "12D3KooWNewCommunity" });
+  });
+  it("says so when the node refuses, and keeps the seed available", async () => {
+    const node = scriptedNode({ createSubplebbit: () => new Error("ERR_NODE_BUSY") });
+    const { container } = mountApp({ socketFactory: node.factory }, { welcomed: true, url: "ws://n" }, IDENTITY);
+    await waitFor(() => node.sockets[0] && node.calls("subplebbitsSubscribe").length);
+    node.ws().notify(1, "subplebbitschange", []);
+    await waitFor(() => container.querySelector(".seedrow"));
+    container.querySelector('.seedrow[data-seed="tech"] button').click();
+    await waitFor(() => /Could not activate: .*ERR_NODE_BUSY/.test(dialog().textContent));
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    expect(container.querySelector('.seedrow[data-seed="tech"]')).not.toBeNull();
+  });
+  it("asks for an identity before creating anything", async () => {
+    const node = scriptedNode();
+    const { container } = mountApp({ socketFactory: node.factory }, { welcomed: true, url: "ws://n" });
+    await waitFor(() => node.sockets[0] && node.calls("subplebbitsSubscribe").length);
+    node.ws().notify(1, "subplebbitschange", []);
+    await waitFor(() => container.querySelector(".seedrow"));
+    container.querySelector('.seedrow[data-seed="ai"] button').click();
+    expect(dialog().textContent).toContain("Create an identity first");
+    expect(node.calls("createSubplebbit")).toHaveLength(0);
+  });
+  it("simulates activation in Demo mode with a clear note, and activates all after a confirmation", async () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    container.querySelector('.seedrow[data-seed="news"] button').click();
+    await waitFor(() => /Demo: news\.bitkin is now yours/.test(dialog().textContent));
+    expect(dialog().textContent).toContain("Nothing is created on a node");
+    btn(dialog(), "Done").click();
+    expect(container.querySelector('.row[data-address="news.bitkin"] .tag').textContent).toBe("yours");
+    expect(container.querySelector('.seedrow[data-seed="news"]')).toBeNull();
+    btn(container, "Activate all").click();
+    expect(container.querySelectorAll(".seedrow")).toHaveLength(5);
+    btn(topDialog(), "Activate all").click();
+    await waitFor(() => topDialog().querySelectorAll(".steps li").length === 5 && !btn(topDialog(), "Done").disabled);
+    expect(container.querySelectorAll(".seedrow")).toHaveLength(0);
+    expect(container.querySelectorAll(".side .row .tag")).toHaveLength(6);
+  });
+});
+
+describe("new space", () => {
+  const openForm = async (container) => { btn(container, "New space").click(); await settle(); return dialog(); };
+  it("creates a public space with no challenges, you as owner, then starts it", async () => {
+    const { container, node } = await connectedAs({ update: postUpdate() });
+    const d = await openForm(container);
+    fill(d.querySelector("input[type=text]"), "Friday co-working");
+    const [desc, rules] = d.querySelectorAll("textarea");
+    fill(desc, "Heads down");
+    fill(rules, "Be kind\n\nStay on topic");
+    btn(d, "Create space").click();
+    await waitFor(() => node.calls("startSubplebbit").length);
+    expect(node.calls("createSubplebbit")[0].params).toEqual([{ title: "Friday co-working", description: "Heads down" }]);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["12D3KooWNewCommunity", { roles: { [ME]: { role: "owner" } }, rules: ["Be kind", "Stay on topic"], settings: { challenges: [] } }]);
+    expect(JSON.parse(localStorage.getItem("bitsocial-hangout:v1")).spaces).toEqual(["12D3KooWNewCommunity"]);
+  });
+  it("creates a private space with the owner on an invite list, and says exactly what private means", async () => {
+    const { container, node } = await connectedAs({ update: postUpdate() });
+    const d = await openForm(container);
+    fill(d.querySelector("input[type=text]"), "Team room");
+    expect(d.textContent).not.toContain("only invited people can post. You are on the list");
+    d.querySelector("input[value=private]").click();
+    d.querySelector("input[value=private]").dispatchEvent(new Event("change", { bubbles: true }));
+    expect(d.textContent).toContain(PRIVATE_HONESTY);
+    expect(d.textContent).toContain("Anyone with the address can read; only invited people can post.");
+    btn(d, "Create space").click();
+    await waitFor(() => node.calls("startSubplebbit").length);
+    expect(node.calls("createSubplebbit")[0].params).toEqual([{ title: "Team room" }]);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["12D3KooWNewCommunity", { roles: { [ME]: { role: "owner" } }, settings: { challenges: [{ name: "whitelist", options: { addresses: ME, error: INVITE_ONLY_MESSAGE }, exclude: [{ role: ["owner", "admin", "moderator"] }] }] } }]);
+  });
+  it("needs a name, and in Demo mode builds the space in memory", async () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    const d = await openForm(container);
+    btn(d, "Create space").click();
+    await waitFor(() => /Give the space a name/.test(d.querySelector(".errtext").textContent));
+    expect(d.textContent).toContain("Demo:");
+    fill(d.querySelector("input[type=text]"), "Demo room");
+    d.querySelector("input[value=private]").click();
+    btn(d, "Create space").click();
+    await waitFor(() => dialog() === null);
+    expect(container.querySelector(".head h2").textContent).toBe("# Demo room");
+    const tags = [...container.querySelectorAll('.row[aria-current="true"] .tag')].map((t) => t.textContent);
+    expect(tags).toEqual(["yours", "space", "private"]);
+  });
+});
+
+describe("inviting people", () => {
+  const privateSpace = () => spaceUpdate([inviteChallenge([ME, PEER_A])]);
+  it("shows the address and an invitation message, and links Start a call to Meet", async () => {
+    const navigate = vi.fn();
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const { container } = await connectedAs({ update: privateSpace(), ctx: { navigate } });
+    btn(head(container), "Invite people").click();
+    const d = dialog();
+    expect(d.textContent).toContain(PRIVATE_HONESTY);
+    expect(d.querySelector("input").value).toBe("vectors.eth");
+    expect(d.querySelector("textarea").value).toBe(inviteMessage({ title: "Vectors", address: "vectors.eth", isPrivate: true }));
+    expect(d.querySelector("textarea").value).toContain("Open Bitkin, choose Join, and paste this address: vectors.eth");
+    btn(d, "Copy invitation").click();
+    expect(writeText).toHaveBeenCalledWith(d.querySelector("textarea").value);
+    const call = [...d.querySelectorAll("a")].find((a) => a.textContent === "Start a call");
+    expect(call.getAttribute("href")).toMatch(/^\/extensions\/meet\/meet\?room=vectors-[a-z0-9.]+$/);
+    call.click();
+    expect(navigate).toHaveBeenCalledWith(call.getAttribute("href"));
+  });
+  it("adds pasted addresses to the invite list without dropping anyone, dedupes, and rejects bad ones", async () => {
+    const { container, node } = await connectedAs({ update: privateSpace() });
+    btn(head(container), "Invite people").click();
+    const d = dialog();
+    expect(d.querySelector(".invitees").textContent).toContain("Invited");
+    const paste = d.querySelector('textarea[placeholder^="12D3"]');
+    fill(paste, `${PEER_B} nonsense`);
+    btn(d, "Add to invite list").click();
+    await waitFor(() => /Not valid author addresses: nonsense/.test(d.textContent));
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    fill(paste, `${PEER_B}, ${PEER_A}\n${PEER_B}`);
+    btn(d, "Add to invite list").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { settings: { challenges: [inviteChallenge([ME, PEER_A, PEER_B])] } }]);
+    await waitFor(() => /Invited 1 person \(1 already on the list\)/.test(d.textContent));
+    expect([...d.querySelectorAll(".invitees .pill")].map((p) => p.textContent)).toEqual(["Invited", "Invited"]);
+  });
+  it("removes an invitee only after a confirmation", async () => {
+    const { container, node } = await connectedAs({ update: privateSpace() });
+    btn(head(container), "Invite people").click();
+    const short = `${PEER_A.slice(0, 6)}…${PEER_A.slice(-4)}`;
+    btn(dialog(), "Remove").click();
+    expect(topDialog().textContent).toContain(`${short} will no longer be able to post`);
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    btn(topDialog(), "Cancel").click();
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    btn(dialog(), "Remove").click();
+    btn(topDialog(), "Remove from list").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { settings: { challenges: [inviteChallenge([ME])] } }]);
+  });
+  it("explains that a public space needs no invitations and hides the list tools", async () => {
+    const { container } = await connectedAs({ update: spaceUpdate([]) });
+    btn(head(container), "Invite people").click();
+    expect(dialog().textContent).toContain("This space is public");
+    expect(btn(dialog(), "Add to invite list")).toBeUndefined();
+  });
+});
+
+describe("managing a space", () => {
+  const owner = { [ME]: { role: "owner" } };
+  const withMod = { ...owner, [PEER_A]: { role: "moderator" } };
+
+  it("shows Manage space and Invite people only to people with a role, and keeps settings owner-only", async () => {
+    const asMember = await connectedAs({ own: false, update: spaceUpdate([], { [PEER_A]: { role: "owner" } }) });
+    expect(btn(head(asMember.container), "Manage space")).toBeUndefined();
+    expect(btn(head(asMember.container), "Invite people")).toBeUndefined();
+    expect(btn(head(asMember.container), "Copy address")).toBeTruthy();
+    expect([...asMember.container.querySelectorAll(".msg .acts .linkbtn")].map((b) => b.textContent)).not.toContain("Remove");
+    document.body.replaceChildren();
+    const asMod = await connectedAs({ own: false, update: spaceUpdate([], { [ME]: { role: "moderator" } }) });
+    expect(btn(head(asMod.container), "Invite people")).toBeUndefined();
+    btn(head(asMod.container), "Manage space").click();
+    expect(dialog().textContent).toContain("only the owner can change settings or roles");
+    expect(btn(dialog(), "Save details")).toBeUndefined();
+    expect(btn(dialog(), "Make private")).toBeUndefined();
+    expect(btn(dialog(), "Lock room")).toBeUndefined();
+    expect(dialog().querySelector("select")).toBeNull();
+    expect([...asMod.container.querySelectorAll(".msg .acts .linkbtn")].map((b) => b.textContent)).toContain("Remove");
+  });
+  it("saves the name, description and rules with editSubplebbit", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([]) });
+    btn(head(container), "Manage space").click();
+    const [title] = dialog().querySelectorAll("input");
+    const [description, rules] = dialog().querySelectorAll("textarea");
+    expect(rules.value).toBe("Be kind");
+    fill(title, "Renamed"); fill(description, "New text"); fill(rules, "One\nTwo");
+    btn(dialog(), "Save details").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { title: "Renamed", description: "New text", rules: ["One", "Two"] }]);
+    await waitFor(() => /Saved/.test(dialog().querySelector(".oktext").textContent));
+  });
+  it("switches Public to Private and back only after a confirmation that says what private means", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([]) });
+    btn(head(container), "Manage space").click();
+    btn(dialog(), "Make private").click();
+    expect(topDialog().textContent).toContain(PRIVATE_HONESTY);
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    btn(topDialog(), "Make private").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { settings: { challenges: [inviteChallenge([ME])] } }]);
+    await waitFor(() => btn(dialog(), "Make public"));
+    btn(dialog(), "Make public").click();
+    expect(topDialog().textContent).toContain("spam included");
+    btn(topDialog(), "Make public").click();
+    await waitFor(() => node.calls("editSubplebbit").length === 2);
+    expect(node.calls("editSubplebbit")[1].params).toEqual(["vectors.eth", { settings: { challenges: [] } }]);
+  });
+  it("locks and unlocks the room by adding and removing a fail challenge that excludes the roles", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([inviteChallenge([ME, PEER_A])]) });
+    btn(head(container), "Manage space").click();
+    btn(dialog(), "Lock room").click();
+    expect(topDialog().textContent).toContain("turns away every post except from the owner, admins and moderators");
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    btn(topDialog(), "Lock room").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { settings: { challenges: [inviteChallenge([ME, PEER_A]), { name: "fail", options: { error: LOCK_MESSAGE }, exclude: [{ role: ["owner", "admin", "moderator"] }] }] } }]);
+    await waitFor(() => btn(dialog(), "Unlock room"));
+    expect(dialog().textContent).toContain("Locked: only the owner, admins and moderators can post right now");
+    btn(dialog(), "Unlock room").click();
+    btn(topDialog(), "Unlock room").click();
+    await waitFor(() => node.calls("editSubplebbit").length === 2);
+    expect(node.calls("editSubplebbit")[1].params).toEqual(["vectors.eth", { settings: { challenges: [inviteChallenge([ME, PEER_A])] } }]);
+  });
+  it("lists attendees with role badges and changes roles by sending the whole merged roles map", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([inviteChallenge([ME, PEER_A, PEER_B])], withMod) });
+    btn(head(container), "Manage space").click();
+    const rows = [...dialog().querySelectorAll(".attendee")];
+    const badge = (addr) => rows.find((r) => r.dataset.address === addr).querySelector(".pill").textContent;
+    expect(badge(ME)).toBe("owner");
+    expect(badge(PEER_A)).toBe("moderator");
+    expect(badge(PEER_B)).toBe("invited");
+    expect(badge("12D3KooWsomeoneelse")).toBe("past poster");
+    expect(rows.find((r) => r.dataset.address === ME).querySelector("select")).toBeNull();
+    const sel = rows.find((r) => r.dataset.address === PEER_B).querySelector("select");
+    expect(sel.getAttribute("aria-label")).toMatch(/^Role for /);
+    sel.value = "admin";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    btn(topDialog(), "Make admin").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params).toEqual(["vectors.eth", { roles: { [ME]: { role: "owner" }, [PEER_A]: { role: "moderator" }, [PEER_B]: { role: "admin" } } }]);
+    const modSel = () => [...dialog().querySelectorAll(".attendee")].find((r) => r.dataset.address === PEER_A).querySelector("select");
+    await waitFor(() => modSel().value === "moderator");
+    modSel().value = "";
+    modSel().dispatchEvent(new Event("change", { bubbles: true }));
+    btn(topDialog(), "Remove role").click();
+    await waitFor(() => node.calls("editSubplebbit").length === 2);
+    expect(node.calls("editSubplebbit")[1].params[1].roles).toEqual({ [ME]: { role: "owner" }, [PEER_B]: { role: "admin" } });
+  });
+  it("removes someone from the invite list from the attendees, after a confirmation", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([inviteChallenge([ME, PEER_B])]) });
+    btn(head(container), "Manage space").click();
+    dialog().querySelector(`[aria-label="Remove ${PEER_B.slice(0, 6)}…${PEER_B.slice(-4)} from the invite list"]`).click();
+    expect(node.calls("editSubplebbit")).toHaveLength(0);
+    btn(topDialog(), "Remove from list").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params[1]).toEqual({ settings: { challenges: [inviteChallenge([ME])] } });
+  });
+  it("removes a post with a signed commentModeration after a confirmation", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([]) });
+    const post = container.querySelector(".msg");
+    [...post.querySelectorAll(".linkbtn")].find((b) => b.textContent === "Remove").click();
+    expect(node.calls("publishCommentModeration")).toHaveLength(0);
+    fill(topDialog().querySelector("input"), "off topic");
+    btn(topDialog(), "Remove post").click();
+    await waitFor(() => node.calls("publishCommentModeration").length);
+    const pub = node.calls("publishCommentModeration")[0].params[0].commentModeration;
+    expect(pub).toMatchObject({ subplebbitAddress: "vectors.eth", commentCid: CID, commentModeration: { removed: true, reason: "off topic" }, author: { address: ME }, timestamp: 1700000000 });
+    expect(pub.signature.signedPropertyNames).toEqual(["author", "subplebbitAddress", "protocolVersion", "timestamp", "commentModeration", "commentCid"]);
+    node.ws().notify(node.returned.publishCommentModeration[0], "challengeverification", { challengeSuccess: true });
+    await waitFor(() => /removed/.test(container.querySelector(".msg").textContent));
+  });
+  it("bans an author for a chosen time and shows the node's refusal when it says no", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([]) });
+    [...container.querySelector(".msg").querySelectorAll(".linkbtn")].find((b) => b.textContent === "Ban…").click();
+    const d = topDialog();
+    d.querySelector("select").value = "1d";
+    btn(d, "Ban author").click();
+    await waitFor(() => node.calls("publishCommentModeration").length);
+    const pub = node.calls("publishCommentModeration")[0].params[0].commentModeration;
+    expect(pub.commentModeration).toEqual({ removed: true, author: { banExpiresAt: 1700086400 } });
+    node.ws().notify(node.returned.publishCommentModeration[0], "challengeverification", { challengeSuccess: false, reason: "CommentModerationPubsubMessagePublication signer is not a mod at this subplebbit" });
+    await waitFor(() => /signer is not a mod/.test(topDialog().textContent));
+  });
+  it("offers Make me owner when the node does not list your identity as owner", async () => {
+    const { container, node } = await connectedAs({ update: spaceUpdate([], { [PEER_A]: { role: "admin" } }) });
+    btn(head(container), "Manage space").click();
+    btn(dialog(), "Make me owner").click();
+    btn(topDialog(), "Make me owner").click();
+    await waitFor(() => node.calls("editSubplebbit").length);
+    expect(node.calls("editSubplebbit")[0].params[1]).toEqual({ roles: { [PEER_A]: { role: "admin" }, [ME]: { role: "owner" } } });
+  });
+});
+
+describe("spaces in Demo mode", () => {
+  it("runs the whole flow in memory: invite, lock, role, ban, with Demo notes", async () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    btn(container, "New space").click();
+    fill(dialog().querySelector("input[type=text]"), "Quiet room");
+    dialog().querySelector("input[value=private]").click();
+    btn(dialog(), "Create space").click();
+    await waitFor(() => dialog() === null);
+    btn(head(container), "Invite people").click();
+    fill(dialog().querySelector('textarea[placeholder^="12D3"]'), `${PEER_A} bad`);
+    btn(dialog(), "Add to invite list").click();
+    await waitFor(() => /Not valid/.test(dialog().textContent));
+    fill(dialog().querySelector('textarea[placeholder^="12D3"]'), PEER_A);
+    btn(dialog(), "Add to invite list").click();
+    await waitFor(() => /Invited 1 person/.test(dialog().textContent));
+    expect(dialog().querySelector(".invitees .pill").textContent).toBe("Invited");
+    dialog().querySelector('[aria-label="Close dialog"]').click();
+    btn(head(container), "Manage space").click();
+    btn(dialog(), "Lock room").click();
+    btn(topDialog(), "Lock room").click();
+    await waitFor(() => btn(dialog(), "Unlock room"));
+    expect(container.querySelector(".notice").textContent).toBe("Demo: The room is locked.");
+    const sel = [...dialog().querySelectorAll(".attendee")].find((r) => r.dataset.address === PEER_A).querySelector("select");
+    sel.value = "moderator";
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    btn(topDialog(), "Make moderator").click();
+    await waitFor(() => [...dialog().querySelectorAll(".attendee")].find((r) => r.dataset.address === PEER_A).querySelector(".pill").textContent === "moderator");
+    dialog().dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(dialog()).toBeNull();
+    // the owner can still post while it is locked
+    fill(container.querySelector(".composerbox textarea"), "hello room");
+    container.querySelector(".composerbar .send").click();
+    await waitFor(() => container.textContent.includes("hello room") && !container.querySelector(".msg.pending"));
+    expect(container.querySelector(".msg.failed")).toBeNull();
+  });
+  it("turns away a post from someone who is not invited, and bans an author in a seeded community you activated", async () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    container.querySelector('.seedrow[data-seed="ai"] button').click();
+    await waitFor(() => !btn(dialog(), "Done").disabled);
+    expect(container.querySelector(".head h2").textContent).toBe("# AI");
+    const msgs = [...container.querySelectorAll(".msg")];
+    const first = msgs[0];
+    [...first.querySelectorAll(".linkbtn")].find((b) => b.textContent === "Ban…").click();
+    btn(topDialog(), "Ban author").click();
+    await waitFor(() => /Demo: .* is banned for 1 hour/.test(container.querySelector(".notice").textContent));
+    const second = [...container.querySelectorAll(".msg")].find((m) => m.textContent.includes("Prompting tips"));
+    [...second.querySelectorAll(".linkbtn")].find((b) => b.textContent === "Remove").click();
+    btn(topDialog(), "Remove post").click();
+    await waitFor(() => /removed/.test(second.textContent) || /removed/.test(container.textContent));
+  });
+  it("shows no old product name in any of the new dialogs", async () => {
+    const { container } = mountApp({ autoConnect: false }, { welcomed: true });
+    container.querySelector('.seedrow[data-seed="ai"] button').click();
+    await waitFor(() => !btn(dialog(), "Done").disabled);
+    btn(dialog(), "Done").click();
+    btn(container, "New space").click();
+    dialog().querySelector("input[value=private]").click();
+    dialog().querySelector("input[value=private]").dispatchEvent(new Event("change", { bubbles: true }));
+    const seen = [dialog().textContent];
+    dialog().querySelector('[aria-label="Close dialog"]').click();
+    btn(head(container), "Invite people").click();
+    seen.push(dialog().textContent);
+    dialog().querySelector('[aria-label="Close dialog"]').click();
+    btn(head(container), "Manage space").click();
+    seen.push(dialog().textContent);
+    expect([container.textContent, ...seen].join(" ")).not.toMatch(/bitsocial|plebbit|seedit|plebs/i);
+    expect(document.body.innerHTML).not.toMatch(/aria-label="[^"]*(bitsocial|plebbit|seedit)|title="[^"]*(bitsocial|plebbit|seedit)/i);
   });
 });

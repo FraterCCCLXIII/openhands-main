@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CanvasExtensionsService from "#/api/canvas-extensions-service";
@@ -17,6 +17,11 @@ import {
   CanvasExtensionsRuntimeProvider,
   useCanvasExtensionsRuntime,
 } from "./canvas-extensions-runtime";
+import {
+  dispatchCanvasExtensionIntent,
+  markCanvasExtensionPageMounted,
+  resetCanvasExtensionIntents,
+} from "#/stores/canvas-extension-intent-store";
 
 const backend: Backend = {
   id: "extension-backend",
@@ -59,6 +64,14 @@ function RuntimeProbe() {
     <div>
       <span data-testid="page-count">{runtime.pages.length}</span>
       <span data-testid="page-href">{runtime.pages[0]?.href}</span>
+      <span data-testid="create-actions">
+        {runtime.createActions
+          .map(
+            (entry) =>
+              `${entry.extension.name}:${entry.action.id}:${entry.href}`,
+          )
+          .join("|")}
+      </span>
       <span data-testid="runtime-error">
         {runtime.errors.get(extension.name)}
       </span>
@@ -269,5 +282,212 @@ describe("CanvasExtensionsRuntimeProvider", () => {
 
     rendered.unmount();
     expect(disposeSecond).toHaveBeenCalledTimes(1);
+  });
+
+  describe("create actions", () => {
+    afterEach(() => resetCanvasExtensionIntents());
+
+    it("publishes valid create actions with the page href", async () => {
+      const moduleLoader = vi.fn().mockResolvedValue({
+        activate: (host: CanvasExtensionHost) => {
+          host.registerCreateAction({
+            id: "new-document",
+            label: "New document",
+            icon: { svg: '<svg viewBox="0 0 1 1"><path d="M0 0h1v1z"/></svg>' },
+            pageId: "dashboard",
+            intent: "create:document",
+          });
+        },
+      });
+
+      renderRuntime(moduleLoader);
+
+      await waitFor(() =>
+        expect(screen.getByTestId("create-actions")).toHaveTextContent(
+          "demo-extension:new-document:/extensions/demo-extension/dashboard",
+        ),
+      );
+    });
+
+    it("rejects invalid registrations without breaking valid ones", async () => {
+      const failures: string[] = [];
+      const attempt = (host: CanvasExtensionHost, action: object) => {
+        try {
+          host.registerCreateAction(
+            action as Parameters<
+              CanvasExtensionHost["registerCreateAction"]
+            >[0],
+          );
+        } catch (error) {
+          failures.push((error as Error).message);
+        }
+      };
+      const moduleLoader = vi.fn().mockResolvedValue({
+        activate: (host: CanvasExtensionHost) => {
+          attempt(host, { id: "Bad Id", label: "Ok", pageId: "dashboard" });
+          attempt(host, { id: "empty-label", label: " ", pageId: "dashboard" });
+          attempt(host, { id: "no-page", label: "Ok", pageId: "missing" });
+          attempt(host, {
+            id: "huge-icon",
+            label: "Ok",
+            pageId: "dashboard",
+            icon: { svg: `<svg>${"a".repeat(5000)}</svg>` },
+          });
+          attempt(host, {
+            id: "not-svg",
+            label: "Ok",
+            pageId: "dashboard",
+            icon: { svg: "<img src=x onerror=alert(1)>" },
+          });
+          attempt(host, { id: "good", label: "Good", pageId: "dashboard" });
+          attempt(host, { id: "good", label: "Again", pageId: "dashboard" });
+        },
+      });
+
+      renderRuntime(moduleLoader);
+
+      await waitFor(() =>
+        expect(screen.getByTestId("create-actions")).toHaveTextContent(
+          "demo-extension:good:",
+        ),
+      );
+      expect(screen.getByTestId("create-actions").textContent).not.toContain(
+        "|",
+      );
+      expect(failures).toEqual([
+        expect.stringContaining("id must use lowercase"),
+        expect.stringContaining("label must be 1-40"),
+        expect.stringContaining('undeclared page "missing"'),
+        expect.stringContaining("icon.svg must be inline <svg>"),
+        expect.stringContaining("icon.svg must be inline <svg>"),
+        expect.stringContaining('create action "good" more than once'),
+      ]);
+      expect(screen.getByTestId("runtime-error")).toBeEmptyDOMElement();
+    });
+
+    it("orders actions by extension name, then registration order", async () => {
+      const zeta: InstalledCanvasExtensionInfo = {
+        ...extension,
+        name: "zeta-extension",
+        manifest: { ...extension.manifest!, name: "zeta-extension" },
+      };
+      vi.mocked(CanvasExtensionsService.listInstalled).mockResolvedValue([
+        zeta,
+        extension,
+      ]);
+      const moduleLoader = vi.fn().mockResolvedValue({
+        activate: (host: CanvasExtensionHost) => {
+          host.registerCreateAction({
+            id: "b",
+            label: "B",
+            pageId: "dashboard",
+          });
+          host.registerCreateAction({
+            id: "a",
+            label: "A",
+            pageId: "dashboard",
+          });
+        },
+      });
+
+      renderRuntime(moduleLoader);
+
+      await waitFor(() =>
+        expect(
+          screen.getByTestId("create-actions").textContent?.split("|"),
+        ).toEqual([
+          "demo-extension:b:/extensions/demo-extension/dashboard",
+          "demo-extension:a:/extensions/demo-extension/dashboard",
+          "zeta-extension:b:/extensions/zeta-extension/dashboard",
+          "zeta-extension:a:/extensions/zeta-extension/dashboard",
+        ]),
+      );
+    });
+
+    it("removes an action when it is disposed", async () => {
+      let disposeNew: (() => void) | undefined;
+      const moduleLoader = vi.fn().mockResolvedValue({
+        activate: (host: CanvasExtensionHost) => {
+          disposeNew = host.registerCreateAction({
+            id: "new-thing",
+            label: "New thing",
+            pageId: "dashboard",
+          });
+        },
+      });
+      renderRuntime(moduleLoader);
+      await waitFor(() =>
+        expect(screen.getByTestId("create-actions")).toHaveTextContent(
+          "new-thing",
+        ),
+      );
+
+      act(() => disposeNew?.());
+
+      expect(screen.getByTestId("create-actions")).toBeEmptyDOMElement();
+    });
+
+    it("removes actions when the extension is disabled", async () => {
+      const moduleLoader = vi.fn().mockResolvedValue({
+        activate: (host: CanvasExtensionHost) => {
+          host.registerCreateAction({
+            id: "new-thing",
+            label: "New thing",
+            pageId: "dashboard",
+          });
+        },
+      });
+      const { queryClient } = renderRuntime(moduleLoader);
+      await waitFor(() =>
+        expect(screen.getByTestId("create-actions")).toHaveTextContent(
+          "new-thing",
+        ),
+      );
+
+      vi.mocked(CanvasExtensionsService.listInstalled).mockResolvedValue([
+        { ...extension, enabled: false },
+      ]);
+      await queryClient.invalidateQueries();
+
+      await waitFor(() =>
+        expect(screen.getByTestId("create-actions")).toBeEmptyDOMElement(),
+      );
+    });
+
+    it("delivers intents to onIntent only while the extension is active", async () => {
+      const received = vi.fn();
+      const moduleLoader = vi.fn().mockResolvedValue({
+        activate: (host: CanvasExtensionHost) => {
+          host.onIntent(received);
+        },
+      });
+      const rendered = renderRuntime(moduleLoader);
+      await waitFor(() => expect(moduleLoader).toHaveBeenCalled());
+      await waitFor(() =>
+        expect(screen.getByTestId("page-count")).toBeInTheDocument(),
+      );
+      const unmarkMounted = markCanvasExtensionPageMounted(
+        extension.name,
+        "dashboard",
+      );
+
+      dispatchCanvasExtensionIntent(extension.name, "dashboard", {
+        id: "new-document",
+        action: "create:document",
+      });
+      expect(received).toHaveBeenCalledWith({
+        id: "new-document",
+        action: "create:document",
+        at: expect.any(Number),
+      });
+
+      rendered.unmount();
+      dispatchCanvasExtensionIntent(extension.name, "dashboard", {
+        id: "new-document",
+        action: "create:document",
+      });
+      expect(received).toHaveBeenCalledTimes(1);
+      unmarkMounted();
+    });
   });
 });

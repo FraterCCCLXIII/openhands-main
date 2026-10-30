@@ -59,7 +59,7 @@ function AgentButton({
           )}
         >
           <FeedCustomIcon
-            iconKey={agentIconKey(`demo:${agent.name}`)}
+            iconKey={agentIconKey(agent.profileId ?? `demo:${agent.name}`)}
             size={large ? 48 : 40}
             radius={12}
             glyph={<Icon size={large ? 24 : 20} />}

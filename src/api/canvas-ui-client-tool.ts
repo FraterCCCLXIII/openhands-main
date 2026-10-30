@@ -58,7 +58,7 @@ When to call (pick the most specific option that matches your last action):
     can interact with the page directly (click links, fill forms, etc.)
 
 Call this BEFORE writing your chat-message summary of the change, so the
-artifact is visible while the user reads what you did. One canvas_ui_control
+artifact is visible while the user reads what you did. One ${CANVAS_UI_CLIENT_TOOL_NAME}
 call per logical step is enough — don't repeat it for the same file or tab in
 the same turn.`;
 

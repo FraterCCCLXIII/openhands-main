@@ -7,8 +7,12 @@ import { mountCanvasExtensionAppView } from "#/extensions/canvas-extension-app-v
 import { loadCanvasExtensionModule } from "#/extensions/canvas-extension-module-loader";
 import { useCanvasExtensions } from "#/hooks/query/use-canvas-extensions";
 import { I18nKey } from "#/i18n/declaration";
+import { subscribeCanvasExtensionIntents } from "#/stores/canvas-extension-intent-store";
 import {
+  CANVAS_EXTENSION_CREATE_ACTION_ICON_MAX_LENGTH,
+  CANVAS_EXTENSION_CREATE_ACTION_LABEL_MAX_LENGTH,
   CANVAS_EXTENSION_HOST_API_VERSION,
+  type CanvasExtensionCreateAction,
   type CanvasExtensionDispose,
   type CanvasExtensionHost,
   type CanvasExtensionModule,
@@ -24,14 +28,24 @@ export interface RegisteredCanvasExtensionPage {
   href: string;
 }
 
+/** An entry an extension added to the New Chat menu, ready to render. */
+export interface RegisteredCanvasExtensionCreateAction {
+  extension: InstalledCanvasExtensionInfo;
+  action: CanvasExtensionCreateAction;
+  href: string;
+}
+
 interface CanvasExtensionsRuntimeValue {
   pages: RegisteredCanvasExtensionPage[];
+  /** Ordered by extension name, then registration order. */
+  createActions: RegisteredCanvasExtensionCreateAction[];
   activating: boolean;
   errors: ReadonlyMap<string, string>;
 }
 
 const EMPTY_RUNTIME: CanvasExtensionsRuntimeValue = {
   pages: [],
+  createActions: [],
   activating: false,
   errors: new Map(),
 };
@@ -84,6 +98,65 @@ function getDeclaredPage(
   return { ...contribution, path: normalizedPath };
 }
 
+const CREATE_ACTION_DESCRIPTION_MAX_LENGTH = 200;
+const CREATE_ACTION_INTENT_MAX_LENGTH = 200;
+
+/** Throws a clear error for a malformed create action; returns the normalized copy. */
+function validateCreateAction(
+  extension: InstalledCanvasExtensionInfo,
+  action: CanvasExtensionCreateAction,
+): CanvasExtensionCreateAction {
+  const fail = (reason: string): never => {
+    throw new Error(
+      `Extension ${extension.name} registered an invalid create action: ${reason}.`,
+    );
+  };
+  if (!action || typeof action !== "object") fail("expected an object");
+  if (typeof action.id !== "string" || !isValidSegment(action.id)) {
+    fail("id must use lowercase letters, digits, and hyphens");
+  }
+  const label = typeof action.label === "string" ? action.label.trim() : "";
+  if (
+    label.length < 1 ||
+    label.length > CANVAS_EXTENSION_CREATE_ACTION_LABEL_MAX_LENGTH
+  ) {
+    fail(
+      `label must be 1-${CANVAS_EXTENSION_CREATE_ACTION_LABEL_MAX_LENGTH} characters`,
+    );
+  }
+  if (
+    action.description !== undefined &&
+    (typeof action.description !== "string" ||
+      action.description.length > CREATE_ACTION_DESCRIPTION_MAX_LENGTH)
+  ) {
+    fail(
+      `description must be a string of at most ${CREATE_ACTION_DESCRIPTION_MAX_LENGTH} characters`,
+    );
+  }
+  if (
+    action.intent !== undefined &&
+    (typeof action.intent !== "string" ||
+      action.intent.length > CREATE_ACTION_INTENT_MAX_LENGTH)
+  ) {
+    fail(
+      `intent must be a string of at most ${CREATE_ACTION_INTENT_MAX_LENGTH} characters`,
+    );
+  }
+  if (action.icon !== undefined) {
+    const svg = action.icon?.svg;
+    if (
+      typeof svg !== "string" ||
+      !/^\s*<svg[\s>]/i.test(svg) ||
+      svg.length > CANVAS_EXTENSION_CREATE_ACTION_ICON_MAX_LENGTH
+    ) {
+      fail(
+        `icon.svg must be inline <svg> markup of at most ${CANVAS_EXTENSION_CREATE_ACTION_ICON_MAX_LENGTH} characters`,
+      );
+    }
+  }
+  return { ...action, label };
+}
+
 type CanvasExtensionModuleLoader = (
   source: string,
 ) => Promise<CanvasExtensionModule>;
@@ -103,6 +176,9 @@ export function CanvasExtensionsRuntimeProvider({
   const { t, i18n } = useTranslation("openhands");
   const query = useCanvasExtensions();
   const [pages, setPages] = React.useState<RegisteredCanvasExtensionPage[]>([]);
+  const [createActions, setCreateActions] = React.useState<
+    RegisteredCanvasExtensionCreateAction[]
+  >([]);
   const [errors, setErrors] = React.useState<ReadonlyMap<string, string>>(
     new Map(),
   );
@@ -165,6 +241,7 @@ export function CanvasExtensionsRuntimeProvider({
     const { backend, orgId } = activeRef.current;
     const extensionsToActivate = enabledExtensionsRef.current;
     setPages([]);
+    setCreateActions([]);
     setErrors(new Map());
     setActivating(extensionsToActivate.length > 0);
 
@@ -172,7 +249,27 @@ export function CanvasExtensionsRuntimeProvider({
       extension: InstalledCanvasExtensionInfo,
     ) => {
       const registeredPages = new Map<string, RegisteredCanvasExtensionPage>();
+      const registeredCreateActions = new Map<
+        string,
+        RegisteredCanvasExtensionCreateAction
+      >();
       const registrationDisposers: CanvasExtensionDispose[] = [];
+      // Create actions are published once activation resolves, then kept in
+      // step with later registrations and disposals.
+      let published = false;
+      const publishCreateActions = () => {
+        if (!published || cancelled) return;
+        setCreateActions((current) =>
+          [
+            ...current.filter(
+              (entry) => entry.extension.name !== extension.name,
+            ),
+            ...registeredCreateActions.values(),
+          ].sort((left, right) =>
+            left.extension.name.localeCompare(right.extension.name),
+          ),
+        );
+      };
       try {
         const source = await CanvasExtensionsService.fetchBundle(
           extension.name,
@@ -231,6 +328,36 @@ export function CanvasExtensionsRuntimeProvider({
             registrationDisposers.push(unregister);
             return unregister;
           },
+          registerCreateAction: (rawAction) => {
+            const action = validateCreateAction(extension, rawAction);
+            if (registeredCreateActions.has(action.id)) {
+              throw new Error(
+                `Extension ${extension.name} registered create action "${action.id}" more than once.`,
+              );
+            }
+            const page = getDeclaredPage(extension, action.pageId);
+            registeredCreateActions.set(action.id, {
+              extension,
+              action,
+              href: buildCanvasExtensionPageHref(extension.name, page.path),
+            });
+            publishCreateActions();
+            const unregister = () => {
+              if (registeredCreateActions.delete(action.id)) {
+                publishCreateActions();
+              }
+            };
+            registrationDisposers.push(unregister);
+            return unregister;
+          },
+          onIntent: (callback) => {
+            const unsubscribe = subscribeCanvasExtensionIntents(
+              extension.name,
+              callback,
+            );
+            registrationDisposers.push(unsubscribe);
+            return unsubscribe;
+          },
           navigate: (path) => navigate(path),
           agentServer: {
             request: (request) =>
@@ -277,7 +404,11 @@ export function CanvasExtensionsRuntimeProvider({
         if (typeof disposeActivation === "function") {
           disposers.push(disposeActivation);
         }
-        disposers.push(...registrationDisposers);
+        // Read the list at disposal time so registrations made after
+        // activation resolves are cleaned up too.
+        disposers.push(() => registrationDisposers.forEach((d) => d()));
+        published = true;
+        publishCreateActions();
         setPages((current) => [
           ...current.filter((page) => page.extension.name !== extension.name),
           ...registeredPages.values(),
@@ -306,6 +437,7 @@ export function CanvasExtensionsRuntimeProvider({
     return () => {
       cancelled = true;
       setPages([]);
+      setCreateActions([]);
       for (const dispose of disposers.reverse()) {
         try {
           dispose();
@@ -317,8 +449,8 @@ export function CanvasExtensionsRuntimeProvider({
   }, [activationSignature, moduleLoader, navigate]);
 
   const value = React.useMemo(
-    () => ({ pages, activating, errors }),
-    [pages, activating, errors],
+    () => ({ pages, createActions, activating, errors }),
+    [pages, createActions, activating, errors],
   );
 
   return (

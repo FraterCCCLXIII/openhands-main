@@ -65,6 +65,37 @@ const PERSONAS = [
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+const KAMIJI_STROKES = ["M18 24V82M46 24L20 54M28 50L48 82", "M96 48V82", "M120 48V82M120 60Q120 48 134 48Q148 48 148 62V82M148 62Q148 48 162 48Q176 48 176 62V82", "M198 48V82M198 26V26", "M224 48V86Q224 98 210 98M224 26V26", "M250 48V82M250 26V26"];
+const KOSMOS_PATHS = [
+  "M79.81,54.47c-2.27-3.14-3.59-7.14-3.59-11.73,0-11.39,8.05-19.17,18.75-19.17,5.44,0,10.18,2.02,13.54,5.49,2.77-3.32,28.03-25.97,31.05-29.06-24.12,19.01-35.79,11.75-44.59,11.75-18.92,0-32.79,13.18-32.79,30.99,0,8.04,2.84,15.14,7.69,20.51",
+  "M111.85,33.96c1.19,2.57,1.86,5.52,1.86,8.77,0,11.38-8.05,19.17-18.75,19.17-4.03,0-7.67-1.1-10.66-3.09-3.54,2.54-21.13,20.86-24.29,23.89,18.2-10.53,26.87-8.99,34.95-8.99,18.83,0,32.79-13.1,32.79-30.99,0-6.58-2.16-12.99-5.7-18.17l-10.2,9.4Z",
+  "M137.56,66.79l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M254.75,72.7l-.09-35.95-17.63,29.62h-6.25l-17.55-28.85v35.18h-13.01V12.78h11.47l22.43,37.24,22.09-37.24h11.39l.17,59.92h-13.01Z",
+  "M280.39,42.78c0-17.81,13.87-30.99,32.79-30.99s32.79,13.1,32.79,30.99-13.95,30.99-32.79,30.99-32.79-13.18-32.79-30.99ZM331.93,42.78c0-11.39-8.05-19.17-18.75-19.17s-18.75,7.79-18.75,19.17,8.05,19.17,18.75,19.17,18.75-7.79,18.75-19.17Z",
+  "M355.48,66.84l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M13.78,39.15V12.78H0v59.92h13.78v-15.15l.03-.03M28.22,42.74 56.22,72.7H38.43L19.09,52.01 13.81,46.36 10.43,42.74 13.78,39.15 38.43,12.78H56.22L31.06,39.7Z",
+];
+
+function logoSvg(viewBox, label, paths, stroke) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", label);
+  const title = document.createElementNS(SVG_NS, "title");
+  title.textContent = label;
+  svg.append(title);
+  paths.forEach((d) => {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("aria-hidden", "true");
+    if (stroke) Object.entries({ fill: "none", stroke: "currentColor", "stroke-width": stroke, "stroke-linecap": "round", "stroke-linejoin": "round" }).forEach(([k, v]) => path.setAttribute(k, v));
+    else path.setAttribute("fill", "currentColor");
+    svg.append(path);
+  });
+  return svg;
+}
+
+
 const mixHex = (hex, other, t) => {
   const n = parseInt(hex.replace("#", ""), 16);
   const m = parseInt(other.replace("#", ""), 16);
@@ -1607,33 +1638,135 @@ export function techRail(ids) {
   return rail;
 }
 
+/**
+ * Drag handles for the outer columns of a page's grid (a left list and/or a right panel).
+ *
+ * `columns` is a list of `{ el, edge, min, max, initial, label }`: `el` is the column's element,
+ * `edge` is "left" for a column on the left side (its handle sits on its right edge) or "right"
+ * for one on the right side. The app's CSS must read each width from a variable, for example
+ * `grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px)`, where the
+ * number is the column's position in the `columns` list. Widths are saved per `storageKey`.
+ * Call `refresh()` after the app shows or hides a column; call `dispose()` on unmount.
+ */
+function gripColumns({ grid, columns, storageKey, centerMin = 320, narrowQuery = "(max-width: 720px)" }) {
+  const win = grid.ownerDocument.defaultView || globalThis;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const saved = (() => {
+    try { return JSON.parse(win.localStorage.getItem(storageKey) || "{}") || {}; } catch { return {}; }
+  })();
+  const widths = columns.map((c, i) => (Number.isFinite(saved[i]) ? clamp(saved[i], c.min, c.max) : c.initial));
+  const handles = [];
+  const cleanups = [];
+
+  const narrow = () => Boolean(win.matchMedia && win.matchMedia(narrowQuery).matches);
+  const shown = (i) => !narrow() && columns[i].el.isConnected && win.getComputedStyle(columns[i].el).display !== "none";
+  const save = () => { try { win.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(widths.map((w, i) => [i, w])))); } catch { /* storage unavailable */ } };
+  // The widest a column may get while the middle keeps `centerMin` and the other grips keep their widths.
+  const limit = (i) => {
+    const total = grid.clientWidth;
+    if (!total) return columns[i].max;
+    const others = widths.reduce((sum, w, j) => (j !== i && shown(j) ? sum + w : sum), 0);
+    return clamp(total - others - centerMin, columns[i].min, columns[i].max);
+  };
+
+  function apply() {
+    columns.forEach((c, i) => {
+      if (narrow()) grid.style.removeProperty(`--grip-${i}`);
+      else grid.style.setProperty(`--grip-${i}`, `${widths[i]}px`);
+      const h = handles[i];
+      h.hidden = !shown(i);
+      h.setAttribute("aria-valuenow", String(Math.round(widths[i])));
+      h.setAttribute("aria-valuemax", String(Math.round(limit(i))));
+    });
+  }
+
+  function set(i, width, persist = true) {
+    widths[i] = clamp(Math.round(width), columns[i].min, limit(i));
+    apply();
+    if (persist) save();
+  }
+
+  columns.forEach((c, i) => {
+    const h = grid.ownerDocument.createElement("div");
+    h.className = `colgrip colgrip-${c.edge}`;
+    h.dataset.grip = String(i);
+    h.setAttribute("role", "separator");
+    h.setAttribute("aria-orientation", "vertical");
+    h.setAttribute("aria-label", `Resize ${c.label || "column"}`);
+    h.setAttribute("aria-valuemin", String(c.min));
+    h.tabIndex = 0;
+    h.style[c.edge === "left" ? "left" : "right"] = `var(--grip-${i}, ${c.initial}px)`;
+    const dir = c.edge === "left" ? 1 : -1;
+    let startX = 0;
+    let startW = 0;
+    const move = (e) => { set(i, startW + dir * (e.clientX - startX), false); };
+    const up = () => {
+      grid.classList.remove("gripping");
+      h.classList.remove("on");
+      grid.ownerDocument.removeEventListener("pointermove", move);
+      grid.ownerDocument.removeEventListener("pointerup", up);
+      save();
+    };
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = widths[i];
+      grid.classList.add("gripping");
+      h.classList.add("on");
+      grid.ownerDocument.addEventListener("pointermove", move);
+      grid.ownerDocument.addEventListener("pointerup", up);
+    });
+    h.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const grow = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * dir;
+      if (grow) set(i, widths[i] + grow * step);
+      else if (e.key === "Home") set(i, c.min);
+      else if (e.key === "End") set(i, limit(i));
+      else return;
+      e.preventDefault();
+    });
+    h.addEventListener("dblclick", () => set(i, c.initial));
+    cleanups.push(() => { grid.ownerDocument.removeEventListener("pointermove", move); grid.ownerDocument.removeEventListener("pointerup", up); h.remove(); });
+    handles.push(h);
+    grid.append(h);
+  });
+
+  win.addEventListener("resize", apply);
+  cleanups.push(() => win.removeEventListener("resize", apply));
+  apply();
+  return { refresh: apply, widths: () => [...widths], dispose: () => cleanups.forEach((fn) => fn()) };
+}
+
+
+
 const CSS = `
 .hg { --hg-bg: var(--oh-color-base, #171717); --hg-panel: var(--oh-color-base-secondary, #212121); --hg-raised: var(--oh-surface-raised, #2a2a2a);
   --hg-text: var(--oh-foreground, #eee); --hg-contrast: var(--oh-contrast, #fff); --hg-muted: var(--oh-muted, #9a9a9a);
-  --hg-border: var(--oh-border-subtle, #3a3a3a); --hg-primary: var(--oh-color-primary, #fff); --hg-on-primary: var(--oh-accent-foreground, #111);
-  --hg-success: var(--oh-success, #34d399);
+  --hg-border: var(--oh-border-subtle, #3a3a3a); --hg-primary: var(--oh-accent, var(--oh-color-primary, #fff)); --hg-on-primary: var(--oh-accent-foreground, #111);
+  --hg-on-contrast: var(--oh-contrast-foreground, #111);
+  --hg-success: var(--oh-success, #34d399); --hg-link: var(--oh-info-soft-foreground, #7c9dff);
   box-sizing: border-box; position: sticky; top: 0; color: var(--hg-text); background: var(--hg-bg); font: 14px/1.45 system-ui, sans-serif;
   height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
 .hg *, .hg *::before, .hg *::after { box-sizing: border-box; }
 .hg button { font: inherit; color: inherit; }
-.hg .shell { display: grid; grid-template-columns: 56px 320px minmax(0, 1fr) 360px; height: 100%; min-height: 0; }
+.hg .shell { position: relative; display: grid; grid-template-columns: 56px var(--grip-0, 320px) minmax(0, 1fr) var(--grip-1, 360px); height: 100%; min-height: 0; }
 .hg .rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; border-right: 1px solid var(--hg-border); background: var(--hg-bg); min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .hg .rbtn { position: relative; width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--hg-muted); display: grid; place-items: center; cursor: pointer; }
 .hg .rbtn svg { width: 21px; height: 21px; }
 .hg .rbtn:hover { background: var(--hg-panel); color: var(--hg-contrast); }
 .hg .rbtn[aria-pressed="true"] { background: var(--hg-raised); color: var(--hg-contrast); }
 .hg .rbtn[aria-pressed="true"]::before { content: ""; position: absolute; left: -8px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--hg-primary); }
-.hg .rlabel { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); z-index: 9; padding: 3px 8px; border-radius: 8px; background: var(--hg-contrast); color: var(--hg-bg); font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; }
+.hg .rlabel { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); z-index: 9; padding: 3px 8px; border-radius: 8px; background: var(--hg-contrast); color: var(--hg-on-contrast); font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .12s; }
 .hg .rbtn:hover .rlabel, .hg .rbtn:focus-visible .rlabel { opacity: 1; }
 .hg .rspacer { flex: 1; }
 .hg .rsep { width: 24px; height: 1px; background: var(--hg-border); margin: 6px 0; }
 .hg .techrail { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--hg-border); color: var(--hg-muted); font-size: 11px; }
 .hg .techlabel { letter-spacing: .06em; text-transform: uppercase; }
-.hg .tech { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: inherit; text-decoration: none; opacity: .8; }
+.hg .tech { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: inherit; text-decoration: none; opacity: .92; }
 .hg .tech:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
 .hg .tech img { width: 14px; height: 14px; display: block; }
 .hg .techmono { font-weight: 700; font-size: 11px; }
-.hg .shell.pipewide { grid-template-columns: 56px 320px minmax(0, 1fr); }
+.hg .shell.pipewide { grid-template-columns: 56px var(--grip-0, 320px) minmax(0, 1fr); }
 .hg .pgraph { position: relative; width: 100%; overflow: hidden; }
 .hg .pcanvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .hg .pedges { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
@@ -1650,7 +1783,7 @@ const CSS = `
 .hg .pnode .nwho .wp { display: inline-flex; align-items: center; gap: 4px; }
 .hg .pnode .nwho canvas, .hg .pnode .nwho .avatar { width: 20px; height: 20px; border-radius: 50%; flex: none; }
 .hg .pdetail { border: 1px solid var(--hg-border); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; background: var(--hg-panel); }
-.hg .shell.nodrawer { grid-template-columns: 56px 320px minmax(0, 1fr); }
+.hg .shell.nodrawer { grid-template-columns: 56px var(--grip-0, 320px) minmax(0, 1fr); }
 .hg .shell.view-studio { grid-template-columns: 56px minmax(0, 1fr); }
 .hg .studio { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; min-height: 0; background: var(--hg-bg); }
 .hg .sstage { align-items: center; padding: 12px 20px 16px; gap: 18px; }
@@ -1660,21 +1793,19 @@ const CSS = `
 .hg .sbig { flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; }
 .hg .sbig svg { width: min(52vh, 340px); height: min(52vh, 340px); filter: drop-shadow(0 18px 24px rgba(0,0,0,.35)); }
 .hg .sactions { display: flex; gap: 8px; }
-.hg .sexport { border: 0; border-radius: 10px; background: var(--hg-contrast); color: var(--hg-bg); padding: 8px 16px; font-weight: 600; cursor: pointer; }
+.hg .sexport { border: 0; border-radius: 10px; background: var(--hg-contrast); color: var(--hg-on-contrast); padding: 8px 16px; font-weight: 600; cursor: pointer; }
 .hg .sreset { border: 1px solid var(--hg-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hg .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
-.hg .powered b { color: var(--hg-text); font-weight: 600; }
+.hg .plogo { display: inline-flex; color: inherit; opacity: .7; }
+.hg .plogo:hover { opacity: 1; }
+.hg .plogo svg { height: 16px; width: auto; }
 .hg .welcome .wdots { display: flex; justify-content: flex-start; gap: 8px; margin-top: 2px; padding-left: 3px; }
 .hg .welcome .wdot { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: 0; cursor: pointer; transition: transform .12s; }
 .hg .welcome .wdot:hover { transform: scale(1.35); }
-.hg .welcome .wdot[aria-pressed="true"] { outline: 1.5px solid #fff; outline-offset: 2px; transform: scale(1.1); }
-.hg .welcome .wvariant { margin-top: -2px; padding-left: 3px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }
-.hg .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: rgba(255,255,255,.62); }
-.hg .welcome .wpowered b { color: #fff; }
+.hg .welcome .wdot[aria-pressed="true"] { outline: 1.5px solid var(--hg-contrast); outline-offset: 2px; transform: scale(1.1); }
+.hg .welcome .wvariant { margin-top: -2px; padding-left: 3px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--hg-contrast) 70%, transparent); }
+.hg .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: color-mix(in srgb, var(--hg-contrast) 75%, transparent); }
 .hg .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hg-border); background: var(--hg-bg); }
-.hg .poweredmark { width: 18px; height: 18px; display: inline-block; }
-.hg .poweredmark svg { width: 100%; height: 100%; }
-.hg .kosmos { letter-spacing: .06em; }
 .hg .spanel { border-left: 1px solid var(--hg-border); padding: 16px; overflow: auto; background: var(--hg-bg); }
 .hg .spanel h4 { margin: 14px 0 8px; font-size: 12px; font-weight: 600; color: var(--hg-text); }
 .hg .ssub { margin: 10px 0 4px; font-size: 11px; color: var(--hg-muted); text-transform: uppercase; letter-spacing: .06em; }
@@ -1726,7 +1857,7 @@ const CSS = `
 .hg .capic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 700; }
 .hg .cdock { align-self: center; padding: 8px 18px; border-radius: 16px; background: rgba(255,255,255,.7); color: #333; font: 12px ui-monospace, Menlo, monospace; max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hg .ccontrol { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 999px; background: var(--hg-panel); border: 1px solid var(--hg-border); }
-.hg .takeover { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 5px 12px; cursor: pointer; font-weight: 600; }
+.hg .takeover { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-on-contrast); padding: 5px 12px; cursor: pointer; font-weight: 600; }
 .hg .cnote { max-width: 560px; text-align: center; color: var(--hg-muted); }
 .hg .col {  display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .hg .list { border-right: 1px solid var(--hg-border); }
@@ -1825,7 +1956,7 @@ const CSS = `
 .hg .md h4 { font-size: 15px; font-weight: 650; color: var(--hg-contrast); }
 .hg .md h5, .hg .md h6 { font-size: 14px; font-weight: 650; color: var(--hg-contrast); }
 .hg .md strong { font-weight: 650; color: var(--hg-contrast); }
-.hg .md a { color: var(--arco-accent, #7c9dff); text-decoration: underline; text-underline-offset: 2px; }
+.hg .md a { color: var(--hg-link); text-decoration: underline; text-underline-offset: 2px; }
 .hg .md ul, .hg .md ol { padding-left: 22px; display: grid; gap: 3px; }
 .hg .md li > ul, .hg .md li > ol { margin-top: 3px; }
 .hg .md li.mdtask { list-style: none; margin-left: -20px; }
@@ -1833,10 +1964,10 @@ const CSS = `
 .hg .md blockquote { border-left: 3px solid var(--hg-border); padding: 2px 0 2px 12px; color: var(--hg-muted); }
 .hg .md hr { border: 0; border-top: 1px solid var(--hg-border); }
 .hg .md code { font: 12.5px ui-monospace, SF Mono, Menlo, monospace; background: rgba(255,255,255,.08); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
-.hg .md .mdcode { border: 1px solid var(--hg-border); border-radius: 10px; overflow: hidden; background: #0e0e10; }
-.hg .md .mdcodebar { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: var(--hg-muted); border-bottom: 1px solid var(--hg-border); background: rgba(255,255,255,.03); }
-.hg .md .mdcodebar button { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 11px; }
-.hg .md .mdcodebar button:hover { color: var(--hg-contrast); }
+.hg .md .mdcode { border: 1px solid var(--hg-border); border-radius: 10px; overflow: hidden; background: #0e0e10; color: #eee; }
+.hg .md .mdcodebar { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: #9a9a9a; border-bottom: 1px solid var(--hg-border); background: rgba(255,255,255,.03); }
+.hg .md .mdcodebar button { border: 0; background: transparent; color: #9a9a9a; cursor: pointer; font-size: 11px; }
+.hg .md .mdcodebar button:hover { color: #fff; }
 .hg .md pre { margin: 0; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.55 ui-monospace, SF Mono, Menlo, monospace; }
 .hg .md pre code { background: none; padding: 0; border-radius: 0; overflow-wrap: normal; }
 .hg .md .mdtable { overflow-x: auto; border: 1px solid var(--hg-border); border-radius: 10px; }
@@ -1869,7 +2000,7 @@ const CSS = `
 .hg .tool span.t { overflow: hidden; text-overflow: ellipsis; }
 .hg .spacer { flex: 1; }
 .hg .send { border: 0; border-radius: 50%; width: 34px; height: 34px; background: var(--hg-primary); color: var(--hg-on-primary); cursor: pointer; font-weight: 700; }
-.hg .send:disabled { opacity: .4; cursor: default; }
+.hg .send:disabled { opacity: .75; cursor: default; }
 .hg .pop { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 5; min-width: 240px; max-width: 360px; max-height: 280px; overflow: auto; background: var(--hg-panel); border: 1px solid var(--hg-border); border-radius: 12px; padding: 6px; box-shadow: 0 12px 32px rgba(0,0,0,.45); }
 .hg .pop h4 { margin: 6px 6px 2px; font-size: 11px; color: var(--hg-muted); text-transform: uppercase; letter-spacing: .06em; }
 .hg .popitem { display: flex; width: 100%; gap: 8px; align-items: center; border: 0; background: transparent; padding: 7px 8px; border-radius: 8px; cursor: pointer; text-align: left; }
@@ -1935,6 +2066,16 @@ const CSS = `
 .hg .status { font: 11px/1 var(--arco-font-mono); text-transform: uppercase; color: var(--arco-text-secondary); border: 1px solid var(--arco-border-strong); border-radius: 999px; padding: 2px 7px; margin-left: auto; }
 .hg .status.done { color: var(--arco-success); } .hg .status.in_progress { color: var(--arco-accent); }
 .hg .lhint { color: var(--arco-text-secondary); font-size: var(--arco-text-sm); }
+/* Draggable column dividers. */
+.colgrip { position: absolute; top: 0; bottom: 0; width: 11px; z-index: 6; cursor: col-resize; touch-action: none; outline: 0; }
+.colgrip-left { transform: translateX(-50%); }
+.colgrip-right { transform: translateX(50%); }
+.colgrip::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: transparent; transition: background .12s; }
+.colgrip:hover::after, .colgrip:focus-visible::after, .colgrip.on::after { background: var(--oh-color-primary, #7c9dff); }
+.gripping { user-select: none; cursor: col-resize; }
+.gripping * { pointer-events: none; }
+.gripping .colgrip { pointer-events: auto; }
+@media (max-width: 720px) { .colgrip { display: none; } }
 @media (max-width: 1100px) { .hg .shell, .hg .shell.nodrawer { grid-template-columns: 56px 280px minmax(0, 1fr); } .hg .drawer:not(.previewcol) { display: none; } .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: 56px minmax(0, 1fr); } .hg .previewcol, .hg .computercol { display: none; } }
 @media (max-width: 900px) { .hg .studio { grid-template-columns: minmax(0, 1fr); overflow: auto; } .hg .spanel { border-left: 0; border-top: 1px solid var(--hg-border); } }
 .hg .mback, .hg .mscreen { display: none; border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 2px 6px; cursor: pointer; }
@@ -1949,11 +2090,11 @@ const CSS = `
 .hg .action .abody { padding: 10px 12px; border-radius: 10px; background: var(--hg-raised); display: grid; gap: 6px; }
 .hg .action .arow { display: flex; gap: 8px; }
 .hg .action button { border: 1px solid var(--hg-border); border-radius: 10px; padding: 6px 14px; background: var(--hg-raised); cursor: pointer; }
-.hg .action button.go { background: var(--hg-contrast); color: var(--hg-bg); border-color: var(--hg-contrast); font-weight: 600; }
+.hg .action button.go { background: var(--hg-contrast); color: var(--hg-on-contrast); border-color: var(--hg-contrast); font-weight: 600; }
 .hg .welcome { height: 100%; position: relative; display: grid; place-items: center; align-content: end; text-align: center; overflow: hidden; background: var(--hg-bg); padding-bottom: 7vh; }
 .hg .welcome .wcanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hg .welcome .wbox { position: relative; display: grid; justify-items: center; }
-.hg .welcome h1, .hg .welcome p { color: #fff; text-shadow: none; }
+.hg .welcome h1, .hg .welcome p { color: var(--hg-contrast); text-shadow: none; }
 .hg .orb-body { transform-box: view-box; transform-origin: 32px 34px; animation: hgOrb 5s ease-in-out infinite alternate; }
 .hg .orb-look { animation: hgLook 8s ease-in-out infinite; }
 .hg .orb-blink { transform-box: view-box; transform-origin: 32px 33px; animation: hgBlink 6s infinite; }
@@ -1962,17 +2103,17 @@ const CSS = `
 @keyframes hgBlink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
 @media (prefers-reduced-motion: reduce) { .hg .orb-body, .hg .orb-look, .hg .orb-blink { animation: none; } }
 .hg .welcome .wcorner { position: absolute; left: 18px; bottom: 18px; display: grid; justify-items: start; gap: 10px; text-align: left; }
-.hg .welcome .wshapes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(255,255,255,.07); }
-.hg .welcome .wshape { width: 26px; height: 26px; padding: 4px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,.55); cursor: pointer; display: grid; place-items: center; }
+.hg .welcome .wshapes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: color-mix(in srgb, var(--hg-contrast) 7%, transparent); }
+.hg .welcome .wshape { width: 26px; height: 26px; padding: 4px; border: 0; border-radius: 8px; background: transparent; color: color-mix(in srgb, var(--hg-contrast) 70%, transparent); cursor: pointer; display: grid; place-items: center; }
 .hg .welcome .wshape svg { width: 100%; height: 100%; display: block; }
-.hg .welcome .wshape:hover { color: #fff; background: rgba(255,255,255,.08); }
-.hg .welcome .wshape[aria-pressed="true"] { color: #fff; background: rgba(139,92,246,.45); }
+.hg .welcome .wshape:hover { color: var(--hg-contrast); background: color-mix(in srgb, var(--hg-contrast) 8%, transparent); }
+.hg .welcome .wshape[aria-pressed="true"] { color: var(--hg-contrast); background: rgba(139,92,246,.45); }
 .hg .welcome .wmodes { display: inline-flex; gap: 2px; margin-top: 0; padding: 2px; border-radius: 999px; background: rgba(0,0,0,.28); }
-.hg .welcome .wmode { border: 0; background: transparent; color: rgba(255,255,255,.75); border-radius: 999px; padding: 3px 12px; font-size: 12px; cursor: pointer; }
+.hg .welcome .wmode { border: 0; background: transparent; color: color-mix(in srgb, var(--hg-contrast) 80%, transparent); border-radius: 999px; padding: 3px 12px; font-size: 12px; cursor: pointer; }
 .hg .welcome .wmode[aria-pressed="true"] { background: rgba(255,255,255,.92); color: #1a1030; }
 .hg .welcome h1 { margin: 0 0 6px; font-size: 40px; font-weight: 300; letter-spacing: -.01em; color: var(--hg-contrast); }
 .hg .welcome p { margin: 0 0 18px; max-width: 260px; font-weight: 300; }
-.hg .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 10px 22px; font-weight: 400; cursor: pointer; }
+.hg .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-on-contrast); padding: 10px 22px; font-weight: 400; cursor: pointer; }
 @media (max-width: 640px) {
   .hg .computercol .mbar { display: flex !important; }
   .hg .shell, .hg .shell.nodrawer, .hg .shell.view-preview, .hg .shell.view-computer { grid-template-columns: minmax(0, 1fr); }
@@ -2175,12 +2316,23 @@ function mount(host, container) {
   const agents = () => [...state.live, ...samples];
   const current = () => agents().find((a) => a.id === state.selected) || agents()[0];
   const threadOf = (agent) => (agent.live ? agent.thread : [...agent.thread, ...(state.threads[agent.id] || [])]);
-  /** The "Powered by Kamiji and Kosmos" line, with a small Kamiji hand. */
+  /** The "Built with" row: Kamiji and Kosmos logos linking to their sites. */
   const poweredBy = (cls = "") => {
     const d = el("div", `powered${cls ? ` ${cls}` : ""}`);
-    const hand = el("span", "poweredmark");
-    hand.append(blobSvg("violet"));
-    d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
+    const logo = (href, svg) => {
+      const a = el("a", "plogo");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.setAttribute("aria-label", svg.getAttribute("aria-label"));
+      a.append(svg);
+      return a;
+    };
+    d.append(
+      el("span", "", "Built with"),
+      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
+      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+    );
     return d;
   };
   const avatarFor = (agent, small) => avatar(agent.blob, small, state.looks[agent.id]);
@@ -3299,6 +3451,7 @@ function mount(host, container) {
     return w;
   }
 
+  let grips = { dispose() {} };
   function render() {
     if (disposed) return;
     const activeEl = document.activeElement;
@@ -3310,6 +3463,8 @@ function mount(host, container) {
     stopWelcome = () => {};
     stopKeys();
     stopKeys = () => {};
+    grips.dispose();
+    grips = { dispose() {} };
     root.replaceChildren();
     if (!state.welcomed) { root.append(welcomeView()); return; }
     const shell = el("div");
@@ -3321,6 +3476,13 @@ function mount(host, container) {
     else if (state.view === "preview") shell.append(chatCol(), previewCol());
     else shell.append(chatCol(), computerCol());
     root.append(shell);
+    if (state.view === "chat") {
+      const columns = [{ el: shell.querySelector(":scope > .list"), edge: "left", min: 220, max: 480, initial: 320, label: "agent list" }];
+      if (state.drawerOpen && !pipeWide) columns.push({ el: shell.querySelector(":scope > .drawer"), edge: "right", min: 240, max: 480, initial: 360, label: "drawer" });
+      grips = gripColumns({ grid: shell, columns, storageKey: "grip:hangout", centerMin: 56 + 320, narrowQuery: "(max-width: 1100px)" });
+      // The rail sits left of the list, so its handle is 56px further in.
+      shell.querySelectorAll(":scope > .colgrip-left").forEach((h) => { h.style.left = "calc(56px + var(--grip-0, 320px))"; });
+    }
     const rows = root.querySelector(".rows");
     if (rows) rows.scrollTop = listScroll;
     const pane = root.querySelector(".pane");
@@ -3342,6 +3504,7 @@ function mount(host, container) {
     disposed = true;
     stopWelcome();
     stopKeys();
+    grips.dispose();
     document.removeEventListener("click", onDocClick);
     document.removeEventListener("keydown", onKey);
     style.remove();

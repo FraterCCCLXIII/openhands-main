@@ -3,31 +3,31 @@
 const DATA = /*__DATA__*/null;
 
 const css = `
-.rh{min-height:100%;padding:1.5rem 2rem;color:var(--oh-text-primary,#fff);background:var(--oh-color-base,#111);font:14px/1.5 system-ui,sans-serif;box-sizing:border-box}
+.rh{min-height:100%;padding:1.5rem 2rem;color:var(--oh-foreground,#fff);background:var(--oh-color-base,#111);font:14px/1.5 system-ui,sans-serif;box-sizing:border-box}
 .rh *{box-sizing:border-box}
 .rh h1{font-size:1.5rem;font-weight:600;margin:0}
 .rh .sub{opacity:.65;margin:.25rem 0 1rem}
 .rh .tabs{display:flex;gap:.5rem;margin-bottom:1rem}
-.rh button,.rh select,.rh input{font:inherit;color:inherit;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:.35rem .7rem}
+.rh button,.rh select,.rh input{font:inherit;color:inherit;background:color-mix(in srgb,currentColor 6%,transparent);border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:6px;padding:.35rem .7rem}
 .rh button{cursor:pointer}
-.rh button[aria-pressed="true"]{background:rgba(255,255,255,.2)}
+.rh button[aria-pressed="true"]{background:color-mix(in srgb,currentColor 20%,transparent)}
 .rh .bar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
 .rh .bar input{flex:1;min-width:14rem}
-.rh .card{border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:.9rem 1rem;margin-bottom:.8rem}
+.rh .card{border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:8px;padding:.9rem 1rem;margin-bottom:.8rem}
 .rh .card h2{font-size:1rem;font-weight:600;margin:0}
 .rh .card a{color:inherit}
-.rh .meta{opacity:.6;font-size:12px;margin:.15rem 0 .5rem}
+.rh .meta{opacity:.7;font-size:12px;margin:.15rem 0 .5rem}
 .rh ul{margin:.5rem 0 0;padding-left:1.1rem}
 .rh li{margin:.3rem 0}
-.rh .pill{display:inline-block;font-size:11px;padding:0 .45rem;margin-right:.35rem;border-radius:999px;background:rgba(255,255,255,.14)}
+.rh .pill{display:inline-block;font-size:11px;padding:0 .45rem;margin-right:.35rem;border-radius:999px;background:color-mix(in srgb,currentColor 14%,transparent)}
 .rh table{border-collapse:collapse;width:100%}
-.rh th,.rh td{text-align:right;padding:.4rem .6rem;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap}
+.rh th,.rh td{text-align:right;padding:.4rem .6rem;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent);white-space:nowrap}
 .rh th:first-child,.rh td:first-child,.rh th:nth-child(2),.rh td:nth-child(2){text-align:left}
 .rh th{cursor:pointer;position:sticky;top:0;background:var(--oh-color-base,#111)}
 .rh .scroll{overflow:auto;max-height:70vh}
 .rh .empty{opacity:.6;padding:2rem 0}
 .rh .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1rem;margin-bottom:1.25rem}
-.rh .chart{border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:.8rem 1rem}
+.rh .chart{border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:8px;padding:.8rem 1rem}
 .rh .chart h3{font-size:.9rem;font-weight:600;margin:0}
 .rh .chart svg{width:100%;height:auto;display:block;margin-top:.4rem;overflow:visible}
 .rh .chart svg text{fill:currentColor;font-size:11px;opacity:.7}
@@ -35,7 +35,7 @@ const css = `
 .rh .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:.35rem}
 .rh .brow{display:grid;grid-template-columns:minmax(7rem,11rem) 1fr 3.2rem;gap:.5rem;align-items:center;margin:.3rem 0;font-size:12px}
 .rh .blabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rh .btrack{height:10px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden}
+.rh .btrack{height:10px;background:color-mix(in srgb,currentColor 8%,transparent);border-radius:5px;overflow:hidden}
 .rh .bfill{display:block;height:100%;border-radius:5px}
 .rh .bval{text-align:right;opacity:.75}
 .rh .pair{margin:.5rem 0}

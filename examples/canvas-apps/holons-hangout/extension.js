@@ -96,6 +96,8 @@ export function unwrapMessage(raw) {
 }
 
 const SAFE_URL = /^(https?:\/\/|mailto:)/i;
+const HTTP_URL = /^https?:\/\//i;
+let urlPolicy = SAFE_URL; // set per renderMarkdown call; the docs reader allows http(s) only
 const INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*|__[^_\n]+__)|(~~[^~\n]+~~)|(\[[^\]\n]+\]\([^)\s]+\))|(\bhttps?:\/\/[^\s<>)]+[^\s<>).,;:!?])|(\*[^*\s][^*\n]*\*|_[^_\s][^_\n]*_)/g;
 
 /** Appends inline markdown (code, bold, italic, strike, links) to a parent, as text nodes and elements. */
@@ -110,7 +112,7 @@ export function renderInline(parent, source) {
     else if (m[3]) { const d = document.createElement("del"); renderInline(d, whole.slice(2, -2)); parent.append(d); }
     else if (m[4]) {
       const [, label, url] = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(whole);
-      if (SAFE_URL.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; renderInline(a, label); parent.append(a); }
+      if (urlPolicy.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; renderInline(a, label); parent.append(a); }
       else parent.append(textOf(label));
     } else if (m[5]) { const a = document.createElement("a"); a.href = whole; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = whole; parent.append(a); }
     else { const i = document.createElement("em"); renderInline(i, whole.slice(1, -1)); parent.append(i); }
@@ -194,8 +196,15 @@ function tableBlock(rows) {
   return wrap;
 }
 
-/** Renders markdown into a container element. Tolerates half-finished text, so it is safe to call as a reply streams in. */
-export function renderMarkdown(source) {
+/** Renders markdown into a container element. Tolerates half-finished text, so it is safe to call as a reply streams in.
+ *  `httpOnly` limits links to http(s) (the docs reader); the default also allows mailto:. */
+export function renderMarkdown(source, { httpOnly = false } = {}) {
+  const previous = urlPolicy;
+  urlPolicy = httpOnly ? HTTP_URL : SAFE_URL;
+  try { return buildMarkdown(source); } finally { urlPolicy = previous; }
+}
+
+function buildMarkdown(source) {
   const root = document.createElement("div");
   root.className = "md";
   const { body, note } = unwrapMessage(source);
@@ -617,24 +626,177 @@ function el(tag, cls, content) {
 
 const avatar = (id, small) => { const w = el("span", `avatar${small ? " sm" : ""}`); w.append(blobSvg(orbFor(id))); return w; };
 
+const KAMIJI_STROKES = ["M18 24V82M46 24L20 54M28 50L48 82", "M96 48V82", "M120 48V82M120 60Q120 48 134 48Q148 48 148 62V82M148 62Q148 48 162 48Q176 48 176 62V82", "M198 48V82M198 26V26", "M224 48V86Q224 98 210 98M224 26V26", "M250 48V82M250 26V26"];
+const KOSMOS_PATHS = [
+  "M79.81,54.47c-2.27-3.14-3.59-7.14-3.59-11.73,0-11.39,8.05-19.17,18.75-19.17,5.44,0,10.18,2.02,13.54,5.49,2.77-3.32,28.03-25.97,31.05-29.06-24.12,19.01-35.79,11.75-44.59,11.75-18.92,0-32.79,13.18-32.79,30.99,0,8.04,2.84,15.14,7.69,20.51",
+  "M111.85,33.96c1.19,2.57,1.86,5.52,1.86,8.77,0,11.38-8.05,19.17-18.75,19.17-4.03,0-7.67-1.1-10.66-3.09-3.54,2.54-21.13,20.86-24.29,23.89,18.2-10.53,26.87-8.99,34.95-8.99,18.83,0,32.79-13.1,32.79-30.99,0-6.58-2.16-12.99-5.7-18.17l-10.2,9.4Z",
+  "M137.56,66.79l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M254.75,72.7l-.09-35.95-17.63,29.62h-6.25l-17.55-28.85v35.18h-13.01V12.78h11.47l22.43,37.24,22.09-37.24h11.39l.17,59.92h-13.01Z",
+  "M280.39,42.78c0-17.81,13.87-30.99,32.79-30.99s32.79,13.1,32.79,30.99-13.95,30.99-32.79,30.99-32.79-13.18-32.79-30.99ZM331.93,42.78c0-11.39-8.05-19.17-18.75-19.17s-18.75,7.79-18.75,19.17,8.05,19.17,18.75,19.17,18.75-7.79,18.75-19.17Z",
+  "M355.48,66.84l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M13.78,39.15V12.78H0v59.92h13.78v-15.15l.03-.03M28.22,42.74 56.22,72.7H38.43L19.09,52.01 13.81,46.36 10.43,42.74 13.78,39.15 38.43,12.78H56.22L31.06,39.7Z",
+];
+
+function logoSvg(viewBox, label, paths, stroke) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", label);
+  const title = document.createElementNS(SVG_NS, "title");
+  title.textContent = label;
+  svg.append(title);
+  paths.forEach((d) => {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("aria-hidden", "true");
+    if (stroke) Object.entries({ fill: "none", stroke: "currentColor", "stroke-width": stroke, "stroke-linecap": "round", "stroke-linejoin": "round" }).forEach(([k, v]) => path.setAttribute(k, v));
+    else path.setAttribute("fill", "currentColor");
+    svg.append(path);
+  });
+  return svg;
+}
+
 function poweredBy(cls = "") {
   const d = el("div", `powered${cls ? ` ${cls}` : ""}`);
-  const hand = el("span", "poweredmark");
-  hand.append(blobSvg("violet"));
-  d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
+  const logo = (href, svg) => {
+    const a = el("a", "plogo");
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.setAttribute("aria-label", svg.getAttribute("aria-label"));
+    a.append(svg);
+    return a;
+  };
+  d.append(
+    el("span", "", "Built with"),
+    logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
+    logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+  );
   return d;
 }
+
+/**
+ * Drag handles for the outer columns of a page's grid (a left list and/or a right panel).
+ *
+ * `columns` is a list of `{ el, edge, min, max, initial, label }`: `el` is the column's element,
+ * `edge` is "left" for a column on the left side (its handle sits on its right edge) or "right"
+ * for one on the right side. The app's CSS must read each width from a variable, for example
+ * `grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px)`, where the
+ * number is the column's position in the `columns` list. Widths are saved per `storageKey`.
+ * Call `refresh()` after the app shows or hides a column; call `dispose()` on unmount.
+ */
+function gripColumns({ grid, columns, storageKey, centerMin = 320, narrowQuery = "(max-width: 720px)" }) {
+  const win = grid.ownerDocument.defaultView || globalThis;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const saved = (() => {
+    try { return JSON.parse(win.localStorage.getItem(storageKey) || "{}") || {}; } catch { return {}; }
+  })();
+  const widths = columns.map((c, i) => (Number.isFinite(saved[i]) ? clamp(saved[i], c.min, c.max) : c.initial));
+  const handles = [];
+  const cleanups = [];
+
+  const narrow = () => Boolean(win.matchMedia && win.matchMedia(narrowQuery).matches);
+  const shown = (i) => !narrow() && columns[i].el.isConnected && win.getComputedStyle(columns[i].el).display !== "none";
+  const save = () => { try { win.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(widths.map((w, i) => [i, w])))); } catch { /* storage unavailable */ } };
+  // The widest a column may get while the middle keeps `centerMin` and the other grips keep their widths.
+  const limit = (i) => {
+    const total = grid.clientWidth;
+    if (!total) return columns[i].max;
+    const others = widths.reduce((sum, w, j) => (j !== i && shown(j) ? sum + w : sum), 0);
+    return clamp(total - others - centerMin, columns[i].min, columns[i].max);
+  };
+
+  function apply() {
+    columns.forEach((c, i) => {
+      if (narrow()) grid.style.removeProperty(`--grip-${i}`);
+      else grid.style.setProperty(`--grip-${i}`, `${widths[i]}px`);
+      const h = handles[i];
+      h.hidden = !shown(i);
+      h.setAttribute("aria-valuenow", String(Math.round(widths[i])));
+      h.setAttribute("aria-valuemax", String(Math.round(limit(i))));
+    });
+  }
+
+  function set(i, width, persist = true) {
+    widths[i] = clamp(Math.round(width), columns[i].min, limit(i));
+    apply();
+    if (persist) save();
+  }
+
+  columns.forEach((c, i) => {
+    const h = grid.ownerDocument.createElement("div");
+    h.className = `grip grip-${c.edge}`;
+    h.dataset.grip = String(i);
+    h.setAttribute("role", "separator");
+    h.setAttribute("aria-orientation", "vertical");
+    h.setAttribute("aria-label", `Resize ${c.label || "column"}`);
+    h.setAttribute("aria-valuemin", String(c.min));
+    h.tabIndex = 0;
+    h.style[c.edge === "left" ? "left" : "right"] = `var(--grip-${i}, ${c.initial}px)`;
+    const dir = c.edge === "left" ? 1 : -1;
+    let startX = 0;
+    let startW = 0;
+    const move = (e) => { set(i, startW + dir * (e.clientX - startX), false); };
+    const up = () => {
+      grid.classList.remove("gripping");
+      h.classList.remove("on");
+      grid.ownerDocument.removeEventListener("pointermove", move);
+      grid.ownerDocument.removeEventListener("pointerup", up);
+      save();
+    };
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = widths[i];
+      grid.classList.add("gripping");
+      h.classList.add("on");
+      grid.ownerDocument.addEventListener("pointermove", move);
+      grid.ownerDocument.addEventListener("pointerup", up);
+    });
+    h.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const grow = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * dir;
+      if (grow) set(i, widths[i] + grow * step);
+      else if (e.key === "Home") set(i, c.min);
+      else if (e.key === "End") set(i, limit(i));
+      else return;
+      e.preventDefault();
+    });
+    h.addEventListener("dblclick", () => set(i, c.initial));
+    cleanups.push(() => { grid.ownerDocument.removeEventListener("pointermove", move); grid.ownerDocument.removeEventListener("pointerup", up); h.remove(); });
+    handles.push(h);
+    grid.append(h);
+  });
+
+  win.addEventListener("resize", apply);
+  cleanups.push(() => win.removeEventListener("resize", apply));
+  apply();
+  return { refresh: apply, widths: () => [...widths], dispose: () => cleanups.forEach((fn) => fn()) };
+}
+
+
+
+// <docs:generated>
+// Generated by scripts/embed-docs.mjs from docs/*.md. Do not edit by hand; run `npm run embed-docs`.
+export const DOCS = [
+  { id: "index", title: "Holons documentation", markdown: "# Holons documentation\n\n> Authored for this app (not imported). It lists the pages and says where they come from.\n\nThis reader has the pages below. All of them were written for this client, from reading its code and README.\n\n| Page | Kind | What it covers |\n|---|---|---|\n| About this implementation | Authored here | What this app is, what works, Demo versus connected, what is real, storage, security |\n| How it works | Authored here | Architecture, modes, the holons-api calls, how Holons map onto chat |\n| Getting started with others | Authored here | Reaching a holons-api server, signing in, sharing a Holon with other people |\n\n## Imported documentation\n\nNone. No protocol or product documentation for Holons was found to import. What exists was checked when these pages were written:\n\n| Repository | What it contains | Licence found | Used here |\n|---|---|---|---|\n| `https://github.com/openartist/holons` (local clone `holons`) | A React front end; its README is the two words \"Holons LMS\" | None stated in the README; no LICENSE file in the clone | No, nothing to import |\n| `https://github.com/matrix9180/holons-api` (local clone `holons-api`) | The Rails API this app talks to; its README is the unedited Rails template | No LICENSE file in the clone, none stated | No, nothing to import. The code itself was read to write these pages |\n| `https://github.com/FraterCCCLXIII/holons-p2p` | A fork of OrbitDB with peer-to-peer chat examples; its docs describe OrbitDB | MIT (Protocol Labs and Haja Networks) | No. It is a different codebase, not the API this app uses, so its pages would not describe this app |\n| `https://github.com/FraterCCCLXIII/test-holons` | Empty repository | none | No |\n\nThe MESH protocol documentation in the sibling MESH app (`mesh-protocol`) is about a different system and is not part of Holons.\n\n## Reading order\n\n1. About this implementation\n2. How it works\n3. Getting started with others\n\nStatements marked **unverified** were not confirmed by running anything. The README of this app says the same about the sign-up, sign-out and \"who am I\" routes.\n" },
+  { id: "about", title: "About this implementation", markdown: "# About this implementation\n\n> Authored for this app, from reading `extension.js` and `README.md` in the `holons-hangout` folder. Not imported from another repository.\n\n## What it is\n\nHolons is a Canvas app: one browser-only JavaScript file (`extension.js`, no dependencies) that shows a Holons community as a team chat. It is a client for a server called `holons-api`. It is not a server and stores no community data of its own.\n\nHow Holons are shown as chat:\n\n| In Holons | In this app |\n|---|---|\n| A Holon (community) | A workspace: one round button in the left icon rail |\n| Its feed | The channel named `feed` |\n| Its courses and their modules | Channels listed under \"Courses\" in the second column |\n| Its members | The team panel on the right |\n| A post (title and Markdown text) | A message |\n| A comment on a post | A reply under that message |\n\n## Two modes\n\n| | Demo | Connected |\n|---|---|---|\n| Data | Sample Holons built in memory when the app opens | Whatever your `holons-api` server returns |\n| Who you are | A made-up user called \"You\" | The account you signed in with |\n| Saved after reload | No | Yes, on the server (courses excepted, see below) |\n| Header chip | \"Demo\" | \"Connected\" |\n\nDemo has three sample Holons (Open Source Academy, Garden Circle, Night Owls Chess), sample people, posts, replies, and a course with modules. All of that is invented sample data. Everything you do in Demo works the same way as when connected, but disappears when you reload.\n\n## What works\n\n- Browse Holons, the feed, courses, modules and team members.\n- Create, edit and delete a Holon (only its creator, or an admin, can on the server).\n- Join and leave a Holon.\n- Write, edit and delete posts, and reply, edit and delete replies. Messages are shown as Markdown.\n- Create courses and modules, reorder modules and mark them complete.\n- Sign in, sign up and sign out against a server.\n- Read these docs, and drag the column edges to resize the Holons list and the team panel.\n\n## What is real and what is not\n\n- **Courses and modules are never saved on the server.** `holons-api` has no course or module routes. When connected, the app keeps them in this browser only and labels them \"Local only, not saved to the server\". Nobody else sees them.\n- **Inviting people is not available.** The server has no invite route, and a membership needs a numeric user id with no way to look a person up. The team panel says so.\n- **Post titles and author ids are missing from the server's answers.** The app remembers the titles it wrote in this session, treats a Holon as yours when the server lists it under your created Holons, and treats a post or reply as yours when this browser created it. The server's refusal (HTTP 403) is always the final word.\n- **Sign up, sign out and learning your own user id use routes that were not verified.** See the README of this app.\n\n## What is stored in your browser\n\n| Key (localStorage) | Contents |\n|---|---|\n| `holons-hangout:v1` | Server address, sign-in token, email, your user id (when known), and the ids of posts and replies this browser created |\n| `holons-hangout:local-courses:v1` | Courses and modules you made while connected, per server address |\n| `grip:holons-hangout` | The widths you dragged the Holons list and team panel to |\n\nThe password is sent once to the server and never stored.\n\n## Security notes\n\n- Text is put on the page as text. Markdown from posts and from these docs is built as page elements, never as HTML, so a post cannot inject script. Links in posts may be `http`, `https` or `mailto`; links in these docs may only be `http` or `https`. Links open in a new tab with `noopener noreferrer`.\n- The sign-in token is kept in `localStorage`, which any script on the same page origin can read. Use a server you trust.\n- The app talks to whatever address you type. The `holons-api` clone this was written against allows requests from any origin (CORS `*`, marked FIXME in its source), which is what lets a browser page call it; that is a server setting, not something this app controls.\n- Connecting over plain `http://` sends your password and token unencrypted. Use `https://` anywhere beyond your own machine.\n\n## Limits\n\n- Everything is fetched in full: the app asks for all posts and all comments and filters them by Holon in the browser, because the server has no filter. Large communities will be slow.\n- There is no live update. You see new content after an action or a reload.\n- Not run against a real server by the author of these pages; see the README's list of verified and unverified routes.\n" },
+  { id: "how-it-works", title: "How it works", markdown: "# How it works\n\n> Authored for this app, from reading `extension.js`. Not imported from another repository.\n\n## Overview\n\n```\n browser (this app)                              holons-api (Ruby on Rails)\n┌───────────────────────────┐   HTTP + JSON      ┌───────────────────────────┐\n│ UI (DOM) + state          │ ─────────────────▶ │ /holons  /posts           │\n│ createClient (HTTP)       │ ◀───────────────── │ /comments                 │\n│ localStorage: token,      │   Bearer token     │ /holon_memberships        │\n│   local courses, widths   │                    │ /users/tokens/sign_in     │\n└───────────────────────────┘                    └───────────────────────────┘\n        │  no server address, no token, or server unreachable\n        ▼\n in-memory Demo backend (same methods, sample data)\n```\n\nThe UI talks to a backend object. There are two with the same methods: the live client for `holons-api`, and the Demo backend. That is why every flow works in both modes.\n\n## Choosing the mode\n\nOn open (and after sign-in or sign-out) the app picks a backend:\n\n1. No server address saved: Demo.\n2. An address but no token: Demo, with the notice \"Sign in to connect to holons-api. Showing the demo.\"\n3. Both: the app lists Holons from the server. If that works it is **Connected**; if it fails (server down, token rejected) it falls back to Demo and shows the error in a notice.\n\nThe \"Connected\" or \"Demo\" chip in the header, and the Sign in / Sign up buttons, open the account dialog. \"Use demo\" in that dialog forgets the saved address and token.\n\n## Calls to the server\n\nAll requests are JSON with `Authorization: Bearer <token>` once you have one.\n\n| Action | Request |\n|---|---|\n| Sign in | `POST /users/tokens/sign_in` with `{email, password}` |\n| Health | `GET /up` |\n| List Holons | `GET /holons`, or `?scope=created` or `?scope=joined` |\n| Create, edit, delete a Holon | `POST /holons`, `PATCH /holons/:id`, `DELETE /holons/:id` |\n| Posts | `GET /posts`, `POST /posts`, `PATCH` and `DELETE /posts/:id` |\n| Replies | `GET /comments`, `POST /comments`, `PATCH` and `DELETE /comments/:id` |\n| Team | `GET /holon_memberships?holon_id=`, `POST /holon_memberships`, `DELETE /holon_memberships/:id` |\n\nCreate and update bodies are wrapped the way Rails expects, for example `{\"post\": {\"holon_id\": 1, \"title\": \"...\", \"content\": \"...\"}}`.\n\nRoutes the README marks **unverified**: `POST /users/tokens/sign_up`, `POST /users/tokens/revoke` (sign out), and `GET /users/tokens/info` (to learn your user id when the sign-in answer does not carry it).\n\n## Opening a Holon\n\nWhen you open a Holon the app loads, at the same time, its memberships, its courses, and the posts, then the replies of each post. Posts are shown oldest first. The server returns every post and reply, so the app keeps only those for the Holon you opened.\n\n## Ownership and permissions\n\nThe server decides who may do what. The app only decides which buttons to show:\n\n- **Owner**: the Holon appears in your `?scope=created` list. You see Edit and Delete.\n- **Member**: it appears in your `?scope=joined` list. You see Leave.\n- **Neither**: you see Join (disabled with an explanation if the app does not know your user id).\n- Edit and Delete on a post or reply appear when this browser created it (or the server names you as author), and on every post if you own the Holon.\n\nIf you try something the server refuses, the error text from the server is shown in a red banner.\n\n## Writing\n\nCreating a post, editing, deleting and replying are applied to the screen at once and then confirmed with the server; if the server refuses, the change is rolled back and the error is shown. A message waiting for the server is marked \"Sending...\". A post written in the composer gets the first line of its text as its title (the server requires one).\n\n## Courses\n\n```\nDemo:       courses + modules  ──▶  in memory (lost on reload)\nConnected:  courses + modules  ──▶  localStorage, per server address, never sent\n```\n\nA course store handles create, reorder (Move up, Move down) and \"Mark complete\". The same code serves both modes; only where it keeps the data differs.\n\n## The columns\n\n```\n┌────┬──────────────┬──────────────────────────────┬──────────────┐\n│rail│ list         │ main                         │ team         │\n│    │ channels,    │ header, thread or welcome,   │ members and  │\n│    │ courses,     │ composer                     │ roles        │\n│    │ Docs link    │ (or the documentation reader)│              │\n└────┴──────────────┴──────────────────────────────┴──────────────┘\n```\n\nThe edges of the list and the team panel can be dragged (or focused and moved with the arrow keys); the widths are remembered. Below 900 pixels wide the team panel is hidden.\n\n## The docs reader\n\nThe pages you are reading are Markdown files in the `docs/` folder, embedded into `extension.js` by `scripts/embed-docs.mjs` so the extension stays one file. A test checks that the embedded copy matches the files. Back returns to where you were; Copy Markdown and Download .md act on the page being shown.\n" },
+  { id: "getting-started", title: "Getting started with others", markdown: "# Getting started with others\n\n> Authored for this app, from `README.md` and `extension.js`, and from reading the `holons-api` source on this machine. Steps marked **unverified** were not run by the author.\n\n## What you need\n\nA running `holons-api` server that you and the other people can reach over HTTP(S), an account on it, and a browser. This app is only a client, so \"working with others\" means everyone signs in to the same server. Without a reachable server the app is a one-person demo.\n\n## 1. Run or find a server\n\n`holons-api` is a separate project (a Ruby on Rails app, `https://github.com/matrix9180/holons-api`). This app does not start it. From its source:\n\n- It listens on port 3000 by default (`PORT` in `config/puma.rb`, `EXPOSE 3000` in its Dockerfile).\n- It uses PostgreSQL (`config/database.yml`).\n- Its CORS settings allow any origin, which lets this page call it from another address.\n\nHow to install, migrate and start it is not documented in that repository (its README is the unedited Rails template), and was not run by the author (**unverified**). If someone else runs a server, ask them for its address and an account.\n\nTo let other people in, the server must be reachable from their machines. Prefer an `https://` address; the app sends your password and token to whatever address you give it.\n\n## 2. Connect\n\n1. Open **Holons** from the Canvas navigation. You start in Demo.\n2. Press **Sign in** in the header (or the Demo chip).\n3. Enter the **holons-api base URL** (for example `http://localhost:3000`), your email and password, and submit.\n4. The chip changes to **Connected** and your Holons load. A notice appears instead if the server cannot be reached or rejects the token.\n\nTo create an account instead, choose \"New here? Sign up\". Sign-up and sign-out use routes the README marks **unverified**.\n\n## 3. Check the connection\n\n| Chip | Meaning |\n|---|---|\n| Connecting... | Waiting for the server |\n| Connected | The server answered and accepted your token |\n| Demo | Sample data; a notice says why, for example \"Showing the demo\" |\n\n## 4. Work with others\n\n1. Press **+** in the rail to create a Holon (name and optional description). You become its owner.\n2. Other people who have accounts on the same server see it in their rail and press **Join**. Joining needs your user id; if the server did not give it, Join is disabled and says so.\n3. Everyone posts in the `feed` channel and replies under posts. You see other people's posts after you open the Holon again or act in it.\n4. The team panel lists members by name where known (otherwise \"Member #id\") and their role.\n\nWhat you cannot do from here:\n\n- **Invite by email or handle.** The server has no invite route. Memberships are made by each person pressing Join.\n- **Share courses.** Courses and modules you create while connected stay in your browser.\n- **Moderate beyond what the server allows.** Editing or deleting someone else's post only works if the server says you may (you own the Holon, or you are an admin).\n\n## Troubleshooting\n\n| You see | Likely cause |\n|---|---|\n| \"Could not reach ... Is holons-api running, and does it allow this origin (CORS)?\" | Wrong address or port, server not running, or a block from the browser (for example an `https` page calling an `http` server) |\n| \"Not signed in, or the token expired.\" | Sign in again |\n| \"holons-api answered 403\" | The server refuses that action for your account |\n| Join is disabled | The server did not tell the app your user id (that route is **unverified**) |\n| Courses missing for a teammate | Courses are local to each browser by design |\n\n## Your data\n\nYour server address, token and email stay in this browser (see \"About this implementation\"). Signing out clears the token and the ids of posts this browser created; local courses stay.\n" },
+];
+// </docs:generated>
 
 const CSS = `
 .hh { --hh-bg: var(--oh-color-base, #171717); --hh-panel: var(--oh-color-base-secondary, #212121); --hh-raised: var(--oh-surface-raised, #2a2a2a);
   --hh-text: var(--oh-foreground, #eee); --hh-contrast: var(--oh-contrast, #fff); --hh-muted: var(--oh-muted, #9a9a9a);
-  --hh-border: var(--oh-border-subtle, #3a3a3a); --hh-primary: var(--oh-color-primary, #fff); --hh-on-primary: var(--oh-accent-foreground, #111);
-  --hh-success: var(--oh-success, #34d399); --hh-warn: #f2b51d;
+  --hh-border: var(--oh-border-subtle, #3a3a3a); --hh-primary: var(--oh-accent, var(--oh-color-primary, #fff)); --hh-on-primary: var(--oh-accent-foreground, #111);
+  --hh-on-contrast: var(--oh-contrast-foreground, #111);
+  --hh-success: var(--oh-success, #34d399); --hh-warn: #f2b51d; --hh-link: var(--oh-info-soft-foreground, #7c9dff);
   box-sizing: border-box; position: sticky; top: 0; color: var(--hh-text); background: var(--hh-bg); font: 14px/1.45 system-ui, sans-serif;
   height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; }
 .hh *, .hh *::before, .hh *::after { box-sizing: border-box; }
 .hh button, .hh input, .hh textarea { font: inherit; color: inherit; }
-.hh .shell { display: grid; grid-template-columns: 56px 300px minmax(0, 1fr) 280px; height: 100%; min-height: 0; }
+.hh .shell { position: relative; display: grid; grid-template-columns: 56px var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px); height: 100%; min-height: 0; }
 .hh .rail { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; border-right: 1px solid var(--hh-border); overflow-y: auto; scrollbar-width: none; }
 .hh .rbtn { position: relative; width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--hh-muted); display: grid; place-items: center; cursor: pointer; padding: 0; }
 .hh .rbtn .avatar { width: 30px; height: 30px; }
@@ -657,10 +819,10 @@ const CSS = `
 .hh .row.sub { padding-left: 32px; font-size: 13px; color: var(--hh-muted); }
 .hh .row .count { font-size: 11px; color: var(--hh-muted); }
 .hh .powered { display: flex; align-items: center; gap: 6px; color: var(--hh-muted); font-size: 12px; }
-.hh .powered b { color: var(--hh-text); font-weight: 600; }
+.hh .plogo { display: inline-flex; color: inherit; opacity: .7; }
+.hh .plogo:hover { opacity: 1; }
+.hh .plogo svg { height: 16px; width: auto; }
 .hh .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hh-border); }
-.hh .poweredmark { width: 18px; height: 18px; display: inline-block; }
-.hh .poweredmark svg { width: 100%; height: 100%; }
 .hh .kosmos { letter-spacing: .06em; }
 .hh .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .hh .mhead { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--hh-border); }
@@ -688,7 +850,7 @@ const CSS = `
 .hh .composer { display: flex; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--hh-border); align-items: flex-end; }
 .hh .composer textarea, .hh .rform input, .hh .setform input { flex: 1; min-width: 0; resize: none; background: var(--hh-panel); border: 1px solid var(--hh-border); border-radius: 12px; padding: 9px 12px; }
 .hh .composer textarea { min-height: 40px; max-height: 140px; }
-.hh .send, .hh .primary { border: 0; border-radius: 10px; background: var(--hh-contrast); color: var(--hh-bg); padding: 8px 16px; font-weight: 600; cursor: pointer; }
+.hh .send, .hh .primary { border: 0; border-radius: 10px; background: var(--hh-contrast); color: var(--hh-on-contrast); padding: 8px 16px; font-weight: 600; cursor: pointer; }
 .hh .send:disabled { opacity: .4; cursor: default; }
 .hh .ghost { border: 1px solid var(--hh-border); border-radius: 10px; background: transparent; padding: 8px 14px; cursor: pointer; }
 .hh .note { padding: 12px 18px; border-top: 1px solid var(--hh-border); color: var(--hh-muted); font-size: 12.5px; }
@@ -697,12 +859,29 @@ const CSS = `
 .hh .member { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
 .hh .member small { color: var(--hh-muted); display: block; }
 .hh .welcome { flex: 1; position: relative; display: grid; place-items: center; align-content: center; text-align: center; gap: 12px; padding: 24px; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, #8B5CF6 28%, var(--hh-bg)), var(--hh-bg) 70%); overflow: auto; }
-.hh .welcome h1 { margin: 0; font-size: 28px; font-weight: 500; color: #fff; }
-.hh .welcome p { margin: 0; color: rgba(255,255,255,.7); max-width: 420px; }
+.hh .welcome h1 { margin: 0; font-size: 28px; font-weight: 500; color: var(--hh-contrast); }
+.hh .welcome p { margin: 0; color: color-mix(in srgb, var(--hh-contrast) 78%, transparent); max-width: 420px; }
 .hh .wbig { width: 110px; height: 110px; }
 .hh .wbig svg { width: 100%; height: 100%; }
-.hh .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: rgba(255,255,255,.62); }
-.hh .wpowered b { color: #fff; }
+.hh .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; color: color-mix(in srgb, var(--hh-contrast) 75%, transparent); }
+.hh .wactions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.hh .welcome .wdocs { border: 1px solid color-mix(in srgb, var(--hh-contrast) 35%, transparent); border-radius: 999px; background: transparent; color: var(--hh-contrast); padding: 10px 18px; cursor: pointer; }
+.hh .welcome .wdocs:hover { background: color-mix(in srgb, var(--hh-contrast) 12%, transparent); }
+.hh .docslink { flex: none; align-self: flex-start; margin: 0 12px 4px; border: 0; background: transparent; color: var(--hh-muted); font-size: 12px; padding: 2px 6px; border-radius: 6px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.hh .docslink:hover { background: var(--hh-panel); color: var(--hh-contrast); }
+.hh .shell.docsopen { grid-template-columns: 56px var(--grip-0, 300px) minmax(0, 1fr); }
+.hh .docs { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.hh .docs .headbtn { border: 1px solid var(--hh-border); background: var(--hh-raised); border-radius: 8px; padding: 4px 12px; cursor: pointer; }
+.hh .docs .dbody { flex: 1; min-height: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+.hh .docs .dnav { overflow-y: auto; padding: 8px; display: grid; align-content: start; gap: 2px; }
+.hh .docs .dlink[aria-current="page"] { background: var(--hh-raised); color: var(--hh-contrast); }
+.hh .docs .dlink { white-space: normal; font-size: 13px; line-height: 18px; }
+.hh .docs .dpage { overflow-y: auto; padding: 12px 24px 32px; min-width: 0; }
+.hh .docs .dpage > h2 { margin: 12px 0; font-size: 20px; line-height: 28px; color: var(--hh-contrast); outline: none; }
+.hh .docs .dpage > h2:focus-visible { outline: 2px solid #7c9dff; outline-offset: 4px; border-radius: 4px; }
+.hh .docs .dtools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.hh .docs .dpage .md { max-width: 820px; }
+@media (max-width: 700px) { .hh .docs .dbody { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } .hh .docs .dnav { max-height: 30vh; border-bottom: 1px solid var(--hh-border); } .hh .docs .dpage { padding: 12px 16px 24px; } }
 .hh .setform { display: grid; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--hh-border); background: var(--hh-panel); }
 .hh .setform label { display: grid; gap: 3px; font-size: 12px; color: var(--hh-muted); }
 .hh .setform .btns { display: flex; gap: 8px; }
@@ -731,22 +910,22 @@ const CSS = `
 .hh .dialog input, .hh .dialog textarea { background: var(--hh-bg); border: 1px solid var(--hh-border); border-radius: 10px; padding: 8px 10px; min-width: 0; }
 .hh .dialog textarea { min-height: 110px; resize: vertical; }
 .hh .dialog [aria-invalid="true"] { border-color: #ef4444; }
-.hh .dialog .derr { color: #ef4444; font-size: 13px; min-height: 0; }
+.hh .dialog .derr { color: var(--oh-danger-soft-foreground, #ef4444); font-size: 13px; min-height: 0; }
 .hh .dialog .btns { display: flex; gap: 8px; justify-content: flex-end; }
-.hh .dialog .primary.danger { background: #ef4444; color: #fff; }
+.hh .dialog .primary.danger { background: #dc2626; color: #fff; }
 .hh .dialog .primary:disabled { opacity: .5; cursor: default; }
 .hh .md { display: grid; gap: 8px; min-width: 0; line-height: 1.5; }
 .hh .md p, .hh .md ul, .hh .md ol, .hh .md blockquote, .hh .md h3, .hh .md h4, .hh .md h5, .hh .md h6, .hh .md hr { margin: 0; }
 .hh .md h3, .hh .md h4, .hh .md h5, .hh .md h6 { font-weight: 650; color: var(--hh-contrast); }
 .hh .md strong { font-weight: 650; color: var(--hh-contrast); }
-.hh .md a { color: #7c9dff; text-decoration: underline; text-underline-offset: 2px; }
+.hh .md a { color: var(--hh-link); text-decoration: underline; text-underline-offset: 2px; }
 .hh .md ul, .hh .md ol { padding-left: 22px; display: grid; gap: 3px; }
 .hh .md blockquote { border-left: 3px solid var(--hh-border); padding: 2px 0 2px 12px; color: var(--hh-muted); }
 .hh .md hr { border: 0; border-top: 1px solid var(--hh-border); }
 .hh .md code { font: 12.5px ui-monospace, SF Mono, Menlo, monospace; background: rgba(255,255,255,.08); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
-.hh .md .mdcode { border: 1px solid var(--hh-border); border-radius: 10px; overflow: hidden; background: #0e0e10; }
-.hh .md .mdcodebar { display: flex; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: var(--hh-muted); border-bottom: 1px solid var(--hh-border); }
-.hh .md .mdcodebar button { border: 0; background: transparent; color: var(--hh-muted); cursor: pointer; font-size: 11px; }
+.hh .md .mdcode { border: 1px solid var(--hh-border); border-radius: 10px; overflow: hidden; background: #0e0e10; color: #eee; }
+.hh .md .mdcodebar { display: flex; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: #9a9a9a; border-bottom: 1px solid var(--hh-border); }
+.hh .md .mdcodebar button { border: 0; background: transparent; color: #9a9a9a; cursor: pointer; font-size: 11px; }
 .hh .md pre { margin: 0; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.55 ui-monospace, SF Mono, Menlo, monospace; }
 .hh .md pre code { background: none; padding: 0; }
 .hh .md .mdtable { overflow-x: auto; border: 1px solid var(--hh-border); border-radius: 10px; }
@@ -754,6 +933,17 @@ const CSS = `
 .hh .md th, .hh .md td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--hh-border); }
 .hh .md .mdnote { font-size: 12px; color: var(--hh-muted); }
 @media (max-width: 900px) { .hh .shell { grid-template-columns: 56px 220px minmax(0, 1fr); } .hh .team { display: none; } }
+/* Draggable column dividers. */
+.grip { position: absolute; top: 0; bottom: 0; width: 11px; z-index: 6; cursor: col-resize; touch-action: none; outline: 0; }
+.grip-left { transform: translateX(-50%); }
+.grip-right { transform: translateX(50%); }
+.grip::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: transparent; transition: background .12s; }
+.grip:hover::after, .grip:focus-visible::after, .grip.on::after { background: var(--oh-color-primary, #7c9dff); }
+.gripping { user-select: none; cursor: col-resize; }
+.gripping * { pointer-events: none; }
+.gripping .grip { pointer-events: auto; }
+@media (max-width: 720px) { .grip { display: none; } }
+
 /* Feed app sizing: 14px text, 12px meta, 16px gutters, 12px gaps, 32px avatars, 16px section titles. */
 .hh { font-size: 14px; line-height: 20px; }
 .hh small, .hh .sub, .hh .sectionlabel, .hh .sect { font-size: 12px; line-height: 16px; }
@@ -799,7 +989,7 @@ function mount(container) {
   saved.mine = { ...emptyMine(), ...(saved.mine || {}) };
   const state = {
     backend: null, notice: "", error: "", success: "", holons: [], holonId: null, channel: "welcome", data: null, loading: true,
-    openReplies: new Set(), refocus: false, me: null, owned: new Set(), joined: new Set(), titles: new Map(), busy: 0, dialog: null,
+    openReplies: new Set(), refocus: false, docs: { open: false, page: DOCS[0].id, opener: "" }, me: null, owned: new Set(), joined: new Set(), titles: new Map(), busy: 0, dialog: null,
   };
 
   const holon = () => state.holons.find((h) => h.id === state.holonId);
@@ -1219,7 +1409,7 @@ function mount(container) {
         });
       }
     }
-    col.append(head, rows, poweredBy("lpowered"));
+    col.append(head, rows, btn("Docs", "docs", "docslink", () => openDocs("index", ".docslink")), poweredBy("lpowered"));
     return col;
   }
 
@@ -1297,7 +1487,83 @@ function mount(container) {
     return tools;
   }
 
+  // ── Documentation reader: replaces the main column; the page list sits at its left ────────
+  function openDocs(pageId = state.docs.page, opener = "") {
+    state.docs.opener = opener;
+    state.docs.page = DOCS.some((d) => d.id === pageId) ? pageId : DOCS[0].id;
+    state.docs.open = true;
+    render();
+    focusDocHeading();
+  }
+
+  function closeDocs() {
+    state.docs.open = false;
+    render();
+    if (state.docs.opener) root.querySelector(state.docs.opener)?.focus?.();
+  }
+
+  function focusDocHeading() { root.querySelector(".dpage h2")?.focus?.(); }
+
+  function chooseDoc(id) {
+    state.docs.page = id;
+    render();
+    focusDocHeading();
+  }
+
+  function downloadText(name, text) {
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
+      const a = el("a");
+      a.href = url; a.download = name;
+      root.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      return true;
+    } catch { return false; }
+  }
+
+  function docsView() {
+    const page = DOCS.find((d) => d.id === state.docs.page) || DOCS[0];
+    const main = el("main", "main");
+    const wrap = el("div", "docs");
+    wrap.dataset.page = page.id;
+    const head = el("div", "mhead");
+    head.append(btn("Back", "docs-back", "headbtn docsback", closeDocs), el("h3", "", "Documentation"));
+    const body = el("div", "dbody");
+
+    const nav = el("nav", "dnav");
+    nav.setAttribute("aria-label", "Documentation pages");
+    DOCS.forEach((d) => {
+      const b = btn(d.title, "docs-page", "row dlink", () => chooseDoc(d.id));
+      if (d.id === page.id) b.setAttribute("aria-current", "page");
+      nav.append(b);
+    });
+
+    const article = el("article", "dpage");
+    const tools = el("div", "dtools");
+    const note = el("span", "hint");
+    note.setAttribute("role", "status");
+    note.setAttribute("aria-live", "polite");
+    note.style.padding = "0";
+    tools.append(
+      btn("Copy Markdown", "docs-copy", "headbtn dcopy", async () => {
+        try { await navigator.clipboard.writeText(page.markdown); note.textContent = "Copied."; } catch { note.textContent = "Copy is not available in this browser."; }
+      }),
+      btn("Download .md", "docs-download", "headbtn ddownload", () => { note.textContent = downloadText(`holons-${page.id}.md`, page.markdown) ? "Download started." : "Download is not available in this browser."; }),
+      note,
+    );
+    const title = el("h2", "", page.title);
+    title.tabIndex = -1;
+    // The page title is the heading above; drop the Markdown's own leading "# " line from the rendered body.
+    const shown = page.markdown.replace(/^# .*\n+/, "");
+    article.append(tools, title, renderMarkdown(shown, { httpOnly: true }));
+    body.append(nav, article);
+    wrap.append(head, body);
+    main.append(wrap);
+    return main;
+  }
+
   function mainView() {
+    if (state.docs.open) return docsView();
     const main = el("main", "main");
     const head = el("div", "mhead");
     const h = holon();
@@ -1327,6 +1593,9 @@ function mount(container) {
       w.append(big, el("h1", "", "Holons"),
         el("p", "", live() ? `Connected to ${state.backend.base}. Pick a Holon on the left, or press + to create one.` : "Chat with your Holons: feeds, courses and the people in them. You are in Demo mode with sample Holons."),
         poweredBy("wpowered"));
+      const actions = el("div", "wactions");
+      actions.append(btn("Learn about Holons", "docs-open", "wdocs", () => openDocs("index", ".wdocs")));
+      w.insertBefore(actions, w.querySelector(".wpowered"));
       main.append(w);
       return main;
     }
@@ -1370,16 +1639,29 @@ function mount(container) {
     return col;
   }
 
+  let grips = { dispose() {} };
   function render() {
     if (disposed) return;
+    grips.dispose();
     const shell = el("div", "shell");
-    shell.append(railView(), listView(), mainView(), teamView());
+    shell.classList.toggle("docsopen", state.docs.open);
+    shell.append(railView(), listView(), mainView());
+    if (!state.docs.open) shell.append(teamView());
     shellHost.replaceChildren(shell);
+    grips = gripColumns({
+      grid: shell, storageKey: "grip:holons-hangout", centerMin: 56 + 320, narrowQuery: "(max-width: 900px)",
+      columns: [
+        { el: shell.querySelector(":scope > .list"), edge: "left", min: 200, max: 480, initial: 300, label: "holons list" },
+        ...(state.docs.open ? [] : [{ el: shell.querySelector(":scope > .team"), edge: "right", min: 160, max: 420, initial: 280, label: "team panel" }]),
+      ],
+    });
+    // The rail sits left of the list, so its handle is 56px further in.
+    shell.querySelectorAll(":scope > .grip-left").forEach((h) => { h.style.left = "calc(56px + var(--grip-0, 300px))"; });
     const ta = root.querySelector(".composer textarea");
     if (ta && state.refocus && !state.dialog) { ta.focus(); state.refocus = false; }
   }
 
   render();
   connect(saved);
-  return () => { disposed = true; root.remove(); };
+  return () => { disposed = true; grips.dispose(); root.remove(); };
 }

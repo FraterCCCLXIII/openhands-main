@@ -44,7 +44,9 @@ export function ChatSendButton({
       ) : (
         <ArrowUp
           className="w-4 h-4"
-          color={disabled ? "var(--oh-muted)" : "var(--oh-contrast)"}
+          // The enabled button is a fixed white disc, so the arrow is fixed dark
+          // rather than the theme's contrast colour (white in dark mode).
+          color={disabled ? "var(--oh-muted)" : "#171717"}
         />
       )}
     </button>

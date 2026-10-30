@@ -17,6 +17,7 @@ import {
   createSampleTeamChatStore,
   useTeamChatStore,
 } from "#/stores/team-chat-store";
+import { useTeamEntryStore } from "#/stores/team-chat-entry-store";
 import { TeamChatStoreProvider } from "#/stores/team-chat-store-context";
 
 type Stage = "welcome" | "dialog" | "sample";
@@ -27,7 +28,15 @@ type Stage = "welcome" | "dialog" | "sample";
  */
 function SignedOutTeamChat({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation("openhands");
-  const [stage, setStage] = useState<Stage>("welcome");
+  // Arriving from the team switcher skips the welcome: straight to the sample or the form.
+  const [stage, setStage] = useState<Stage>(() => {
+    const { intent } = useTeamEntryStore.getState();
+    if (intent === "sample") return "sample";
+    return intent ? "dialog" : "welcome";
+  });
+  useEffect(() => {
+    if (stage === "sample") useTeamEntryStore.getState().setIntent(null);
+  }, [stage]);
   const sample = useMemo(() => createSampleTeam(), []);
   const store = useMemo(
     () =>
@@ -68,6 +77,10 @@ function SignedOutTeamChat({ children }: { children: React.ReactNode }) {
           <Workspace
             client={sample.client}
             sample
+            onStartTeam={(mode) => {
+              useTeamEntryStore.getState().setIntent(mode);
+              setStage("dialog");
+            }}
             sampleNotice={
               <SampleNotice
                 onStart={() => setStage("dialog")}

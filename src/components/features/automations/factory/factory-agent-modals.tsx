@@ -26,7 +26,7 @@ import {
 } from "#/utils/feed-agent-role";
 import { cn } from "#/utils/utils";
 import { IconAppearancePanel } from "#/ui/icon-appearance-picker";
-import { FEED_DEMO_AGENTS } from "#/utils/feed-demo-agents";
+import { useKnownFeedAgents } from "#/hooks/use-known-feed-agents";
 import { agentIconKey } from "#/utils/feed-icon-keys";
 import type { Roster, RosterAgent } from "./factory-routing-context";
 
@@ -48,7 +48,8 @@ export function FactoryAddAgentModal({
     roster.coordinator.agent.name,
     ...roster.others.map(({ agent }) => agent.name),
   ]);
-  const available = FEED_DEMO_AGENTS.filter(({ name }) => !taken.has(name));
+  const known = useKnownFeedAgents();
+  const available = known.filter(({ name }) => !taken.has(name));
 
   return (
     <ModalBackdrop onClose={onClose}>
@@ -203,7 +204,7 @@ export function FactoryEditAgentModal({
   const { t } = useTranslation("openhands");
   const { agent, conversations } = entry;
   const [tab, setTab] = useState<EditTab>("general");
-  const iconKey = agentIconKey(`demo:${agent.name}`);
+  const iconKey = agentIconKey(agent.profileId ?? `demo:${agent.name}`);
   const savedIcon = useFeedIconsStore((state) => state.icons[iconKey]);
   const setIcon = useFeedIconsStore((state) => state.setIcon);
   const savedConfig = useFeedAgentConfigStore(

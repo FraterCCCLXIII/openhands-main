@@ -4,7 +4,11 @@ import {
   FEED_DEMO_AGENT_FILTER_PREFIX,
   pickFeedDemoAgent,
 } from "./feed-demo-agents";
-import { getFeedFactory, getFeedTeammateIds } from "./feed-team-demo";
+import {
+  getConversationFactory,
+  getFeedTeammateIds,
+  type FactoryResolver,
+} from "./feed-team-demo";
 
 export interface FeedFilter {
   /** Project key from {@link getFeedProject}; null is every project. */
@@ -49,6 +53,7 @@ export function getFeedProject(conversation: AppConversation): string | null {
 export function matchesFeedFilter(
   conversation: AppConversation,
   filter: FeedFilter,
+  resolveFactory: FactoryResolver = getConversationFactory,
 ): boolean {
   if (filter.project && getFeedProject(conversation) !== filter.project) {
     return false;
@@ -67,7 +72,7 @@ export function matchesFeedFilter(
   }
   if (
     filter.factoryId &&
-    getFeedFactory(conversation.id).id !== filter.factoryId
+    resolveFactory(conversation)?.id !== filter.factoryId
   ) {
     return false;
   }

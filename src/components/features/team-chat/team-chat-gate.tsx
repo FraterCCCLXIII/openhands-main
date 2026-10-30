@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTeamEntryStore } from "#/stores/team-chat-entry-store";
 import { MessagesSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RelayConnection, TeamClient } from "#/chat-transport/nostr";
@@ -358,7 +359,10 @@ export function TeamChooser({ account }: { account: Account }) {
   const { t } = useTranslation("openhands");
   const relayUrl = useTeamChatStore((s) => s.relayUrl);
   const openTeam = useTeamChatStore((s) => s.openTeam);
-  const [mode, setMode] = useState<ChooserMode>("start");
+  const [mode, setMode] = useState<ChooserMode>(() =>
+    useTeamEntryStore.getState().intent === "join" ? "join" : "start",
+  );
+  useEffect(() => useTeamEntryStore.getState().setIntent(null), []);
   const [teamName, setTeamName] = useState("");
   const { busy, error, run } = useAction();
   const start = () =>
@@ -423,7 +427,10 @@ export function TeamChooser({ account }: { account: Account }) {
 export function TeamChatGate() {
   const { t } = useTranslation("openhands");
   const relayUrl = useTeamChatStore((s) => s.relayUrl);
-  const [tab, setTab] = useState<GateTab>("create");
+  const [tab, setTab] = useState<GateTab>(() =>
+    useTeamEntryStore.getState().intent === "join" ? "join" : "create",
+  );
+  useEffect(() => useTeamEntryStore.getState().setIntent(null), []);
   const [relay, setRelay] = useState(relayUrl);
   return (
     <div data-testid="team-chat-gate" className="flex flex-col gap-5 p-6 pt-8">

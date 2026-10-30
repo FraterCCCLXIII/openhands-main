@@ -1,4 +1,4 @@
-/* Bitsocial — a Canvas App that looks and feels like Hangout / Team Chat, but talks
+/* Bitkin — a Canvas App that looks and feels like Hangout / Team Chat, but talks
  * to the Bitsocial protocol (peer-to-peer social on IPFS pubsub, formerly Plebbit).
  *
  *   community  = channel      post  = thread root      reply = reply in the thread
@@ -87,7 +87,7 @@ export function createRpcClient(url, { socketFactory, timeoutMs = 15000 } = {}) 
     setState("connecting");
     openPromise = new Promise((resolve, reject) => {
       const unreachable = (why) => {
-        const e = new Error(`Can't reach a Bitsocial node at ${url}${why ? ` (${why})` : ""}. Start your node and check the URL.`);
+        const e = new Error(`Can't reach the node at ${url}${why ? ` (${why})` : ""}. Start your node and check the URL.`);
         e.unreachable = true;
         return e;
       };
@@ -108,7 +108,7 @@ export function createRpcClient(url, { socketFactory, timeoutMs = 15000 } = {}) 
         if (!settled) { settled = true; setState("failed"); openPromise = null; reject(unreachable("closed")); return; }
         openPromise = null;
         setState("closed");
-        failAll(new Error("The connection to the Bitsocial node closed."));
+        failAll(new Error("The connection to the node closed."));
       };
       socket.onmessage = onMessage;
     });
@@ -164,6 +164,7 @@ const PUBLISH_METHODS = {
   comment: { method: "publishComment", key: "comment" },
   vote: { method: "publishVote", key: "vote" },
   commentEdit: { method: "publishCommentEdit", key: "commentEdit" },
+  commentModeration: { method: "publishCommentModeration", key: "commentModeration" },
 };
 
 export function createBitsocialApi(client) {
@@ -174,7 +175,7 @@ export function createBitsocialApi(client) {
   };
   return {
     watchCommunityList: (onList) => subscribe("subplebbitsSubscribe", [], (event, result) => { if (event === "subplebbitschange" && Array.isArray(result)) onList(result); }),
-    watchCommunity: (address, onUpdate, onError) => subscribe("subplebbitUpdateSubscribe", [{ address }], (event, result) => { if (event === "update") onUpdate(result); else if (event === "error" && onError) onError(result); }),
+    watchCommunity: (address, onUpdate, onError) => subscribe("subplebbitUpdateSubscribe", [{ address }], (event, result) => { if (event === "update") onUpdate(unwrapCommunityUpdate(result)); else if (event === "error" && onError) onError(result); }),
     getSubplebbitPage: (subplebbitAddress, cid, pageMaxSize = 50) => client.call("getSubplebbitPage", [{ cid, subplebbitAddress, type: "posts", pageMaxSize }]),
     getCommentPage: (subplebbitAddress, commentCid, cid, pageMaxSize = 50) => client.call("getCommentPage", [{ cid, commentCid, subplebbitAddress, pageMaxSize }]),
     getComment: (cid) => client.call("getComment", [{ cid }]),
@@ -235,6 +236,23 @@ export function postsFromCommunity(sub) {
   return entries.map(normalizeEntry).sort((a, b) => a.timestamp - b.timestamp);
 }
 
+/** A remote community's update arrives as {subplebbit, updateCid, updatingState}; a local one is the flat community. */
+export function unwrapCommunityUpdate(result) {
+  return result && typeof result === "object" && result.subplebbit && typeof result.subplebbit === "object" ? result.subplebbit : result;
+}
+
+/** True once an update carries real community data (a remote community first sends an empty one). */
+export function hasCommunityData(sub) {
+  return Boolean(sub && typeof sub === "object" && (sub.title || sub.description || sub.updatedAt || sub.createdAt || sub.posts || sub.lastPostCid || sub.signature));
+}
+
+const CHALLENGE_REJECTED = "This community requires a challenge your identity cannot satisfy. If you own it, open Community settings and allow anyone to post.";
+/** Turns the node's challenge failure into a plain sentence; anything else is shown as the node said it. */
+export function explainPublishError(reason) {
+  const text = String(reason || "");
+  return /ERR_INVALID_RESULT_FROM_GET_CHALLENGE_FUNCTION|challenges? is misconfigured/i.test(text) ? CHALLENGE_REJECTED : text;
+}
+
 /** Flattens preloaded replies (nested trees) to a list sorted oldest first. */
 export function repliesFromRaw(raw) {
   const out = [];
@@ -273,6 +291,8 @@ const SIGNED_ORDER = {
   comment: ["flairs", "spoiler", "nsfw", "content", "title", "link", "linkWidth", "linkHeight", "linkHtmlTagName", "parentCid", "postCid", "quotedCids", "author", "subplebbitAddress", "protocolVersion", "timestamp"],
   vote: ["author", "subplebbitAddress", "protocolVersion", "timestamp", "commentCid", "vote"],
   commentEdit: ["author", "subplebbitAddress", "protocolVersion", "timestamp", "commentCid", "content", "deleted", "flairs", "spoiler", "nsfw", "reason"],
+  // Verified against plebbit-js: createCommentModeration(...).signature.signedPropertyNames.
+  commentModeration: ["author", "subplebbitAddress", "protocolVersion", "timestamp", "commentModeration", "commentCid"],
 };
 
 const B58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -455,6 +475,103 @@ export function validateCommunityAddress(input) {
   return { ok: false, error: `"${text.length > 60 ? `${text.slice(0, 57)}…` : text}" is not a community address. Use a name like music.eth or a peer id starting with 12D3KooW.` };
 }
 
+// ─── Spaces: access, invitations and roles (verified against a real node, see README) ──────
+// "Private" is invite-only to POST. Anyone with the address can still read the content; the node has no
+// switch to hide it. Access is the community's `settings.challenges`:
+//   Public  = []                                              (no challenge: anyone can post)
+//   Private = [{name:"whitelist", options:{addresses:"a,b", error}, exclude:[{role:[owner,admin,moderator]}]}]
+//   Locked  = the same list plus {name:"fail", options:{error}, exclude:[{role:[...]}]} (only the roles can post)
+// `roles` in editSubplebbit REPLACES the whole map, so callers always send the full merged map.
+
+export const STAFF_ROLES = ["owner", "admin", "moderator"];
+export const INVITE_ONLY_MESSAGE = "This room is invite-only.";
+export const LOCK_MESSAGE = "This room is locked right now.";
+export const PRIVATE_HONESTY = "Anyone with the address can read; only invited people can post.";
+
+/** A pasted author address: a peer id (12D3KooW… / Qm…) or a name like alice.eth. */
+export function validateAuthorAddress(input) {
+  const text = String(input || "").trim();
+  if (!text) return { ok: false, error: "Enter an author address." };
+  if (PEER_ID.test(text)) return { ok: true, address: text };
+  if (DOMAIN_NAME.test(text.toLowerCase())) return { ok: true, address: text.toLowerCase() };
+  return { ok: false, error: `"${text.length > 40 ? `${text.slice(0, 37)}…` : text}" is not an author address. Use 12D3KooW… or a name like alice.eth.` };
+}
+
+/** Splits pasted text (commas, spaces, new lines) into unique valid addresses and the entries that failed. */
+export function parseAddressList(text) {
+  const valid = [];
+  const invalid = [];
+  String(text || "").split(/[\s,;]+/).filter(Boolean).forEach((part) => {
+    const v = validateAuthorAddress(part);
+    if (!v.ok) invalid.push(part);
+    else if (!valid.includes(v.address)) valid.push(v.address);
+  });
+  return { valid, invalid };
+}
+
+const isInviteChallenge = (ch) => Boolean(ch) && ch.name === "whitelist" && isObject(ch.options) && typeof ch.options.addresses === "string";
+const isLockChallenge = (ch) => Boolean(ch) && ch.name === "fail" && isObject(ch.options) && ch.options.error === LOCK_MESSAGE;
+
+/** The challenge that makes a space invite-only to post. */
+export function inviteChallenge(addresses) {
+  return { name: "whitelist", options: { addresses: addresses.join(","), error: INVITE_ONLY_MESSAGE }, exclude: [{ role: [...STAFF_ROLES] }] };
+}
+/** The challenge that always fails, except for the owner, admins and moderators. */
+export function lockChallenge() {
+  return { name: "fail", options: { error: LOCK_MESSAGE }, exclude: [{ role: [...STAFF_ROLES] }] };
+}
+
+/** What a challenge list means for people: {private, locked, allow}. */
+export function readAccess(challenges) {
+  const list = Array.isArray(challenges) ? challenges : [];
+  const invite = list.find(isInviteChallenge);
+  return {
+    private: Boolean(invite),
+    locked: list.some(isLockChallenge),
+    allow: invite ? invite.options.addresses.split(",").map((a) => a.trim()).filter(Boolean) : [],
+  };
+}
+/** The same list with the allow-list replaced (other challenges are kept). */
+export function withAllowList(challenges, addresses) {
+  const list = Array.isArray(challenges) ? challenges : [];
+  if (!list.some(isInviteChallenge)) return [inviteChallenge(addresses), ...list];
+  return list.map((ch) => (isInviteChallenge(ch) ? { ...ch, options: { ...ch.options, addresses: addresses.join(",") } } : ch));
+}
+/** The same list with the lock added or removed. */
+export function withLock(challenges, locked) {
+  const list = (Array.isArray(challenges) ? challenges : []).filter((ch) => !isLockChallenge(ch));
+  return locked ? [...list, lockChallenge()] : list;
+}
+/** The challenge list for a visibility: public clears everything but a lock; private needs the owner on the list. */
+export function accessChallenges({ visibility, allow = [], locked = false }) {
+  return withLock(visibility === "private" ? [inviteChallenge(allow)] : [], locked);
+}
+/** Roles after setting one address's role (null removes it). The owner's own entry can never change here. */
+export function mergeRoles(roles, address, role) {
+  const out = { ...(isObject(roles) ? roles : {}) };
+  if (out[address] && out[address].role === "owner") return out;
+  if (role) out[address] = { role }; else delete out[address];
+  return out;
+}
+export const BAN_DURATIONS = [
+  { id: "1h", label: "1 hour", seconds: 3600 },
+  { id: "1d", label: "1 day", seconds: 86400 },
+  { id: "7d", label: "7 days", seconds: 7 * 86400 },
+  { id: "30d", label: "30 days", seconds: 30 * 86400 },
+];
+/** The `commentModeration` object for a removal and/or a ban. `now` is in ms. */
+export function moderationFor({ remove = false, banSeconds = 0, reason = "", now = Date.now() }) {
+  const out = {};
+  if (remove) out.removed = true;
+  if (banSeconds) out.author = { banExpiresAt: Math.floor(now / 1000) + banSeconds };
+  if (reason.trim()) out.reason = reason.trim();
+  return out;
+}
+/** The text a person pastes to invite someone. */
+export function inviteMessage({ title, address, isPrivate }) {
+  return `Join my Bitkin space "${title}". Open Bitkin, choose Join, and paste this address: ${address}${isPrivate ? "\nThis space is invite-only: send me your author address (Bitkin, your identity) so I can add you before you post." : ""}`;
+}
+
 /** Checks the fields of a new post or reply; returns an error string or "". */
 export function validateComposer({ content = "", title = "", link = "", isReply = false }) {
   if (isReply) return content.trim() ? "" : "Write something to reply.";
@@ -471,22 +588,42 @@ export function validateComposer({ content = "", title = "", link = "", isReply 
 const H = 3600 * 1000;
 const mk = (cid, name, address, text, ago, extra = {}) => ({ cid, author: { address, name }, title: "", content: text, link: "", timestamp: 0, ago, replyCount: 0, upvotes: 0, downvotes: 0, pinned: false, replies: [], ...extra });
 
+/**
+ * The public topic communities every demo starts with. One entry per community, plain data, so a later
+ * "activate on my node" flow can read `id`, `address`, `topic` and `visibility` and create the real community from it.
+ * Shape: { id, title, description, address, topic, visibility: "public" | "private", challenge?: {question, answer},
+ *   posts: [{ cid, who, title, text, ago (hours), up, pinned, replies: [{ cid, who, text, ago }] }] }
+ */
+export const SEEDED_COMMUNITIES = [
+  { id: "ai", title: "AI", description: "Artificial intelligence: research, tools and discussion.", address: "ai.bitkin", topic: "topic-ai", visibility: "public", posts: [
+    { cid: "Qm-demo-1", who: "es", title: "Welcome to AI", text: "Welcome to the **AI** community on Bitkin. Share papers, tools and questions.", ago: 30, up: 42, pinned: true, replies: [{ cid: "Qm-demo-1a", who: "ada", text: "Love that *anyone* can run a community like this from a laptop.", ago: 29 }, { cid: "Qm-demo-1b", who: "li", text: "What is the best way to try a small model locally?\n\nStart with a quantised model and a simple runner.", ago: 28 }] },
+    { cid: "Qm-demo-2", who: "gr", title: "Prompting tips that worked", text: "Be specific about the output format.\n\n```\nAnswer as a JSON list of strings.\n```", ago: 5, up: 17, replies: [{ cid: "Qm-demo-2a", who: "es", text: "That also makes the answers easier to check.", ago: 4 }] },
+  ] },
+  { id: "news", title: "News", description: "News & Current Events.", address: "news.bitkin", topic: "topic-news", visibility: "public", challenge: {"question": "What is 2 + 3?", "answer": "5"}, posts: [
+    { cid: "Qm-demo-3", who: "ma", title: "Weekly digest", text: "A short digest of what happened this week. Posting here asks a demo challenge, to show how moderated communities work.", ago: 12, up: 9, replies: [{ cid: "Qm-demo-3a", who: "ada", text: "Thanks, this saves me a lot of reading.", ago: 11 }] },
+    { cid: "Qm-demo-3b", who: "li", title: "Sources you trust", text: "Which outlets do you read, and why?", ago: 6, up: 5 },
+  ] },
+  { id: "tech", title: "Tech", description: "Technology and gadgets.", address: "tech.bitkin", topic: "topic-tech", visibility: "public", posts: [
+    { cid: "Qm-demo-4", who: "li", title: "Weekend projects", text: "What are you building this weekend?", ago: 2, up: 3, replies: [{ cid: "Qm-demo-4a", who: "ada", text: "A tiny garden planner.", ago: 1 }] },
+    { cid: "Qm-demo-4b", who: "gr", title: "Best budget keyboard?", text: "Looking for something quiet that lasts.", ago: 9, up: 4 },
+  ] },
+  { id: "science", title: "Science", description: "Discoveries, papers and curiosity.", address: "science.bitkin", topic: "topic-science", visibility: "public", posts: [
+    { cid: "Qm-demo-7", who: "ada", title: "Favourite science explainer", text: "Share an article or video that made something click for you.", ago: 14, up: 8, replies: [{ cid: "Qm-demo-7a", who: "es", text: "Anything on how vaccines are tested.", ago: 13 }] },
+  ] },
+  { id: "business", title: "Business", description: "Startups, work and money matters.", address: "business.bitkin", topic: "topic-business", visibility: "public", posts: [
+    { cid: "Qm-demo-8", who: "gr", title: "Show your side project", text: "Share what you are shipping and what you learned.", ago: 8, up: 11, replies: [{ cid: "Qm-demo-8a", who: "ma", text: "Pricing was the hardest part for me.", ago: 7 }] },
+  ] },
+  { id: "design", title: "Design", description: "Interfaces, graphics and craft.", address: "design.bitkin", topic: "topic-design", visibility: "public", posts: [
+    { cid: "Qm-demo-9", who: "ma", title: "Critique corner", text: "Post a screenshot and get friendly feedback.", ago: 20, up: 6 },
+  ] },
+];
+const DEMO_PEOPLE = {"es": {"name": "Esteban", "address": "12D3KooWesteban"}, "ada": {"name": "Ada", "address": "12D3KooWada"}, "li": {"name": "Linus", "address": "12D3KooWlinus"}, "gr": {"name": "Grace", "address": "12D3KooWgrace"}, "ma": {"name": "Margaret", "address": "12D3KooWmargaret"}};
+const fromSeed = (c) => ({
+  address: c.address, title: c.title, description: c.description, topic: c.topic, visibility: c.visibility, seedId: c.id, ...(c.challenge ? { challenge: { ...c.challenge } } : {}),
+  posts: c.posts.map((p) => mk(p.cid, DEMO_PEOPLE[p.who].name, DEMO_PEOPLE[p.who].address, p.text, p.ago * H, { title: p.title, pinned: Boolean(p.pinned), upvotes: p.up, replies: (p.replies || []).map((r) => mk(r.cid, DEMO_PEOPLE[r.who].name, DEMO_PEOPLE[r.who].address, r.text, r.ago * H)) })),
+});
 export function demoCommunities(now = Date.now()) {
-  const list = [
-    { address: "bitsocial.eth", title: "Bitsocial", description: "News, ideas and questions about the Bitsocial protocol.", posts: [
-      mk("Qm-demo-1", "Esteban", "12D3KooWesteban", "Welcome to **Bitsocial**! Every community is run by its owner from their own node. No company in the middle.", 30 * H, { title: "Welcome to Bitsocial", pinned: true, upvotes: 42, replies: [
-        mk("Qm-demo-1a", "Ada", "12D3KooWada", "Love that *anyone* can run a community from a laptop.", 29 * H),
-        mk("Qm-demo-1b", "Linus", "12D3KooWlinus", "How do posts reach other people?\n\nThrough pubsub on IPFS, with the community node publishing signed updates.", 28 * H),
-      ] }),
-      mk("Qm-demo-2", "Grace", "12D3KooWgrace", "Tip: run the node manager and point apps at `ws://localhost:9138`.\n\n```sh\nbitsocial-node --rpc 9138\n```", 5 * H, { title: "Running your own node", upvotes: 17, replies: [mk("Qm-demo-2a", "Esteban", "12D3KooWesteban", "That is the same URL this app uses in Connected mode.", 4 * H)] }),
-    ] },
-    { address: "seedit.eth", title: "Seedit", description: "The Reddit-style client for Bitsocial communities.", posts: [
-      mk("Qm-demo-3", "Margaret", "12D3KooWmargaret", "Seedit now supports **multiple accounts**.\n\n- Import an account\n- Export a backup\n- Switch in settings", 12 * H, { title: "Multiple accounts", upvotes: 9, replies: [mk("Qm-demo-3a", "Ada", "12D3KooWada", "Nice, importing was painless.", 11 * H)] }),
-    ] },
-    { address: "plebtoken.eth", title: "Plebs", description: "Casual chat for everyone. Posting here asks a demo challenge.", challenge: { question: "What is 2 + 3?", answer: "5" }, posts: [
-      mk("Qm-demo-4", "Linus", "12D3KooWlinus", "What are you building this weekend?", 2 * H, { title: "Weekend projects", upvotes: 3 }),
-    ] },
-  ];
+  const list = SEEDED_COMMUNITIES.map(fromSeed);
   list.forEach((c) => c.posts.forEach((p) => { p.timestamp = now - p.ago; p.replies.forEach((r) => { r.timestamp = now - r.ago; r.depth = 0; }); p.replyCount = p.replies.length; }));
   return list;
 }
@@ -495,7 +632,7 @@ export function demoCommunities(now = Date.now()) {
 export function demoDirectory(now = Date.now()) {
   const list = [
     { address: "music.eth", title: "Music", description: "Albums, gigs and gear.", posts: [mk("Qm-demo-5", "Ada", "12D3KooWada", "What are you listening to this week?", 3 * H, { title: "Weekly listening thread", upvotes: 6 })] },
-    { address: "devs.eth", title: "Devs", description: "Building on Bitsocial.", posts: [mk("Qm-demo-6", "Grace", "12D3KooWgrace", "Share what you are shipping.", 6 * H, { title: "Show and tell", upvotes: 11 })] },
+    { address: "devs.eth", title: "Devs", description: "Building with Bitkin.", posts: [mk("Qm-demo-6", "Grace", "12D3KooWgrace", "Share what you are shipping.", 6 * H, { title: "Show and tell", upvotes: 11 })] },
   ];
   list.forEach((c) => c.posts.forEach((p) => { p.timestamp = now - p.ago; p.replies.forEach((r) => { r.timestamp = now - r.ago; r.depth = 0; }); p.replyCount = p.replies.length; }));
   return list;
@@ -504,6 +641,37 @@ export function demoDirectory(now = Date.now()) {
 // ─── Avatars: Kamiji-style orbs, tinted from the author address ────────────────────────────
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+
+const KAMIJI_STROKES = ["M18 24V82M46 24L20 54M28 50L48 82", "M96 48V82", "M120 48V82M120 60Q120 48 134 48Q148 48 148 62V82M148 62Q148 48 162 48Q176 48 176 62V82", "M198 48V82M198 26V26", "M224 48V86Q224 98 210 98M224 26V26", "M250 48V82M250 26V26"];
+const KOSMOS_PATHS = [
+  "M79.81,54.47c-2.27-3.14-3.59-7.14-3.59-11.73,0-11.39,8.05-19.17,18.75-19.17,5.44,0,10.18,2.02,13.54,5.49,2.77-3.32,28.03-25.97,31.05-29.06-24.12,19.01-35.79,11.75-44.59,11.75-18.92,0-32.79,13.18-32.79,30.99,0,8.04,2.84,15.14,7.69,20.51",
+  "M111.85,33.96c1.19,2.57,1.86,5.52,1.86,8.77,0,11.38-8.05,19.17-18.75,19.17-4.03,0-7.67-1.1-10.66-3.09-3.54,2.54-21.13,20.86-24.29,23.89,18.2-10.53,26.87-8.99,34.95-8.99,18.83,0,32.79-13.1,32.79-30.99,0-6.58-2.16-12.99-5.7-18.17l-10.2,9.4Z",
+  "M137.56,66.79l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M254.75,72.7l-.09-35.95-17.63,29.62h-6.25l-17.55-28.85v35.18h-13.01V12.78h11.47l22.43,37.24,22.09-37.24h11.39l.17,59.92h-13.01Z",
+  "M280.39,42.78c0-17.81,13.87-30.99,32.79-30.99s32.79,13.1,32.79,30.99-13.95,30.99-32.79,30.99-32.79-13.18-32.79-30.99ZM331.93,42.78c0-11.39-8.05-19.17-18.75-19.17s-18.75,7.79-18.75,19.17,8.05,19.17,18.75,19.17,18.75-7.79,18.75-19.17Z",
+  "M355.48,66.84l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M13.78,39.15V12.78H0v59.92h13.78v-15.15l.03-.03M28.22,42.74 56.22,72.7H38.43L19.09,52.01 13.81,46.36 10.43,42.74 13.78,39.15 38.43,12.78H56.22L31.06,39.7Z",
+];
+
+function logoSvg(viewBox, label, paths, stroke) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", label);
+  const title = document.createElementNS(SVG_NS, "title");
+  title.textContent = label;
+  svg.append(title);
+  paths.forEach((d) => {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("aria-hidden", "true");
+    if (stroke) Object.entries({ fill: "none", stroke: "currentColor", "stroke-width": stroke, "stroke-linecap": "round", "stroke-linejoin": "round" }).forEach(([k, v]) => path.setAttribute(k, v));
+    else path.setAttribute("fill", "currentColor");
+    svg.append(path);
+  });
+  return svg;
+}
+
 
 const BLOBS = [
   { id: "violet", fill: "#8B5CF6", path: "M32 6c14 0 24 10 24 24 0 16-11 28-24 28S8 46 8 30C8 16 18 6 32 6Z" },
@@ -778,16 +946,121 @@ export function relativeTime(ts, now = Date.now()) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
+/**
+ * Drag handles for the outer columns of a page's grid (a left list and/or a right panel).
+ *
+ * `columns` is a list of `{ el, edge, min, max, initial, label }`: `el` is the column's element,
+ * `edge` is "left" for a column on the left side (its handle sits on its right edge) or "right"
+ * for one on the right side. The app's CSS must read each width from a variable, for example
+ * `grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px)`, where the
+ * number is the column's position in the `columns` list. Widths are saved per `storageKey`.
+ * Call `refresh()` after the app shows or hides a column; call `dispose()` on unmount.
+ */
+function gripColumns({ grid, columns, storageKey, centerMin = 320, narrowQuery = "(max-width: 720px)" }) {
+  const win = grid.ownerDocument.defaultView || globalThis;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const saved = (() => {
+    try { return JSON.parse(win.localStorage.getItem(storageKey) || "{}") || {}; } catch { return {}; }
+  })();
+  const widths = columns.map((c, i) => (Number.isFinite(saved[i]) ? clamp(saved[i], c.min, c.max) : c.initial));
+  const handles = [];
+  const cleanups = [];
+
+  const narrow = () => Boolean(win.matchMedia && win.matchMedia(narrowQuery).matches);
+  const shown = (i) => !narrow() && columns[i].el.isConnected && win.getComputedStyle(columns[i].el).display !== "none";
+  const save = () => { try { win.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(widths.map((w, i) => [i, w])))); } catch { /* storage unavailable */ } };
+  // The widest a column may get while the middle keeps `centerMin` and the other grips keep their widths.
+  const limit = (i) => {
+    const total = grid.clientWidth;
+    if (!total) return columns[i].max;
+    const others = widths.reduce((sum, w, j) => (j !== i && shown(j) ? sum + w : sum), 0);
+    return clamp(total - others - centerMin, columns[i].min, columns[i].max);
+  };
+
+  function apply() {
+    columns.forEach((c, i) => {
+      if (narrow()) grid.style.removeProperty(`--grip-${i}`);
+      else grid.style.setProperty(`--grip-${i}`, `${widths[i]}px`);
+      const h = handles[i];
+      h.hidden = !shown(i);
+      h.setAttribute("aria-valuenow", String(Math.round(widths[i])));
+      h.setAttribute("aria-valuemax", String(Math.round(limit(i))));
+    });
+  }
+
+  function set(i, width, persist = true) {
+    widths[i] = clamp(Math.round(width), columns[i].min, limit(i));
+    apply();
+    if (persist) save();
+  }
+
+  columns.forEach((c, i) => {
+    const h = grid.ownerDocument.createElement("div");
+    h.className = `colgrip colgrip-${c.edge}`;
+    h.dataset.grip = String(i);
+    h.setAttribute("role", "separator");
+    h.setAttribute("aria-orientation", "vertical");
+    h.setAttribute("aria-label", `Resize ${c.label || "column"}`);
+    h.setAttribute("aria-valuemin", String(c.min));
+    h.tabIndex = 0;
+    h.style[c.edge === "left" ? "left" : "right"] = `var(--grip-${i}, ${c.initial}px)`;
+    const dir = c.edge === "left" ? 1 : -1;
+    let startX = 0;
+    let startW = 0;
+    const move = (e) => { set(i, startW + dir * (e.clientX - startX), false); };
+    const up = () => {
+      grid.classList.remove("gripping");
+      h.classList.remove("on");
+      grid.ownerDocument.removeEventListener("pointermove", move);
+      grid.ownerDocument.removeEventListener("pointerup", up);
+      save();
+    };
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = widths[i];
+      grid.classList.add("gripping");
+      h.classList.add("on");
+      grid.ownerDocument.addEventListener("pointermove", move);
+      grid.ownerDocument.addEventListener("pointerup", up);
+    });
+    h.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const grow = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * dir;
+      if (grow) set(i, widths[i] + grow * step);
+      else if (e.key === "Home") set(i, c.min);
+      else if (e.key === "End") set(i, limit(i));
+      else return;
+      e.preventDefault();
+    });
+    h.addEventListener("dblclick", () => set(i, c.initial));
+    cleanups.push(() => { grid.ownerDocument.removeEventListener("pointermove", move); grid.ownerDocument.removeEventListener("pointerup", up); h.remove(); });
+    handles.push(h);
+    grid.append(h);
+  });
+
+  win.addEventListener("resize", apply);
+  cleanups.push(() => win.removeEventListener("resize", apply));
+  apply();
+  return { refresh: apply, widths: () => [...widths], dispose: () => cleanups.forEach((fn) => fn()) };
+}
+
+
+
 const CSS = `
 .bh { --bh-bg: var(--oh-color-base, #171717); --bh-panel: var(--oh-color-base-secondary, #212121); --bh-raised: var(--oh-surface-raised, #2a2a2a);
   --bh-text: var(--oh-foreground, #eee); --bh-contrast: var(--oh-contrast, #fff); --bh-muted: var(--oh-muted, #9a9a9a);
-  --bh-border: var(--oh-border-subtle, #3a3a3a); --bh-primary: var(--oh-color-primary, #fff); --bh-on-primary: var(--oh-accent-foreground, #111);
-  --bh-ok: var(--oh-success, #34d399); --bh-bad: #f87171;
+  --bh-border: var(--oh-border-subtle, #3a3a3a); --bh-primary: var(--oh-accent, var(--oh-color-primary, #fff)); --bh-on-primary: var(--oh-accent-foreground, #111);
+  --bh-on-contrast: var(--oh-contrast-foreground, #111);
+  --bh-ok: var(--oh-success, #34d399); --bh-bad: var(--oh-danger-soft-foreground, #f87171);
+  --bh-link: var(--oh-info-soft-foreground, #7c9dff);
+  /* the copied markdown block below still names Hangout's tokens; resolve them here so text never loses its colour */
+  --hg-contrast: var(--bh-contrast); --hg-muted: var(--bh-muted); --hg-primary: var(--bh-primary);
   box-sizing: border-box; position: sticky; top: 0; color: var(--bh-text); background: var(--bh-bg); font: 14px/1.45 system-ui, sans-serif;
-  height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; }
+  height: 100%; min-height: 480px; overflow: hidden; }
 .bh *, .bh *::before, .bh *::after { box-sizing: border-box; }
 .bh button, .bh input, .bh textarea { font: inherit; color: inherit; }
-.bh .shell { display: grid; grid-template-columns: 260px minmax(0, 1fr) 240px; height: 100%; min-height: 0; }
+.bh .shell { position: relative; display: grid; grid-template-columns: var(--grip-0, 260px) minmax(0, 1fr) var(--grip-1, 240px); height: 100%; min-height: 0; }
 .bh .side, .bh .members { display: flex; flex-direction: column; min-height: 0; background: var(--bh-bg); }
 .bh .side { border-right: 1px solid var(--bh-border); }
 .bh .members { border-left: 1px solid var(--bh-border); }
@@ -818,9 +1091,9 @@ const CSS = `
 .bh .btn.primary { background: var(--bh-primary); color: var(--bh-on-primary); border-color: transparent; }
 .bh .btn:disabled { opacity: .5; cursor: default; }
 .bh .powered { display: flex; align-items: center; gap: 6px; color: var(--bh-muted); font-size: 12px; }
-.bh .powered b { color: var(--bh-text); font-weight: 600; }
-.bh .poweredmark { width: 18px; height: 18px; display: inline-block; }
-.bh .poweredmark svg { width: 100%; height: 100%; }
+.bh .plogo { display: inline-flex; color: inherit; opacity: .7; }
+.bh .plogo:hover { opacity: 1; }
+.bh .plogo svg { height: 16px; width: auto; }
 .bh .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .bh .head { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--bh-border); }
 .bh .head h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--bh-contrast); }
@@ -836,7 +1109,7 @@ const CSS = `
 .bh .msg.pending { opacity: .65; }
 .bh .msg.failed .note { color: var(--bh-bad); }
 .bh .msg .note { font-size: 12px; color: var(--bh-muted); }
-.bh .linkbtn { border: 0; background: none; padding: 2px 0; color: var(--arco-accent, #7c9dff); cursor: pointer; font-size: 12px; }
+.bh .linkbtn { border: 0; background: none; padding: 2px 0; color: var(--bh-link); cursor: pointer; font-size: 12px; }
 .bh .linkbtn:hover { text-decoration: underline; }
 .bh .empty { padding: 40px 20px; text-align: center; color: var(--bh-muted); }
 .bh .composerwrap { flex: none; padding: 8px 16px 14px; }
@@ -875,7 +1148,7 @@ const CSS = `
 .bh .md h4 { font-size: 15px; font-weight: 650; color: var(--hg-contrast); }
 .bh .md h5, .bh .md h6 { font-size: 14px; font-weight: 650; color: var(--hg-contrast); }
 .bh .md strong { font-weight: 650; color: var(--hg-contrast); }
-.bh .md a { color: var(--arco-accent, #7c9dff); text-decoration: underline; text-underline-offset: 2px; }
+.bh .md a { color: var(--bh-link); text-decoration: underline; text-underline-offset: 2px; }
 .bh .md ul, .bh .md ol { padding-left: 22px; display: grid; gap: 3px; }
 .bh .md li > ul, .bh .md li > ol { margin-top: 3px; }
 .bh .md li.mdtask { list-style: none; margin-left: -20px; }
@@ -883,10 +1156,10 @@ const CSS = `
 .bh .md blockquote { border-left: 3px solid var(--hg-border); padding: 2px 0 2px 12px; color: var(--hg-muted); }
 .bh .md hr { border: 0; border-top: 1px solid var(--hg-border); }
 .bh .md code { font: 12.5px ui-monospace, SF Mono, Menlo, monospace; background: rgba(255,255,255,.08); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
-.bh .md .mdcode { border: 1px solid var(--hg-border); border-radius: 10px; overflow: hidden; background: #0e0e10; }
-.bh .md .mdcodebar { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: var(--hg-muted); border-bottom: 1px solid var(--hg-border); background: rgba(255,255,255,.03); }
-.bh .md .mdcodebar button { border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; font-size: 11px; }
-.bh .md .mdcodebar button:hover { color: var(--hg-contrast); }
+.bh .md .mdcode { border: 1px solid var(--hg-border); border-radius: 10px; overflow: hidden; background: #0e0e10; color: #eee; }
+.bh .md .mdcodebar { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 11px; color: #9a9a9a; border-bottom: 1px solid var(--hg-border); background: rgba(255,255,255,.03); }
+.bh .md .mdcodebar button { border: 0; background: transparent; color: #9a9a9a; cursor: pointer; font-size: 11px; }
+.bh .md .mdcodebar button:hover { color: #fff; }
 .bh .md pre { margin: 0; padding: 10px 12px; overflow-x: auto; font: 12.5px/1.55 ui-monospace, SF Mono, Menlo, monospace; }
 .bh .md pre code { background: none; padding: 0; border-radius: 0; overflow-wrap: normal; }
 .bh .md .mdtable { overflow-x: auto; border: 1px solid var(--hg-border); border-radius: 10px; }
@@ -945,7 +1218,37 @@ const CSS = `
 .bh .dlg .ownrow { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--bh-border); border-radius: 12px; background: var(--bh-panel); }
 .bh .dlg .ownrow .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .bh .dlg .ownrow .top b { color: var(--bh-contrast); font-weight: 500; }
-.bh button:focus-visible, .bh input:focus-visible, .bh textarea:focus-visible { outline: 2px solid var(--arco-accent, #7c9dff); outline-offset: 1px; }
+.bh .sidebtns { flex-wrap: wrap; }
+.bh .sidebtns .btn { flex: 1 1 auto; white-space: nowrap; }
+.bh .seedhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-right: 12px; }
+.bh .seedhead .btn { padding: 2px 10px; font-size: 12px; }
+.bh .seedrow { display: flex; align-items: center; gap: 12px; padding: 6px 12px; }
+.bh .seedrow .t { min-width: 0; flex: 1; display: grid; }
+.bh .seedrow .t b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh .seedrow .t small { color: var(--bh-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh .seedrow .btn { padding: 3px 10px; font-size: 12px; }
+.bh .btn.danger { color: var(--bh-bad); border-color: var(--bh-bad); background: transparent; }
+.bh a.btn { display: inline-block; text-decoration: none; color: var(--bh-link); text-align: center; }
+.bh .dlg.wide { width: min(720px, 100%); }
+.bh .dlg .steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.bh .dlg .steps li { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--bh-border); border-radius: 10px; background: var(--bh-panel); }
+.bh .dlg .steps li b { color: var(--bh-contrast); font-weight: 500; }
+.bh .dlg .stepstatus { font-size: 12px; color: var(--bh-muted); word-break: break-word; }
+.bh .dlg .stepstatus[data-kind="error"] { color: var(--bh-bad); }
+.bh .dlg .opt { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; }
+.bh .dlg .opt input { width: auto; margin-top: 3px; }
+.bh .dlg .opt span { display: grid; }
+.bh .dlg .opt small { color: var(--bh-muted); }
+.bh .dlg .check { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.bh .dlg select { border: 1px solid var(--bh-border); border-radius: 10px; background: var(--bh-panel); color: var(--bh-text); padding: 5px 8px; }
+.bh .pill { display: inline-block; font-size: 11px; padding: 1px 8px; border: 1px solid var(--bh-border); border-radius: 999px; color: var(--bh-muted); white-space: nowrap; }
+.bh .pill.role { border-color: var(--bh-link); color: var(--bh-link); }
+.bh .pill.bad { border-color: var(--bh-bad); color: var(--bh-bad); }
+.bh .pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.bh .dlg .attendee, .bh .dlg .invitees .mrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 0; }
+.bh .dlg .attendee .t, .bh .dlg .invitees .mrow .t { flex: 1; min-width: 140px; }
+.bh .dlg .attendees { display: grid; }
+.bh button:focus-visible, .bh input:focus-visible, .bh textarea:focus-visible { outline: 2px solid var(--bh-link); outline-offset: 1px; }
 @keyframes bhOrb { 0% { transform: scale(1, 1) rotate(0deg); } 100% { transform: scale(1.05, .95) rotate(-3deg); } }
 @keyframes bhLook { 0%, 38% { transform: translateX(0); } 46%, 66% { transform: translateX(3px); } 76%, 92% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
 @keyframes bhBlink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
@@ -965,6 +1268,16 @@ const CSS = `
 /* Fewer rules: the rails separate from the page by tone, not by lines. */
 .bh .side, .bh .members { border: 0; background: var(--bh-panel); }
 .bh .sidefoot, .bh .head, .bh .dlg .sep { border: 0; }
+/* Draggable column dividers. */
+.colgrip { position: absolute; top: 0; bottom: 0; width: 11px; z-index: 6; cursor: col-resize; touch-action: none; outline: 0; }
+.colgrip-left { transform: translateX(-50%); }
+.colgrip-right { transform: translateX(50%); }
+.colgrip::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: transparent; transition: background .12s; }
+.colgrip:hover::after, .colgrip:focus-visible::after, .colgrip.on::after { background: var(--oh-color-primary, #7c9dff); }
+.gripping { user-select: none; cursor: col-resize; }
+.gripping * { pointer-events: none; }
+.gripping .colgrip { pointer-events: auto; }
+@media (max-width: 720px) { .colgrip { display: none; } }
 `;
 
 function el(tag, cls, content) {
@@ -981,8 +1294,8 @@ function avatar(address, size) {
 }
 
 export function activate(host, options = {}) {
-  if (host.apiVersion !== "1") throw new Error("Bitsocial requires Canvas host API 1.");
-  return host.registerPage("bitsocial-hangout", ({ container }) => mount(container, options));
+  if (host.apiVersion !== "1") throw new Error("Bitkin requires Canvas host API 1.");
+  return host.registerPage("bitsocial-hangout", (ctx) => mount(ctx.container, options, (ctx && ctx.navigate) || host.navigate));
 }
 
 const IDENTITY_KEY = "bitsocial-hangout:identity:v1";
@@ -990,7 +1303,7 @@ const GUEST = { name: "You", address: "you.eth" };
 const errText = (err) => (err && err.message ? err.message : String(err || "Unknown error"));
 const shortAddress = (a) => (a && a.length > 14 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a || "");
 
-function mount(container, options) {
+function mount(container, options, navigateHost) {
   container.append(el("style", "", CSS));
   const root = el("div", "bh");
   container.append(root);
@@ -1016,6 +1329,8 @@ function mount(container, options) {
     joined: strings(saved.joined) || [], // communities joined by address on a node
     joinedDemo: strings(saved.joinedDemo) || demoCommunities().map((c) => c.address), // joined demo communities
     votes: isObject(saved.votes) ? saved.votes : {}, // comment cid -> 1 | -1 (this browser's own votes)
+    activated: isObject(saved.activated) ? saved.activated : {}, // seed id -> address of the community created on the node
+    spaces: strings(saved.spaces) || [], // addresses of spaces made with "New space" on the node
     ownAddresses: [], // communities hosted by the connected node
     pool: [...demoCommunities(), ...demoDirectory()], // all demo communities, in memory only
     selected: "",
@@ -1023,7 +1338,7 @@ function mount(container, options) {
     replyTo: null,
     composerError: "",
   };
-  const persist = () => writeJson(STORAGE_KEY, { url: state.url, name: state.name, welcomed: state.welcomed, joined: state.joined, joinedDemo: state.joinedDemo, votes: state.votes });
+  const persist = () => writeJson(STORAGE_KEY, { url: state.url, name: state.name, welcomed: state.welcomed, joined: state.joined, joinedDemo: state.joinedDemo, votes: state.votes, activated: state.activated, spaces: state.spaces });
   const persistIdentity = () => { try { if (state.identity) localStorage.setItem(IDENTITY_KEY, JSON.stringify(state.identity)); else localStorage.removeItem(IDENTITY_KEY); } catch { /* storage unavailable */ } };
 
   let client = null;
@@ -1120,8 +1435,12 @@ function mount(container, options) {
     if (!api || state.status !== "connected" || !c) return;
     try {
       communityWatch = await api.watchCommunity(c.address, (sub) => {
-        if (disposed) return;
+        if (disposed || !hasCommunityData(sub)) return;
         c.title = (sub && sub.title) || c.address;
+        c.challenges = sub.challenges;
+        c.settings = isObject(sub.settings) ? sub.settings : undefined; // only a node's own communities report these
+        c.roles = isObject(sub.roles) ? sub.roles : {};
+        c.rules = Array.isArray(sub.rules) ? sub.rules : [];
         c.description = (sub && sub.description) || "";
         const fetched = postsFromCommunity(sub);
         const pendingLocal = c.posts.filter((p) => p.pending || p.failed);
@@ -1139,6 +1458,7 @@ function mount(container, options) {
     const c = community();
     if (!p || p.replies || !c) return;
     p.replies = repliesFromRaw(p.repliesRaw);
+    render();
     if (!p.replies.length && p.replyCount && api && p.repliesRaw && p.repliesRaw.pageCids) {
       const cid = Object.values(p.repliesRaw.pageCids)[0];
       try {
@@ -1387,12 +1707,27 @@ function mount(container, options) {
   // Demo backend: the same event sequence a node produces, in memory.
   let demoSeq = 0;
   const demoPending = new Map();
+  /** Why the demo community would turn this author away (ban, lock, invite-only), or "". Mirrors the node's behaviour. */
+  function demoDenied(c, pub) {
+    if (!c) return "";
+    const address = pub && pub.author ? pub.author.address : "";
+    const role = c.roles && c.roles[address] ? c.roles[address].role : "";
+    const staff = STAFF_ROLES.includes(role);
+    const banned = c.bans && c.bans[address];
+    if (banned && banned > Math.floor(Date.now() / 1000)) return "Author is banned";
+    const access = readAccess(c.settings && c.settings.challenges);
+    if (access.locked && !staff) return LOCK_MESSAGE;
+    if (access.private && !staff && !access.allow.includes(address)) return INVITE_ONLY_MESSAGE;
+    return "";
+  }
   const demoBackend = {
     async publish(kind, pub, onEvent) {
       const id = ++demoSeq;
       const c = state.pool.find((x) => x.address === pub.subplebbitAddress);
-      const challenge = kind === "comment" && c && c.challenge ? c.challenge : null;
+      const denied = kind === "comment" ? demoDenied(c, pub) : "";
+      const challenge = !denied && kind === "comment" && c && c.challenge ? c.challenge : null;
       demoPending.set(id, { onEvent, challenge });
+      if (denied) { later(() => onEvent("challengeverification", { challengeSuccess: false, reason: denied })); return { id, stop: async () => { demoPending.delete(id); } }; }
       const success = () => onEvent("challengeverification", { challengeSuccess: true, commentUpdate: kind === "comment" ? { cid: `demo-${id}` } : undefined });
       later(() => { if (challenge) onEvent("challenge", { challenges: [{ challenge: challenge.question, type: "text/plain" }] }); else success(); });
       return { id, stop: async () => { demoPending.delete(id); } };
@@ -1504,16 +1839,16 @@ function mount(container, options) {
         } else if (event === "challengeverification") {
           const ok = !result || result.challengeSuccess !== false;
           const errors = result && result.challengeErrors ? Object.values(result.challengeErrors).join(" ") : "";
-          finish({ ok, reason: ok ? "" : [result && result.reason, errors].filter(Boolean).join(" ") || "The community rejected it.", cid: result && result.commentUpdate ? result.commentUpdate.cid : "" });
+          finish({ ok, reason: ok ? "" : explainPublishError([result && result.reason, errors].filter(Boolean).join(" ")) || "The community rejected it.", cid: result && result.commentUpdate ? result.commentUpdate.cid : "" });
         } else if (event === "error") {
-          finish({ ok: false, reason: describeError(result) });
+          finish({ ok: false, reason: explainPublishError(describeError(result)) });
         }
       };
       buildPublication(kind, fields).then((built) => {
         pub = built;
         if (onSigned) onSigned(true);
         try { subPromise = Promise.resolve(backend().publish(kind, pub, onEvent)); } catch (err) { subPromise = Promise.reject(err); }
-        subPromise.catch((err) => finish({ ok: false, reason: `Your node did not accept it: ${errText(err)}` }));
+        subPromise.catch((err) => finish({ ok: false, reason: `Your node did not accept it: ${explainPublishError(errText(err))}` }));
       }).catch((err) => {
         if (onSigned) onSigned(false);
         if (err && err.needsIdentity) openIdentityDialog();
@@ -1632,7 +1967,7 @@ function mount(container, options) {
       let finalAddress = address;
       let warning = "";
       if (domain) {
-        try { await api.editCommunity(address, { address: domain }); finalAddress = domain; } catch (err) { warning = `The community runs as ${address}, but setting ${domain} failed: ${errText(err)}. Point the domain's TXT record "subplebbit-address" at it, then edit the address again.`; }
+        try { await api.editCommunity(address, { address: domain }); finalAddress = domain; } catch (err) { warning = `The community runs as ${address}, but setting ${domain} failed: ${errText(err)}. Point the domain's DNS TXT record for the community address at it, then edit the address again.`; }
       }
       state.ownAddresses = [...state.ownAddresses.filter((a) => a !== address), finalAddress];
       known.set(finalAddress, { address: finalAddress, title: title || finalAddress, description: description || "", posts: [], loaded: true, owned: true });
@@ -1641,6 +1976,19 @@ function mount(container, options) {
     const address = domain || `12D3KooWdemo${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
     state.pool.push({ address, title: title || address, description: description || "", posts: [], owned: true, started: true });
     return { address, warning: "" };
+  }
+  /** Removes the community's spam challenges so any identity can post (an owner-only node setting). */
+  async function opAllowAnyonePost(address) {
+    if (isConnected()) {
+      await api.editCommunity(address, { settings: { challenges: [] } });
+      const c = known.get(address);
+      if (c) c.challenges = [];
+      return;
+    }
+    const c = state.pool.find((x) => x.address === address);
+    if (!c) throw new Error("That community no longer exists.");
+    delete c.challenge;
+    c.challenges = [];
   }
   async function opEditCommunity(address, props) {
     if (isConnected()) {
@@ -1660,7 +2008,7 @@ function mount(container, options) {
     if (c) c.started = true;
   }
   /** Checks the community can be reached, then remembers it. Throws a readable error otherwise. */
-  async function opJoin(input) {
+  async function opJoin(input, onProgress) {
     const v = validateCommunityAddress(input);
     if (!v.ok) throw new Error(v.error);
     const address = v.address;
@@ -1671,6 +2019,7 @@ function mount(container, options) {
         let done = false;
         let watch = null;
         let lastError = "";
+        let sawEmpty = false;
         const end = (err, value) => {
           if (done) return;
           done = true;
@@ -1678,10 +2027,10 @@ function mount(container, options) {
           if (watch) watch.stop().catch(() => {});
           if (err) reject(err); else resolve(value);
         };
-        const timer = setTimeout(() => end(new Error(`Could not reach ${address}${lastError ? ` (${lastError})` : ""}. Check the address and that its owner is online.`)), timeoutMs);
-        api.watchCommunity(address, (update) => end(null, update || {}), (e) => { lastError = describeError(e); }).then((w) => { watch = w; if (done) w.stop().catch(() => {}); }, (e) => end(new Error(errText(e))));
+        const timer = setTimeout(() => end(new Error(sawEmpty ? `Found ${address}, but its data did not arrive in time. Its owner may be offline; try again later.` : `Could not reach ${address}${lastError ? ` (${lastError})` : ""}. Check the address and that its owner is online.`)), timeoutMs);
+        api.watchCommunity(address, (update) => { if (hasCommunityData(update)) end(null, update); else { sawEmpty = true; if (onProgress) onProgress("Loading community…"); } }, (e) => { lastError = describeError(e); }).then((w) => { watch = w; if (done) w.stop().catch(() => {}); }, (e) => end(new Error(errText(e))));
       });
-      known.set(address, { address, title: sub.title || address, description: sub.description || "", posts: postsFromCommunity(sub), loaded: true, owned: false });
+      known.set(address, { address, title: sub.title || address, description: sub.description || "", posts: postsFromCommunity(sub), loaded: true, owned: false, challenges: sub.challenges });
       state.joined = [...state.joined, address];
     } else {
       const c = state.pool.find((x) => x.address === address);
@@ -1709,13 +2058,13 @@ function mount(container, options) {
       const msg = messages();
       const actions = el("div", "actions");
       actions.append(join, cancel);
-      dlg.body.append(field("Community address", input, isConnected() ? "A name like music.eth, or the peer id of the community. Your node must be able to find it." : "Demo mode: try music.eth or devs.eth."), actions, msg.err, msg.ok);
+      dlg.body.append(field("Community address", input, isConnected() ? "A name like music.eth, or the peer id of the community. Ask its owner to copy the address for you. Your node must be able to find it." : "Demo mode: try music.eth or devs.eth."), actions, msg.err, msg.ok);
       cancel.addEventListener("click", dlg.close);
       const run = () => withBusy(join, "Looking it up…", async () => {
         msg.clear();
         input.disabled = true;
         try {
-          const address = await opJoin(input.value);
+          const address = await opJoin(input.value, (text) => { join.textContent = text; });
           dlg.close();
           selectCommunity(address);
           flash(`Joined ${address}.`);
@@ -1739,7 +2088,7 @@ function mount(container, options) {
       dlg.body.append(
         el("p", "", isConnected() ? "The community is created on your node and started. It gets a permanent peer-id address; you can point a name at it." : "Demo mode: the community lives in memory until you reload."),
         field("Title", title), field("Description", description),
-        field("Name address (optional)", domain, "A name you own, like mycommunity.eth. Its TXT record subplebbit-address must point at the community, otherwise keep the peer-id address."),
+        field("Name address (optional)", domain, "A name you own, like mycommunity.eth. Its DNS TXT record must point at the community, otherwise keep the peer-id address."),
         actions, msg.err, msg.ok,
       );
       cancel.addEventListener("click", dlg.close);
@@ -1756,6 +2105,45 @@ function mount(container, options) {
         } catch (err) { msg.error(`Could not create the community: ${errText(err)}`); [title, description, domain].forEach((i) => { i.disabled = false; }); }
       }));
     });
+  }
+
+  /** The owner-only "Community settings" block: one clearly worded switch that opens posting to everyone. */
+  function communitySettings(c) {
+    const box = el("div", "fld settings");
+    box.setAttribute("aria-label", "Community settings");
+    box.append(el("b", "", "Community settings"));
+    const open = Array.isArray(c.challenges) ? c.challenges.length === 0 : !c.challenge && c.challenges !== undefined;
+    const label = el("label", "check");
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.checked = open;
+    toggle.disabled = open;
+    label.append(toggle, document.createTextNode(" Allow anyone to post (remove spam challenges)"));
+    const note = el("div", "hint", open ? "Anyone can post. To bring challenges back, change them on your node." : "New communities reject posts from identities that cannot pass the default challenges. This removes them, so anyone can post, spam included.");
+    box.append(label, note);
+    toggle.addEventListener("change", () => {
+      if (!toggle.checked) return;
+      toggle.checked = false;
+      openDialog("Allow anyone to post?", (dlg) => {
+        const yes = button("Allow anyone to post", "btn primary");
+        const no = button("Cancel");
+        const acts = el("div", "actions");
+        acts.append(yes, no);
+        dlg.body.append(el("p", "", `This removes all spam challenges from ${c.title || c.address}. Anyone, including spammers, will be able to post. You can add challenges back on your node.`), acts);
+        no.addEventListener("click", dlg.close);
+        yes.addEventListener("click", () => withBusy(yes, "Applying…", async () => {
+          try {
+            await opAllowAnyonePost(c.address);
+            dlg.close();
+            toggle.checked = true;
+            toggle.disabled = true;
+            note.textContent = "Anyone can post now. To bring challenges back, change them on your node.";
+            render();
+          } catch (err) { dlg.body.append(el("div", "errtext", `Could not change it: ${explainPublishError(errText(err))}`)); }
+        }));
+      });
+    });
+    return box;
   }
 
   function openMyCommunitiesDialog() {
@@ -1784,7 +2172,7 @@ function mount(container, options) {
           const msg = messages();
           const acts = el("div", "actions");
           acts.append(save);
-          form.append(field("Title", t), field("Description", d), acts);
+          form.append(field("Title", t), field("Description", d), acts, communitySettings(c));
           row.append(form, msg.err, msg.ok);
           edit.addEventListener("click", () => {
             form.hidden = !form.hidden;
@@ -1809,6 +2197,559 @@ function mount(container, options) {
     });
   }
 
+  // ─── spaces: seeded communities, new spaces, invitations, room and attendee control ────
+  const myAddress = () => (state.identity ? state.identity.address : isConnected() ? "" : GUEST.address);
+  const myOwner = () => ({ [myAddress()]: { role: "owner" } });
+
+  /** What the signed-in person may do here: "manage" (hosted on this node), "mod" (a role in someone else's room), or "". */
+  function accessOf(c) {
+    const entry = c.roles && c.roles[myAddress()];
+    const role = (entry && entry.role) || "";
+    if (c.owned) return { level: "manage", role: role || "host" };
+    if (STAFF_ROLES.includes(role)) return { level: "mod", role };
+    return { level: "", role: "" };
+  }
+  const accessInfo = (c) => readAccess(c.settings && c.settings.challenges);
+  function challengesOf(c) {
+    const list = c.settings && c.settings.challenges;
+    if (Array.isArray(list)) return list;
+    if (!isConnected()) return [];
+    throw new Error("This space's settings have not loaded from your node yet. Open the space, wait a moment and try again.");
+  }
+  /** Applies an edit to a hosted community: through editSubplebbit when connected, in memory in Demo mode. */
+  async function editProps(c, props) {
+    let result = null;
+    if (isConnected()) result = await api.editCommunity(c.address, props);
+    if ("title" in props) c.title = props.title || c.address;
+    if ("description" in props) c.description = props.description || "";
+    if ("rules" in props) c.rules = props.rules;
+    if ("roles" in props) c.roles = props.roles;
+    if ("settings" in props) c.settings = { ...(c.settings || {}), ...props.settings };
+    if (result && typeof result === "object") {
+      if (isObject(result.roles)) c.roles = result.roles;
+      if (isObject(result.settings)) c.settings = result.settings;
+      if (Array.isArray(result.rules)) c.rules = result.rules;
+    }
+  }
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+  }
+  function confirmDialog({ title, text, confirmLabel, build, run, danger = true }) {
+    return openDialog(title, (dlg) => {
+      const yes = button(confirmLabel, danger ? "btn danger" : "btn primary");
+      const no = button("Cancel");
+      const acts = el("div", "actions");
+      acts.append(yes, no);
+      const msg = messages();
+      dlg.body.append(el("p", "", text));
+      if (build) build(dlg.body);
+      dlg.body.append(acts, msg.err);
+      no.addEventListener("click", dlg.close);
+      yes.addEventListener("click", () => withBusy(yes, "Working…", async () => {
+        msg.clear();
+        try { await run(); dlg.close(); render(); } catch (err) { msg.error(errText(err)); }
+      }));
+    }, { focus: "button.btn:not(.danger):not(.primary)" });
+  }
+
+  // Seeded topic communities: activate them on your node.
+  function seedActivated(seed) {
+    if (isConnected()) { const a = state.activated[seed.id]; return Boolean(a) && state.ownAddresses.includes(a); }
+    const c = state.pool.find((x) => x.address === seed.address);
+    return Boolean(c && c.owned);
+  }
+  const pendingSeeds = () => (state.status === "connecting" ? [] : SEEDED_COMMUNITIES.filter((s) => !seedActivated(s)));
+
+  async function activateSeed(seed, onStep) {
+    if (!isConnected()) {
+      onStep("Demo: setting it up in memory…");
+      const c = state.pool.find((x) => x.address === seed.address);
+      if (!c) throw new Error("That seeded community is not available.");
+      Object.assign(c, { owned: true, started: true, roles: myOwner(), rules: c.rules || [], settings: { challenges: [] } });
+      delete c.challenge;
+      if (!state.joinedDemo.includes(c.address)) { state.joinedDemo = [...state.joinedDemo, c.address]; persist(); }
+      return { address: c.address };
+    }
+    const me = myAddress();
+    if (!me) throw needIdentity();
+    onStep("Creating it on your node…");
+    const created = await api.createCommunity({ title: seed.title, description: seed.description });
+    const address = created && created.address;
+    if (!address) throw new Error("The node did not return an address for the new community.");
+    state.ownAddresses = [...state.ownAddresses.filter((a) => a !== address), address];
+    state.activated[seed.id] = address;
+    persist();
+    known.set(address, { address, title: seed.title, description: seed.description, posts: [], loaded: true, owned: true, roles: { [me]: { role: "owner" } }, settings: { challenges: [] }, rules: [] });
+    try {
+      onStep("Making it public: no spam challenges, anyone can post…");
+      await api.editCommunity(address, { title: seed.title, description: seed.description, roles: { [me]: { role: "owner" } }, settings: { challenges: [] } });
+      onStep("Starting it…");
+      const started = await api.startCommunity(address);
+      await started.stop();
+    } catch (err) {
+      const e = new Error(`It was created on your node as ${address}, but setup did not finish: ${errText(err)} Open Yours, then Edit, to finish (allow anyone to post).`);
+      e.address = address;
+      throw e;
+    }
+    return { address };
+  }
+
+  function openActivateDialog(seeds) {
+    openDialog(seeds.length === 1 ? `Activate ${seeds[0].title}` : "Activate seeded communities", (dlg) => {
+      const demo = !isConnected();
+      dlg.body.append(el("p", "", demo
+        ? "Demo: this is simulated in memory. Nothing is created on a node. Connect a node to activate for real."
+        : "Each community is created on your node, made public (no spam challenges, so anyone can post) and started. You become its owner. It starts empty."));
+      if (!demo && !myAddress()) {
+        const err = el("div", "errtext", "Create an identity first: you become the owner of what you activate.");
+        err.setAttribute("role", "alert");
+        const make = button("Create identity", "btn primary");
+        make.addEventListener("click", () => { dlg.close(); openIdentityDialog(); });
+        dlg.body.append(err, make);
+        return;
+      }
+      const list = el("ul", "steps");
+      const rows = seeds.map((seed) => {
+        const li = el("li");
+        const status = el("span", "stepstatus", "Waiting…");
+        status.setAttribute("role", "status");
+        li.append(el("b", "", seed.title), status);
+        list.append(li);
+        return status;
+      });
+      const done = button("Done", "btn primary");
+      done.disabled = true;
+      done.addEventListener("click", dlg.close);
+      const acts = el("div", "actions");
+      acts.append(done);
+      dlg.body.append(list, acts);
+      (async () => {
+        let last = "";
+        for (let i = 0; i < seeds.length; i += 1) {
+          try {
+            const res = await activateSeed(seeds[i], (t) => { rows[i].textContent = t; });
+            last = res.address;
+            rows[i].textContent = demo ? `Demo: ${res.address} is now yours (in memory only).` : `Done. Address: ${res.address}`;
+          } catch (err) {
+            rows[i].textContent = `Could not activate: ${errText(err)}`;
+            rows[i].dataset.kind = "error";
+            rows.slice(i + 1).forEach((r) => { r.textContent = "Not started."; });
+            break;
+          }
+        }
+        if (disposed) return;
+        done.disabled = false;
+        done.focus();
+        if (last && seeds.length === 1) selectCommunity(last); else render();
+      })();
+    });
+  }
+
+  // New space.
+  async function opCreateSpace({ title, description, rules, visibility }) {
+    const me = myAddress();
+    if (isConnected()) {
+      if (!me) throw needIdentity();
+      const created = await api.createCommunity({ title, ...(description ? { description } : {}) });
+      const address = created && created.address;
+      if (!address) throw new Error("The node did not return an address for the new space.");
+      state.ownAddresses = [...state.ownAddresses.filter((a) => a !== address), address];
+      state.spaces = [...state.spaces, address];
+      persist();
+      const challenges = accessChallenges({ visibility, allow: [me] });
+      known.set(address, { address, title, description, posts: [], loaded: true, owned: true, roles: { [me]: { role: "owner" } }, settings: { challenges }, rules });
+      try {
+        await api.editCommunity(address, { roles: { [me]: { role: "owner" } }, ...(rules.length ? { rules } : {}), settings: { challenges } });
+        const started = await api.startCommunity(address);
+        await started.stop();
+      } catch (err) { throw new Error(`The space exists on your node as ${address}, but setting it up failed: ${errText(err)}`); }
+      return address;
+    }
+    const address = `12D3KooWdemo${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+    state.pool.push({ address, title, description, posts: [], owned: true, started: true, space: true, roles: myOwner(), rules, settings: { challenges: accessChallenges({ visibility, allow: [me] }) } });
+    return address;
+  }
+
+  function accessChoice(groupName, initial) {
+    const box = el("fieldset");
+    box.append(el("legend", "", "Who can post"));
+    const inputs = {};
+    [["public", "Public", "Anyone with the address can read and post."], ["private", "Private", "Invite only. Anyone with the address can read; only invited people can post."]].forEach(([value, label, hint]) => {
+      const row = el("label", "opt");
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = groupName;
+      input.value = value;
+      input.checked = value === initial;
+      inputs[value] = input;
+      const text = el("span");
+      text.append(el("b", "", label), el("small", "", hint));
+      row.append(input, text);
+      box.append(row);
+    });
+    return { box, value: () => (inputs.private.checked ? "private" : "public"), inputs };
+  }
+
+  function openNewSpaceDialog() {
+    openDialog("New space", (dlg) => {
+      const title = textInput("", "Name, like Friday co-working");
+      const description = textBox("", 3);
+      const rules = textBox("", 3);
+      const choice = accessChoice(`bh-vis-${++idCounter}`, "public");
+      const honesty = el("p", "hint", "");
+      const create = button("Create space", "btn primary");
+      const cancel = button("Cancel");
+      const msg = messages();
+      const acts = el("div", "actions");
+      acts.append(create, cancel);
+      const sync = () => { honesty.textContent = choice.value() === "private" ? `${PRIVATE_HONESTY} You are on the list automatically.` : "Public: nobody is turned away. Spam is possible, so you can lock or moderate the room later."; };
+      Object.values(choice.inputs).forEach((i) => i.addEventListener("change", sync));
+      sync();
+      dlg.body.append(
+        el("p", "", isConnected() ? "A space is a room of your own on your node: you own it, control who can post and manage the attendees." : "Demo: the space lives in memory until you reload. Connect a node to create it for real."),
+        field("Name", title), field("Description", description), field("Rules (optional, one per line)", rules),
+        choice.box, honesty, acts, msg.err, msg.ok,
+      );
+      cancel.addEventListener("click", dlg.close);
+      create.addEventListener("click", () => withBusy(create, "Creating…", async () => {
+        msg.clear();
+        if (!title.value.trim()) { msg.error("Give the space a name."); return; }
+        if (isConnected() && !myAddress()) { msg.error("Create an identity first: you become the owner of the space."); openIdentityDialog(); return; }
+        try {
+          const address = await opCreateSpace({ title: title.value.trim(), description: description.value.trim(), rules: rules.value.split("\n").map((r) => r.trim()).filter(Boolean), visibility: choice.value() });
+          dlg.close();
+          selectCommunity(address);
+          flash(`Created the space ${title.value.trim()}. Use Invite people to bring others in.`);
+        } catch (err) { msg.error(`Could not create the space: ${errText(err)}`); }
+      }));
+    });
+  }
+
+  // Invitations.
+  function roomName(c) {
+    const slug = String(c.title || "space").toLowerCase().replace(/[^\w.-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "space";
+    return `${slug}-${String(c.address).slice(-6).toLowerCase()}`.slice(0, 64);
+  }
+  async function opAddInvitees(c, addresses) {
+    const list = challengesOf(c);
+    const access = readAccess(list);
+    const merged = [...access.allow];
+    const added = [];
+    addresses.forEach((a) => { if (!merged.includes(a)) { merged.push(a); added.push(a); } });
+    if (added.length) await editProps(c, { settings: { challenges: withAllowList(list, merged) } });
+    return added;
+  }
+  async function opRemoveInvitee(c, address) {
+    const list = challengesOf(c);
+    await editProps(c, { settings: { challenges: withAllowList(list, readAccess(list).allow.filter((a) => a !== address)) } });
+  }
+  function nameOfAuthor(c, address) {
+    let found = "";
+    const look = (m) => { if (m.author && m.author.address === address) found = m.author.name; };
+    c.posts.forEach((p) => { look(p); (p.replies || []).forEach(look); });
+    return found || shortAddress(address);
+  }
+  function confirmRemoveInvitee(c, address, after) {
+    confirmDialog({
+      title: "Remove from the invite list?", confirmLabel: "Remove from list",
+      text: `${nameOfAuthor(c, address)} will no longer be able to post in ${c.title || c.address}. They can still read it, and their earlier posts stay.`,
+      run: async () => { await opRemoveInvitee(c, address); if (after) after(); },
+    });
+  }
+
+  function openInviteDialog(c) {
+    openDialog(`Invite people to ${c.title || c.address}`, (dlg) => {
+      const draw = () => {
+        dlg.body.replaceChildren();
+        const access = accessInfo(c);
+        const manage = accessOf(c).level === "manage";
+        const msg = messages();
+        dlg.body.append(el("p", "", access.private ? `This space is private. ${PRIVATE_HONESTY}` : "This space is public: anyone with the address can read and post."));
+        const addr = textInput(c.address);
+        addr.readOnly = true;
+        const copyAddr = button("Copy address");
+        const addrRow = field("Space address", addr);
+        addrRow.append(copyAddr);
+        const text = inviteMessage({ title: c.title || c.address, address: c.address, isPrivate: access.private });
+        const note = textBox(text, 4);
+        note.readOnly = true;
+        const copyNote = button("Copy invitation");
+        const noteRow = field("Invitation message", note);
+        noteRow.append(copyNote);
+        copyAddr.addEventListener("click", async () => (await copyText(c.address) ? msg.success("Address copied.") : msg.error(`Copy failed. The address is ${c.address}`)));
+        copyNote.addEventListener("click", async () => (await copyText(text) ? msg.success("Invitation copied.") : msg.error("Copy failed. Select the message and copy it.")));
+        dlg.body.append(addrRow, noteRow);
+        if (access.private && manage) {
+          const paste = textBox("", 3);
+          paste.placeholder = "12D3KooW…, alice.eth";
+          const add = button("Add to invite list", "btn primary");
+          const addRow = field("Add people by author address", paste, "Paste one or more author addresses, separated by commas, spaces or new lines. Each person finds theirs under their identity in Bitkin.");
+          addRow.append(add);
+          add.addEventListener("click", () => withBusy(add, "Adding…", async () => {
+            msg.clear();
+            const { valid, invalid } = parseAddressList(paste.value);
+            if (invalid.length) { msg.error(`Not valid author addresses: ${invalid.join(", ")}.`); return; }
+            if (!valid.length) { msg.error("Paste at least one author address."); return; }
+            try {
+              const added = await opAddInvitees(c, valid);
+              const skipped = valid.length - added.length;
+              draw();
+              const m2 = messages();
+              m2.success(added.length ? `Invited ${added.length} ${added.length === 1 ? "person" : "people"}${skipped ? ` (${skipped} already on the list)` : ""}.` : "Everyone you pasted is already on the list.");
+              dlg.body.append(m2.err, m2.ok);
+            } catch (err) { msg.error(`Could not update the invite list: ${errText(err)}`); }
+          }));
+          dlg.body.append(addRow);
+        }
+        if (access.private) {
+          const owners = Object.keys(c.roles || {}).filter((a) => c.roles[a].role === "owner");
+          const invited = access.allow.filter((a) => !owners.includes(a));
+          const box = el("div", "fld invitees");
+          box.append(el("b", "", `Invite list (${invited.length})`));
+          if (!invited.length) box.append(el("div", "hint", "Nobody is invited yet. You and the room's admins and moderators can always post."));
+          const posted = new Set();
+          c.posts.forEach((p) => { posted.add(p.author.address); (p.replies || []).forEach((r) => posted.add(r.author.address)); });
+          invited.forEach((a) => {
+            const row = el("div", "mrow");
+            const t = el("div", "t", nameOfAuthor(c, a));
+            t.append(el("small", "mono", a));
+            row.append(avatar(a, "sm"), t, el("span", "pill", posted.has(a) ? "Member" : "Invited"));
+            if (manage) {
+              const rm = button("Remove");
+              rm.setAttribute("aria-label", `Remove ${nameOfAuthor(c, a)} from the invite list`);
+              rm.addEventListener("click", () => confirmRemoveInvitee(c, a, draw));
+              row.append(rm);
+            }
+            box.append(row);
+          });
+          dlg.body.append(box);
+        }
+        const call = el("a", "btn", "Start a call");
+        const path = `/extensions/meet/meet?room=${encodeURIComponent(roomName(c))}`;
+        call.href = path;
+        call.addEventListener("click", (e) => { if (navigateHost) { e.preventDefault(); dlg.close(); navigateHost(path); } });
+        const callRow = el("div", "fld");
+        callRow.append(call, el("div", "hint", "Opens the Meet extension on a room for this space. Meet must be installed."));
+        dlg.body.append(callRow, msg.err, msg.ok);
+      };
+      draw();
+    }, { focus: "input" });
+  }
+
+  // Moderation: remove a post, ban an author.
+  async function moderate(c, cid, moderation) {
+    const level = accessOf(c).level;
+    if (!level) throw new Error("Only the owner, admins and moderators can do this.");
+    if (isConnected()) {
+      const res = await runPublish({ kind: "commentModeration", fields: { subplebbitAddress: c.address, commentCid: cid, commentModeration: moderation }, what: "moderation action", address: c.address });
+      if (!res.ok) throw new Error(res.reason || "The community rejected it.");
+    }
+    const touch = (m) => {
+      if (m.cid !== cid) return;
+      if (moderation.removed) { m.removed = true; m.content = "_[removed]_"; m.title = ""; m.link = ""; }
+      if (moderation.author && moderation.author.banExpiresAt && !isConnected()) { c.bans = { ...(c.bans || {}), [m.author.address]: moderation.author.banExpiresAt }; }
+    };
+    c.posts.forEach((p) => { touch(p); (p.replies || []).forEach(touch); });
+  }
+  function openRemoveDialog(c, m) {
+    let reason = null;
+    confirmDialog({
+      title: "Remove this post?", confirmLabel: "Remove post",
+      text: `It disappears from ${c.title || c.address} for everyone. This is a moderation action signed with your identity.`,
+      build: (body) => { reason = textInput("", "Reason (optional)"); body.append(field("Reason", reason)); },
+      run: async () => { await moderate(c, m.cid, moderationFor({ remove: true, reason: reason.value })); flash(isConnected() ? "Post removed." : "Demo: post removed in memory."); },
+    });
+  }
+  function openBanDialog(c, author, cid, alsoRemove = false) {
+    let duration = null;
+    let reason = null;
+    let remove = null;
+    confirmDialog({
+      title: `Ban ${author.name}?`, confirmLabel: "Ban author",
+      text: `${author.name} will not be able to post in ${c.title || c.address} for the time you choose. The ban is attached to one of their posts and signed with your identity.`,
+      build: (body) => {
+        duration = document.createElement("select");
+        BAN_DURATIONS.forEach((d) => { const o = document.createElement("option"); o.value = d.id; o.textContent = d.label; duration.append(o); });
+        reason = textInput("", "Reason (optional)");
+        const check = el("label", "check");
+        remove = document.createElement("input");
+        remove.type = "checkbox";
+        remove.checked = alsoRemove;
+        check.append(remove, document.createTextNode(" Also remove that post"));
+        body.append(field("Ban for", duration), field("Reason", reason), check);
+      },
+      run: async () => {
+        const d = BAN_DURATIONS.find((x) => x.id === duration.value) || BAN_DURATIONS[0];
+        await moderate(c, cid, moderationFor({ remove: remove.checked, banSeconds: d.seconds, reason: reason.value }));
+        flash(`${isConnected() ? "" : "Demo: "}${author.name} is banned for ${d.label}.`);
+      },
+    });
+  }
+
+  // Manage space: details, access, lock, attendees and roles.
+  function attendeesOf(c) {
+    const access = accessInfo(c);
+    const posters = new Map();
+    const walk = (m) => {
+      if (!m.author) return;
+      const e = posters.get(m.author.address) || { name: m.author.name, cid: "", n: 0 };
+      e.n += 1;
+      if (m.cid && !String(m.cid).startsWith("local-") && !m.removed) e.cid = m.cid;
+      posters.set(m.author.address, e);
+    };
+    c.posts.forEach((p) => { walk(p); (p.replies || []).forEach(walk); });
+    const addresses = new Set([...Object.keys(c.roles || {}), ...access.allow, ...posters.keys()]);
+    const rank = (r) => { const i = STAFF_ROLES.indexOf(r); return i < 0 ? 9 : i; };
+    return [...addresses].map((address) => {
+      const role = (c.roles && c.roles[address] && c.roles[address].role) || "";
+      const posted = posters.get(address);
+      const onList = access.allow.includes(address);
+      const badge = role || (access.private ? (onList ? (posted ? "member" : "invited") : "past poster") : "member");
+      return { address, name: posted ? posted.name : shortAddress(address), role, onList, cid: posted ? posted.cid : "", badge };
+    }).sort((a, b) => rank(a.role) - rank(b.role) || a.name.localeCompare(b.name));
+  }
+  const roleLabel = (r) => (r === "moderator" ? "Moderator" : r === "admin" ? "Admin" : r === "owner" ? "Owner" : "Member");
+
+  function openManageDialog(c) {
+    openDialog(`Manage ${c.title || c.address}`, (dlg) => {
+      dlg.element.classList.add("wide");
+      const draw = () => {
+        dlg.body.replaceChildren();
+        const acc = accessOf(c);
+        const manage = acc.level === "manage";
+        const access = accessInfo(c);
+        const status = el("div", "pills");
+        status.append(el("span", "pill", access.private ? "Private" : "Public"), el("span", "pill", `You: ${acc.role}`));
+        if (access.locked) status.append(el("span", "pill bad", "Locked"));
+        const msg = messages();
+        dlg.body.append(status);
+        if (!manage) dlg.body.append(el("p", "", "You have a moderator role here. You can see the room and attendees and remove posts or ban authors, but only the owner can change settings or roles."));
+
+        if (manage && isConnected() && myAddress() && c.roles && !c.roles[myAddress()]) {
+          const fix = el("div", "warn");
+          fix.append(document.createTextNode("Your identity is not listed as this space's owner, so the node refuses moderation actions from it. "));
+          const own = button("Make me owner");
+          own.addEventListener("click", () => confirmDialog({ title: "Make your identity the owner?", confirmLabel: "Make me owner", danger: false, text: "This adds your identity to the roles of this space as owner. Existing roles stay.", run: async () => { await editProps(c, { roles: { ...c.roles, ...myOwner() } }); draw(); } }));
+          fix.append(own);
+          dlg.body.append(fix);
+        }
+
+        // Details
+        const title = textInput(c.title && c.title !== c.address ? c.title : "", "Name");
+        const description = textBox(c.description || "", 3);
+        const rules = textBox((c.rules || []).join("\n"), 3);
+        [title, description, rules].forEach((i) => { i.disabled = !manage; });
+        const save = button("Save details", "btn primary");
+        const detailActs = el("div", "actions");
+        detailActs.append(save);
+        dlg.body.append(el("div", "sectionlabel", "Details"), field("Name", title), field("Description", description), field("Rules (one per line)", rules));
+        if (manage) {
+          dlg.body.append(detailActs);
+          save.addEventListener("click", () => withBusy(save, "Saving…", async () => {
+            msg.clear();
+            if (!title.value.trim()) { msg.error("The space needs a name."); return; }
+            try {
+              await editProps(c, { title: title.value.trim(), description: description.value.trim(), rules: rules.value.split("\n").map((r) => r.trim()).filter(Boolean) });
+              render();
+              msg.success("Saved.");
+            } catch (err) { msg.error(`Could not save: ${errText(err)}`); }
+          }));
+        }
+
+        // Access
+        dlg.body.append(el("div", "sectionlabel", "Who can post"));
+        dlg.body.append(el("p", "", access.private ? `Private. ${PRIVATE_HONESTY}` : "Public. Anyone with the address can read and post."));
+        if (access.locked) dlg.body.append(el("p", "", "Locked: only the owner, admins and moderators can post right now. Everyone else is turned away until you unlock. The invite list is kept."));
+        if (manage) {
+          const accActs = el("div", "actions");
+          const switchBtn = button(access.private ? "Make public" : "Make private");
+          const lockBtn = button(access.locked ? "Unlock room" : "Lock room");
+          accActs.append(switchBtn, lockBtn);
+          dlg.body.append(accActs);
+          switchBtn.addEventListener("click", () => {
+            const toPrivate = !access.private;
+            confirmDialog({
+              title: toPrivate ? "Make this space private?" : "Make this space public?", confirmLabel: toPrivate ? "Make private" : "Make public", danger: !toPrivate,
+              text: toPrivate
+                ? `Only people on the invite list can post, plus you, admins and moderators. ${PRIVATE_HONESTY} This replaces the space's current spam challenges.`
+                : "Anyone will be able to post, spam included. The invite list is dropped from the node's settings. Anyone with the address could already read.",
+              run: async () => {
+                const owners = Object.keys(c.roles || {}).filter((a) => c.roles[a].role === "owner");
+                const allow = [...new Set([...owners, myAddress()].filter(Boolean))];
+                await editProps(c, { settings: { challenges: accessChallenges({ visibility: toPrivate ? "private" : "public", allow, locked: access.locked }) } });
+                flash(`${isConnected() ? "" : "Demo: "}This space is now ${toPrivate ? "private (invite-only to post)" : "public"}.`);
+                draw();
+              },
+            });
+          });
+          lockBtn.addEventListener("click", () => {
+            const lock = !access.locked;
+            confirmDialog({
+              title: lock ? "Lock this room?" : "Unlock this room?", confirmLabel: lock ? "Lock room" : "Unlock room", danger: lock,
+              text: lock
+                ? "While locked, the node turns away every post except from the owner, admins and moderators. People can still read, and the invite list and roles stay as they are. Unlock to let invited people post again."
+                : "People allowed to post (everyone if public, the invite list if private) can post again.",
+              run: async () => {
+                await editProps(c, { settings: { challenges: withLock(challengesOf(c), lock) } });
+                flash(`${isConnected() ? "" : "Demo: "}The room is ${lock ? "locked" : "unlocked"}.`);
+                draw();
+              },
+            });
+          });
+          const invite = button("Invite people");
+          invite.addEventListener("click", () => openInviteDialog(c));
+          accActs.append(invite);
+        }
+
+        // Attendees
+        const people = attendeesOf(c);
+        dlg.body.append(el("div", "sectionlabel", `Attendees (${people.length})`));
+        const list = el("div", "attendees");
+        if (!people.length) list.append(el("div", "empty", "Nobody here yet."));
+        people.forEach((p) => {
+          const row = el("div", "mrow attendee");
+          row.dataset.address = p.address;
+          const t = el("div", "t", p.name);
+          t.append(el("small", "mono", p.address));
+          row.append(avatar(p.address, "sm"), t, el("span", `pill${p.role ? " role" : ""}`, p.badge));
+          const mine = p.address === myAddress();
+          if (manage && p.role !== "owner") {
+            const sel = document.createElement("select");
+            sel.setAttribute("aria-label", `Role for ${p.name}`);
+            ["", "moderator", "admin"].forEach((r) => { const o = document.createElement("option"); o.value = r; o.textContent = roleLabel(r); sel.append(o); });
+            sel.value = p.role;
+            sel.disabled = mine;
+            sel.addEventListener("change", () => {
+              const next = sel.value;
+              sel.value = p.role;
+              confirmDialog({
+                title: `Change ${p.name}'s role?`, confirmLabel: next ? `Make ${roleLabel(next).toLowerCase()}` : "Remove role", danger: !next,
+                text: next ? `${p.name} becomes ${next === "admin" ? "an admin" : "a moderator"} of this space: they can post even when it is locked and can remove posts and ban authors.` : `${p.name} loses their ${p.role} role and becomes a normal member.`,
+                run: async () => { await editProps(c, { roles: mergeRoles(c.roles, p.address, next) }); draw(); },
+              });
+            });
+            row.append(sel);
+            if (access.private && p.onList) {
+              const rm = button("Remove from list");
+              rm.setAttribute("aria-label", `Remove ${p.name} from the invite list`);
+              rm.addEventListener("click", () => confirmRemoveInvitee(c, p.address, draw));
+              row.append(rm);
+            }
+          }
+          if (acc.level && p.role !== "owner" && !mine && p.cid) {
+            const ban = button("Ban…");
+            ban.setAttribute("aria-label", `Ban ${p.name}`);
+            ban.addEventListener("click", () => openBanDialog(c, { name: p.name, address: p.address }, p.cid));
+            row.append(ban);
+          }
+          list.append(row);
+        });
+        dlg.body.append(list, msg.err, msg.ok);
+      };
+      draw();
+    }, { focus: "input, textarea, button" });
+  }
+
   // ─── view ─────────────────────────────────────────────────────────────────────────────
   const side = el("aside", "side");
   const main = el("section", "main");
@@ -1816,6 +2757,13 @@ function mount(container, options) {
   const shell = el("div", "shell");
   shell.append(side, main, members);
   root.append(shell);
+  const grips = gripColumns({
+    grid: shell, storageKey: "grip:bitsocial-hangout", narrowQuery: "(max-width: 900px)",
+    columns: [
+      { el: side, edge: "left", min: 200, max: 480, initial: 260, label: "communities list" },
+      { el: members, edge: "right", min: 160, max: 420, initial: 240, label: "members panel" },
+    ],
+  });
 
   const head = el("div", "head");
   const body = el("div", "body");
@@ -1893,11 +2841,23 @@ function mount(container, options) {
   sendBtn.addEventListener("click", submit);
   textarea.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } });
 
+  /** The "Built with" row: Kamiji and Kosmos logos linking to their sites. */
   const poweredBy = () => {
     const d = el("div", "powered");
-    const hand = el("span", "poweredmark");
-    hand.append(orbSvg(BLOBS[0], 0));
-    d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
+    const logo = (href, svg) => {
+      const a = el("a", "plogo");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.setAttribute("aria-label", svg.getAttribute("aria-label"));
+      a.append(svg);
+      return a;
+    };
+    d.append(
+      el("span", "", "Built with"),
+      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
+      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+    );
     return d;
   };
 
@@ -1910,7 +2870,7 @@ function mount(container, options) {
   function renderSide() {
     side.replaceChildren();
     const brand = el("div", "brand");
-    brand.append(avatar("bitsocial", ""), el("h1", "", "Bitsocial"));
+    brand.append(avatar("bitsocial", ""), el("h1", "", "Bitkin"));
     const status = el("div", "status", statusText());
     status.dataset.state = state.status;
     status.setAttribute("role", "status");
@@ -1927,6 +2887,9 @@ function mount(container, options) {
       const name = el("b");
       name.append(el("i", "", "#"), document.createTextNode(c.title || c.address));
       if (c.owned) name.append(el("i", "tag", "yours"));
+      if (c.seedId && !c.owned) name.append(el("i", "tag", "seeded"));
+      if (c.owned && (c.space || state.spaces.includes(c.address))) name.append(el("i", "tag", "space"));
+      if (accessInfo(c).private) name.append(el("i", "tag", "private"));
       t.append(name);
       if (c.description) t.append(el("small", "", c.description));
       row.append(t);
@@ -1934,6 +2897,35 @@ function mount(container, options) {
       list.append(row);
     });
     if (!communities().length) list.append(el("div", "empty", state.status === "connected" ? "No communities yet. Create one or join by address." : "No communities. Join one by address."));
+    const seeds = pendingSeeds();
+    if (seeds.length) {
+      const seedHead = el("div", "seedhead");
+      seedHead.append(el("div", "sectionlabel", "Seeded communities"));
+      if (seeds.length > 1) {
+        const all = button("Activate all");
+        all.title = "Create every seeded community on your node, one after the other";
+        all.addEventListener("click", () => confirmDialog({
+          title: `Activate all ${seeds.length} seeded communities?`, confirmLabel: "Activate all", danger: false,
+          text: state.status === "connected" ? `This creates ${seeds.map((s) => s.title).join(", ")} on your node, one after the other, each public (anyone can post). It stops at the first error.` : "Demo: this simulates activating them all in memory.",
+          run: async () => { openActivateDialog(seeds); },
+        }));
+        seedHead.append(all);
+      }
+      list.append(seedHead);
+      seeds.forEach((seed) => {
+        const row = el("div", "seedrow");
+        row.dataset.seed = seed.id;
+        const t = el("span", "t");
+        const name = el("b", "", seed.title);
+        name.append(el("i", "tag", "Seeded"));
+        t.append(name, el("small", "", seed.description));
+        const act = button("Activate");
+        act.setAttribute("aria-label", `Activate ${seed.title}`);
+        act.addEventListener("click", () => openActivateDialog([seed]));
+        row.append(avatar(seed.address, "sm"), t, act);
+        list.append(row);
+      });
+    }
     const btns = el("div", "sidebtns");
     const join = button("Join");
     join.title = "Join a community by address";
@@ -1944,7 +2936,10 @@ function mount(container, options) {
     const mine = button("Yours");
     mine.title = "Your communities";
     mine.addEventListener("click", openMyCommunitiesDialog);
-    btns.append(join, create, mine);
+    const space = button("New space");
+    space.title = "Create a co-working space: a room you control";
+    space.addEventListener("click", openNewSpaceDialog);
+    btns.append(join, create, space, mine);
     const foot = el("div", "sidefoot");
     const chip = el("button", "idchip");
     chip.type = "button";
@@ -2021,6 +3016,16 @@ function mount(container, options) {
         acts.append(edit, del);
       }
     }
+    const cm = community();
+    if (cm && accessOf(cm).level && !m.pending && !m.failed && !m.removed && !String(m.cid).startsWith("local-") && !isMine(m)) {
+      const rm = el("button", "linkbtn danger", "Remove");
+      rm.type = "button";
+      rm.addEventListener("click", () => openRemoveDialog(cm, m));
+      const ban = el("button", "linkbtn danger", "Ban…");
+      ban.type = "button";
+      ban.addEventListener("click", () => openBanDialog(cm, m.author, m.cid, true));
+      acts.append(rm, ban);
+    }
     if (m.failed) {
       const dismiss = el("button", "linkbtn", "Dismiss");
       dismiss.type = "button";
@@ -2038,7 +3043,7 @@ function mount(container, options) {
 
   function settingsCard() {
     const card = el("div", "card");
-    const label = el("label", "", "Bitsocial node (Plebbit RPC WebSocket URL)");
+    const label = el("label", "", "Node (RPC WebSocket URL)");
     label.htmlFor = "bh-rpc-url";
     const input = el("input");
     input.id = "bh-rpc-url";
@@ -2071,6 +3076,25 @@ function mount(container, options) {
     const wrap = el("span", "spacer");
     const group = el("span");
     group.style.cssText = "display:inline-flex;gap:6px;";
+    const share = button("Copy address");
+    share.title = "Copy this community's address. Anyone can join it with Join by address.";
+    share.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(c.address); flash(`Copied ${c.address}. Share it: others use Join and paste it.`); } catch { flash(`Share this address: ${c.address}`); }
+    });
+    group.append(share);
+    const acc = accessOf(c);
+    if (acc.level === "manage") {
+      const invite = button("Invite people");
+      invite.title = "Share this space's address and manage who may post";
+      invite.addEventListener("click", () => openInviteDialog(c));
+      group.append(invite);
+    }
+    if (acc.level) {
+      const manage = button("Manage space");
+      manage.title = "Room settings, attendees and roles";
+      manage.addEventListener("click", () => openManageDialog(c));
+      group.append(manage);
+    }
     if (c.owned) {
       const edit = button("Edit community");
       edit.addEventListener("click", openMyCommunitiesDialog);
@@ -2104,7 +3128,7 @@ function mount(container, options) {
       const page = el("div", "page");
       const big = el("span", "avatar lg");
       big.append(orbSvg(BLOBS[0], 0));
-      page.append(big, el("h2", "", "Welcome to Bitsocial"), el("p", "", "Chat in Bitsocial communities: each community is a channel, each post a thread, all peer to peer. No node yet? Start in demo mode."), settingsCard());
+      page.append(big, el("h2", "", "Welcome to Bitkin"), el("p", "", "Chat in Bitkin communities: each community is a channel, each post a thread, all peer to peer. No node yet? Start in demo mode. Got a community address from someone? Use Join by address."), settingsCard());
       body.append(page);
       return;
     }
@@ -2167,21 +3191,33 @@ function mount(container, options) {
     [...counts.values()].sort((a, b) => b.n - a.n).forEach(({ author, n }) => {
       const row = el("div", "mrow");
       const t = el("div", "t", author.name);
-      t.append(el("small", "", `${n} ${n === 1 ? "message" : "messages"}`));
+      const role = c.roles && c.roles[author.address] ? c.roles[author.address].role : "";
+      t.append(el("small", "", `${n} ${n === 1 ? "message" : "messages"}${role ? `, ${role}` : ""}`));
       row.append(avatar(author.address, "sm"), t);
       members.append(row);
     });
   }
 
   function renderChrome() { renderSide(); }
+  /** Fill the visible page below wherever the host put us (hosts may not give a definite height). */
+  function fit() {
+    if (disposed) return;
+    const top = Math.max(0, root.getBoundingClientRect().top);
+    root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
+  }
   function render() {
     if (disposed) return;
+    fit();
     renderSide();
     renderBody();
     renderMembers();
+    grips.refresh();
   }
 
   render();
+  window.addEventListener("resize", fit);
+  let sizeWatch = null;
+  if (typeof ResizeObserver === "function" && container.parentElement) { sizeWatch = new ResizeObserver(fit); sizeWatch.observe(container.parentElement); }
   // Try the saved node quietly; fall back to demo mode if it is not there.
   if (saved.url && saved.autoconnect !== false && options.autoConnect !== false && saved.welcomed) connect(state.url);
 
@@ -2191,6 +3227,9 @@ function mount(container, options) {
     clearTimeout(noticeTimer);
     dialogs.slice().forEach((d) => d.close());
     stopLive();
+    grips.dispose();
+    window.removeEventListener("resize", fit);
+    if (sizeWatch) sizeWatch.disconnect();
     root.remove();
   };
 }

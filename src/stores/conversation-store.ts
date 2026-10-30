@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
+import type { ExtensionTabId } from "#/utils/extension-tab-id";
 import {
   getConversationState,
   setConversationState,
 } from "#/utils/conversation-local-storage";
 
-export type ConversationTab =
+export type StaticConversationTab =
   | "files"
   | "commits"
   | "browser"
@@ -14,6 +15,9 @@ export type ConversationTab =
   | "planner"
   | "tasklist"
   | "usage";
+
+/** A built-in tab, or a Canvas Extension page (`extension:<name>:<page>`). */
+export type ConversationTab = StaticConversationTab | ExtensionTabId;
 
 export type ConversationMode = "code" | "plan";
 

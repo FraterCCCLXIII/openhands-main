@@ -1,5 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Activity, Clock, FolderGit2, MessagesSquare } from "lucide-react";
+import {
+  Activity,
+  Bot,
+  Clock,
+  FolderGit2,
+  MessagesSquare,
+  Users,
+} from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
@@ -8,10 +15,12 @@ import { ExecutionStatus } from "#/types/agent-server/core";
 import { getFeedProject } from "#/utils/feed-filters";
 import {
   feedProfilePath,
-  getFeedFactory,
   getFeedPerson,
+  isFeedTeamDemoEnabled,
   type FeedFactory,
 } from "#/utils/feed-team-demo";
+import { useFactoryResolver } from "#/hooks/use-feed-factories";
+import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { formatRelativeTime } from "#/utils/format-relative-time";
 import { factoryIconKey } from "#/utils/feed-icon-keys";
 import { cn } from "#/utils/utils";
@@ -35,9 +44,17 @@ export function FeedFactoryHeader({
   const isColumn = variant === "column";
   const { t, i18n } = useTranslation("openhands");
   const backendScopedPath = useBackendScopedPath();
-  const own = conversations.filter(
-    (c) => getFeedFactory(c.id).id === factory.id,
+  const resolveFactory = useFactoryResolver();
+  const agentCount = useFeedFactoriesStore(
+    (state) => state.addedAgents[factory.id]?.length ?? 0,
   );
+  const peopleCount = useFeedFactoriesStore((state) => {
+    const stages = state.humanAssignments?.[factory.id] ?? {};
+    return new Set(
+      Object.values(stages).flatMap((list) => list.map((a) => a.id)),
+    ).size;
+  });
+  const own = conversations.filter((c) => resolveFactory(c)?.id === factory.id);
   const live = own.filter(
     (c) => c.execution_status === ExecutionStatus.RUNNING,
   ).length;
@@ -46,7 +63,10 @@ export function FeedFactoryHeader({
     (latest, c) => (!latest || c.updated_at > latest ? c.updated_at : latest),
     null,
   );
-  const owner = getFeedPerson(factory.ownerId);
+  // Teammates are simulated, so a named owner shows only in the team demo.
+  const owner = isFeedTeamDemoEnabled(window.location.search)
+    ? getFeedPerson(factory.ownerId)
+    : undefined;
   const { Icon } = factory;
 
   return (
@@ -121,6 +141,20 @@ export function FeedFactoryHeader({
                 </NavigationLink>
               </li>
             ) : null}
+            <li
+              data-testid="feed-factory-agents"
+              className="flex items-center gap-1.5"
+            >
+              <Bot size={14} aria-hidden />
+              {t(I18nKey.FEED$FACTORY_AGENTS, { count: agentCount })}
+            </li>
+            <li
+              data-testid="feed-factory-people"
+              className="flex items-center gap-1.5"
+            >
+              <Users size={14} aria-hidden />
+              {t(I18nKey.FEED$FACTORY_PEOPLE, { count: peopleCount })}
+            </li>
             <li
               data-testid="feed-factory-conversations"
               className="flex items-center gap-1.5"

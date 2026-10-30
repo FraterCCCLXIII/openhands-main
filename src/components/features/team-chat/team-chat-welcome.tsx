@@ -12,6 +12,8 @@ import {
 } from "#/utils/team-chat-sprites";
 import { primaryButtonClassName } from "./team-chat-ui";
 
+const KAMIJI_NAME = "Kamiji";
+const KOSMOS_NAME = "Kosmos";
 const CELL = 4;
 const PERSON = [
   "...XXXXXX...",
@@ -354,14 +356,46 @@ export function TeamChatWelcome({
           />
         ))}
       </div>
+      <div
+        role="group"
+        aria-label={t(I18nKey.TEAM_CHAT$BUILT_WITH)}
+        data-testid="team-welcome-built-with"
+        className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-3 text-xs text-muted"
+      >
+        <span aria-hidden="true">{t(I18nKey.TEAM_CHAT$BUILT_WITH)}</span>
+        <a
+          href="https://github.com/FraterCCCLXIII/kamiji"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="opacity-60 transition-opacity hover:opacity-100"
+        >
+          <img
+            src="/logos/kamiji.svg"
+            alt={KAMIJI_NAME}
+            className="h-5 w-auto"
+          />
+        </a>
+        <a
+          href="https://kosmos.computer"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="opacity-60 transition-opacity hover:opacity-100"
+        >
+          <img
+            src="/logos/kosmos.svg"
+            alt={KOSMOS_NAME}
+            className="h-4 w-auto"
+          />
+        </a>
+      </div>
       <div className="relative flex flex-col items-center gap-3 text-center">
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-surface-raised text-contrast">
-          <MessagesSquare size={24} aria-hidden />
+        <span className="flex size-20 items-center justify-center rounded-3xl bg-surface-raised text-contrast">
+          <MessagesSquare size={44} strokeWidth={2.5} aria-hidden />
         </span>
-        <h1 className="text-4xl font-light tracking-tight text-contrast">
+        <h1 className="text-4xl font-semibold tracking-tight text-contrast">
           {t(I18nKey.TEAM_CHAT$NAV_LABEL)}
         </h1>
-        <p className="max-w-xs text-sm font-light text-muted">
+        <p className="max-w-xs text-sm font-medium text-muted">
           {t(I18nKey.TEAM_CHAT$WELCOME_TAGLINE)}
         </p>
         <div className="mt-4 flex flex-col items-center gap-3">

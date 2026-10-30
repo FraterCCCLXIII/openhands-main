@@ -235,6 +235,22 @@ export const meta: MetaFunction = () => [
   { name: "description", content: "Let's Start Building!" },
 ];
 
+/**
+ * Shown while the app's route modules load, so the window never sits blank.
+ * It renders inside Layout, before any app providers have mounted.
+ */
+export function HydrateFallback() {
+  return (
+    <div
+      data-testid="hydrate-fallback"
+      className="flex h-screen flex-col items-center justify-center gap-4 bg-base text-muted"
+    >
+      <img src="/favicon.svg" alt="" width={56} height={56} />
+      <p>Loading OpenHands…</p>
+    </div>
+  );
+}
+
 export default function App() {
   // Flag-based gate: in public mode (VITE_AUTH_REQUIRED=true) with no
   // session key yet, show the auth screen immediately — no network

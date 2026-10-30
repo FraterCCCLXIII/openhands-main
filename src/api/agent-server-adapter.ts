@@ -57,10 +57,9 @@ import {
 } from "#/constants/llm-subscription";
 import {
   CANVAS_UI_CLIENT_TOOL,
-  CANVAS_UI_CLIENT_TOOL_NAME,
-  LEGACY_CANVAS_UI_TOOL_NAME,
   type ClientToolSpec,
 } from "./canvas-ui-client-tool";
+import { CANVAS_UI_TOOL_NAMES } from "#/constants/canvas-ui";
 import {
   LAUNCH_CHILD_CONVERSATION_CLIENT_TOOL,
   LAUNCH_CHILD_CONVERSATION_TOOL_NAME,
@@ -1192,8 +1191,9 @@ export function buildStartConversationRequest(
       | Record<string, string>
       | undefined) ?? {}),
   };
-  delete toolModuleQualnames[LEGACY_CANVAS_UI_TOOL_NAME];
-  delete toolModuleQualnames[CANVAS_UI_CLIENT_TOOL_NAME];
+  CANVAS_UI_TOOL_NAMES.forEach((name) => {
+    delete toolModuleQualnames[name];
+  });
   delete toolModuleQualnames[LAUNCH_CHILD_CONVERSATION_TOOL_NAME];
   if (Object.keys(toolModuleQualnames).length > 0) {
     payload.tool_module_qualnames = toolModuleQualnames;

@@ -1,4 +1,5 @@
 import { lazy, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { TabWrapper } from "./tab-wrapper";
 import { TabContainer } from "./tab-container";
@@ -7,6 +8,9 @@ import { ConversationTabContentCrossfade } from "./conversation-tab-content-cros
 import { useConversationStore } from "#/stores/conversation-store";
 import { useConversationId } from "#/hooks/use-conversation-id";
 import { CONVERSATION_TAB_LABEL_KEYS } from "../conversation-tab-ids";
+import { ExtensionDrawerPage } from "#/components/features/canvas-extensions/extension-page-host";
+import { useExtensionDrawerTabs } from "#/hooks/use-extension-drawer-tabs";
+import { parseExtensionTabId } from "#/utils/extension-tab-id";
 
 // Lazy load all tab components, including the terminal — xterm + addon-fit +
 // xterm.css are large enough that we don't want them in the conversation
@@ -36,6 +40,10 @@ export function ConversationTabContent() {
   const { selectedTab, shouldShownAgentLoading } = useConversationStore();
   const { conversationId } = useConversationId();
 
+  const navigate = useNavigate();
+  const extensionTabs = useExtensionDrawerTabs();
+  const extensionTab = parseExtensionTabId(selectedTab);
+
   const activeTab = useMemo(
     () =>
       TAB_CONFIG[selectedTab as keyof typeof TAB_CONFIG] ?? TAB_CONFIG.files,
@@ -43,6 +51,14 @@ export function ConversationTabContent() {
   );
 
   const ActiveComponent = activeTab.component;
+  const tabLabel = extensionTab
+    ? (extensionTabs.find(({ tab }) => tab === selectedTab)?.label ??
+      extensionTab.pageId)
+    : t(
+        CONVERSATION_TAB_LABEL_KEYS[
+          (selectedTab ?? "files") as keyof typeof CONVERSATION_TAB_LABEL_KEYS
+        ],
+      );
 
   const tabWrapperKey =
     selectedTab === "terminal"
@@ -50,16 +66,22 @@ export function ConversationTabContent() {
       : (selectedTab ?? "files");
 
   return (
-    <TabContainer
-      label={t(CONVERSATION_TAB_LABEL_KEYS[selectedTab ?? "files"])}
-    >
+    <TabContainer label={tabLabel}>
       <TabContentArea>
         <ConversationTabContentCrossfade
           showAgentLoading={shouldShownAgentLoading}
           tabKey={tabWrapperKey}
         >
           <TabWrapper key={tabWrapperKey}>
-            <ActiveComponent />
+            {extensionTab ? (
+              <ExtensionDrawerPage
+                extensionName={extensionTab.extensionName}
+                pageId={extensionTab.pageId}
+                navigate={navigate}
+              />
+            ) : (
+              <ActiveComponent />
+            )}
           </TabWrapper>
         </ConversationTabContentCrossfade>
       </TabContentArea>

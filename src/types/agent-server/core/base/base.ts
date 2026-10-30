@@ -1,5 +1,5 @@
 import { AUTOMATION_FORM_UPDATE_ACTION_KIND } from "#/constants/automation-form";
-import { CANVAS_UI_CLIENT_ACTION_KIND } from "#/constants/canvas-ui";
+import { CANVAS_UI_CLIENT_ACTION_KINDS } from "#/constants/canvas-ui";
 import { LAUNCH_CHILD_CONVERSATION_ACTION_KIND } from "#/constants/child-conversation";
 import { REQUEST_SECRET_ACTION_KIND } from "#/constants/secret-request";
 
@@ -41,7 +41,7 @@ type ActionEventType =
   | "GrepAction"
   // The `task` tool delegating work to a spawned subagent.
   | "TaskAction"
-  | typeof CANVAS_UI_CLIENT_ACTION_KIND
+  | (typeof CANVAS_UI_CLIENT_ACTION_KINDS)[number]
   | typeof AUTOMATION_FORM_UPDATE_ACTION_KIND
   | typeof LAUNCH_CHILD_CONVERSATION_ACTION_KIND
   | typeof REQUEST_SECRET_ACTION_KIND;

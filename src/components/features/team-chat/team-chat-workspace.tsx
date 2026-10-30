@@ -12,6 +12,7 @@ import { MemberAvatar } from "./member-avatar";
 import { TeamMemberProfile } from "./team-chat-profile";
 import { AgentInbox, ReplyModeSwitch, useAgentRequests } from "./agent-inbox";
 import { TeamChatThread } from "./team-chat-thread";
+import { TeamSwitcher } from "./team-switcher";
 import {
   CopyField,
   ErrorNote,
@@ -255,9 +256,12 @@ export function Workspace({
   client,
   sample = false,
   sampleNotice = null,
+  onStartTeam,
 }: {
   client: TeamClient;
   sample?: boolean;
+  /** Sample only: opens the create/join form over the sample (a real team leaves instead). */
+  onStartTeam?: (mode: "start" | "join") => void;
   sampleNotice?: React.ReactNode;
 }) {
   const { t } = useTranslation("openhands");
@@ -273,7 +277,11 @@ export function Workspace({
     <div data-testid="team-chat-workspace" className="flex h-full">
       <aside className="custom-scrollbar flex w-72 shrink-0 flex-col gap-5 overflow-y-auto border-r border-border p-4">
         {sampleNotice}
-        <h1 className="text-lg font-medium text-contrast">{client.name}</h1>
+        <TeamSwitcher
+          client={client}
+          sample={sample}
+          onStartTeam={onStartTeam}
+        />
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-contrast">

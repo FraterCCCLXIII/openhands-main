@@ -1,8 +1,5 @@
 import { AUTOMATION_FORM_UPDATE_TOOL_NAME } from "#/constants/automation-form";
-import {
-  CANVAS_UI_CLIENT_TOOL_NAME,
-  LEGACY_CANVAS_UI_TOOL_NAME,
-} from "#/constants/canvas-ui";
+import { isCanvasUiToolName } from "#/constants/canvas-ui";
 import { LAUNCH_CHILD_CONVERSATION_TOOL_NAME } from "#/constants/child-conversation";
 import { REQUEST_SECRET_TOOL_NAME } from "#/constants/secret-request";
 
@@ -212,9 +209,7 @@ export const isBrowserNavigateActionEvent = (
 export const isCanvasUIActionEvent = (
   event: OpenHandsEvent,
 ): event is ActionEvent<CanvasUIAction> =>
-  isActionEvent(event) &&
-  (event.tool_name === LEGACY_CANVAS_UI_TOOL_NAME ||
-    event.tool_name === CANVAS_UI_CLIENT_TOOL_NAME);
+  isActionEvent(event) && isCanvasUiToolName(event.tool_name);
 
 export const isAutomationFormUpdateActionEvent = (
   event: OpenHandsEvent,

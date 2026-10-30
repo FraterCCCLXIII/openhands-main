@@ -47,7 +47,7 @@ export function DetectedBackendsMenuSection({
   return (
     <div
       data-testid="detected-backends-menu"
-      className={cn(dropdownMenuListClassName, "border-t border-border")}
+      className={dropdownMenuListClassName}
     >
       <p className="px-2 pt-2 text-xs text-muted">
         {t(I18nKey.BACKEND$DETECTED_TITLE)}

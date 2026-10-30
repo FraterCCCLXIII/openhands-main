@@ -14,12 +14,15 @@ import {
 } from "#/stores/feed-factories-store";
 import { pickFeedDemoAgent, pickFeedTint } from "./feed-demo-agents";
 
-/** Query parameter value that switches the simulated team off: `?demoTeam=off`. */
+/** Query parameter that switches the simulated team on: `?demoTeam=on`. */
 export const FEED_TEAM_DEMO_PARAM = "demoTeam";
 
-/** The simulated factories, teammates and chatter are on unless turned off. */
+/**
+ * The simulated factories, teammates and chatter are off unless asked for with
+ * `?demoTeam=on`. Without it the Feed shows only real data.
+ */
 export function isFeedTeamDemoEnabled(search: string): boolean {
-  return new URLSearchParams(search).get(FEED_TEAM_DEMO_PARAM) !== "off";
+  return new URLSearchParams(search).get(FEED_TEAM_DEMO_PARAM) === "on";
 }
 
 export interface FeedFactory {
@@ -189,6 +192,51 @@ export function getFeedFactory(conversationId: string): FeedFactory {
     if (found) return found;
   }
   return FEED_FACTORIES[hashId(conversationId) % FEED_FACTORIES.length];
+}
+
+/** What a conversation needs to say which factory it belongs to. */
+export interface FactoryConversationRef {
+  id: string;
+  launched_agent_profile?: { agent_profile_id: string } | null;
+}
+
+/** Maps a conversation to its factory, or undefined when it has none. */
+export type FactoryResolver = (
+  conversation: FactoryConversationRef,
+) => FeedFactory | undefined;
+
+/**
+ * The factory a conversation really belongs to: the one the inbox placed it
+ * in, else the first factory that has the agent profile it was launched with
+ * as a member. Undefined when neither applies; only `?demoTeam=on` falls back
+ * to a simulated factory.
+ */
+export function getConversationFactory(
+  conversation: FactoryConversationRef,
+  agentNameById?: ReadonlyMap<string, string>,
+): FeedFactory | undefined {
+  const { assignments, custom, addedAgents } = useFeedFactoriesStore.getState();
+  const demo =
+    typeof window !== "undefined" &&
+    isFeedTeamDemoEnabled(window.location.search);
+  const known: FeedFactory[] = [
+    ...(demo ? FEED_FACTORIES : []),
+    ...custom.map(toFeedFactory),
+  ];
+  const assigned = assignments[conversation.id];
+  if (assigned) {
+    const found = known.find((factory) => factory.id === assigned.factoryId);
+    if (found) return found;
+  }
+  const profileId = conversation.launched_agent_profile?.agent_profile_id;
+  const agentName = profileId ? agentNameById?.get(profileId) : undefined;
+  if (agentName) {
+    const member = known.find((factory) =>
+      addedAgents[factory.id]?.includes(agentName),
+    );
+    if (member) return member;
+  }
+  return demo ? getFeedFactory(conversation.id) : undefined;
 }
 
 export type FeedTeamAuthorKind = "agent" | "subagent" | "teammate";

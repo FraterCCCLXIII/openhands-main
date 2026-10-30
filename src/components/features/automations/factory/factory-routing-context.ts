@@ -1,3 +1,5 @@
+import { Bot } from "lucide-react";
+import { pickAgentTint } from "#/utils/feed-agent-identity";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import {
   FEED_DEMO_AGENTS,
@@ -12,6 +14,15 @@ import type { FactoryData } from "./use-factory-data";
 export const FACTORY_COORDINATOR: FeedDemoAgent =
   FEED_DEMO_AGENTS.find((agent) => agent.role === "conductor") ??
   FEED_DEMO_AGENTS[0];
+
+/** Stands in as coordinator for a factory that has no agents of its own yet. */
+const DEFAULT_COORDINATOR: FeedDemoAgent = {
+  name: "OpenHands",
+  role: "conductor",
+  tier: null,
+  Icon: Bot,
+  className: pickAgentTint("OpenHands"),
+};
 
 export interface RosterAgent {
   agent: FeedDemoAgent;
@@ -33,12 +44,10 @@ export function buildRoster(
   data: FactoryData,
   addedNames: readonly string[] = [],
   coordinatorName?: string,
+  knownAgents: readonly FeedDemoAgent[] = FEED_DEMO_AGENTS,
 ): Roster {
   const byName = (name: string) =>
-    FEED_DEMO_AGENTS.find((agent) => agent.name === name);
-  const coordinatorAgent =
-    (coordinatorName ? byName(coordinatorName) : undefined) ??
-    FACTORY_COORDINATOR;
+    knownAgents.find((agent) => agent.name === name);
   const find = (name: string) =>
     data.agents.find((entry) => entry.agent.name === name);
   const toRoster = (agent: FeedDemoAgent): RosterAgent => ({
@@ -53,8 +62,17 @@ export function buildRoster(
     const agent = byName(name);
     if (agent) members.set(name, agent);
   });
-  // A replaced default coordinator stays on the roster as an ordinary agent.
-  members.set(FACTORY_COORDINATOR.name, FACTORY_COORDINATOR);
+
+  // The coordinator is the one chosen by hand, else a member playing the
+  // conductor role, else the first member, else the default OpenHands agent.
+  const memberList = [...members.values()];
+  const coordinatorAgent =
+    (coordinatorName ? byName(coordinatorName) : undefined) ??
+    memberList.find((agent) => agent.role === "conductor") ??
+    memberList[0] ??
+    (knownAgents.includes(FACTORY_COORDINATOR)
+      ? FACTORY_COORDINATOR
+      : DEFAULT_COORDINATOR);
   members.delete(coordinatorAgent.name);
 
   return {

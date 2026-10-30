@@ -1,0 +1,37 @@
+{
+  "name": "murmur",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Murmur: peer-to-peer chat rooms on OrbitDB, a Canvas Extension.",
+  "scripts": {
+    "build": "node build.mjs",
+    "relay": "node relay/relay.mjs",
+    "test": "vitest run --environment jsdom",
+    "test:replicate": "node test/replicate.mjs"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-gossipsub": "14.1.2",
+    "@chainsafe/libp2p-noise": "16.1.5",
+    "@chainsafe/libp2p-yamux": "7.0.4",
+    "@helia/block-brokers": "4.2.4",
+    "@libp2p/circuit-relay-v2": "3.2.24",
+    "@libp2p/identify": "3.0.39",
+    "@libp2p/pubsub-peer-discovery": "11.0.2",
+    "@libp2p/webrtc": "5.2.24",
+    "@libp2p/websockets": "9.2.19",
+    "@orbitdb/core": "github:FraterCCCLXIII/holons-p2p#21731d83f4cb3f70a79a4b117f93e1b9e4b176fa",
+    "blockstore-core": "5.0.2",
+    "blockstore-level": "2.0.1",
+    "helia": "5.5.1",
+    "libp2p": "2.10.0",
+    "qrcode-generator": "1.4.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "events": "3.3.0",
+    "jsdom": "26.0.0",
+    "path-browserify": "1.0.1",
+    "vitest": "3.2.4"
+  }
+}

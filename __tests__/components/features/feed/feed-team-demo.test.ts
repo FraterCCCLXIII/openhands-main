@@ -1,3 +1,4 @@
+import * as vitestDemoOn from "vitest";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { ALL_FEED_FILTER, matchesFeedFilter } from "#/utils/feed-filters";
@@ -154,3 +155,7 @@ describe("feed icons store", () => {
     });
   });
 });
+
+// These cover the simulated team, which is opt-in.
+vitestDemoOn.beforeEach(() => window.history.pushState({}, "", "/?demoTeam=on"));
+vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));

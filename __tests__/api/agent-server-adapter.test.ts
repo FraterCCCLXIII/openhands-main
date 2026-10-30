@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MockInstance } from "vitest";
+import { CANVAS_UI_CLIENT_TOOL } from "#/api/canvas-ui-client-tool";
 import { CANVAS_UI_CLIENT_TOOL_NAME } from "#/constants/canvas-ui";
 import { LAUNCH_CHILD_CONVERSATION_TOOL_NAME } from "#/constants/child-conversation";
 import { REQUEST_SECRET_TOOL_NAME } from "#/constants/secret-request";
@@ -7,8 +8,6 @@ import { AUTOMATION_FORM_UPDATE_TOOL_NAME } from "#/constants/automation-form";
 
 import {
   ACP_SERVER_TAG_KEY,
-  AGENT_CANVAS_SOURCE,
-  CLIENT_SOURCE_TAG_KEY,
   WORKSPACE_TAG_KEY,
   buildWorkspaceTags,
   buildRuntimeServicesSystemSuffix,
@@ -439,6 +438,26 @@ describe("buildStartConversationRequest", () => {
   });
 
   describe("client tool injection", () => {
+    it("sends a byte-identical versioned canvas ui definition from every creation path", () => {
+      const profilePayload = buildStartConversationRequest({
+        ...PROFILE,
+        settings: DEFAULT_SETTINGS,
+      });
+      const automationPayload = buildStartConversationRequest({
+        ...PROFILE,
+        settings: DEFAULT_SETTINGS,
+        automationSetup: true,
+      });
+      const canonical = JSON.stringify(CANVAS_UI_CLIENT_TOOL);
+
+      [profilePayload, automationPayload].forEach((payload) => {
+        const sent = payload.client_tools.filter(
+          (tool) => tool.name === CANVAS_UI_CLIENT_TOOL_NAME,
+        );
+        expect(sent.map((tool) => JSON.stringify(tool))).toEqual([canonical]);
+      });
+    });
+
     it("sends canvas_ui as a client-defined JSON tool", () => {
       const payload = buildStartConversationRequest({
         ...PROFILE,

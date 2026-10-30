@@ -1,6 +1,6 @@
 import { Trans } from "react-i18next";
 import React from "react";
-import { CANVAS_UI_CLIENT_TOOL_NAME } from "#/constants/canvas-ui";
+import { isCanvasUiClientToolName } from "#/constants/canvas-ui";
 import { LAUNCH_CHILD_CONVERSATION_TOOL_NAME } from "#/constants/child-conversation";
 import { REQUEST_SECRET_TOOL_NAME } from "#/constants/secret-request";
 import {
@@ -223,7 +223,7 @@ const getObservationEventTitle = (
       observationKey = "OBSERVATION_MESSAGE$CANVAS_UI";
       break;
     case "ClientToolObservation":
-      if (event.tool_name === CANVAS_UI_CLIENT_TOOL_NAME) {
+      if (isCanvasUiClientToolName(event.tool_name)) {
         observationKey = "OBSERVATION_MESSAGE$CANVAS_UI";
         break;
       }
@@ -302,7 +302,7 @@ const getCanvasUIClientObservationContent = (
 ): string | null => {
   if (
     event.observation.kind !== "ClientToolObservation" ||
-    event.tool_name !== CANVAS_UI_CLIENT_TOOL_NAME ||
+    !isCanvasUiClientToolName(event.tool_name) ||
     !correspondingAction ||
     !isCanvasUIActionEvent(correspondingAction)
   ) {

@@ -1,5 +1,5 @@
 {
-  "description": "Known apps across the OpenHands repositories. Canvas Apps install from Customize → Apps; the other entries are product repositories.",
+  "description": "Known apps across the OpenHands repositories. Canvas Apps install from Customize \u2192 Apps; the other entries are product repositories.",
   "apps": [
     {
       "name": "learning-center",
@@ -32,6 +32,58 @@
       "owner": "FraterCCCLXIII",
       "repo": "FraterCCCLXIII/openhands-main",
       "path": "src/fixtures/canvas-extensions/demo-page"
+    },
+    {
+      "name": "kamiji",
+      "display_name": "Kamiji",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "Build a Kamiji creature: body plan, ears, tails, horns and wings, shape sliders, colours and expressions, with a roster and character JSON export.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "examples/canvas-apps/kamiji",
+      "upstream": "FraterCCCLXIII/kamiji"
+    },
+    {
+      "name": "arcade",
+      "display_name": "Arcade",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "A games tab that runs playable web games, such as the Kamiji pet game, in a sandboxed frame inside OpenHands, with Yakopop, Kamikin and Kosmica listed until they have web builds.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "examples/canvas-apps/arcade"
+    },
+    {
+      "name": "doctransit",
+      "display_name": "DocTransit",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "DocTransit e-signature: its own sign-in and dashboard pages embedded, plus a native documents list with signing links through an API key.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "examples/canvas-apps/doctransit"
+    },
+    {
+      "name": "murmur",
+      "display_name": "Murmur",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "Peer-to-peer social, no server in the middle: OrbitDB chat rooms that replicate browser to browser through a small relay.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "examples/canvas-apps/murmur"
+    },
+    {
+      "name": "pullboard",
+      "display_name": "Pullboard",
+      "kind": "canvas-app-fixture",
+      "version": "0.1.0",
+      "description": "A local-first work board where agents build from a spec you approve and a second agent verifies every change. Wraps pullboard-dev/pullboard.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "src/fixtures/canvas-extensions/pullboard",
+      "upstream": "pullboard-dev/pullboard"
     },
     {
       "name": "qa-bridge-echo",

@@ -72,7 +72,15 @@ import { toAcpModelOptions } from "#/constants/acp-providers";
 import { isPlannerConversationOf } from "#/utils/plan-file";
 import { buildAutomationSetupModeTags } from "#/utils/automation-draft-tags";
 import { AUTOMATION_FORM_UPDATE_CLIENT_TOOL } from "../automation-form-client-tool";
-import { CANVAS_UI_CLIENT_TOOL } from "../canvas-ui-client-tool";
+import {
+  CANVAS_UI_CLIENT_TOOL,
+  type ClientToolSpec,
+} from "../canvas-ui-client-tool";
+import { CANVAS_UI_CLIENT_TOOL_NAME } from "#/constants/canvas-ui";
+import { getClientToolConflictName } from "../client-tool-conflict";
+import i18n from "#/i18n";
+import { I18nKey } from "#/i18n/declaration";
+import { displayWarningToast } from "#/utils/custom-toast-handlers";
 import { LAUNCH_CHILD_CONVERSATION_CLIENT_TOOL } from "../launch-child-conversation-client-tool";
 import type {
   GetHooksResponse,
@@ -657,12 +665,38 @@ class AgentServerConversationService {
     }
 
     const telemetryDistinctId = await getTelemetryDistinctId();
-    const data = await new ConversationClient(
+    const conversationClient = new ConversationClient(
       getAgentServerClientOptions({ timeout: CREATE_CONVERSATION_TIMEOUT_MS }),
-    ).createConversation<DirectConversationInfo>({
+    );
+    const startRequest = {
       ...payload,
       ...(telemetryDistinctId ? { user_id: telemetryDistinctId } : {}),
-    });
+    };
+    let data: DirectConversationInfo;
+    try {
+      data =
+        await conversationClient.createConversation<DirectConversationInfo>(
+          startRequest,
+        );
+    } catch (error) {
+      // A saved conversation from an older build pins an older schema for a
+      // client tool name in this server process (see client-tool-conflict.ts).
+      // Start the chat without that tool instead of blocking it, once.
+      const conflictingTool = getClientToolConflictName(error);
+      if (!conflictingTool) throw error;
+      data =
+        await conversationClient.createConversation<DirectConversationInfo>({
+          ...startRequest,
+          client_tools: (
+            (payload.client_tools as ClientToolSpec[] | undefined) ?? []
+          ).filter((tool) => tool.name !== conflictingTool),
+        });
+      if (conflictingTool === CANVAS_UI_CLIENT_TOOL_NAME) {
+        displayWarningToast(
+          i18n.t(I18nKey.CONVERSATION$CANVAS_UI_CONTROL_UNAVAILABLE),
+        );
+      }
+    }
     const localBackend = getEffectiveLocalBackend();
     if (!localBackend) throw new NoBackendAvailableError();
 

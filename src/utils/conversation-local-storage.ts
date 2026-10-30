@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isExtensionTabId } from "#/utils/extension-tab-id";
 import type {
   ConversationTab,
   ConversationMode,
@@ -75,7 +76,7 @@ const DEFAULT_CONVERSATION_STATE: ConversationState = {
   filesTabSelectedPath: null,
 };
 
-const VALID_CONVERSATION_TABS: ReadonlySet<ConversationTab> = new Set([
+const VALID_CONVERSATION_TABS: ReadonlySet<string> = new Set([
   "files",
   "commits",
   "browser",
@@ -112,7 +113,8 @@ function sanitizeStoredState(
     result.selectedTab != null &&
     (REMOVED_CONVERSATION_TABS.has(result.selectedTab) ||
       (result.selectedTab as string) === "changes" ||
-      !VALID_CONVERSATION_TABS.has(result.selectedTab as ConversationTab))
+      (!VALID_CONVERSATION_TABS.has(result.selectedTab as ConversationTab) &&
+        !isExtensionTabId(result.selectedTab)))
   ) {
     const selectedTab = result.selectedTab as string;
     result = { ...result };

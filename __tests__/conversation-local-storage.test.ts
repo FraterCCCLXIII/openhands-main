@@ -24,6 +24,31 @@ describe("conversation localStorage utilities", () => {
     });
   });
 
+  describe("extension tabs", () => {
+    const key = (id: string) =>
+      `${LOCAL_STORAGE_KEYS.CONVERSATION_STATE}-${id}`;
+
+    it("keeps a stored extension page as the selected tab", () => {
+      localStorage.setItem(
+        key("conv-ext"),
+        JSON.stringify({ selectedTab: "extension:meet:home" }),
+      );
+
+      expect(getConversationState("conv-ext").selectedTab).toBe(
+        "extension:meet:home",
+      );
+    });
+
+    it("drops an unknown tab id instead of keeping it", () => {
+      localStorage.setItem(
+        key("conv-bad"),
+        JSON.stringify({ selectedTab: "extension:Not Valid" }),
+      );
+
+      expect(getConversationState("conv-bad").selectedTab).toBe("files");
+    });
+  });
+
   describe("getConversationState", () => {
     it("returns default state including conversationMode for task IDs without reading localStorage", () => {
       const state = getConversationState("task-uuid-123");
@@ -66,9 +91,9 @@ describe("conversation localStorage utilities", () => {
     });
 
     it("defaults rightPanelShown to false and drops corrupt values", () => {
-      expect(getConversationState("conv-right-panel-default").rightPanelShown).toBe(
-        false,
-      );
+      expect(
+        getConversationState("conv-right-panel-default").rightPanelShown,
+      ).toBe(false);
 
       const conversationId = "conv-right-panel-corrupt";
       const key = `${LOCAL_STORAGE_KEYS.CONVERSATION_STATE}-${conversationId}`;
@@ -153,7 +178,12 @@ describe("conversation localStorage utilities", () => {
     it("persists and sanitizes unpinnedOverviewSections", () => {
       const conversationId = "conv-overview-pins";
       setConversationState(conversationId, {
-        unpinnedOverviewSections: ["skills", "not-a-section", "mcp", "workspace"],
+        unpinnedOverviewSections: [
+          "skills",
+          "not-a-section",
+          "mcp",
+          "workspace",
+        ],
       });
 
       const state = getConversationState(conversationId);

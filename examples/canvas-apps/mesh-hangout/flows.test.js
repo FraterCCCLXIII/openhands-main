@@ -731,3 +731,131 @@ describe("the page, Connected mode", () => {
     expect(container.querySelector(".chead h2").textContent).toBe("keyed");
   });
 });
+
+// ── Node failures, the connection pill, and DMs a node cannot read back ───────────────────
+describe("the page, node failures", () => {
+  const INFO = { node_id: "node1", node_url: "http://localhost:12000", protocol_version: "1.1", features: [] };
+  const post = { id: "c1", author: "ent:zed", author_handle: "zed", author_profile: { name: "Zed" }, body: "hello from zed", created_at: "2026-01-01T00:00:00", reply_count: 0 };
+  /** A node whose health endpoint and global feed can be switched: `health` up/down, `feed` ok / "throw" (CORS-less 500) / "503". */
+  function flaky() {
+    const ctl = { health: true, feed: "ok", calls: [] };
+    ctl.fetchImpl = vi.fn(async (url) => {
+      const u = new URL(url);
+      ctl.calls.push(u.pathname);
+      if (!ctl.health) throw new TypeError("Failed to fetch");
+      if (u.pathname === "/.well-known/mesh-node") return jsonRes(INFO);
+      if (u.pathname === "/api/content") {
+        if (ctl.feed === "throw") throw new TypeError("Failed to fetch");
+        if (ctl.feed === "503") return jsonRes({}, 503);
+        return jsonRes({ items: [post] });
+      }
+      if (u.pathname.startsWith("/api/entities/")) return jsonRes({ id: "ent:zed", kind: "user", handle: "zed", profile: { name: "Zed" } });
+      return jsonRes({ detail: "nope" }, 404);
+    });
+    return ctl;
+  }
+  const noteText = (c) => [...c.querySelectorAll(".notice")].map((n) => n.textContent).join(" | ");
+
+  it("tells a readable HTTP status, a node that is up but failing, and an unreachable node apart", async () => {
+    const node = flaky();
+    vi.stubGlobal("fetch", node.fetchImpl);
+    node.feed = "503";
+    const { container } = mountApp({ channel: "global" });
+    await waitFor(() => container.querySelector(".notice.error"));
+    expect(noteText(container)).toContain("The node answered 503");
+    expect(container.querySelector(".status").dataset.mode).toBe("connected");
+
+    // fetch throws (a CORS-less 500) but the info endpoint answers: the node is up
+    node.feed = "throw";
+    clickText(container, ".list .row", "Following");
+    clickText(container, ".list .row", "Global feed");
+    await waitFor(() => container.querySelector(".notice.error")?.textContent.includes("The node is up but could not load this view"));
+    expect(container.querySelector(".notice.error").textContent).toContain("known node bug");
+    expect(container.querySelector(".status").dataset.mode).toBe("connected");
+    clickText(container.querySelector(".notice.error"), "button", "Docs");
+    expect(container.textContent).toContain("About this implementation");
+  });
+
+  it("shows Disconnected with Retry node, keeps what is loaded, and returns to Connected", async () => {
+    const node = flaky();
+    vi.stubGlobal("fetch", node.fetchImpl);
+    const { container } = mountApp({ channel: "global" });
+    await waitFor(() => container.textContent.includes("hello from zed"));
+    expect(container.querySelector(".status").textContent).toContain("Connected");
+
+    node.health = false;
+    clickText(container, ".list .row", "Following");
+    clickText(container, ".list .row", "Global feed");
+    await waitFor(() => container.querySelector(".status")?.dataset.mode === "disconnected");
+    expect(container.querySelector(".status").textContent).toContain("Disconnected");
+    expect(container.querySelector(".notice.warn").textContent).toContain("Cannot reach http://localhost:12000. Check that the node is running");
+
+    // a failed retry stays Disconnected; a successful one reconnects
+    clickText(container.querySelector(".notice.warn"), "button", "Retry node");
+    await tick(30);
+    expect(container.querySelector(".status").dataset.mode).toBe("disconnected");
+    node.health = true;
+    clickText(container.querySelector(".notice.warn"), "button", "Retry node");
+    await waitFor(() => container.querySelector(".status")?.dataset.mode === "connected");
+    await waitFor(() => container.textContent.includes("hello from zed"));
+    expect(noteText(container)).not.toContain("Cannot reach");
+  });
+
+  it("keeps already-loaded messages on screen when a background refresh finds the node gone", async () => {
+    const node = flaky();
+    vi.stubGlobal("fetch", node.fetchImpl);
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      const { container: c2 } = mountApp({ channel: "global" });
+      await waitFor(() => c2.textContent.includes("hello from zed"));
+      node.health = false;
+      vi.advanceTimersByTime(20_000);
+      await waitFor(() => c2.querySelector(".status")?.dataset.mode === "disconnected");
+      expect(c2.textContent).toContain("hello from zed");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("replaces the Demo members with the node's members after Retry node", async () => {
+    const node = flaky();
+    node.health = false;
+    vi.stubGlobal("fetch", node.fetchImpl);
+    const { container } = mountApp({ channel: "global" });
+    await waitFor(() => container.querySelector(".status")?.dataset.mode === "demo");
+    await waitFor(() => container.querySelector(".members")?.textContent.includes("Atlas"));
+    node.health = true;
+    clickText(container.querySelector(".notice.warn"), "button", "Retry node");
+    await waitFor(() => container.querySelector(".status")?.dataset.mode === "connected");
+    await waitFor(() => container.querySelector(".members")?.textContent.includes("Zed"));
+    const members = container.querySelector(".members").textContent;
+    for (const demo of ["Ada", "Lin", "Atlas", "Nova", "Sentinel"]) expect(members).not.toContain(demo);
+    expect(container.querySelector(".mhead .sub").textContent).toBe("1");
+  });
+
+  it("v1.1: shows a sent DM as Sent with a note, and keeps it when the thread cannot be read", async () => {
+    const node = fakeNode({ version: "1.1" });
+    const id = await generateIdentity();
+    await node.fetchImpl("http://localhost:12000/api/entities", { method: "POST", body: JSON.stringify({ public_key: id.publicKeyHex, encryption_key: id.enc.publicKeyHex, handle: "me", profile: { name: "me" } }) });
+    let sent = 0;
+    const fetchImpl = vi.fn(async (url, init = {}) => {
+      const u = new URL(url);
+      if (decodeURIComponent(u.pathname) === "/api/messages/ent:zed" && (init.method || "GET") === "GET") throw new TypeError("Failed to fetch"); // CORS-less 500 on read
+      if (u.pathname === "/api/messages" && init.method === "POST") { sent += 1; return jsonRes({ id: "m1", status: "sent" }); }
+      return node.fetchImpl(url, init);
+    });
+    vi.stubGlobal("fetch", fetchImpl);
+    const { container } = mountApp({ channel: "dm:ent:zed", identity: { jwk: id.jwk, enc: id.enc.jwk, handle: "me", name: "me", bio: "", agent: false } });
+    await waitFor(() => container.querySelector(".acct")?.textContent.includes("signed in"));
+    await waitFor(() => container.querySelector(".notice.error"));
+    expect(container.querySelector(".notice.error").textContent).toContain("known node bug");
+
+    const ta = container.querySelector("textarea");
+    setVal(ta, "hi zed");
+    container.querySelector(".composerbox").dispatchEvent(new Event("submit", { cancelable: true }));
+    await waitFor(() => container.querySelector(".msg .badge.sent"));
+    expect(sent).toBe(1);
+    expect(container.querySelector(".thread").textContent).toContain("hi zed");
+    await waitFor(() => container.textContent.includes("Replies cannot be loaded from this node right now"));
+    expect(container.querySelector(".notice.error")).toBeNull();
+    expect(container.querySelector(".thread").textContent).toContain("hi zed");
+  });
+});

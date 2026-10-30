@@ -21,6 +21,13 @@ interface TeamRef {
   name: string;
 }
 
+/** A team a person has opened, by the name its relay reports. */
+export interface KnownTeam {
+  relayUrl: string;
+  groupId: string;
+  name: string;
+}
+
 interface TeamChatState {
   /** Dev build: the secret key is kept in this browser's localStorage. */
   account: Account | null;
@@ -34,11 +41,19 @@ interface TeamChatState {
   requests: Record<string, RequestProgress>;
   /** The last team each person opened, so signing back in returns to it. */
   teamsByPubkey: Record<string, TeamRef>;
+  /** Every team each person has opened (by pubkey), for the team switcher. */
+  knownTeams: Record<string, KnownTeam[]>;
 }
 
 interface TeamChatActions {
   signIn: (account: Account, relayUrl: string) => void;
   openTeam: (groupId: string) => void;
+  /** Remembers a team for the switcher; opening it again only refreshes its name. */
+  rememberTeam: (team: KnownTeam) => void;
+  /** Opens a team the person has opened before, on its own relay. */
+  switchTeam: (team: KnownTeam) => void;
+  /** Leaves the open team without signing out, back to the start-or-join screen. */
+  closeTeam: () => void;
   addAgent: (agent: Account) => void;
   setReplyMode: (agentPubkey: string, mode: ReplyMode) => void;
   setRequestProgress: (key: string, progress: RequestProgress) => void;
@@ -62,6 +77,7 @@ const initializer: StateCreator<TeamChatState & TeamChatActions> = (
   replyModes: {},
   requests: {},
   teamsByPubkey: {},
+  knownTeams: {},
   signIn: (account, relayUrl) => {
     const last = get().teamsByPubkey[account.pubkey];
     set({
@@ -84,6 +100,40 @@ const initializer: StateCreator<TeamChatState & TeamChatActions> = (
           }
         : state.teamsByPubkey,
     })),
+  rememberTeam: (team) =>
+    set((state) => {
+      const me = state.account?.pubkey;
+      if (!me) return state;
+      const current = state.knownTeams[me] ?? [];
+      const same = (t: KnownTeam) =>
+        t.groupId === team.groupId && t.relayUrl === team.relayUrl;
+      const existing = current.find(same);
+      if (existing?.name === team.name) return state;
+      return {
+        knownTeams: {
+          ...state.knownTeams,
+          [me]: existing
+            ? current.map((t) => (same(t) ? team : t))
+            : [...current, team],
+        },
+      };
+    }),
+  switchTeam: (team) =>
+    set((state) => ({
+      relayUrl: team.relayUrl,
+      groupId: team.groupId,
+      teamsByPubkey: state.account
+        ? {
+            ...state.teamsByPubkey,
+            [state.account.pubkey]: {
+              relayUrl: team.relayUrl,
+              groupId: team.groupId,
+              name: state.account.name,
+            },
+          }
+        : state.teamsByPubkey,
+    })),
+  closeTeam: () => set({ groupId: null }),
   addAgent: (agent) =>
     set((state) => {
       const owner = agent.ownerPubkey ?? "";
@@ -128,6 +178,12 @@ export type TeamChatStoreHook = UseBoundStore<
 >;
 
 const NO_AGENTS: Account[] = [];
+
+const NO_TEAMS: KnownTeam[] = [];
+
+/** Selector: the teams the signed-in person has opened. */
+export const selectMyTeams = (s: TeamChatState): KnownTeam[] =>
+  s.knownTeams[s.account?.pubkey ?? ""] ?? NO_TEAMS;
 
 /** Selector: the agents run by the signed-in person. */
 export const selectMyAgents = (s: TeamChatState): Account[] =>

@@ -280,11 +280,11 @@ function h(tag, props = {}, ...children) {
 }
 
 const STYLE = `
-.tama { min-height: 100%; box-sizing: border-box; padding: 1.25rem; color: var(--oh-text-primary, #f5f5f5); background: var(--oh-color-base, #151515); font: inherit; }
+.tama { min-height: 100%; box-sizing: border-box; padding: 1.25rem; color: var(--oh-foreground, #f5f5f5); background: var(--oh-color-base, #151515); font: inherit; }
 .tama *, .tama *::before, .tama *::after { box-sizing: border-box; }
 .tama-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; border: 1px solid #333; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
 .tama-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.tama-pill { border: 1px solid #444; border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.8rem; background: #222; }
+.tama-pill { border: 1px solid #444; border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.8rem; background: #222; color: #f5f5f5; }
 .tama h1 { font-size: 1.6rem; font-weight: 600; margin: 0.75rem 0 0.25rem; }
 .tama h2 { font-size: 1.05rem; font-weight: 600; margin: 0; }
 .tama-sub { margin: 0; opacity: 0.65; }
@@ -292,7 +292,7 @@ const STYLE = `
 .tama-nav { align-self: flex-start; }
 .tama-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 @media (max-width: 900px) { .tama-grid { grid-template-columns: 1fr; } }
-.tama-panel { border: 1px solid #333; border-radius: 12px; padding: 1rem; background: #1b1b1b; display: flex; flex-direction: column; gap: 0.75rem; }
+.tama-panel { border: 1px solid #333; border-radius: 12px; padding: 1rem; background: #1b1b1b; color: #f5f5f5; display: flex; flex-direction: column; gap: 0.75rem; }
 .tama-den { border: 1px solid #5a3d12; border-radius: 10px; padding: 1rem; display: flex; justify-content: center; background: radial-gradient(circle at 40% 30%, rgba(240, 160, 48, 0.18), transparent 60%), #171717; }
 .tama-art { margin: 0; font-family: ui-monospace, Menlo, monospace; font-size: 0.95rem; line-height: 1.25; color: #f7c948; white-space: pre; }
 .tama-name { text-align: center; font-size: 1.2rem; }
@@ -301,7 +301,7 @@ const STYLE = `
 .tama-cell { border: 1px solid #333; border-radius: 8px; padding: 0.5rem 0.75rem; }
 .tama-cell span { display: block; font-size: 0.75rem; opacity: 0.6; }
 .tama-cell strong { font-weight: 600; }
-.tama-btn { font: inherit; font-size: 0.9rem; padding: 0.45rem 0.9rem; border-radius: 8px; border: 1px solid #444; background: #222; color: inherit; cursor: pointer; }
+.tama-btn { font: inherit; font-size: 0.9rem; padding: 0.45rem 0.9rem; border-radius: 8px; border: 1px solid #444; background: #222; color: #f5f5f5; cursor: pointer; }
 .tama-btn:hover:not(:disabled) { border-color: #777; }
 .tama-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .tama-btn:focus-visible { outline: 2px solid #f0a030; outline-offset: 2px; }

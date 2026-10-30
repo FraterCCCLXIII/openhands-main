@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFeedConversations } from "#/hooks/use-feed-conversations";
 import { I18nKey } from "#/i18n/declaration";
@@ -19,7 +19,10 @@ import { FeedNotificationCard } from "./feed-notification-card";
 import { FeedComposer } from "./feed-composer";
 import { FeedColumns } from "./feed-columns";
 import { FeedFactoryHeader } from "./feed-factory-header";
-import { useFeedFactories } from "#/hooks/use-feed-factories";
+import {
+  useFactoryResolver,
+  useFeedFactories,
+} from "#/hooks/use-feed-factories";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { FeedSortMenu } from "./feed-sort-menu";
 import { FeedViewTabs, type FeedView } from "./feed-view-tabs";
@@ -63,6 +66,7 @@ export function Feed() {
     fetchNextPage,
   } = useFeedConversations();
 
+  const resolveFactory = useFactoryResolver();
   const { backend } = useActiveBackend();
   const pinnedIds = usePinnedConversationsStore(
     (state) => state.pinsByBackendId[backend.id],
@@ -81,13 +85,13 @@ export function Feed() {
         !isEffectivelyArchivedConversation(
           c.sandbox_status,
           archived.has(c.id),
-        ) && matchesFeedFilter(c, filter),
+        ) && matchesFeedFilter(c, filter, resolveFactory),
     );
     return [
       ...shown.filter((c) => pinned.has(c.id)),
       ...shown.filter((c) => !pinned.has(c.id)),
     ];
-  }, [conversations, filter, sort, pinnedIds, archivedIds]);
+  }, [conversations, filter, sort, pinnedIds, archivedIds, resolveFactory]);
 
   let body;
   if (isLoading) {
@@ -134,6 +138,15 @@ export function Feed() {
 
   const factories = useFeedFactories();
   const factory = factories.find((f) => f.id === filter.factoryId);
+  const setFilter = useFeedFilterStore((state) => state.setFilter);
+
+  // A filter on a factory that no longer exists (deleted, or a demo factory
+  // after leaving the demo) would hide every conversation; clear it.
+  useEffect(() => {
+    if (filter.factoryId && !factory) {
+      setFilter({ ...filter, factoryId: null });
+    }
+  }, [filter, factory, setFilter]);
 
   return (
     <FeedColumns

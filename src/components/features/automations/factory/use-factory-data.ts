@@ -7,7 +7,13 @@ import {
   type FeedDemoAgent,
 } from "#/utils/feed-demo-agents";
 import { getFeedProject } from "#/utils/feed-filters";
-import { getFeedFactory } from "#/utils/feed-team-demo";
+import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
+import { useFactoryResolver } from "#/hooks/use-feed-factories";
+import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
+import { toFeedAgent } from "#/utils/feed-agent-identity";
+import { getFeedAgent } from "#/utils/feed-agent";
+import type { FactoryResolver } from "#/utils/feed-team-demo";
+import { getConversationFactory } from "#/utils/feed-team-demo";
 
 export interface FactoryAgentSummary {
   agent: FeedDemoAgent;
@@ -37,15 +43,18 @@ const isLive = (conversation: AppConversation): boolean =>
 export function summarizeFactory(
   all: AppConversation[],
   factoryId: string,
+  resolveFactory: FactoryResolver = getConversationFactory,
+  agentOf: (conversation: AppConversation) => FeedDemoAgent = (c) =>
+    pickFeedDemoAgent(c.id),
 ): Omit<FactoryData, "isLoading"> {
   const conversations = all.filter(
-    (conversation) => getFeedFactory(conversation.id).id === factoryId,
+    (conversation) => resolveFactory(conversation)?.id === factoryId,
   );
 
   const agentsByName = new Map<string, FactoryAgentSummary>();
   const projectCounts = new Map<string, number>();
   conversations.forEach((conversation) => {
-    const agent = pickFeedDemoAgent(conversation.id);
+    const agent = agentOf(conversation);
     const entry = agentsByName.get(agent.name) ?? {
       agent,
       conversations: 0,
@@ -80,8 +89,25 @@ export function summarizeFactory(
 /** The factory roll-up for the loaded conversations. */
 export function useFactoryData(factoryId: string): FactoryData {
   const { conversations: all, isLoading } = useFeedConversations();
-  return useMemo(
-    () => ({ ...summarizeFactory(all, factoryId), isLoading }),
-    [all, factoryId, isLoading],
-  );
+  const resolveFactory = useFactoryResolver();
+  const { data } = useAgentProfiles();
+  const configs = useFeedAgentConfigStore((state) => state.configs);
+  return useMemo(() => {
+    const profiles = new Map(
+      (data?.profiles ?? []).map((profile) => [profile.id, profile]),
+    );
+    // The agent behind a conversation is the profile it was launched with.
+    const agentOf = (conversation: AppConversation): FeedDemoAgent => {
+      const profile = profiles.get(
+        conversation.launched_agent_profile?.agent_profile_id ?? null,
+      );
+      return profile
+        ? toFeedAgent(profile, configs[profile.name])
+        : toFeedAgent({ name: getFeedAgent(conversation).name });
+    };
+    return {
+      ...summarizeFactory(all, factoryId, resolveFactory, agentOf),
+      isLoading,
+    };
+  }, [all, factoryId, isLoading, resolveFactory, data, configs]);
 }

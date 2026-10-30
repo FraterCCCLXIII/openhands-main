@@ -8,6 +8,7 @@ import type { FeedFactory } from "#/utils/feed-team-demo";
 import { cn } from "#/utils/utils";
 import { buildActivity } from "./pipeline-activity";
 import { ActivityDetails } from "./pipeline-activity-ui";
+import { HumanRolesPanel } from "./human-roles-panel";
 import { pipelineCounts } from "./pipeline-counts";
 import {
   DEFAULT_PIPELINE_TEMPLATE_ID,
@@ -154,6 +155,7 @@ export function PipelinePage({ factory, data }: PipelinePageProps) {
             />
           </Suspense>
         </div>
+        <HumanRolesPanel factory={factory} template={template} />
         <div
           data-testid="pipeline-inspector"
           className="rounded-lg border border-border bg-surface-raised px-4 py-3 text-sm"

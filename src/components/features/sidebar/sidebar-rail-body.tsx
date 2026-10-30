@@ -56,6 +56,7 @@ import {
 import type { Backend } from "#/api/backend-registry/types";
 import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
+import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 
 const APPS_PATH = "/apps";
 const FACTORY_PATH = "/factory";
@@ -149,6 +150,8 @@ export function SidebarRailBody({
   const isLockedToCloud = getLockedCloudHost() !== null;
   const isFullScreen = useDesktopFullScreen();
   const showTitleBand = isMacDesktopShell() && !isFullScreen;
+  // With the left rail on, the traffic lights live in the rail, not here.
+  const leftRailEnabled = useBackendTileViewStore((state) => state.enabled);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -157,7 +160,9 @@ export function SidebarRailBody({
           sidebarHeaderRowClassName(collapsed),
           // Desktop title-band: the header shares the traffic-light row, with
           // the collapse control at the right and the lights kept clear.
-          showTitleBand && !collapsed && "-mt-7 mb-7 justify-end pl-20",
+          showTitleBand &&
+            !collapsed &&
+            cn("-mt-7 justify-end", !leftRailEnabled && "mb-7 pl-20"),
         )}
       >
         <div

@@ -7,9 +7,12 @@ import {
   ChartNoAxesGantt,
   FolderGit2,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   MessagesSquare,
   Activity,
+  Sparkles,
+  Timer,
   Workflow,
 } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
@@ -46,8 +49,11 @@ import { useFactoryData, type FactoryData } from "./use-factory-data";
 import { FactoryAgentRail } from "./factory-agent-rail";
 import { PipelinePage } from "./pipeline-page";
 import { FactoryComposer } from "./factory-composer";
+import { FactoryAutomations } from "./factory-automations";
 import { FactoryGantt } from "./factory-gantt";
 import { FactoryIncoming } from "./factory-incoming";
+import { FactorySkills } from "./factory-skills";
+import { FactoryVault } from "./factory-vault";
 import { useFactoryRoster } from "#/hooks/use-factory-roster";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import {
@@ -63,7 +69,10 @@ type FactorySection =
   | "schedule"
   | "conversations"
   | "agents"
-  | "projects";
+  | "projects"
+  | "skills"
+  | "automations"
+  | "vault";
 
 const SECTIONS: FactorySection[] = [
   "overview",
@@ -73,6 +82,9 @@ const SECTIONS: FactorySection[] = [
   "conversations",
   "agents",
   "projects",
+  "skills",
+  "automations",
+  "vault",
 ];
 
 const RECENT_LIMIT = 5;
@@ -291,6 +303,12 @@ export function FactoryPage() {
     },
     agents: { label: t(I18nKey.FEED$AGENTS), Icon: Bot },
     projects: { label: t(I18nKey.FEED$PROJECTS), Icon: FolderGit2 },
+    skills: { label: t(I18nKey.SIDEBAR$SKILLS), Icon: Sparkles },
+    automations: {
+      label: t(I18nKey.CONVERSATION_PANEL$AUTOMATIONS),
+      Icon: Timer,
+    },
+    vault: { label: t(I18nKey.FACTORY$KEYS_AND_SECRETS), Icon: KeyRound },
   };
   const items: SubPageNavItem[] = SECTIONS.map((id) => ({
     to: backendScopedPath(factoryPath(factoryId, id === "overview" ? "" : id)),
@@ -357,7 +375,7 @@ export function FactoryPage() {
       }
     >
       <NavigationLink
-        to={backendScopedPath("/automations")}
+        to={backendScopedPath("/factory")}
         data-testid="factory-back"
         className="flex items-center gap-1.5 self-start text-sm text-muted hover:text-contrast"
       >
@@ -406,6 +424,21 @@ export function FactoryPage() {
             </section>
           ) : section === "pipeline" ? (
             <PipelinePage factory={factory} data={data} />
+          ) : section === "skills" ||
+            section === "automations" ||
+            section === "vault" ? (
+            <section data-testid={`factory-section-${section}`}>
+              <h2 className="mb-3 text-base font-semibold text-foreground">
+                {rail[section].label}
+              </h2>
+              {section === "skills" ? (
+                <FactorySkills factoryId={factory.id} />
+              ) : section === "automations" ? (
+                <FactoryAutomations factoryId={factory.id} />
+              ) : (
+                <FactoryVault factoryId={factory.id} />
+              )}
+            </section>
           ) : (
             <section data-testid={`factory-section-${section}`}>
               <h2 className="mb-3 text-base font-semibold text-foreground">

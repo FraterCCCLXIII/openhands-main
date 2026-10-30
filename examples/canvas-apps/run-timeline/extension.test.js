@@ -383,3 +383,48 @@ describe("page", () => {
     expect(container.querySelector('[data-testid="rt-detail"]').textContent).toContain("command: ls");
   });
 });
+
+describe("resizable conversation list", () => {
+  const mountApp = () => {
+    let mount;
+    const c = document.createElement("div");
+    document.body.append(c);
+    activate({ apiVersion: "1", navigate() {}, registerPage: (_, m) => { mount = m; return () => {}; }, agentServer: { request: () => Promise.resolve({ items: [] }) } });
+    const cleanup = mount({ container: c });
+    return { c, cleanup };
+  };
+
+  it("drags the list handle, writes the width to the grid, and restores it after a remount", () => {
+    window.localStorage.removeItem("grip:run-timeline");
+    const first = mountApp();
+    const grip = first.c.querySelector(".grip[role=separator]");
+    expect(grip).not.toBeNull();
+    grip.dispatchEvent(new MouseEvent("pointerdown", { clientX: 300, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 360, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointerup", { clientX: 360, bubbles: true }));
+    expect(first.c.querySelector(".shell").style.getPropertyValue("--grip-0")).toBe("350px");
+    first.cleanup();
+    first.c.remove();
+
+    const second = mountApp();
+    expect(second.c.querySelector(".shell").style.getPropertyValue("--grip-0")).toBe("350px");
+    expect(second.c.querySelectorAll(".grip")).toHaveLength(1);
+    second.cleanup();
+    second.c.remove();
+  });
+});
+
+describe("chip text contrast", () => {
+  it("colours medium-risk chip text with the theme's readable warning ink, not the fixed light-on-dark amber", () => {
+    let mount;
+    const c = document.createElement("div");
+    document.body.append(c);
+    activate({ apiVersion: "1", navigate() {}, registerPage: (_, m) => { mount = m; return () => {}; }, agentServer: { request: () => Promise.resolve({ items: [] }) } });
+    const cleanup = mount({ container: c });
+    const css = [...document.head.querySelectorAll("style")].map((s) => s.textContent).join("\n");
+    const rule = css.match(/\.chip\.risk-medium\s*\{([^}]*)\}/)[1];
+    expect(rule).toMatch(/(^|[;\s])color:\s*var\(--oh-feedback-warning/);
+    cleanup();
+    c.remove();
+  });
+});

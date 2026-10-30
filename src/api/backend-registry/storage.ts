@@ -53,17 +53,43 @@ function isLoopbackUrl(value: string): boolean {
   }
 }
 
+function loopbackPort(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (!isLoopbackUrl(value)) return null;
+    if (url.port) return url.port;
+    return url.protocol === "https:" ? "443" : "80";
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The launcher-injected key is authoritative for a stored Local backend that
+ * points at the server serving this page: the seeded default (any loopback
+ * port, as before), or any Local entry on a loopback host whose port is the
+ * page's own or the launcher default host's. Cloud entries and hosts that are
+ * not loopback (other than the seeded entry's exact default host) are never
+ * touched, so a user-added remote backend keeps its own key.
+ */
 function shouldSyncLauncherDefaultLocalBackend(
   backend: Backend,
   defaultBackend: Backend,
 ): boolean {
-  if (backend.id !== SEEDED_DEFAULT_BACKEND_ID || backend.kind !== "local") {
-    return false;
+  if (backend.kind !== "local" || backend.authMode === "cookie") return false;
+
+  if (backend.id === SEEDED_DEFAULT_BACKEND_ID) {
+    return (
+      backend.host === defaultBackend.host ||
+      (isLoopbackUrl(backend.host) && isLoopbackUrl(defaultBackend.host))
+    );
   }
 
+  const port = loopbackPort(backend.host);
+  if (!port) return false;
   return (
-    backend.host === defaultBackend.host ||
-    (isLoopbackUrl(backend.host) && isLoopbackUrl(defaultBackend.host))
+    port === loopbackPort(defaultBackend.host) ||
+    port === loopbackPort(window.location.origin)
   );
 }
 
@@ -77,13 +103,20 @@ function syncLauncherDefaultLocalBackend(backends: Backend[]): Backend[] {
       return backend;
     }
 
-    if (backend.apiKey === defaultBackend.apiKey) return backend;
+    // A seeded entry stranded on a stale loopback port follows the launcher.
+    const host =
+      backend.id === SEEDED_DEFAULT_BACKEND_ID &&
+      loopbackPort(backend.host) !== null &&
+      loopbackPort(defaultBackend.host) !== null &&
+      loopbackPort(backend.host) !== loopbackPort(defaultBackend.host)
+        ? defaultBackend.host
+        : backend.host;
+    if (backend.apiKey === defaultBackend.apiKey && host === backend.host) {
+      return backend;
+    }
 
     didSync = true;
-    return {
-      ...backend,
-      apiKey: defaultBackend.apiKey,
-    };
+    return { ...backend, host, apiKey: defaultBackend.apiKey };
   });
 
   if (!didSync) return backends;

@@ -218,7 +218,7 @@ describe("the page", () => {
     expect(container.querySelector(".status").textContent).toContain("Demo");
     expect(container.querySelector(".notice.warn").textContent).toContain("Cannot reach http://localhost:12000");
     await waitFor(() => container.querySelectorAll(".thread .msg").length > 0);
-    expect(container.querySelector(".powered").textContent).toBe("Powered byKamijiandKosmos");
+    expect(container.querySelector(".powered").textContent).toBe("Built withKamijiKosmos");
     expect(container.querySelector(".avatar svg[data-style='orb']")).not.toBeNull();
     expect([...container.querySelectorAll(".list .row .name")].map((n) => n.textContent)).toEqual(expect.arrayContaining(["Following", "Global feed"]));
     expect(container.querySelector(".members").textContent).toContain("Atlas");
@@ -273,11 +273,16 @@ describe("the page", () => {
     expect(container.querySelector(".notice.warn").textContent).toContain("Ed25519");
   });
 
-  it("shows the welcome page first with the Powered by footer", async () => {
+  it("shows the welcome page first with the Built with footer", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
     const { container } = mountApp({ welcomed: false });
     expect(container.querySelector(".welcome h1").textContent).toBe("Welcome to MESH");
-    expect(container.querySelector(".welcome .powered b").textContent).toBe("Kamiji");
+    const links = [...container.querySelectorAll(".welcome .wpowered a")];
+    expect(container.querySelector(".welcome .wpowered").textContent).toContain("Built with");
+    expect(links.map((a) => [a.getAttribute("aria-label"), a.href, !!a.querySelector("svg")])).toEqual([
+      ["Kamiji", "https://github.com/FraterCCCLXIII/kamiji", true],
+      ["Kosmos", "https://kosmos.computer/", true],
+    ]);
     container.querySelector(".wgo").click();
     expect(container.querySelector(".welcome")).toBeNull();
     expect(container.querySelector(".thread")).not.toBeNull();
@@ -290,5 +295,62 @@ describe("the page", () => {
     await waitFor(() => container.querySelector(".thread"));
     expect(container.querySelector(".welcome")).toBeNull();
     expect(container.querySelectorAll(".composerwrap")).toHaveLength(1);
+  });
+});
+
+describe("column grips", () => {
+  const drag = (h, from, to) => {
+    h.dispatchEvent(new MouseEvent("pointerdown", { clientX: from, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: to, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointerup", { clientX: to, bubbles: true }));
+  };
+
+  it("shows only the list grip while welcoming, then both after Get started", () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
+    const { container } = mountApp({ welcomed: false });
+    const grips = () => [...container.querySelectorAll(".shell > .grip")];
+    expect(grips().map((g) => g.getAttribute("role"))).toEqual(["separator", "separator"]);
+    expect(grips().map((g) => g.hidden)).toEqual([false, true]);
+    container.querySelector(".wgo").click();
+    expect(grips().map((g) => g.hidden)).toEqual([false, false]);
+  });
+
+  it("resizes the list by dragging and restores the saved width after a remount", () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
+    const first = mountApp({ welcomed: false });
+    const shell = first.container.querySelector(".shell");
+    drag(first.container.querySelector('.grip[data-grip="0"]'), 300, 360);
+    expect(shell.style.getPropertyValue("--grip-0")).toBe("360px");
+    first.dispose();
+    document.body.replaceChildren();
+    const saved = localStorage.getItem("grip:mesh-hangout");
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
+    localStorage.setItem("mesh-hangout:v1", JSON.stringify({ welcomed: false }));
+    expect(saved).toContain("360");
+    let mountFn;
+    activate({ apiVersion: "1", registerPage: (_id, fn) => { mountFn = fn; return () => {}; } });
+    const container = document.createElement("div");
+    document.body.append(container);
+    mountFn({ container });
+    expect(container.querySelector(".shell").style.getPropertyValue("--grip-0")).toBe("360px");
+  });
+});
+
+describe("button colours", () => {
+  it("gives every solid contrast or primary fill its own foreground token, and fixed dark panels their own text colour", () => {
+    const { container } = mountApp();
+    const css = container.querySelector("style").textContent;
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => ({ sel: sel.trim(), body }));
+    const decl = (body, prop) => new RegExp(`(?:^|[;\\s])${prop}\\s*:\\s*([^;]+)`).exec(body)?.[1].trim();
+    const darkHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "") && [1, 3, 5].reduce((n, i) => n + parseInt(v.slice(i, i + 2), 16), 0) < 150;
+    for (const { sel, body } of rules) {
+      if (/::|\binput\b/.test(sel)) continue; // pseudo-element marks and switch tracks carry no text
+      const bg = decl(body, "background");
+      const color = decl(body, "color");
+      if (bg === "var(--hg-contrast)") expect(color, sel).toBe("var(--hg-on-contrast)");
+      if (bg === "var(--hg-primary)") expect(color, sel).toBe("var(--hg-on-primary)");
+      if (darkHex(bg)) expect(color, sel).toMatch(/^#[0-9a-f]{3,6}$/i);
+      if (/\.btn\.primary/.test(sel)) expect(sel).toContain(".modal button.btn.primary");
+    }
   });
 });

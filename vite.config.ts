@@ -90,6 +90,15 @@ const appBuildConfig = {
             test: /node_modules[\\/](react-syntax-highlighter[\\/]|refractor[\\/]|lowlight[\\/]|highlight\.js[\\/]|hastscript[\\/]|(hast|mdast|unist|micromark|remark|rehype)[^\\/]*[\\/]|unified[\\/]|vfile[^\\/]*[\\/]|property-information[\\/]|(comma|space)-separated-tokens[\\/]|character-entities[^\\/]*[\\/]|(parse|stringify)-entities[\\/]|decode-named-character-reference[\\/]|bail[\\/]|trough[\\/]|is-plain-obj[\\/]|zwitch[\\/]|longest-streak[\\/]|ccount[\\/]|escape-string-regexp[\\/]|markdown-table[\\/]|devlop[\\/])/,
           },
           {
+            // Keep lucide-react (createLucideIcon + the per-icon modules) in one
+            // un-size-split chunk. Same failure mode as vendor-styling: when
+            // the generic vendor group slices it, an icon module evaluates
+            // before createLucideIcon is defined ("TypeError: e is not a
+            // function" at module load) and the whole app renders blank.
+            name: "vendor-icons",
+            test: /node_modules[\\/]lucide-react[\\/]/,
+          },
+          {
             name: "vendor",
             test: /node_modules[\\/]/,
             maxSize: APP_CHUNK_MAX_BYTES,

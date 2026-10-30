@@ -28,6 +28,24 @@ vi.mock("#/hooks/use-task-list", () => ({
   }),
 }));
 
+let mockExtensionPages: unknown[] = [];
+vi.mock(
+  "#/components/features/canvas-extensions/canvas-extensions-runtime",
+  () => ({
+    useCanvasExtensionsRuntime: () => ({
+      pages: mockExtensionPages,
+      activating: false,
+      errors: new Map(),
+    }),
+  }),
+);
+vi.mock(
+  "#/components/features/canvas-extensions/canvas-extension-icon",
+  () => ({
+    CanvasExtensionIcon: () => null,
+  }),
+);
+
 vi.mock("#/hooks/use-is-archived-conversation", () => ({
   useIsArchivedConversation: () => false,
 }));
@@ -151,6 +169,7 @@ describe("ConversationTabsContextMenu", () => {
     localStorage.clear();
     __resetActiveStoreForTests();
     mockHasTaskList = false;
+    mockExtensionPages = [];
     useConversationStore.setState({
       selectedTab: "files",
       isRightPanelShown: true,
@@ -200,6 +219,27 @@ describe("ConversationTabsContextMenu", () => {
     );
 
     expect(screen.getByText("COMMON$PLANNER")).toBeInTheDocument();
+  });
+
+  it("lists installed extension pages and opens one in the drawer", async () => {
+    const user = userEvent.setup();
+    mockExtensionPages = [
+      {
+        extension: { name: "meet" },
+        contribution: { id: "home", title: "Meet home", nav_label: "Meet" },
+      },
+    ];
+
+    render(<ConversationTabsContextMenu isOpen={true} onClose={vi.fn()} />);
+
+    await user.click(
+      screen.getByTestId("conversation-tabs-menu-open-extension:meet:home"),
+    );
+
+    expect(screen.getByText("Meet")).toBeInTheDocument();
+    expect(useConversationStore.getState().selectedTab).toBe(
+      "extension:meet:home",
+    );
   });
 
   it("should open a tab from the label button without changing pin state", async () => {

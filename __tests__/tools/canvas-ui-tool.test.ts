@@ -9,6 +9,10 @@ import {
   CANVAS_UI_CLIENT_TOOL_NAME,
   LEGACY_CANVAS_UI_TOOL_NAME,
 } from "#/api/canvas-ui-client-tool";
+import {
+  isCanvasUiActionKind,
+  isCanvasUiToolName,
+} from "#/constants/canvas-ui";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const legacyToolSource = readFileSync(
@@ -31,10 +35,36 @@ describe("canvas_ui client tool", () => {
   });
 
   it("exports the semantic tool name and generated action kind", () => {
-    expect(CANVAS_UI_CLIENT_TOOL_NAME).toBe("canvas_ui_control");
-    expect(CANVAS_UI_CLIENT_ACTION_KIND).toBe("ClientAction_canvas_ui_control");
+    expect(CANVAS_UI_CLIENT_TOOL_NAME).toBe("canvas_ui_control_v2");
+    expect(CANVAS_UI_CLIENT_ACTION_KIND).toBe(
+      "ClientAction_canvas_ui_control_v2",
+    );
     expect(CANVAS_UI_CLIENT_TOOL.name).toBe(CANVAS_UI_CLIENT_TOOL_NAME);
     expect(CANVAS_UI_CLIENT_TOOL.name).not.toBe(LEGACY_CANVAS_UI_TOOL_NAME);
+  });
+
+  it("names the registered tool in its own description", () => {
+    expect(CANVAS_UI_CLIENT_TOOL.description).toContain(
+      CANVAS_UI_CLIENT_TOOL_NAME,
+    );
+    expect(CANVAS_UI_CLIENT_TOOL.description).not.toMatch(
+      /canvas_ui_control(?!_v)/,
+    );
+  });
+
+  it.each(["canvas_ui", "canvas_ui_control", CANVAS_UI_CLIENT_TOOL_NAME])(
+    "recognises %s as a Canvas UI tool",
+    (name) => {
+      expect(isCanvasUiToolName(name)).toBe(true);
+    },
+  );
+
+  it("recognises historical and current client action kinds only", () => {
+    expect(isCanvasUiActionKind("ClientAction_canvas_ui_control")).toBe(true);
+    expect(isCanvasUiActionKind(CANVAS_UI_CLIENT_ACTION_KIND)).toBe(true);
+    expect(isCanvasUiActionKind("CanvasUIAction")).toBe(true);
+    expect(isCanvasUiActionKind("ClientAction_other")).toBe(false);
+    expect(isCanvasUiToolName("execute_bash")).toBe(false);
   });
 
   it("retains the Python registration shim for persisted conversations", () => {

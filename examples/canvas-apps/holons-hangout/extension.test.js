@@ -96,7 +96,7 @@ describe("rendering", () => {
     const { container } = mountApp();
     await tick(10);
     expect(container.querySelector(".status").textContent).toBe("Demo");
-    expect(container.querySelector(".welcome").textContent).toContain("Powered by");
+    expect(container.querySelector(".welcome .wpowered").textContent).toContain("Built with");
     expect(container.querySelectorAll(".rail [data-holon]")).toHaveLength(3);
     container.querySelector(".rail [data-holon='1']").click();
     await tick(10);
@@ -104,7 +104,13 @@ describe("rendering", () => {
     expect(container.querySelector(".msg").textContent).toContain("Welcome to Open Source Academy");
     expect(container.querySelectorAll(".member")).toHaveLength(5);
     expect(container.querySelector(".member .avatar svg")).not.toBeNull();
-    expect(container.querySelector(".lpowered").textContent).toContain("Kamiji");
+    const built = container.querySelector(".lpowered");
+    expect(built.firstElementChild.textContent).toBe("Built with");
+    expect([...built.querySelectorAll("a.plogo")].map((a) => [a.getAttribute("aria-label"), a.href, a.rel, a.target])).toEqual([
+      ["Kamiji", "https://github.com/FraterCCCLXIII/kamiji", "noopener noreferrer", "_blank"],
+      ["Kosmos", "https://kosmos.computer/", "noopener noreferrer", "_blank"],
+    ]);
+    expect(built.querySelectorAll("a.plogo svg[role='img'] path").length).toBeGreaterThan(2);
     container.querySelector("[data-channel='course:1']").click();
     expect(container.querySelector(".thread").textContent).toContain("Branching");
 
@@ -543,5 +549,49 @@ describe("Connected mode: courses are local only", () => {
     const stored = JSON.parse(localStorage.getItem("holons-hangout:local-courses:v1"));
     expect(stored["http://api.test"].courses[0]).toMatchObject({ name: "Mine", holon_id: 7, local: true });
     expect(stored["http://api.test"].modules[0]).toMatchObject({ name: "Lesson 1", completed: true });
+  });
+});
+
+describe("draggable column dividers", () => {
+  it("renders separators, resizes a column by dragging and restores the saved width after a remount", async () => {
+    const { container, dispose } = mountApp();
+    await tick();
+    const grid = container.querySelector(".shell");
+    const handle = grid.querySelector(":scope > .grip");
+    expect(handle.getAttribute("role")).toBe("separator");
+    expect(grid.style.getPropertyValue("--grip-0")).toBe("300px");
+    handle.dispatchEvent(new MouseEvent("pointerdown", { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 150, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointerup", { bubbles: true }));
+    expect(grid.style.getPropertyValue("--grip-0")).toBe("350px");
+    const handleCount = grid.querySelectorAll(".grip").length;
+    dispose();
+    container.remove();
+    // The mount helper clears storage first; keep the saved width for the remount.
+    vi.spyOn(Storage.prototype, "clear").mockImplementation(() => {});
+    const again = mountApp();
+    await tick();
+    const grid2 = again.container.querySelector(".shell");
+    expect(grid2.style.getPropertyValue("--grip-0")).toBe("350px");
+    expect(grid2.querySelectorAll(".grip").length).toBe(handleCount);
+    vi.restoreAllMocks();
+  });
+});
+
+describe("button colours", () => {
+  it("gives every solid contrast or primary fill its own foreground token, and fixed dark panels their own text colour", () => {
+    const { container } = mountApp();
+    const css = container.querySelector("style").textContent;
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => ({ sel: sel.trim(), body }));
+    const decl = (body, prop) => new RegExp(`(?:^|[;\\s])${prop}\\s*:\\s*([^;]+)`).exec(body)?.[1].trim();
+    const darkHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "") && [1, 3, 5].reduce((n, i) => n + parseInt(v.slice(i, i + 2), 16), 0) < 150;
+    for (const { sel, body } of rules) {
+      if (/::|\binput\b/.test(sel)) continue; // pseudo-element marks and switch tracks carry no text
+      const bg = decl(body, "background");
+      const color = decl(body, "color");
+      if (bg === "var(--hh-contrast)") expect(color, sel).toBe("var(--hh-on-contrast)");
+      if (bg === "var(--hh-primary)") expect(color, sel).toBe("var(--hh-on-primary)");
+      if (darkHex(bg)) expect(color, sel).toMatch(/^#[0-9a-f]{3,6}$/i);
+    }
   });
 });

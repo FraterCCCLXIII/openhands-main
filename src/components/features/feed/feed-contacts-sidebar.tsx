@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Users } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
@@ -10,6 +11,8 @@ import {
   getFeedTeammateIds,
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
+import { useFeedFactories } from "#/hooks/use-feed-factories";
+import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { FeedFilterRow } from "./feed-filter-row";
 import { FeedIconMenu } from "./feed-icon-menu";
 import { personIconKey } from "#/utils/feed-icon-keys";
@@ -21,7 +24,11 @@ interface FeedContactsSidebarProps {
   onChange: (filter: FeedFilter) => void;
 }
 
-/** The simulated teammates, like Facebook's Contacts: filter by one or open their profile. */
+/**
+ * Contacts: the people added to factories (a teammate or a pending invite),
+ * each with the factories they are in. The simulated teammates, whose
+ * conversations can be filtered, appear only in `?demoTeam=on` mode.
+ */
 export function FeedContactsSidebar({
   conversations,
   filter,
@@ -29,7 +36,79 @@ export function FeedContactsSidebar({
 }: FeedContactsSidebarProps) {
   const { t } = useTranslation("openhands");
   const backendScopedPath = useBackendScopedPath();
-  if (!isFeedTeamDemoEnabled(window.location.search)) return null;
+  const factories = useFeedFactories();
+  const humanAssignments = useFeedFactoriesStore(
+    (state) => state.humanAssignments,
+  );
+  const demo = isFeedTeamDemoEnabled(window.location.search);
+
+  // One entry per person across all stages and factories.
+  const members = useMemo(() => {
+    const byId = new Map<
+      string,
+      { id: string; name: string; pending: boolean; factories: string[] }
+    >();
+    factories.forEach((factory) => {
+      Object.values(humanAssignments?.[factory.id] ?? {}).forEach((list) =>
+        list.forEach((person) => {
+          const entry = byId.get(person.id) ?? {
+            id: person.id,
+            name: person.name,
+            pending: person.status === "pending",
+            factories: [],
+          };
+          if (!entry.factories.includes(factory.name)) {
+            entry.factories.push(factory.name);
+          }
+          byId.set(person.id, entry);
+        }),
+      );
+    });
+    return [...byId.values()];
+  }, [factories, humanAssignments]);
+
+  if (!demo) {
+    return (
+      <section data-testid="feed-teammates">
+        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
+          {t(I18nKey.FEED$CONTACTS)}
+        </h2>
+        {members.length === 0 ? (
+          <p
+            data-testid="feed-contacts-empty"
+            className="px-2 text-sm text-muted"
+          >
+            {t(I18nKey.FEED$CONTACTS_EMPTY)}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-0.5">
+            {members.map((member) => (
+              <li
+                key={member.id}
+                data-testid="feed-contact"
+                className="flex items-center gap-3 rounded-lg px-2 py-2 text-contrast"
+              >
+                <span
+                  aria-hidden
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-raised text-xs font-semibold"
+                >
+                  {member.name.slice(0, 2).toUpperCase()}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-medium">
+                    {member.name}
+                  </span>
+                  <span className="block truncate text-xs text-muted">
+                    {member.factories.join(", ")}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    );
+  }
 
   const teammateCount = (id: string) =>
     conversations.filter((c) => getFeedTeammateIds(c.id).includes(id)).length;

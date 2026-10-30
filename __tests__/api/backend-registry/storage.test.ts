@@ -23,6 +23,8 @@ afterEach(() => {
   window.sessionStorage.clear();
   delete (window as unknown as Record<string, unknown>)
     .__AGENT_CANVAS_LOCK_TO_CLOUD__;
+  delete (window as unknown as Record<string, unknown>)
+    .__AGENT_CANVAS_SESSION_API_KEY__;
   Object.defineProperty(window, "location", {
     configurable: true,
     value: ORIGINAL_LOCATION,
@@ -267,7 +269,7 @@ describe("backend-registry storage", () => {
     const storedBackend: Backend = {
       id: "custom-local",
       name: "Custom Local",
-      host: window.location.origin,
+      host: "http://localhost:9999",
       apiKey: "stored-session-key",
       kind: "local",
     };
@@ -300,6 +302,120 @@ describe("backend-registry storage", () => {
       id: "default-local",
       host: "https://example.com",
       apiKey: "stored-session-key",
+    });
+  });
+
+  describe("injected launcher key on a long-lived profile", () => {
+    const FRESH = "fresh-injected-key";
+    const seed = (backends: Array<Partial<Backend>>) =>
+      window.localStorage.setItem(
+        BACKENDS_STORAGE_KEY,
+        JSON.stringify(
+          backends.map((b, i) => ({
+            id: `b${i}`,
+            name: "Local",
+            host: "http://localhost:8000",
+            apiKey: "",
+            kind: "local",
+            ...b,
+          })),
+        ),
+      );
+    const launch = () => {
+      vi.stubEnv("VITE_SESSION_API_KEY", "");
+      mockWindowLocation("http://localhost:8000/apps");
+      (
+        window as unknown as Record<string, unknown>
+      ).__AGENT_CANVAS_SESSION_API_KEY__ = FRESH;
+    };
+
+    it("refreshes a seeded entry with an old key on the page origin", () => {
+      launch();
+      seed([{ id: "default-local", apiKey: "old" }]);
+      expect(readStoredBackends()[0].apiKey).toBe(FRESH);
+    });
+
+    it("moves a seeded entry on a stale loopback port to the current host", () => {
+      launch();
+      seed([
+        { id: "default-local", host: "http://127.0.0.1:18000", apiKey: "old" },
+      ]);
+      expect(readStoredBackends()[0]).toMatchObject({
+        host: "http://localhost:8000",
+        apiKey: FRESH,
+      });
+    });
+
+    it.each([
+      ["an empty key", ""],
+      ["an old key", "old"],
+    ])(
+      "heals a non-seeded Local entry on the page origin with %s",
+      (_, apiKey) => {
+        launch();
+        seed([{ apiKey }]);
+        expect(readStoredBackends()[0].apiKey).toBe(FRESH);
+      },
+    );
+
+    it("heals a non-seeded Local entry written as 127.0.0.1 with the page port", () => {
+      launch();
+      seed([{ host: "http://127.0.0.1:8000" }]);
+      expect(readStoredBackends()[0].apiKey).toBe(FRESH);
+    });
+
+    it("leaves a non-seeded loopback entry on another port alone", () => {
+      launch();
+      seed([{ host: "http://localhost:18000", apiKey: "mine" }]);
+      expect(readStoredBackends()[0].apiKey).toBe("mine");
+    });
+
+    it("never touches a cloud entry on the page origin", () => {
+      launch();
+      seed([{ kind: "cloud", apiKey: "cloud-key" }]);
+      expect(readStoredBackends()[0].apiKey).toBe("cloud-key");
+    });
+
+    it("never overwrites the key of a remote backend", () => {
+      launch();
+      seed([
+        { host: "https://my-box.example.com", apiKey: "remote-key" },
+        {
+          id: "default-local",
+          host: "https://other.example.com",
+          apiKey: "r2",
+        },
+      ]);
+      expect(readStoredBackends().map((b) => b.apiKey)).toEqual([
+        "remote-key",
+        "r2",
+      ]);
+    });
+
+    it("heals only the matching entry when several are stored", () => {
+      launch();
+      seed([{ host: "https://my-box.example.com", apiKey: "remote-key" }, {}]);
+      expect(readStoredBackends().map((b) => b.apiKey)).toEqual([
+        "remote-key",
+        FRESH,
+      ]);
+    });
+
+    it("persists the healed key and leaves entries alone without an injected key", () => {
+      launch();
+      delete (window as unknown as Record<string, unknown>)
+        .__AGENT_CANVAS_SESSION_API_KEY__;
+      seed([{ apiKey: "old" }]);
+      expect(readStoredBackends()[0].apiKey).toBe("old");
+
+      (
+        window as unknown as Record<string, unknown>
+      ).__AGENT_CANVAS_SESSION_API_KEY__ = FRESH;
+      readStoredBackends();
+      expect(
+        JSON.parse(window.localStorage.getItem(BACKENDS_STORAGE_KEY)!)[0]
+          .apiKey,
+      ).toBe(FRESH);
     });
   });
 

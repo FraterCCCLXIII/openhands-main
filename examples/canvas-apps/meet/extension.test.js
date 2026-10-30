@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { techRail, activate, cleanName, connectedGithubToken, fetchGithubPeople, parseGithubRef, signToken, httpUrl, probeLivekit, probeToken, probeMedia, startCommands, directRoom, inviteLink, inviteMessage, mailtoLink, mergeContacts, parseContacts, qrSvg, randomRoomCode, smsLink, decodeChat, encodeChat, gridColumns, initials } from "./extension.js";
+import { techRail, activate, cleanName, connectedGithubToken, fetchGithubPeople, parseGithubRef, signToken, httpUrl, probeLivekit, probeToken, probeMedia, startCommands, directRoom, inviteLink, inviteMessage, mailtoLink, mergeContacts, parseContacts, qrSvg, randomRoomCode, smsLink, decodeChat, encodeChat, gridColumns, initials, DEMO_PEOPLE, DEMO_NAMES, participantInfo, miniAppScreen, DEMO_SCRIPT, agentReply, speechSupport, isLocalOnly, shareBaseUrl, kamijiHue, parseInvite, lobbyWarnings } from "./extension.js";
 
 function mountMeet(saved = {}) {
   localStorage.clear();
@@ -22,6 +22,63 @@ function fakeLivekit() {
 }
 
 afterEach(() => { delete globalThis.__meetLivekit; vi.unstubAllGlobals(); document.body.replaceChildren(); });
+
+describe("sharing", () => {
+  it("flags links that only work on this computer and honours a public address", () => {
+    expect(isLocalOnly("http://localhost:8000/x")).toBe(true);
+    expect(isLocalOnly("http://127.0.0.1:8000/")).toBe(true);
+    expect(isLocalOnly("https://meet.example.com/")).toBe(false);
+    const base = shareBaseUrl("meet.example.com", "http://localhost:8000/x");
+    expect(inviteLink(base, "standup")).toBe("https://meet.example.com/?room=standup");
+    expect(shareBaseUrl("", "http://localhost:8000/x")).toBe("http://localhost:8000/x");
+  });
+});
+
+describe("people and agents", () => {
+  it("tells agents from humans and reads role and model", () => {
+    expect(participantInfo({ metadata: JSON.stringify({ kind: "agent", role: "Reviewer", model: "Claude" }) })).toEqual({ kind: "agent", role: "Reviewer", model: "Claude" });
+    expect(participantInfo({ kind: 4 }).kind).toBe("agent");
+    expect(participantInfo({ metadata: "not json" })).toEqual({ kind: "human", role: "", model: "" });
+  });
+  it("marks both humans and agents in the demo", () => {
+    expect(new Set(DEMO_PEOPLE.map((p) => p.kind))).toEqual(new Set(["human", "agent"]));
+    expect(DEMO_PEOPLE.filter((p) => p.kind === "agent").every((p) => p.model)).toBe(true);
+  });
+});
+
+describe("shared screen demo", () => {
+  it("draws a miniature app with a chat and a diff", () => {
+    const screen = miniAppScreen();
+    expect(screen.querySelector(".machat")).not.toBeNull();
+    expect(screen.querySelectorAll(".madiff .add").length).toBeGreaterThan(0);
+  });
+});
+
+describe("kamiji avatars", () => {
+  it("gives each name a stable colour that differs between people", () => {
+    expect(kamijiHue("Ada")).toBe(kamijiHue("Ada"));
+    expect(kamijiHue("Ada")).not.toBe(kamijiHue("Grace"));
+  });
+});
+
+describe("agent", () => {
+  it("replies to what it heard and stays quiet on silence", () => {
+    expect(agentReply("")).toBe("");
+    expect(agentReply("hello there")).toMatch(/listening/);
+    expect(agentReply("ship it")).toBe("Got it: ship it");
+  });
+  it("reports which speech features a window offers", () => {
+    expect(speechSupport({})).toEqual({ listen: false, speak: false });
+    expect(speechSupport({ webkitSpeechRecognition: class {}, speechSynthesis: {}, SpeechSynthesisUtterance: class {} })).toEqual({ listen: true, speak: true });
+  });
+});
+
+describe("demo", () => {
+  it("scripts a call from the demo people only", () => {
+    const speakers = DEMO_SCRIPT.filter((m) => m.from).map((m) => m.from);
+    expect(speakers.every((n) => DEMO_NAMES.includes(n))).toBe(true);
+  });
+});
 
 describe("helpers", () => {
   it("round-trips chat and ignores foreign data messages", () => {
@@ -256,5 +313,187 @@ describe("add contacts modal", () => {
     open(container);
     [...container.querySelectorAll(".modalfoot button")].find((b) => b.textContent === "Done").click();
     expect(container.querySelector('[role="dialog"]')).toBeNull();
+  });
+});
+
+describe("resizable columns", () => {
+  const drag = (handle, from, to) => {
+    handle.dispatchEvent(new MouseEvent("pointerdown", { clientX: from, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: to, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointerup", { bubbles: true }));
+  };
+  const remount = () => {
+    let mountFn;
+    activate({ apiVersion: "1", registerPage: (_id, fn) => { mountFn = fn; return () => {}; } });
+    const container = document.createElement("div");
+    document.body.append(container);
+    return { container, dispose: mountFn({ container }) };
+  };
+
+  it("drags the contacts edge, keeps one handle across renders, and restores the width on remount", () => {
+    const { container, dispose } = mountMeet();
+    const root = container.querySelector(".mt");
+    const handle = root.querySelector(".grip");
+    expect(handle.getAttribute("role")).toBe("separator");
+
+    drag(handle, 260, 300);
+    expect(root.style.getPropertyValue("--grip-0")).toBe("300px");
+
+    container.querySelector('.navhead [aria-label="Settings"]').click();
+    expect(container.querySelectorAll(".mt > .grip").length).toBe(1);
+    dispose();
+
+    const again = remount();
+    expect(again.container.querySelector(".mt").style.getPropertyValue("--grip-0")).toBe("300px");
+    again.dispose();
+  });
+
+  it("also lets the in-call chat column be dragged", () => {
+    const { container, dispose } = mountMeet();
+    [...container.querySelectorAll("button")].find((b) => b.textContent.includes("Preview the UI")).click();
+    const meeting = container.querySelector(".meeting");
+    const handle = meeting.querySelector(".grip");
+    expect(handle.getAttribute("role")).toBe("separator");
+
+    drag(handle, 600, 560);
+    expect(meeting.style.getPropertyValue("--grip-0")).toBe("340px");
+    dispose();
+  });
+});
+
+describe("remote invites", () => {
+  const remote = { serverUrl: "wss://lk.example.com", tokenUrl: "https://tok.example.com/token" };
+  afterEach(() => history.replaceState({}, "", "/"));
+
+  it("carries a remote server and token endpoint in the link, and parses them back", () => {
+    const link = inviteLink("https://app.test/meet", "team", remote);
+    expect(parseInvite(new URL(link).search)).toEqual({ room: "team", serverUrl: "wss://lk.example.com/", tokenUrl: "https://tok.example.com/token" });
+  });
+
+  it("leaves local-only and invalid servers out of the link", () => {
+    expect(inviteLink("https://app.test/", "r", { serverUrl: "ws://127.0.0.1:7880", tokenUrl: "http://localhost:7891/token" })).toBe("https://app.test/?room=r");
+    expect(inviteLink("https://app.test/", "r", { serverUrl: "javascript:alert(1)", tokenUrl: "file:///etc/passwd" })).toBe("https://app.test/?room=r");
+    expect(inviteLink("https://app.test/", "r", { serverUrl: "wss://k:secret@lk.example.com", tokenUrl: "" })).toBe("https://app.test/?room=r");
+  });
+
+  it("ignores unsafe schemes when reading a link", () => {
+    expect(parseInvite("?room=r&lk=javascript:alert(1)&tok=file:///x")).toEqual({ room: "r", serverUrl: "", tokenUrl: "" });
+    expect(parseInvite("?room=r&lk=https://a.test&tok=wss://a.test")).toEqual({ room: "r", serverUrl: "", tokenUrl: "" });
+  });
+
+  it("pre-fills the lobby from the link and saves nothing until Join", async () => {
+    history.replaceState({}, "", "/?room=team&lk=wss%3A%2F%2Flk.example.com&tok=https%3A%2F%2Ftok.example.com%2Ftoken");
+    globalThis.__meetLivekit = fakeLivekit().lk;
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({ token: "jwt" }) })));
+    const { container } = mountMeet({ serverUrl: "ws://127.0.0.1:7880" });
+    const val = (label) => [...container.querySelectorAll(".lobby label")].find((l) => l.textContent.startsWith(label)).querySelector("input").value;
+    expect(val("Room")).toBe("team");
+    expect(val("LiveKit server")).toBe("wss://lk.example.com/");
+    expect(val("Token endpoint")).toBe("https://tok.example.com/token");
+    expect(container.textContent).toContain("Server settings came from the invite link.");
+    expect(container.textContent).toContain("You were invited");
+    expect(JSON.parse(localStorage.getItem("meet:v1")).serverUrl).toBe("ws://127.0.0.1:7880");
+    const name = container.querySelector(".lobby input");
+    name.value = "ada"; name.dispatchEvent(new Event("input"));
+    container.querySelector("form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await tick(5);
+    expect(JSON.parse(localStorage.getItem("meet:v1")).serverUrl).toBe("wss://lk.example.com/");
+  });
+});
+
+describe("lobby warnings", () => {
+  it("warns that an https page cannot use ws://", () => {
+    expect(lobbyWarnings({ pageUrl: "https://meet.example.com/", serverUrl: "ws://lk.example.com:7880", tokenUrl: "https://t.example.com" })).toEqual(["This page is https, so the browser will block ws://. Use a wss:// server."]);
+    expect(lobbyWarnings({ pageUrl: "https://meet.example.com/", serverUrl: "ws://localhost:7880", tokenUrl: "x" })).not.toContain("This page is https, so the browser will block ws://. Use a wss:// server.");
+  });
+
+  it("warns that camera and microphone need https or localhost", () => {
+    expect(lobbyWarnings({ pageUrl: "http://192.168.1.5:8000/", serverUrl: "wss://lk.example.com", tokenUrl: "https://t.example.com" })).toEqual(["Camera and microphone need https or localhost."]);
+    expect(lobbyWarnings({ pageUrl: "http://localhost:8000/", serverUrl: "wss://lk.example.com", tokenUrl: "https://t.example.com" })).toEqual([]);
+  });
+
+  it("tells a remote invitee that the default server is their own computer", () => {
+    expect(lobbyWarnings({ pageUrl: "https://meet.example.com/", serverUrl: "ws://127.0.0.1:7880" })).toEqual(["This points at your own computer. Ask the host for their LiveKit server and token endpoint, or open their invite link."]);
+    expect(lobbyWarnings({ pageUrl: "http://localhost:8000/", serverUrl: "ws://127.0.0.1:7880" })).toEqual([]);
+  });
+
+  it("is honest about browser-signed tokens for a non-local server", () => {
+    const msg = "No token endpoint: the browser will sign its own token with the key in Settings. Use a token endpoint for anything other than local testing.";
+    expect(lobbyWarnings({ pageUrl: "https://meet.example.com/", serverUrl: "wss://lk.example.com", tokenUrl: "" })).toEqual([msg]);
+    expect(lobbyWarnings({ pageUrl: "http://localhost:8000/", serverUrl: "ws://127.0.0.1:7880", tokenUrl: "" })).toEqual([]);
+  });
+});
+
+describe("meeting header", () => {
+  it("updates the people count when someone joins or leaves", async () => {
+    const { room, handlers, lk } = fakeLivekit();
+    globalThis.__meetLivekit = lk;
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({ token: "jwt" }) })));
+    const { container } = mountMeet({ tokenUrl: "http://127.0.0.1:7891/token" });
+    const name = container.querySelector(".lobby input");
+    name.value = "ada"; name.dispatchEvent(new Event("input"));
+    container.querySelector("form").dispatchEvent(new Event("submit", { cancelable: true }));
+    await tick(5);
+    expect(container.querySelector(".mhead small").textContent).toBe("1 person · ada");
+    room.remoteParticipants.set("grace", { identity: "grace", isSpeaking: false, getTrackPublication: () => undefined });
+    handlers.ParticipantConnected();
+    expect(container.querySelector(".mhead small").textContent).toBe("2 people · ada");
+    room.remoteParticipants.delete("grace");
+    handlers.ParticipantDisconnected();
+    expect(container.querySelector(".mhead small").textContent).toBe("1 person · ada");
+  });
+});
+
+// --- text/background legibility of solid buttons, resolved through the real cascade ---
+// The host's own tokens for dark and light (src/tailwind.css, light-plus.ts); jsdom resolves the
+// cascade but not var(), so chains are followed by hand.
+const HOST_THEMES = {
+  dark: { "--oh-contrast": "#ffffff", "--oh-contrast-foreground": "#000000", "--oh-color-base": "#0b0e14", "--oh-color-base-secondary": "#21252f", "--oh-foreground": "#eef2f7", "--oh-muted": "#a3b0c4", "--oh-border-subtle": "#383f50", "--oh-danger": "#e76a5e" },
+  "inverted-page": { "--oh-contrast": "#ffffff", "--oh-contrast-foreground": "#000000", "--oh-color-base": "#ffffff", "--oh-color-base-secondary": "#eeeeee", "--oh-foreground": "#111111", "--oh-muted": "#555555", "--oh-border-subtle": "#cccccc", "--oh-danger": "#c12a1c" },
+  light: { "--oh-contrast": "#1f1f1f", "--oh-contrast-foreground": "#ffffff", "--oh-color-base": "#ffffff", "--oh-color-base-secondary": "#f3f3f3", "--oh-foreground": "#1f1f1f", "--oh-muted": "#616161", "--oh-border-subtle": "#d1d1d1", "--oh-danger": "#c12a1c" },
+};
+function resolveVars(el, value, depth = 0) {
+  return value.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (_m, name, fallback) => {
+    let v = "";
+    for (let e = el; e && !v; e = e.parentElement) v = getComputedStyle(e).getPropertyValue(name).trim();
+    v = v || (fallback || "").trim();
+    return depth < 10 ? resolveVars(el, v, depth + 1) : v;
+  });
+}
+function luminance(css) {
+  const rgb = css.match(/rgba?\(([^)]+)\)/);
+  const parts = rgb ? rgb[1].split(",").map((n) => parseFloat(n) / 255)
+    : (() => { const h = css.replace("#", "").replace(/^(.)(.)(.)$/, "$1$1$2$2$3$3"); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); })();
+  const [r, g, bl] = parts.map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+}
+function contrastRatio(el) {
+  const cs = getComputedStyle(el);
+  const color = resolveVars(el, cs.color).trim();
+  const background = resolveVars(el, cs.backgroundColor !== "rgba(0, 0, 0, 0)" ? cs.backgroundColor : cs.getPropertyValue("background")).trim();
+  const [a, b] = [luminance(color), luminance(background)];
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+const useHostTheme = (name) => Object.entries(HOST_THEMES[name]).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+
+describe("solid button legibility", () => {
+  afterEach(() => { document.documentElement.removeAttribute("style"); });
+
+  it.each(["dark", "light", "inverted-page"])("keeps contrast, danger and agent fills readable in the %s host theme", (theme) => {
+    useHostTheme(theme);
+    const { container, dispose } = mountMeet();
+    const root = container.querySelector(".mt");
+    // controls that only exist inside a call are probed with the same classes the call view gives them
+    const probe = (html) => { const w = document.createElement("div"); w.innerHTML = html; root.append(w); return w.firstElementChild; };
+    const solid = [
+      ...container.querySelectorAll(".newroom, .primary"),
+      probe('<button class="ctl leave">Leave</button>'),
+      probe('<button class="ctl" aria-pressed="false">Mic</button>'),
+      probe('<div class="views"><button class="ctl" aria-pressed="true">Grid</button></div>').firstElementChild,
+      probe('<div class="tile"><span class="badge agent">Agent</span></div>').firstElementChild,
+    ];
+    expect(solid.length).toBeGreaterThan(4);
+    for (const b of solid) expect(contrastRatio(b), b.textContent).toBeGreaterThanOrEqual(4.5);
+    dispose();
   });
 });

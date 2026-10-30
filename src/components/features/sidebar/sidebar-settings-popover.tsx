@@ -61,7 +61,7 @@ export function SidebarSettingsPopover({
   };
 
   const linkRowClassName =
-    "group flex items-center gap-3 px-3 py-2 text-muted hover:bg-surface-raised hover:text-contrast";
+    "group flex items-center gap-3 px-3 py-2 text-foreground hover:bg-surface-raised hover:text-contrast";
 
   return (
     <div
@@ -111,10 +111,10 @@ export function SidebarSettingsPopover({
                         )
                       }
                     >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted group-hover:text-contrast">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-foreground group-hover:text-contrast">
                         {item.icon}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-sm text-muted group-hover:text-contrast">
+                      <span className="min-w-0 flex-1 truncate text-sm text-foreground group-hover:text-contrast">
                         {t(item.text as I18nKey)}
                       </span>
                     </NavigationLink>

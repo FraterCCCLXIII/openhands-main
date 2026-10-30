@@ -2,7 +2,7 @@ export function activate(host) {
   return host.registerPage("hello", ({ container, path }) => {
     const wrapper = document.createElement("section");
     wrapper.style.cssText =
-      "min-height:100%;padding:2rem;color:var(--oh-text-primary,#fff);background:var(--oh-color-base,#111);";
+      "min-height:100%;padding:2rem;color:var(--oh-foreground,#fff);background:var(--oh-color-base,#111);";
 
     const title = document.createElement("h1");
     title.textContent = "Hello from a Canvas Extension";

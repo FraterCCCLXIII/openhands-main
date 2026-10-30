@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "arcade",
+  "display_name": "Arcade",
+  "version": "0.1.0",
+  "description": "A games tab: pick Kamiji, Yakopop, Kamikin and Kosmica games and play them inside OpenHands. Games that have no playable web build yet are listed as coming soon.",
+  "entrypoint": "extension.js",
+  "icon": "icon.svg",
+  "contributes": {
+    "pages": [
+      {
+        "id": "arcade",
+        "title": "Arcade",
+        "path": "/arcade",
+        "nav_label": "Arcade",
+        "description": "Play games inside OpenHands."
+      }
+    ]
+  },
+  "icon_appearance": {
+    "background": "violet"
+  }
+}

@@ -70,7 +70,7 @@ function TitleBarDragRegion() {
     <div
       data-testid="titlebar-drag-region"
       aria-hidden="true"
-      className="app-region-drag fixed inset-x-0 top-0 z-50 h-7"
+      className="app-region-drag fixed inset-x-0 top-0 z-50 h-3"
     />
   );
 }
@@ -179,9 +179,6 @@ function MainAppContent() {
             className={cn(
               "h-screen lg:min-w-5xl flex flex-col md:flex-row bg-canvas-base overflow-hidden p-0",
               showTitleBarBand && "pt-7",
-              // Electron's window has no native bottom inset; keep the composer
-              // and its status line off the window edge.
-              isDesktopShell() && "pb-3",
             )}
           >
             <title>{appTitle}</title>
@@ -189,7 +186,17 @@ function MainAppContent() {
             <BackendLeftRail />
             <Sidebar />
 
-            <div className="flex min-h-0 flex-col w-full min-w-0 h-full gap-[calc(0.75rem*var(--oh-padding-scale,1))]">
+            <div
+              className={cn(
+                "flex min-h-0 flex-col w-full min-w-0 h-full gap-[calc(0.75rem*var(--oh-padding-scale,1))]",
+                // Electron's window has no native bottom inset; keep the
+                // composer and its status line off the window edge. The rail
+                // and sidebar run to the bottom, so only this column is inset.
+                isDesktopShell() && "pb-3",
+                // The page (and its top gradient) runs under the title band.
+                showTitleBarBand && "md:-mt-7 md:h-[calc(100%+1.75rem)]",
+              )}
+            >
               {!hideMobileSidebarMenuBar ? <SidebarMobileMenuBar /> : null}
               {config.data &&
                 (config.data.maintenance_start_time ||

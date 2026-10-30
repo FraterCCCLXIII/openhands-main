@@ -318,11 +318,21 @@ let mainWin = null;
 let marsTunnelBridge = null;
 
 const APP_URL = "http://localhost:8000";
-// Blank page the window shows until the ingress is up; the startup overlay is
-// drawn on top of it, then on top of the app once the app page loads.
-const BOOT_SHELL_URL = `data:text/html;charset=utf-8,${encodeURIComponent(
-  '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#0b0e14"></body>',
-)}`;
+// Page the window shows until the ingress is up (the startup overlay is drawn
+// on top of it, then on top of the app once the app page loads). It carries its
+// own logo and message so the window is never blank, even before the overlay
+// script has been injected.
+function bootShellUrl() {
+  bootIcon ??= nativeImage
+    .createFromPath(appIconPath)
+    .resize({ width: 128 })
+    .toDataURL();
+  const html = `<!doctype html><meta charset="utf-8"><title>OpenHands</title>
+<body style="margin:0;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0b0e14;color:#c9d1d9;font:15px -apple-system,BlinkMacSystemFont,sans-serif;-webkit-app-region:drag">
+<img src="${bootIcon}" width="72" height="72" alt="">
+<div>Starting OpenHands…</div></body>`;
+  return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+}
 
 function createMainWindow() {
   mainWin = new BrowserWindow({
@@ -367,7 +377,7 @@ function createMainWindow() {
     mainWin?.maximize();
   });
 
-  mainWin.loadURL(bootUi.backendReady ? APP_URL : BOOT_SHELL_URL);
+  mainWin.loadURL(bootUi.backendReady ? APP_URL : bootShellUrl());
 
   // Route window.open() calls appropriately.
   mainWin.webContents.setWindowOpenHandler(({ url }) => {

@@ -56,6 +56,36 @@ function orbSvg(blob, index) {
   return svg;
 }
 
+const KAMIJI_STROKES = ["M18 24V82M46 24L20 54M28 50L48 82", "M96 48V82", "M120 48V82M120 60Q120 48 134 48Q148 48 148 62V82M148 62Q148 48 162 48Q176 48 176 62V82", "M198 48V82M198 26V26", "M224 48V86Q224 98 210 98M224 26V26", "M250 48V82M250 26V26"];
+const KOSMOS_PATHS = [
+  "M79.81,54.47c-2.27-3.14-3.59-7.14-3.59-11.73,0-11.39,8.05-19.17,18.75-19.17,5.44,0,10.18,2.02,13.54,5.49,2.77-3.32,28.03-25.97,31.05-29.06-24.12,19.01-35.79,11.75-44.59,11.75-18.92,0-32.79,13.18-32.79,30.99,0,8.04,2.84,15.14,7.69,20.51",
+  "M111.85,33.96c1.19,2.57,1.86,5.52,1.86,8.77,0,11.38-8.05,19.17-18.75,19.17-4.03,0-7.67-1.1-10.66-3.09-3.54,2.54-21.13,20.86-24.29,23.89,18.2-10.53,26.87-8.99,34.95-8.99,18.83,0,32.79-13.1,32.79-30.99,0-6.58-2.16-12.99-5.7-18.17l-10.2,9.4Z",
+  "M137.56,66.79l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M254.75,72.7l-.09-35.95-17.63,29.62h-6.25l-17.55-28.85v35.18h-13.01V12.78h11.47l22.43,37.24,22.09-37.24h11.39l.17,59.92h-13.01Z",
+  "M280.39,42.78c0-17.81,13.87-30.99,32.79-30.99s32.79,13.1,32.79,30.99-13.95,30.99-32.79,30.99-32.79-13.18-32.79-30.99ZM331.93,42.78c0-11.39-8.05-19.17-18.75-19.17s-18.75,7.79-18.75,19.17,8.05,19.17,18.75,19.17,18.75-7.79,18.75-19.17Z",
+  "M355.48,66.84l4.71-10.44c5.05,3.68,12.58,6.25,19.77,6.25,8.22,0,11.56-2.74,11.56-6.42,0-11.21-34.84-3.51-34.84-25.77,0-10.19,8.22-18.66,25.25-18.66,7.53,0,15.24,1.8,20.8,5.31l-4.28,10.53c-5.56-3.17-11.3-4.71-16.61-4.71-8.22,0-11.39,3.08-11.39,6.85,0,11.04,34.84,3.42,34.84,25.42,0,10.02-8.3,18.58-25.42,18.58-9.5,0-19.09-2.83-24.4-6.93Z",
+  "M13.78,39.15V12.78H0v59.92h13.78v-15.15l.03-.03M28.22,42.74 56.22,72.7H38.43L19.09,52.01 13.81,46.36 10.43,42.74 13.78,39.15 38.43,12.78H56.22L31.06,39.7Z",
+];
+
+function logoSvg(viewBox, label, paths, stroke) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", label);
+  const title = document.createElementNS(SVG_NS, "title");
+  title.textContent = label;
+  svg.append(title);
+  paths.forEach((d) => {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("aria-hidden", "true");
+    if (stroke) Object.entries({ fill: "none", stroke: "currentColor", "stroke-width": stroke, "stroke-linecap": "round", "stroke-linejoin": "round" }).forEach(([k, v]) => path.setAttribute(k, v));
+    else path.setAttribute("fill", "currentColor");
+    svg.append(path);
+  });
+  return svg;
+}
+
 export function blobSvg(blobId) {
   const blob = BLOBS.find((b) => b.id === blobId) || BLOBS[0];
   return orbSvg(blob, BLOBS.indexOf(blob));
@@ -376,6 +406,22 @@ export class MeshClient {
     this.seen = new Map(); // v2 has no replies endpoint; replies are derived from everything fetched
     this.caps = capsFor("v1");
     this.onAuthExpired = null; // async () => boolean: re-run the challenge flow when the node forgot our session
+    this.onNetworkError = null; // () => void: a request could not reach the node at all (fetch threw)
+    this.onReachable = null; // () => void: the node answered a request (any HTTP status)
+  }
+
+  /**
+   * Cheap health check: GET /.well-known/mesh-node (the same endpoint used to connect). Resolves true when the node answers
+   * with a 2xx, false otherwise. Never throws and never fires the request hooks. A browser cannot read a CORS-less HTTP 500,
+   * so this is how the app tells "node is down" from "node is up but a particular request failed".
+   */
+  async probe() {
+    const ctl = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), Math.min(this.timeoutMs, 4000)) : 0;
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/.well-known/mesh-node`, { method: "GET", headers: {}, signal: ctl?.signal });
+      return Boolean(res && res.ok);
+    } catch { return false; } finally { clearTimeout(timer); }
   }
 
   get signedIn() { return Boolean(this.token && this.me); }
@@ -394,8 +440,12 @@ export class MeshClient {
     try {
       res = await this.fetchImpl(url, { method, headers: body === undefined ? {} : { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), signal: ctl?.signal });
     } catch (err) {
-      throw new MeshError(err?.name === "AbortError" ? `No answer from ${this.baseUrl}` : `Cannot reach ${this.baseUrl}`, { detail: String(err?.message || err) });
+      const failure = new MeshError(err?.name === "AbortError" ? `No answer from ${this.baseUrl}` : `Cannot reach ${this.baseUrl}`, { detail: String(err?.message || err) });
+      failure.network = true; // fetch threw: no HTTP status could be read (node down, blocked, or a CORS-less error response)
+      try { this.onNetworkError?.(failure); } catch { /* observer errors never mask the request error */ }
+      throw failure;
     } finally { clearTimeout(timer); }
+    try { this.onReachable?.(); } catch { /* observer only */ }
     let data = null;
     try { data = await res.json(); } catch { data = null; }
     if (!res.ok) {
@@ -816,6 +866,8 @@ export function createDemoClient(now = Date.now()) {
 // ─── Markdown: built as DOM, never as HTML ────────────────────────────────────────────────
 
 const SAFE_URL = /^(https?:\/\/|mailto:)/i;
+const HTTP_URL = /^https?:\/\//i;
+let urlPolicy = SAFE_URL; // set per renderMarkdown call; the docs reader allows http(s) only
 const INLINE = /(`[^`\n]+`)|(\*\*[^*\n]+\*\*|__[^_\n]+__)|(~~[^~\n]+~~)|(\[[^\]\n]+\]\([^)\s]+\))|(\bhttps?:\/\/[^\s<>)]+[^\s<>).,;:!?])|(\*[^*\s][^*\n]*\*|_[^_\s][^_\n]*_)/g;
 
 export function renderInline(parent, source) {
@@ -829,7 +881,7 @@ export function renderInline(parent, source) {
     else if (m[3]) { const d = document.createElement("del"); renderInline(d, whole.slice(2, -2)); parent.append(d); }
     else if (m[4]) {
       const [, label, url] = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(whole);
-      if (SAFE_URL.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; renderInline(a, label); parent.append(a); }
+      if (urlPolicy.test(url)) { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; renderInline(a, label); parent.append(a); }
       else parent.append(textOf(label));
     } else if (m[5]) { const a = document.createElement("a"); a.href = whole; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = whole; parent.append(a); }
     else { const i = document.createElement("em"); renderInline(i, whole.slice(1, -1)); parent.append(i); }
@@ -903,7 +955,14 @@ function tableBlock(rows) {
   return wrap;
 }
 
-export function renderMarkdown(source) {
+/** Renders Markdown to DOM nodes (never HTML). `httpOnly` limits links to http(s); the default also allows mailto:. */
+export function renderMarkdown(source, { httpOnly = false } = {}) {
+  const previous = urlPolicy;
+  urlPolicy = httpOnly ? HTTP_URL : SAFE_URL;
+  try { return buildMarkdown(source); } finally { urlPolicy = previous; }
+}
+
+function buildMarkdown(source) {
   const root = document.createElement("div");
   root.className = "md";
   const lines = String(source || "").replace(/\r\n?/g, "\n").split("\n");
@@ -979,20 +1038,149 @@ export function plainText(source) {
     .trim();
 }
 
+// <docs:generated>
+// Generated by scripts/embed-docs.mjs from docs/*.md. Do not edit by hand; run `npm run embed-docs`.
+export const DOCS = [
+  { id: "index", title: "MESH documentation", markdown: "# MESH documentation\n\n> Authored for this app (not imported). It lists the pages and says which are imported and which are written about this client.\n\nThis reader has two kinds of pages.\n\n| Page | Kind | What it covers |\n|---|---|---|\n| About this implementation | Authored here | What this app is, what works, what is demo, limits, storage, security |\n| How it works | Authored here | Modes, node connection, identity, posting, feeds, groups, DMs, moderation |\n| Getting started with others | Authored here | Run or reach a node, create identities, find and follow people, troubleshooting |\n| MESH protocol: overview | Imported | Layered stack and comparison, from the protocol README |\n| MESH spec v1.1: overview, principles, architecture | Imported | Spec sections 1 to 3 |\n| MESH spec v1.1: privacy, storage and integrity layers | Imported | Spec sections 4 to 6 |\n| MESH spec v1.1: social and moderation layers | Imported | Spec sections 7 and 8 |\n| MESH spec v1.1: view, network and application layers | Imported | Spec sections 9 to 11 |\n| MESH spec v1.1: sync protocol and security model | Imported | Spec sections 15 and 16 |\n\n## Where the protocol pages come from\n\nThe imported pages are copies of text in the MESH protocol repository, `https://github.com/FraterCCCLXIII/mesh-protocol` (released by its authors under CC0 1.0). Each one starts with a `Source:` line giving the file and line range. Some sections of the specification are left out for length (for example multi-device and identity recovery, sections 12 to 14, and the appendices). Read the repository for the whole specification.\n\nThe README of this app links to `https://github.com/holon-protocol/mesh-protocol`. That address did not resolve on GitHub when these docs were written; the local clone used for the import has `FraterCCCLXIII/mesh-protocol` as its remote.\n\n## Reading order\n\n1. About this implementation\n2. How it works\n3. Getting started with others\n4. The protocol pages, in the order of the table above\n\nThe spec describes protocol version 1.1. This app talks to nodes over HTTP, and the node servers it targets are described in the other pages. Where the spec and the node servers differ, the node servers decide what this app can do.\n" },
+  { id: "about", title: "About this implementation", markdown: "# About this implementation\n\n> Authored for this app, from reading `extension.js` and `README.md` in the `mesh-hangout` folder. Not imported from the protocol repository.\n\n## What it is\n\nMESH is a Canvas Extension: one self-contained `extension.js` with an embedded stylesheet and no dependencies. It gives the Hangout / Team Chat experience (a channel list, a message thread, a member list) on top of a MESH protocol **node**. It is an HTTP client in your browser. It is not a node, a relay or a peer-to-peer program.\n\nThe mapping from chat ideas to MESH ideas:\n\n| Chat | MESH |\n|---|---|\n| Channel | A feed or a timeline: Following, Global feed, one timeline per entity |\n| Message | Content, with replies through `reply_to` |\n| Member (person or AI agent) | Entity |\n| Moderation | Attestations shown as badges |\n| Direct message | A message to another entity |\n| Group | A node feature of the v1.1 server |\n\n## Two modes\n\n- **Connected.** The app reached a node at the Node URL (default `http://localhost:12000`) and read `/.well-known/mesh-node`. The header shows `Connected` and the node id.\n- **Disconnected.** The same as Connected, but the node stopped answering. The pill says `Disconnected`, a banner says \"Cannot reach ...\" with a Retry node button, and your identity and loaded messages stay on screen. It returns to Connected on the next successful request or retry.\n- **Demo.** Everything is in memory with sample data. **It is ticked by default on a fresh browser** (and the welcome screen and \"Get started\" open in Demo with no hint), so untick it under the gear icon and press Save & reconnect to use a node. It also starts when no node answers. The header says `Demo`. Nothing in Demo mode is sent anywhere, and it resets when you reload.\n\n## What works today\n\n- Create an Ed25519 identity in the browser, register it on a node and sign in with the challenge flow.\n- Post and reply, like, quote, follow and unfollow, find members, send direct messages (sending only: see Known issues for reading).\n- Account shows an **Edit profile** button on both versions. On v2.0 it opens a short notice that the node has no profile update endpoint, so only v1.1 can edit a profile.\n- v1.1 nodes: global feed, groups, delete your own post, edit your profile.\n- v2.0 nodes: boost (repost), media links, attestation labels, end-to-end encrypted DMs (send only).\n\nBetween two people on one node (tested 2026-10-30, separate sessions): identity, find by handle (v1.1) or `ent:` id (v2.0), follow, post, reply, public groups (v1.1). Not working: DMs and private groups (see Known issues). On v2.0, handle search is not supported (paste the `ent:` id) and you will not see someone's reply until you follow its author.\n- Moderation labels as badges, with a per-viewer choice of which labelers to trust. Messages with a `spam`, `nsfw` or `harassment` label are folded until you click Show.\n- Export and import an identity key.\n\n## What is demo or mock\n\n- The demo members Ada, Lin, Atlas, Nova and Sentinel are fixed sample data. Atlas, Nova and Sentinel are marked as agents, but nothing in the code makes them act: they never reply. Sentinel's labels are pre-written sample attestations.\n- The demo node re-creates your stored key's account each time you open it.\n- Live testing: on 2026-10-30 the app was run against a real v1.1 node and a real v2.0 node (through the extension's code with real `fetch`, and through the real DOM). The core flows worked on both; the README's \"Verified and unverified\" section lists exactly what was and was not covered. Request paths are also checked in tests with a mocked `fetch`.\n\n## Limits\n\n- Per-content signatures: the client can sign an object (`signObject`) the way the spec describes, but posts are not signed today. The node servers it targets do not verify content signatures, so the client signs only the sign-in challenge.\n- No federation, relay selection or sync: the app talks to exactly one node at a time.\n- Groups exist only on v1.1 nodes. Delete exists only on v1.1. Boost, media and labels exist only on v2.0.\n- A v2.0 node has no endpoint to list follows, likes, reposts or read DMs, so the app keeps follows, likes and reposts in `localStorage` for that node and identity, and shows only the DMs you send in the current session.\n- Handle (2 to 32 letters, digits, `.`, `-`, `_`), display name (60) and bio (280) limits are client-side rules; the nodes accept any string.\n- Without WebCrypto Ed25519 in the browser you can read but not post. Without X25519 your identity has no encryption key and cannot receive v2.0 DMs.\n- No post editing, titles or tags: the nodes have no such fields.\n\n## Known issues\n\n- **v1.1 node: reading DMs fails with HTTP 500** (`GET /api/messages/conversations` and `GET /api/messages/{id}`, `sqlite3.OperationalError: malformed JSON`, `main.py` around lines 3552 to 3558) for **anyone whose DM partner has ever posted plain text**. The node's DM queries run `json_extract(body, '$.recipient')` over plain-text post rows. So DM reading effectively never works in normal use. Sending works and the node stores the message. This is a bug in the node, not in this app, and the app has no workaround. A suggested node fix (not done here) is to make the DM queries skip non-JSON bodies, for example by guarding with `json_valid(body)`. Because an error response without CORS headers cannot be read by a browser, the app checks the node's info endpoint: if the node answers, you see \"The node is up but could not load this view (it returned an error)\"; if not, \"Cannot reach ...\". A DM you just sent stays on screen marked Sent.\n- **v2.0 node: a DM cannot be received through this app.** DMs can be sent (encrypted) but the node has no read endpoint.\n- **Private groups do not work between people.** The create dialog offers \"Private\", but the node has no invite or add-member endpoint (`main.py` around lines 1842 to 1850 has admin, kick and ban only), so nobody else can join and the group does not appear in other users' rails. The node also returned a non-member the private group's content through `GET /api/content?group_id=`: a privacy hole in the node, to be fixed there.\n- **v2.0 search and replies:** handle search is not supported (paste the `ent:` entity id), and you will not see someone's reply until you follow its author.\n- **v1.1 attestations**: the node answers \"This node does not accept attestations\".\n\n## Not yet verified\n\nTwo people on separate sessions against a real v1.1 node and a real v2.0 node **were** tested on 2026-10-30 (UI level, built-in browser, separate origins, one machine). Not verified: a node reachable from other machines, opening MESH from the Canvas navigation (as opposed to a standalone page), an `https` page calling an `http` node (mixed content), long-running sessions, and DM reading on v2.0 (the node has no read endpoint).\n\n## Dependencies\n\nNone at runtime: browser APIs only (`fetch`, WebCrypto, `localStorage`, DOM). The test tooling needs `vitest` and `jsdom` (`npm test`). The Markdown in messages and in this reader is turned into DOM nodes; page text is never inserted as HTML.\n\n## Storage keys\n\nEverything is kept in `localStorage` under one key, `mesh-hangout:v1`, as JSON:\n\n| Field | Holds |\n|---|---|\n| `nodeUrl`, `forceDemo` | Node URL and the Demo switch |\n| `identity` | `{ jwk, enc, handle, name, bio, agent }`: your private key material and profile |\n| `tokens` | Session token per node URL |\n| `welcomed`, `channel` | Whether the welcome screen is done, and the last open channel |\n| `trusted` | List of trusted labeler ids, or `null` for everyone |\n| `local` | Per node and identity: follows, likes, reposts (v2.0 nodes) |\n| `myGroups` | Group bookkeeping |\n\n## Security notes\n\n- The private key (a JWK with the secret `d` field) lives in `localStorage` in this browser, unencrypted. Anyone or any script with access to this page's storage can read it. The key is not sent to the node; only the public key and signatures are.\n- Export shows the key only after an acknowledgement and a warning. Treat an exported bundle as a password.\n- Session tokens are sent as a `?token=` query parameter, which is how the node servers read them. URLs can end up in logs of the node or of anything between you and the node. Use `https` for any node that is not on your own machine.\n- Message text, names and links are always set as text. Links open in a new tab with `rel=\"noopener noreferrer\"`.\n- A node can see everything on v1.1: DMs there are stored in plaintext (the `encrypted` flag is only a flag). v2.0 encrypts DMs to the recipient's published X25519 key.\n" },
+  { id: "how-it-works", title: "How it works", markdown: "# How it works\n\n> Authored for this app, from reading `extension.js`. Not imported from the protocol repository.\n\n## Overview\n\n```\n browser (this app)                                 MESH node (Python, FastAPI)\n┌───────────────────────────┐   HTTP + JSON        ┌───────────────────────────┐\n│ UI (DOM) + state          │ ───────────────────▶ │ /.well-known/mesh-node    │\n│ MeshClient                │ ◀─────────────────── │ /api/entities, /api/auth  │\n│ WebCrypto: Ed25519/X25519 │                      │ /api/content, /api/links  │\n│ localStorage: key, tokens │                      │ /api/messages | /api/dm   │\n└───────────────────────────┘                      └───────────────────────────┘\n        │  no node reachable, or Demo switched on\n        ▼\n in-memory Demo client (same interface, sample data)\n```\n\nThe UI talks to a client object. There are two with the same methods: `MeshClient` (HTTP) and the Demo client (in memory). That is why every flow works in both modes.\n\n## Connecting\n\n1. On open, the app builds a `MeshClient` for the saved Node URL and calls `GET /.well-known/mesh-node`.\n2. The answer must contain `node_id`. `protocol_version` starting with `2` selects **v2.0** behavior; anything else is treated as **v1.1**. The app then knows which endpoints exist.\n3. If the call fails or times out (6 seconds), the app enters Demo mode and says why in a notice, with a \"Retry node\" button. Retry node replaces the Demo members and data with the node's.\n4. Once connected, if the node stops answering the pill changes to `Disconnected`, the banner says \"Cannot reach ...\" with Retry node, and the app does not fall back to Demo: your identity and the messages already on screen stay. A failed request is checked with a cheap probe of `/.well-known/mesh-node`: if the probe answers, the node is up and that one request failed (the message then says \"The node answered <status>\", or, for an error the browser cannot read, \"The node is up but could not load this view\"); if the probe fails, the node is unreachable. The next successful request or retry returns the pill to Connected.\n5. In connected mode it checks that the browser supports Ed25519, loads your stored identity, reuses a saved session token or signs in again, then loads the side lists and the current channel. It refreshes the channel every 20 seconds.\n\n## Identity\n\nAn identity is an Ed25519 key pair made with WebCrypto, plus (when supported) an X25519 pair for encrypted DMs.\n\n```\npublic key (32 bytes) ──sha256──▶ first 32 hex chars ──▶  ent:<32 hex>   (your entity id)\n```\n\n- Create: Account, \"Create your identity\". The app generates the keys, checks the handle (v1.1 only), and registers `POST /api/entities` with the public key, the encryption public key, the handle and a profile (`name`, `bio`, and an `agent` flag).\n- Sign in is a challenge: `POST /api/auth/challenge`, the app signs the challenge text with the private key (hex signature), then `POST /api/auth/verify` returns a session token. If the node answers 401 later, the app signs in again once and retries.\n- The private key stays in the browser. Export gives a JSON bundle; import accepts that bundle or a bare Ed25519 private JWK.\n\n## Posting and signing\n\n```\ncompose text ─▶ POST /api/content  {kind, body, reply_to, ...}  ?token=<session>\n                         │\n                         ▼\n          the node stores it as content with an id and your entity as author\n```\n\nThe request is authorised by the session token, not by a signature over the post. The code includes `canonicalJson` (byte-identical to Python's sorted-key compact JSON), `signObject` and `verifyObject`, which implement the scheme the spec describes, but they are not used on the posting path. The README explains why: the node servers do not check per-content signatures yet.\n\nv1.1 body: `{ kind: \"post\" | \"reply\", body, reply_to, access: \"public\" | \"group\", group_id? }`. v2.0 body: `{ author, kind: \"post\", body, media: [urls], reply_to }`; replies are posts with `reply_to`.\n\n## Feeds, threads and timelines\n\n| View | v1.1 node | v2.0 node |\n|---|---|---|\n| Following | `GET /api/users/{me}/feed` | `GET /api/feed` (needs sign-in) |\n| Global feed | `GET /api/content` | not offered |\n| Timeline of one entity | `GET /api/content?author=` | `GET /api/timeline/{id}` |\n| Replies to a post | `GET /api/content?reply_to=` | derived from items already fetched |\n\nMessages are shown oldest to newest. Replies are indented under the post and can be expanded from the reply count.\n\n## Follows, likes, boosts\n\nThese are \"links\" from you to a target: `POST /api/links` with `kind` of `follow`, `like` or (v2.0 only) `repost`. v1.1 can list who you follow. v2.0 cannot, so the app stores the list locally.\n\n## Direct messages\n\n- v1.1: `POST /api/messages` and `GET /api/messages/...`; the node stores plaintext. Reading fails with an HTTP 500 for anyone whose DM partner has ever posted plain text (a node bug, see About this implementation), so in practice the other person's replies cannot be read.\n- v2.0: `POST /api/dm`; the node encrypts to the recipient's published X25519 key. If the recipient has no key the node refuses and the app explains it. There is no read endpoint, so a DM cannot be received through this app.\n- A message you send is shown at once in the thread, marked **Sent**, with a brief \"Message sent\" note. If the thread cannot be loaded afterwards, the messages sent from this session stay visible with the line \"Replies cannot be loaded from this node right now\". They are kept in memory only.\n\n## Groups\n\nOnly on v1.1 nodes: list, create, join, leave, and posts with `access: \"group\"` and a `group_id`. The protocol spec leaves groups to the social layer, so they are a feature of the node server, not of the protocol text.\n\n## Moderation\n\n```\nyou ──label (spam, nsfw, misleading, harassment, ...)──▶ POST /api/attestations   (v2.0)\nviewer ◀── GET /api/subjects/{id}/labels?viewer=me ──────  labels from issuers you trust\n```\n\n- Label types known to the app: `spam`, `nsfw`, `misleading`, `harassment`, `verified`, `trusted`, `bot`.\n- Labels display as badges. `spam`, `nsfw` and `harassment` fold the message behind a Show button. Your own messages are never folded.\n- \"Labelers\" lets you choose which issuers' labels you see. That choice is applied in the browser.\n- On v1.1, labels only appear if the node itself is set up with an external moderation service. You cannot create labels there.\n- Labelling the same subject with the same type again replaces your earlier label. There is no revoke.\n\n## Agents\n\nAn \"agent\" in this app is an entity flagged as one: the Account form has \"This identity is an AI agent\", which sets `profile.agent`. Agents get an Agent badge and are listed in their own section in the members column; a `bot` label from a trusted labeler has the same effect. The app does not run or call any AI model itself. In Demo mode the sample agents are static.\n\n## The docs reader\n\nThe pages you are reading are Markdown files in the `docs/` folder, embedded into `extension.js` by `scripts/embed-docs.mjs` so the extension stays one file. A test checks that the embedded copy matches the files.\n" },
+  { id: "getting-started", title: "Getting started with others", markdown: "# Getting started with others\n\n> Authored for this app, from `README.md` and `extension.js`. Steps marked **unverified** were not tested. On 2026-10-30 the app was tested against a real v1.1 node and a real v2.0 node on `127.0.0.1` (see the README).\n\n## What works for two people today\n\nOn one shared node, two people on separate browsers can do all of the **public** features, tested on 2026-10-30 against a real v1.1 node and a real v2.0 node:\n\n- Create an identity (each person, in their own browser).\n- Find the other person by handle (v1.1) or by pasting their `ent:` entity id (v2.0).\n- Follow them, post, and reply, in **Following** or **Global feed** (Global feed is v1.1 only).\n- Create and join a **public** group by name (v1.1 only).\n\n## What does not work yet\n\n- **Direct messages.** On a v1.1 node you can send a DM and the node stores it, but reading DMs fails for almost everyone (a node bug, see Known issues), so the other person cannot read it in this app. On a v2.0 node a DM can be sent (encrypted) but the node has no read endpoint, so a DM cannot be received through this app at all.\n- **Private groups.** The create dialog offers \"Private\", but the node has no invite or add-member endpoint, so nobody else can join a private group and it does not appear in other people's rails.\n\n## The steps for two people\n\n1. Start one node that both browsers can reach. For a v1.1 node on one machine: `uvicorn main:app --host 127.0.0.1 --port 12000` (see step 1 below for the install line).\n2. Each person opens **MESH** and presses **Get started**, then opens the gear, **unticks Demo mode**, sets the **Node URL**, and presses **Save & reconnect**. The pill under \"MESH\" must say Connected.\n3. Each person creates an identity (Account, \"Create your identity\").\n4. Each person shares their handle (v1.1) or their `ent:` entity id (v2.0, shown in Account).\n5. Each person finds the other in the members search and presses **Follow**.\n6. Post and reply in **Following** or **Global feed**. On v2.0 you will not see someone's reply until you follow its author.\n7. For a public group (v1.1): under **Groups**, one person creates it and the other types the same name and presses **Join**.\n\n## What you need\n\nA MESH node that both you and the other people can reach over HTTP(S), and a browser with WebCrypto Ed25519. This app is only a client, so \"working with others\" means everyone uses the same node (there is no cross-node sync in this client).\n\n## 1. Run a node\n\nRun these from the protocol repository (`FraterCCCLXIII/mesh-protocol`, local clone path `holon-protocol/mesh-protocol/app/server`), ideally in a throwaway virtual environment:\n\n```bash\npip install fastapi uvicorn aiosqlite pydantic cryptography httpx websockets\nuvicorn main:app --host 127.0.0.1 --port 12000        # v1.1 node: DMs, global feed, replies, groups\n# or\nuvicorn server_v2:app --host 127.0.0.1 --port 12001   # v2.0 node: attestations, DAG heads\n```\n\nThe protocol README's install line (`pip install cryptography aiosqlite`) is incomplete; the node needs all seven packages above. Port 12000 is the default in this app. Prefer `uvicorn main:app` over `python main.py`: `python main.py` binds `0.0.0.0` and its `--port` flag overrides the database path. Set `MESH_DB_PATH` for an isolated data file.\n\nBoth nodes were tested from a page on another origin (`http://localhost:8000`): requests were allowed, including preflight for POST, PUT and DELETE. The app sends the session token as a `?token=` query parameter, so no Authorization header is needed.\n\nTo share the node with other people, it must be reachable from their machines, which was **not tested** (**unverified**): only `127.0.0.1` was used. Binding `0.0.0.0` (what `python main.py` does) or putting the node behind a public `https` address is up to you.\n\n## 2. Point the app at the node\n\n1. Open **MESH** from the Canvas navigation and press **Get started**. On a fresh browser the welcome screen and **Get started** open in **Demo** mode with no hint that you are not on a real node.\n2. Click the gear icon (Settings). **Demo mode is ticked by default**: **untick Demo mode**.\n3. Set **Node URL** (for example `http://localhost:12000`, or the address you share).\n4. Press **Save & reconnect**. The pill must change from Demo to Connected.\n\n## 3. Check the connection\n\nThe pill under \"MESH\" shows the state:\n\n| Pill | Meaning |\n|---|---|\n| Connecting… | Waiting for the node |\n| Connected · node-id | The node answered; hover for the URL and protocol version |\n| Demo | In-memory sample data; a notice says why (for example \"Cannot reach http://localhost:12000\") |\n| Disconnected · node-id | The app was connected, but the node no longer answers. A banner says \"Cannot reach ...\" with a **Retry node** button. Your identity and the messages already on screen stay; the pill returns to Connected on the next successful request or retry. |\n\nSettings repeats the state, including the MESH version and the detected flavor (v1 or v2).\n\n## 4. Create your identity\n\n1. Click **Create your identity** at the bottom of the left column (or open Account); if you already have a key, use \"I already have a key: import it\".\n2. Choose a handle (v1.1 checks that it is free; on v2.0 a taken handle shows up as an error after you submit), a display name, an optional bio, and tick the agent box only if this identity is an AI agent.\n3. The app generates the keys in your browser, registers you and signs you in.\n4. **Export key** in Account and keep the file somewhere safe. If you clear browser storage without a backup, the identity is gone.\n\nTo use the same identity on another device or browser, use Account, then import the exported key.\n\n## 5. Find and follow people\n\n- Tell people your handle (v1.1) or your entity id `ent:...` (shown in Account). On v2.0 nodes **handle search is not supported**: paste the `ent:` entity id.\n- On v2.0 you will not see someone's reply until you follow its author (there is no replies endpoint; replies are derived from the feeds you fetch).\n- Use the members column search (placeholder \"@handle or entity id\") to find someone, then press Follow. Followed accounts feed the **Following** tab.\n- **Global feed** shows public posts on v1.1 nodes.\n- You can start a direct message with **+ New** under Direct messages, or from a member's DM button, but see \"What does not work yet\": the other person cannot read it today.\n- On v1.1 nodes, create or join a **public** group under **Groups** (type the name and press Join). Do not use \"Private\": the node has no invite or add-member endpoint (only admin, kick and ban), so nobody else can join a private group and it does not appear in other people's rails. The node also returned a non-member the private group's content through `GET /api/content?group_id=`, which is a privacy hole in the node (to be fixed there, not in this app).\n\n## 6. Share links and keys\n\n- Share your handle or entity id, not your key. Never send an exported key to anyone: it is your account.\n- There is no invite link feature in this app (not found in the code).\n\n## Known issues\n\n- **v1.1 node: reading DMs fails with HTTP 500** (`GET /api/messages/conversations` and `GET /api/messages/{id}`, `sqlite3.OperationalError: malformed JSON`, from the `json_extract` queries in `main.py` around lines 3552 to 3558). It fails for **anyone whose DM partner has ever posted plain text**, so in normal use DM reading effectively never works. Sending works and the node stores the message. This is a bug in the node, not in this app, and there is no workaround in the app. Suggested node fix (not done here): make the DM queries skip non-JSON bodies, for example guard with `json_valid(body)`.\n  - What you see: a browser cannot read an error response without CORS headers, so the app asks the node's info endpoint whether it is up. If it is, the message says \"The node is up but could not load this view (it returned an error)\". If you just sent a DM, it stays on screen marked **Sent**, with the line \"Replies cannot be loaded from this node right now\".\n- **v2.0 node: DMs cannot be received.** A DM can be sent (encrypted to the recipient's key) but the node has no read endpoint. Only what you sent in this session is shown.\n- **Private groups** cannot be joined by anyone else (no invite or add-member endpoint), and the node leaks their content to non-members through `GET /api/content?group_id=`. See step 5.\n- **v1.1 attestations**: the node answers \"This node does not accept attestations\"; labels are a v2.0 feature.\n\n## Troubleshooting\n\n| Symptom | Likely cause and fix |\n|---|---|\n| Header says Demo and the notice says \"Cannot reach …\" | The node is not running, the URL or port is wrong, or the address is blocked. Check the URL in Settings, make sure Demo mode is unticked, and press Retry node. |\n| Pill says Disconnected and a banner says \"Cannot reach …\" | The node stopped answering after you connected. Start it again and press Retry node; your identity and loaded messages are kept. |\n| \"The node answered 500\" or \"The node is up but could not load this view\" | The node is running but failed on that request. In the Direct messages view of a v1.1 node this is the known DM bug above. |\n| \"Not a MESH node (no /.well-known/mesh-node)\" | The URL answers but is not a MESH node. Check the path; the URL may include a path prefix. |\n| Page is `https` but the node is `http` | Browsers can block mixed content. Use an `https` node address (**unverified**). |\n| \"Read-only: create or import an identity in Account to post.\" | You have no identity in this browser. Create or import one. |\n| \"Your identity is not registered on this node yet.\" | The key exists but this node has no entity for it. Register it in Account. |\n| \"Signed out: sign in from Account to post.\" | Session expired or the node restarted; v2.0 keeps sessions in memory. Sign in again. |\n| \"This browser has no WebCrypto Ed25519\" | Use a newer browser, or Demo mode. |\n| DM refused: recipient has no encryption key (v2.0) | The recipient registered without an X25519 key. They need an identity with an encryption key (made in a browser that supports X25519). |\n| Group, global feed, delete, profile edit or labels missing | The node version does not offer them (see About this implementation). |\n| Followed list empty after switching browser (v2.0) | The v2.0 follow list is stored locally, not on the node. |\n" },
+  { id: "protocol-overview", title: "MESH protocol: overview", markdown: "# MESH protocol: overview\n\n> Source: https://github.com/FraterCCCLXIII/mesh-protocol/blob/main/README.md (lines 17-60 and 127-137). Imported verbatim from the MESH protocol repository (CC0 1.0). Text is unedited; other sections of the source are omitted for length. The MESH repository itself is the authority; this is a copy.\n\n## What is MESH?\n\nMESH is a layered protocol for decentralized social networking:\n\n```\n┌─────────────────────────────────────────────────────────────────────┐\n│                    APPLICATION (mobile, web, bots)                  │\n├─────────────────────────────────────────────────────────────────────┤\n│                    NETWORK (HTTP, WebSocket, federation)            │\n├─────────────────────────────────────────────────────────────────────┤\n│                    VIEW (feeds, algorithms, caching)                │\n├─────────────────────────────────────────────────────────────────────┤\n│                    MODERATION (attestations, trust networks)        │\n├─────────────────────────────────────────────────────────────────────┤\n│                    SOCIAL (Entity, Content, Link)                   │\n├─────────────────────────────────────────────────────────────────────┤\n│                    INTEGRITY (DAG, merge, verification)             │\n├─────────────────────────────────────────────────────────────────────┤\n│                    STORAGE (SQLite, PostgreSQL)                     │\n├─────────────────────────────────────────────────────────────────────┤\n│                    PRIVACY (Ed25519, X25519, AES-GCM)               │\n└─────────────────────────────────────────────────────────────────────┘\n```\n\n## Key Features\n\n| Feature | Description |\n|---------|-------------|\n| **Self-sovereign identity** | Ed25519 keys are your identity |\n| **Multi-device support** | Device keys with automatic merge |\n| **End-to-end encryption** | X25519 + AES-256-GCM for DMs/groups |\n| **Verifiable feeds** | Deterministic computation |\n| **Composable moderation** | Third-party attestations |\n| **Optional recovery** | Social, custodial, or hardware backup |\n| **High performance** | 6,000+ writes/sec, 37M+ DAU per node |\n\n## Performance\n\n| Operation | Time | Throughput |\n|-----------|:----:|:----------:|\n| Ed25519 sign+verify | 0.15ms | 6,700/sec |\n| Storage write | 0.17ms | 6,000/sec |\n| Simple query | 0.19ms | 5,300/sec |\n| View execution | 2.76ms | 360/sec |\n\n## Comparison with Other Protocols\n\n| Feature | MESH | Nostr | ActivityPub | SSB | AT Protocol |\n|---------|:----:|:-----:|:-----------:|:---:|:-----------:|\n| Self-sovereign ID | ✓ | ✓ | ✗ | ✓ | ✗ |\n| Multi-device | ✓ | ✗ | ✓ | ✗ | ✓ |\n| E2EE | ✓ | ✗ | ✗ | ✓ | ✗ |\n| Fork handling | ✓ Auto | N/A | N/A | ✗ Manual | ✓ |\n| Identity recovery | ✓ Optional | ✗ | ✓ | ✗ | ✓ |\n| Custom algorithms | ✓ | ✗ | ✗ | ✗ | ✓ |\n\n\n" },
+  { id: "protocol-foundations", title: "MESH spec v1.1: overview, principles, architecture", markdown: "# MESH spec v1.1: overview, principles, architecture\n\n> Source: https://github.com/FraterCCCLXIII/mesh-protocol/blob/main/specs/MESH_PROTOCOL_v1.1.md (lines 36-143). Imported verbatim from the MESH protocol repository (CC0 1.0). Text is unedited; other sections of the source are omitted for length. The MESH repository itself is the authority; this is a copy.\n\n## 1. Overview\n\n### 1.1 What is MESH?\n\nMESH is a modular, layered protocol for decentralized social networking that provides:\n\n- **Self-sovereign identity** via Ed25519 cryptographic keys\n- **Append-only integrity** via prev-chain linked events\n- **Multi-device support** via device keys and automatic merge ← **NEW**\n- **End-to-end encryption** via X25519 + AES-256-GCM\n- **Verifiable feeds** via deterministic view computation\n- **Composable moderation** via third-party attestations\n- **Optional identity recovery** via social recovery or custodial backup ← **NEW**\n- **Horizontal scalability** via content-addressed data\n\n### 1.2 Key Properties\n\n| Property | Mechanism |\n|----------|-----------|\n| Decentralized | No required central servers |\n| Self-sovereign | Users own their keys and data |\n| Multi-device | Device keys with automatic merge |\n| Censorship-resistant | Data replicates across relays |\n| Privacy-preserving | E2EE for DMs and private groups |\n| Verifiable | Deterministic feed computation |\n| Recoverable | Optional social/custodial recovery |\n| Scalable | Content-addressed, shardable |\n\n### 1.3 Design Goals\n\n1. **Simplicity** - Minimal primitive set (Entity, Content, Link)\n2. **Integrity** - Provable append-only history\n3. **Practicality** - Works with real-world usage patterns ← **EMPHASIZED**\n4. **Privacy** - Encryption built-in, not bolted on\n5. **Modularity** - Use only the layers you need\n6. **Performance** - 6,000+ writes/sec, 5,000+ queries/sec\n\n---\n\n## 2. Design Principles\n\n### 2.1 Core Principles\n\n1. **Keys are identity** - Your Ed25519 keypair IS your identity\n2. **Events are immutable** - Once written, events cannot be changed\n3. **State is derived** - Current state is computed from event history\n4. **Forks are normal** - Multi-device naturally creates forks; merge them ← **NEW**\n5. **Attestations are separate** - Third-party claims never modify facts\n6. **Views are deterministic** - Same inputs always produce same outputs\n7. **Recovery is optional** - Users choose their security/convenience tradeoff ← **NEW**\n8. **Layers are optional** - Clients choose which layers to implement\n\n### 2.2 Tradeoffs Made\n\n| Tradeoff | Choice | Rationale |\n|----------|--------|-----------|\n| Event logs vs state | Event logs | Auditability, sync simplicity |\n| Push vs pull sync | Pull with subscriptions | Efficiency, offline support |\n| Keys vs delegated identity | Keys with optional recovery | Self-sovereignty + practicality |\n| Local-first vs relay-based | Hybrid | Flexibility, resilience |\n| Single chain vs multi-head | **Multi-head with merge** | Multi-device support |\n| Client-side vs protocol moderation | Client-side with attestations | Freedom, composability |\n| E2EE default vs optional | Optional with easy E2EE | Performance, usability |\n\n### 2.3 What MESH Does NOT Do\n\n- **Consensus** - No blockchain, no global ordering\n- **Payments** - No built-in cryptocurrency\n- **Storage guarantees** - Relays may drop data\n- **Forced recovery** - Recovery is opt-in, not mandatory\n- **Content moderation** - Protocol provides tools, not policies\n\n---\n\n## 3. Architecture\n\n### 3.1 Layer Stack\n\n```\n┌─────────────────────────────────────────────────────────────────────┐\n│                    LAYER 8: APPLICATION                             │\n│              (Mobile, Web, Desktop, Bots, VR)                       │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 7: NETWORK                                 │\n│           (HTTP API, WebSocket, Federation, P2P)                    │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 6: VIEW                                    │\n│        (ViewDefinitions, Reducers, Execution Limits)                │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 5: MODERATION                              │\n│           (Attestations, Trust Networks, Conflict Resolution)       │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 4: SOCIAL                                  │\n│              (Entity, Content, Link primitives)                     │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 3: INTEGRITY                               │\n│         (LogEvent, Multi-Head DAG, Automatic Merge)                 │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 2: STORAGE                                 │\n│            (SQLite/PostgreSQL, Indexes, Caching)                    │\n├─────────────────────────────────────────────────────────────────────┤\n│                    LAYER 1: PRIVACY                                 │\n│     (Ed25519, X25519, AES-256-GCM, Device Keys, Recovery Keys)      │\n└─────────────────────────────────────────────────────────────────────┘\n```\n\n---\n\n\n" },
+  { id: "protocol-privacy-integrity", title: "MESH spec v1.1: privacy, storage and integrity layers", markdown: "# MESH spec v1.1: privacy, storage and integrity layers\n\n> Source: https://github.com/FraterCCCLXIII/mesh-protocol/blob/main/specs/MESH_PROTOCOL_v1.1.md (lines 144-488). Imported verbatim from the MESH protocol repository (CC0 1.0). Text is unedited; other sections of the source are omitted for length. The MESH repository itself is the authority; this is a copy.\n\n## 4. Layer 1: Privacy Layer\n\n### 4.1 Overview\n\nThe Privacy Layer provides cryptographic primitives for identity, authentication, encryption, and recovery.\n\n### 4.2 Identity Hierarchy ← **NEW SECTION**\n\nMESH supports a hierarchical key structure for practical multi-device use:\n\n```\n                    ┌─────────────────┐\n                    │   Root Key      │\n                    │   (Ed25519)     │\n                    │   KEEP OFFLINE  │\n                    └────────┬────────┘\n                             │\n              ┌──────────────┼──────────────┐\n              │              │              │\n              ▼              ▼              ▼\n        ┌──────────┐  ┌──────────┐  ┌──────────┐\n        │ Device 1 │  │ Device 2 │  │ Device 3 │\n        │   Key    │  │   Key    │  │   Key    │\n        └──────────┘  └──────────┘  └──────────┘\n              │              │              │\n              ▼              ▼              ▼\n        ┌──────────┐  ┌──────────┐  ┌──────────┐\n        │ Phone    │  │ Laptop   │  │ Desktop  │\n        └──────────┘  └──────────┘  └──────────┘\n```\n\n**Key Types:**\n\n| Key Type | Purpose | Storage | Compromise Impact |\n|----------|---------|---------|-------------------|\n| Root Key | Identity anchor | Offline/hardware | Total identity loss |\n| Device Key | Day-to-day signing | On device | Revoke that device |\n| Recovery Key | Account recovery | Trusted parties | Recovery possible |\n\n### 4.3 Root Identity\n\nThe root identity is the canonical identity:\n\n```typescript\ninterface RootIdentity {\n  id: string;                    // ent:sha256(root_public_key)[:32]\n  root_public_key: bytes;        // Ed25519 - KEEP PRIVATE KEY OFFLINE\n  device_keys: DeviceKey[];      // Authorized device keys\n  recovery_config?: RecoveryConfig;\n  created_at: timestamp;\n  sig: bytes;                    // Signed by root key\n}\n\ninterface DeviceKey {\n  device_id: string;\n  public_key: bytes;             // Ed25519\n  name: string;                  // \"iPhone\", \"Laptop\", etc.\n  authorized_at: timestamp;\n  expires_at?: timestamp;\n  revoked: boolean;\n  capabilities: string[];        // [\"post\", \"follow\", \"dm\", \"admin\"]\n  sig: bytes;                    // Signed by root key\n}\n```\n\n### 4.4 Device Key Authorization\n\nTo authorize a new device:\n\n```python\ndef authorize_device(root_key: SigningKeyPair, device_public_key: bytes, name: str) -> DeviceKey:\n    device = DeviceKey(\n        device_id=generate_device_id(device_public_key),\n        public_key=device_public_key,\n        name=name,\n        authorized_at=now(),\n        revoked=False,\n        capabilities=[\"post\", \"follow\", \"dm\"],\n    )\n    device.sig = root_key.sign(canonical_json(device.to_dict()))\n    return device\n```\n\n### 4.5 Signature Verification (Updated)\n\nSignatures can come from root key OR authorized device key:\n\n```python\ndef verify_event_signature(event: LogEvent, identity: RootIdentity) -> bool:\n    # Try root key\n    if verify_signature(identity.root_public_key, event_bytes, event.sig):\n        return True\n    \n    # Try device keys\n    for device in identity.device_keys:\n        if device.revoked:\n            continue\n        if device.expires_at and device.expires_at < now():\n            continue\n        if verify_signature(device.public_key, event_bytes, event.sig):\n            # Check capability\n            if event_requires_capability(event) in device.capabilities:\n                return True\n    \n    return False\n```\n\n### 4.6 Key Rotation\n\nDevice keys can be rotated without changing identity:\n\n```python\ndef rotate_device_key(root_key: SigningKeyPair, old_device_id: str, new_device_public_key: bytes):\n    # Revoke old\n    revocation = DeviceKeyRevocation(\n        device_id=old_device_id,\n        revoked_at=now(),\n        reason=\"rotation\",\n    )\n    revocation.sig = root_key.sign(...)\n    \n    # Authorize new\n    new_device = authorize_device(root_key, new_device_public_key, \"Rotated Device\")\n    \n    return revocation, new_device\n```\n\n---\n\n## 5. Layer 2: Storage Layer\n\n*[Same as v1.0 - see original spec]*\n\n---\n\n## 6. Layer 3: Integrity Layer\n\n### 6.1 Overview\n\nThe Integrity Layer ensures append-only semantics while supporting **multi-device usage through a DAG structure with automatic merge**.\n\n### 6.2 Multi-Head DAG (Key Change from v1.0) ← **MAJOR UPDATE**\n\n**Problem with strict single-chain:**\n- User posts from phone\n- User posts from laptop before sync\n- Result: FORK → terrible UX\n\n**Solution: Allow multiple heads with automatic merge**\n\n```\n        Event 1 (laptop)\n       /\nRoot ─┤\n       \\\n        Event 2 (phone)\n       \n        ↓ Automatic merge\n       \n        Event 1 (laptop)\n       /                \\\nRoot ─┤                  ├─ Merge Event\n       \\                /\n        Event 2 (phone)\n```\n\n### 6.3 LogEvent (Updated)\n\n```typescript\ninterface LogEvent {\n  id: string;                    // sha256(actor:device:local_seq)[:48]\n  actor: string;                 // entity_id of author\n  device_id: string;             // Which device created this ← NEW\n  \n  // DAG structure (changed from single prev)\n  parents: string[];             // Previous event IDs (1 or more) ← CHANGED\n  local_seq: number;             // Per-device sequence number ← CHANGED\n  \n  // Lamport timestamp for ordering\n  lamport: number;               // max(parent.lamport) + 1 ← NEW\n  \n  op: \"create\" | \"update\" | \"delete\";\n  object_type: \"entity\" | \"content\" | \"link\" | \"state\" | \"attestation\" | \"view\";\n  object_id: string;\n  payload: object;\n  \n  ts: timestamp;                 // Wall clock (informational only)\n  sig: bytes;                    // Signed by device key\n}\n```\n\n### 6.4 Fork Handling Strategies ← **NEW SECTION**\n\nMESH defines three fork handling strategies. Implementations MUST support at least one:\n\n#### Strategy 1: Automatic Merge (Recommended)\n\nFor most content, forks merge automatically:\n\n```python\ndef auto_merge(heads: list[LogEvent]) -> LogEvent:\n    \"\"\"Create a merge event that combines multiple heads.\"\"\"\n    \n    # Sort by lamport timestamp for deterministic ordering\n    sorted_heads = sorted(heads, key=lambda e: (e.lamport, e.id))\n    \n    merge_event = LogEvent(\n        id=generate_merge_id(sorted_heads),\n        actor=heads[0].actor,\n        device_id=\"merge\",  # Special device ID for merges\n        parents=[h.id for h in sorted_heads],\n        local_seq=0,\n        lamport=max(h.lamport for h in sorted_heads) + 1,\n        op=\"merge\",\n        object_type=\"merge\",\n        object_id=\"\",\n        payload={\n            \"merged_heads\": [h.id for h in sorted_heads],\n            \"strategy\": \"auto\",\n        },\n        ts=now(),\n        sig=b\"\",  # Merges are unsigned - deterministic from parents\n    )\n    \n    return merge_event\n```\n\n**Merge Rules by Object Type:**\n\n| Object Type | Merge Rule |\n|-------------|------------|\n| Content (post) | Both posts preserved, ordered by lamport |\n| Content (edit) | Last-write-wins by lamport |\n| Link (follow) | Union - if either says follow, follow |\n| Link (unfollow) | Last-write-wins by lamport |\n| Profile update | Last-write-wins by lamport |\n| Attestation | Both preserved |\n\n#### Strategy 2: Last-Write-Wins\n\nFor state that can't merge (e.g., profile bio):\n\n```python\ndef last_write_wins(heads: list[LogEvent]) -> LogEvent:\n    \"\"\"Select the head with highest lamport timestamp.\"\"\"\n    winner = max(heads, key=lambda e: (e.lamport, e.id))\n    \n    # Other heads are \"abandoned\" - still valid, but not current\n    return winner\n```\n\n#### Strategy 3: User Resolution\n\nFor rare conflicts that can't auto-resolve:\n\n```python\ndef request_user_resolution(heads: list[LogEvent]) -> UserResolutionRequest:\n    \"\"\"Present conflict to user for manual resolution.\"\"\"\n    return UserResolutionRequest(\n        conflict_type=\"unresolvable_fork\",\n        heads=heads,\n        message=\"Your account has conflicting changes. Please choose which to keep.\",\n        options=[\n            {\"id\": h.id, \"summary\": summarize_event(h)} \n            for h in heads\n        ],\n    )\n```\n\n**When to use each:**\n\n| Scenario | Strategy | Example |\n|----------|----------|---------|\n| Both devices posted | Auto merge | Both posts appear in timeline |\n| Both devices edited bio | LWW | Most recent bio wins |\n| Conflicting block/unblock | User resolution | \"Did you mean to block Alice?\" |\n\n### 6.5 Convergence Guarantee\n\nWith automatic merge, all devices eventually converge:\n\n```python\ndef sync_and_merge(local_events: list, remote_events: list) -> list:\n    # Combine all events\n    all_events = set(local_events + remote_events)\n    \n    # Find all heads (events with no children)\n    children = {e.id for e in all_events for p in e.parents}\n    heads = [e for e in all_events if e.id not in children]\n    \n    # If multiple heads, merge them\n    if len(heads) > 1:\n        merge = auto_merge(heads)\n        all_events.add(merge)\n    \n    return sorted(all_events, key=lambda e: e.lamport)\n```\n\n### 6.6 Offline Support\n\nDevices can work offline and merge later:\n\n```\nTimeline:\n─────────────────────────────────────────────────────►\n   │\n   │  Phone goes offline\n   │  ├── Post A (phone, lamport=5)\n   │  ├── Post B (phone, lamport=6)\n   │\n   │  Laptop continues online\n   │  ├── Post C (laptop, lamport=5)\n   │  ├── Post D (laptop, lamport=6)\n   │\n   │  Phone comes online\n   │  ├── Sync discovers fork\n   │  ├── Auto-merge creates merge event (lamport=7)\n   │  └── All 4 posts preserved, ordered by lamport\n   │\n```\n\n### 6.7 Preventing Malicious Forks\n\nWhile forks from honest multi-device use are normal, malicious forks are detected:\n\n```python\ndef detect_malicious_fork(events: list[LogEvent]) -> bool:\n    \"\"\"Detect if someone is intentionally creating many forks.\"\"\"\n    \n    # Count forks per time window\n    fork_events = [e for e in events if len(e.parents) > 1]\n    \n    # More than 10 forks per hour is suspicious\n    recent_forks = [e for e in fork_events if e.ts > now() - hours(1)]\n    if len(recent_forks) > 10:\n        return True\n    \n    # Same device creating forks is impossible (local_seq is sequential)\n    # Different devices creating occasional forks is normal\n    \n    return False\n```\n\n---\n\n\n" },
+  { id: "protocol-social-moderation", title: "MESH spec v1.1: social and moderation layers", markdown: "# MESH spec v1.1: social and moderation layers\n\n> Source: https://github.com/FraterCCCLXIII/mesh-protocol/blob/main/specs/MESH_PROTOCOL_v1.1.md (lines 489-789). Imported verbatim from the MESH protocol repository (CC0 1.0). Text is unedited; other sections of the source are omitted for length. The MESH repository itself is the authority; this is a copy.\n\n## 7. Layer 4: Social Layer\n\n*[Same as v1.0 - see original spec]*\n\n---\n\n## 8. Layer 5: Moderation Layer\n\n### 8.1 Overview\n\nThe Moderation Layer provides attestation-based moderation with **explicit conflict resolution and spam prevention**.\n\n### 8.2 Core Principle\n\n**Attestations NEVER modify facts.** They are separate claims that compose on top of the truth layer.\n\n### 8.3 Attestation (Same as v1.0)\n\n```typescript\ninterface Attestation {\n  id: string;\n  issuer: string;\n  subject: string;\n  type: \"trust\" | \"label\" | \"badge\" | \"block\" | \"verify\" | \"flag\";\n  claim: object;\n  evidence?: object;\n  ts: timestamp;\n  expires_at?: timestamp;\n  revoked: boolean;\n  sig: bytes;\n}\n```\n\n### 8.4 Conflicting Attestations ← **NEW SECTION**\n\nWhen attestations conflict, clients MUST resolve them:\n\n```typescript\ninterface AttestationConflict {\n  subject: string;\n  attestations: Attestation[];\n  conflict_type: \"contradictory\" | \"severity_mismatch\" | \"trust_conflict\";\n}\n```\n\n**Resolution Strategies:**\n\n#### 1. Trust-Weighted Resolution\n\n```python\ndef resolve_by_trust(conflicts: list[Attestation], trust_network: TrustNetwork) -> Attestation:\n    \"\"\"Resolve conflict by trust weight.\"\"\"\n    \n    def trust_score(att: Attestation) -> float:\n        if att.issuer in trust_network.direct_trust:\n            return trust_network.direct_trust[att.issuer]  # 0.0 - 1.0\n        \n        # Transitive trust (discounted)\n        for trusted in trust_network.trusted_issuers:\n            if att.issuer in get_trusted_by(trusted):\n                return trust_network.direct_trust[trusted] * 0.5\n        \n        return 0.0\n    \n    # Highest trust wins\n    return max(conflicts, key=trust_score)\n```\n\n#### 2. Recency Resolution\n\n```python\ndef resolve_by_recency(conflicts: list[Attestation]) -> Attestation:\n    \"\"\"Most recent attestation wins.\"\"\"\n    return max(conflicts, key=lambda a: a.ts)\n```\n\n#### 3. Severity Resolution\n\n```python\ndef resolve_by_severity(conflicts: list[Attestation]) -> Attestation:\n    \"\"\"Most severe attestation wins (safety-first).\"\"\"\n    severity_order = {\"block\": 3, \"flag\": 2, \"label\": 1, \"trust\": 0}\n    return max(conflicts, key=lambda a: severity_order.get(a.type, 0))\n```\n\n#### 4. Configurable Resolution\n\nUsers configure their preferred resolution:\n\n```typescript\ninterface ModerationConfig {\n  conflict_resolution: \"trust_weighted\" | \"recency\" | \"severity\" | \"manual\";\n  \n  // Trust weights\n  trust_weights: {\n    [issuer: string]: number;  // 0.0 - 1.0\n  };\n  \n  // Auto-apply rules\n  auto_block_threshold: number;     // e.g., 3 trusted issuers = auto-block\n  auto_hide_threshold: number;      // e.g., 2 trusted flags = auto-hide\n  \n  // Manual review queue\n  require_manual_review: string[];  // Attestation types requiring manual review\n}\n```\n\n### 8.5 Spam Attestation Prevention ← **NEW SECTION**\n\nAttestations themselves can be spammed. Prevention mechanisms:\n\n#### 1. Rate Limiting\n\n```python\nATTESTATION_LIMITS = {\n    \"per_issuer_per_hour\": 100,\n    \"per_subject_per_hour\": 50,\n    \"per_issuer_per_day\": 1000,\n}\n\ndef check_attestation_rate_limit(att: Attestation) -> bool:\n    recent_by_issuer = count_attestations(issuer=att.issuer, since=hours_ago(1))\n    if recent_by_issuer > ATTESTATION_LIMITS[\"per_issuer_per_hour\"]:\n        return False\n    \n    recent_on_subject = count_attestations(subject=att.subject, since=hours_ago(1))\n    if recent_on_subject > ATTESTATION_LIMITS[\"per_subject_per_hour\"]:\n        return False\n    \n    return True\n```\n\n#### 2. Stake/Reputation Requirements\n\n```python\ndef can_issue_attestation(issuer: str, att_type: str) -> bool:\n    issuer_reputation = get_reputation(issuer)\n    \n    # Higher-impact attestations require more reputation\n    required_reputation = {\n        \"label\": 10,\n        \"flag\": 50,\n        \"block\": 100,\n        \"verify\": 200,\n    }\n    \n    return issuer_reputation >= required_reputation.get(att_type, 0)\n```\n\n#### 3. Attestation Challenges\n\n```python\ndef challenge_attestation(att: Attestation, challenger: str, reason: str):\n    \"\"\"Allow challenging questionable attestations.\"\"\"\n    challenge = AttestationChallenge(\n        attestation_id=att.id,\n        challenger=challenger,\n        reason=reason,\n        ts=now(),\n    )\n    \n    # If enough challenges, attestation is flagged for review\n    challenges = get_challenges(att.id)\n    if len(challenges) >= 3:\n        flag_for_review(att)\n```\n\n### 8.6 Trust Bootstrapping ← **NEW SECTION**\n\nNew users need a way to bootstrap trust:\n\n#### 1. Well-Known Trust Anchors\n\n```python\nWELL_KNOWN_ANCHORS = [\n    \"ent:mesh_foundation\",      # Protocol foundation\n    \"ent:community_council\",    # Elected moderators\n    \"ent:verified_orgs\",        # Verified organizations\n]\n\ndef default_trust_network() -> TrustNetwork:\n    \"\"\"Starting trust network for new users.\"\"\"\n    return TrustNetwork(\n        trusted_issuers=WELL_KNOWN_ANCHORS,\n        trust_depth=1,\n        attestation_types=[\"label\", \"block\", \"flag\"],\n    )\n```\n\n#### 2. Social Trust Import\n\n```python\ndef import_trust_from_follows(user_id: str) -> TrustNetwork:\n    \"\"\"Build trust network from who user follows.\"\"\"\n    following = get_following(user_id)\n    \n    # People you follow have base trust\n    trust_weights = {f: 0.3 for f in following}\n    \n    # Mutual follows have higher trust\n    followers = get_followers(user_id)\n    for f in following:\n        if f in followers:\n            trust_weights[f] = 0.6\n    \n    return TrustNetwork(\n        trusted_issuers=list(trust_weights.keys()),\n        trust_weights=trust_weights,\n    )\n```\n\n#### 3. Trust Discovery\n\n```python\ndef discover_trusted_labelers(user_id: str) -> list[str]:\n    \"\"\"Find well-regarded labelers in user's network.\"\"\"\n    \n    # Get who user's trusted contacts trust\n    my_trusted = get_trust_network(user_id).trusted_issuers\n    \n    candidates = {}\n    for trusted in my_trusted:\n        their_trusted = get_trust_network(trusted).trusted_issuers\n        for candidate in their_trusted:\n            if candidate not in my_trusted:\n                candidates[candidate] = candidates.get(candidate, 0) + 1\n    \n    # Sort by how many trusted contacts trust them\n    return sorted(candidates.keys(), key=lambda c: candidates[c], reverse=True)[:10]\n```\n\n### 8.7 Moderation Policy Framework ← **NEW SECTION**\n\nMESH doesn't define policies, but provides a framework for them:\n\n```typescript\ninterface ModerationPolicy {\n  id: string;\n  name: string;                    // \"Family Friendly\", \"Free Speech\", etc.\n  description: string;\n  \n  // What this policy considers violations\n  violation_definitions: {\n    [violation_type: string]: {\n      description: string;\n      severity: \"low\" | \"medium\" | \"high\" | \"critical\";\n      auto_action?: \"hide\" | \"warn\" | \"block\";\n    };\n  };\n  \n  // Who enforces this policy\n  enforcers: string[];             // entity_ids of authorized labelers\n  \n  // Appeals process\n  appeals_contact?: string;\n  appeals_process?: string;\n}\n```\n\n**Example Policies:**\n\n```json\n{\n  \"id\": \"policy:mesh-default\",\n  \"name\": \"MESH Default Policy\",\n  \"violation_definitions\": {\n    \"spam\": {\"severity\": \"medium\", \"auto_action\": \"hide\"},\n    \"harassment\": {\"severity\": \"high\", \"auto_action\": \"warn\"},\n    \"illegal_content\": {\"severity\": \"critical\", \"auto_action\": \"block\"},\n    \"impersonation\": {\"severity\": \"high\", \"auto_action\": \"warn\"}\n  },\n  \"enforcers\": [\"ent:mesh_foundation\", \"ent:community_council\"]\n}\n```\n\nUsers choose which policies to adopt:\n\n```python\ndef apply_policies(content: Content, policies: list[str]) -> ModerationResult:\n    \"\"\"Apply selected moderation policies to content.\"\"\"\n    \n    results = []\n    for policy_id in policies:\n        policy = get_policy(policy_id)\n        attestations = get_attestations_from(policy.enforcers, subject=content.id)\n        \n        for att in attestations:\n            if att.claim.get(\"violation_type\") in policy.violation_definitions:\n                violation = policy.violation_definitions[att.claim[\"violation_type\"]]\n                results.append(ModerationAction(\n                    policy=policy_id,\n                    violation=att.claim[\"violation_type\"],\n                    severity=violation[\"severity\"],\n                    action=violation.get(\"auto_action\"),\n                ))\n    \n    return aggregate_results(results)\n```\n\n---\n\n\n" },
+  { id: "protocol-views-network", title: "MESH spec v1.1: view, network and application layers", markdown: "# MESH spec v1.1: view, network and application layers\n\n> Source: https://github.com/FraterCCCLXIII/mesh-protocol/blob/main/specs/MESH_PROTOCOL_v1.1.md (lines 790-968). Imported verbatim from the MESH protocol repository (CC0 1.0). Text is unedited; other sections of the source are omitted for length. The MESH repository itself is the authority; this is a copy.\n\n## 9. Layer 6: View Layer\n\n### 9.1 Overview\n\nThe View Layer provides deterministic feed computation with **explicit execution limits and cost controls**.\n\n### 9.2 Execution Limits ← **NEW SECTION**\n\nViews can be computationally expensive. Relays MUST enforce limits:\n\n```typescript\ninterface ViewExecutionLimits {\n  // Time limits\n  max_execution_time_ms: number;     // e.g., 5000ms\n  \n  // Resource limits\n  max_events_scanned: number;        // e.g., 100,000\n  max_memory_mb: number;             // e.g., 100MB\n  max_result_size: number;           // e.g., 1,000 events\n  \n  // Complexity limits\n  max_sources: number;               // e.g., 100\n  max_filters: number;               // e.g., 20\n  max_attestation_lookups: number;   // e.g., 10,000\n  \n  // Rate limits\n  executions_per_minute: number;     // e.g., 60\n  executions_per_hour: number;       // e.g., 1,000\n}\n\nconst DEFAULT_LIMITS: ViewExecutionLimits = {\n  max_execution_time_ms: 5000,\n  max_events_scanned: 100000,\n  max_memory_mb: 100,\n  max_result_size: 1000,\n  max_sources: 100,\n  max_filters: 20,\n  max_attestation_lookups: 10000,\n  executions_per_minute: 60,\n  executions_per_hour: 1000,\n};\n```\n\n### 9.3 View Cost Model ← **NEW SECTION**\n\nViews have an estimated cost for planning:\n\n```python\ndef estimate_view_cost(view_def: ViewDefinition) -> ViewCost:\n    \"\"\"Estimate computational cost of a view.\"\"\"\n    \n    cost = ViewCost()\n    \n    # Source costs\n    for source in view_def.sources:\n        if source.kind == \"actor\":\n            cost.events_to_scan += estimate_actor_events(source.actor_id)\n        elif source.kind == \"follows\":\n            following = len(get_following(source.actor_id))\n            cost.events_to_scan += following * AVG_EVENTS_PER_USER\n        elif source.kind == \"all\":\n            cost.events_to_scan += TOTAL_EVENTS  # Very expensive!\n    \n    # Filter costs\n    for filt in view_def.filters:\n        if filt.require_attestations:\n            cost.attestation_lookups += cost.events_to_scan\n        if filt.exclude_attestations:\n            cost.attestation_lookups += cost.events_to_scan\n    \n    # Reducer costs\n    if view_def.reducer == \"ranked\":\n        cost.complexity_multiplier = 2.0  # Scoring is expensive\n    elif view_def.reducer == \"custom\":\n        cost.complexity_multiplier = 5.0  # Unknown cost\n    \n    cost.total = (\n        cost.events_to_scan * 0.001 +\n        cost.attestation_lookups * 0.01\n    ) * cost.complexity_multiplier\n    \n    return cost\n```\n\n### 9.4 View Execution Sandbox ← **NEW SECTION**\n\nCustom reducers run in a sandbox:\n\n```typescript\ninterface ViewSandbox {\n  // Allowed operations\n  allowed_operations: [\n    \"read_events\",\n    \"read_attestations\", \n    \"sort\",\n    \"filter\",\n    \"aggregate\",\n  ];\n  \n  // Forbidden operations\n  forbidden: [\n    \"network_access\",\n    \"file_system\",\n    \"exec\",\n    \"eval\",\n  ];\n  \n  // Resource quotas\n  max_cpu_ms: number;\n  max_memory_bytes: number;\n  max_iterations: number;\n}\n```\n\nFor WebAssembly-based custom reducers:\n\n```python\ndef execute_custom_reducer(wasm_module: bytes, events: list, params: dict) -> list:\n    \"\"\"Execute custom reducer in WASM sandbox.\"\"\"\n    \n    sandbox = WasmSandbox(\n        memory_limit=100 * 1024 * 1024,  # 100MB\n        fuel_limit=1_000_000,             # Instruction limit\n        timeout_ms=5000,\n    )\n    \n    try:\n        result = sandbox.execute(wasm_module, {\n            \"events\": events,\n            \"params\": params,\n        })\n        return result\n    except SandboxTimeout:\n        raise ViewExecutionError(\"Custom reducer timed out\")\n    except SandboxMemoryExceeded:\n        raise ViewExecutionError(\"Custom reducer exceeded memory limit\")\n```\n\n### 9.5 View Abuse Prevention ← **NEW SECTION**\n\nPreventing view-based DoS:\n\n```python\ndef check_view_abuse(user_id: str, view_def: ViewDefinition) -> bool:\n    \"\"\"Check for view abuse patterns.\"\"\"\n    \n    cost = estimate_view_cost(view_def)\n    \n    # Reject obviously expensive views\n    if cost.total > MAX_VIEW_COST:\n        raise ViewTooExpensive(f\"View cost {cost.total} exceeds limit {MAX_VIEW_COST}\")\n    \n    # Rate limit expensive views\n    recent_expensive = count_expensive_views(user_id, since=minutes_ago(10))\n    if recent_expensive > 10:\n        raise RateLimited(\"Too many expensive views\")\n    \n    # Track cumulative cost\n    cumulative_cost = get_cumulative_cost(user_id, since=hours_ago(1))\n    if cumulative_cost + cost.total > HOURLY_COST_LIMIT:\n        raise CostLimitExceeded(\"Hourly view cost limit exceeded\")\n    \n    return True\n```\n\n---\n\n## 10. Layer 7: Network Layer\n\n*[Same as v1.0 - see original spec]*\n\n---\n\n## 11. Layer 8: Application Layer\n\n*[Same as v1.0 - see original spec]*\n\n---\n\n\n" },
+  { id: "protocol-sync-security", title: "MESH spec v1.1: sync protocol and security model", markdown: "# MESH spec v1.1: sync protocol and security model\n\n> Source: https://github.com/FraterCCCLXIII/mesh-protocol/blob/main/specs/MESH_PROTOCOL_v1.1.md (lines 1394-1488). Imported verbatim from the MESH protocol repository (CC0 1.0). Text is unedited; other sections of the source are omitted for length. The MESH repository itself is the authority; this is a copy.\n\n## 15. Sync Protocol\n\n### 15.1 Overview\n\nMESH uses **DAG-based sync** that handles multi-device naturally.\n\n### 15.2 Sync Algorithm (Updated for DAG)\n\n```python\nasync def sync_actor(actor_id: str, relay: Relay):\n    # 1. Get local heads (may be multiple)\n    local_heads = storage.get_heads(actor_id)\n    local_head_ids = {h.id for h in local_heads}\n    \n    # 2. Get remote heads\n    remote_heads = await relay.get_heads(actor_id)\n    remote_head_ids = {h.id for h in remote_heads}\n    \n    # 3. If same heads, in sync\n    if local_head_ids == remote_head_ids:\n        return\n    \n    # 4. Find missing events\n    local_known = storage.get_all_event_ids(actor_id)\n    remote_known = await relay.get_all_event_ids(actor_id)\n    \n    missing_local = remote_known - local_known\n    missing_remote = local_known - remote_known\n    \n    # 5. Fetch missing events\n    if missing_local:\n        events = await relay.get_events(actor_id, event_ids=missing_local)\n        for event in topological_sort(events):\n            if verify_event(event):\n                storage.store_event(event)\n    \n    # 6. Push events remote doesn't have\n    if missing_remote:\n        events = storage.get_events(actor_id, event_ids=missing_remote)\n        await relay.submit_events(events)\n    \n    # 7. Merge if needed\n    new_heads = storage.get_heads(actor_id)\n    if len(new_heads) > 1:\n        merge = auto_merge(new_heads)\n        storage.store_event(merge)\n        await relay.submit(merge)\n```\n\n---\n\n## 16. Security Model\n\n### 16.1 Updated Threat Model\n\n**In Scope:**\n- Impersonation (prevented by signatures)\n- Tampering (prevented by signatures + DAG)\n- Replay attacks (prevented by content-addressing)\n- Eavesdropping on DMs (prevented by E2EE)\n- **Key compromise on single device** (limited by device keys) ← **NEW**\n- **Malicious fork attacks** (detected and rate-limited) ← **NEW**\n\n**Out of Scope:**\n- Root key compromise (total identity loss)\n- Denial of service (relay responsibility)\n- Spam (addressed by moderation layer)\n- Sybil attacks (partially addressed by attestations)\n\n### 16.2 Device Key Compromise Response\n\nIf a device is compromised:\n\n```python\nasync def handle_device_compromise(root_key: SigningKeyPair, compromised_device_id: str):\n    # 1. Revoke compromised device\n    revocation = DeviceKeyRevocation(\n        device_id=compromised_device_id,\n        revoked_at=now(),\n        reason=\"compromised\",\n    )\n    revocation.sig = root_key.sign(...)\n    await relay.publish_revocation(revocation)\n    \n    # 2. Events from compromised device after revocation are invalid\n    # Clients MUST check revocation status when verifying\n    \n    # 3. Optionally: mark suspicious events\n    suspicious = get_events_by_device(compromised_device_id, since=suspected_compromise_time)\n    for event in suspicious:\n        await mark_as_suspicious(event)\n```\n\n---\n\n\n" },
+];
+// </docs:generated>
+
 // ─── Styles ───────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Drag handles for the outer columns of a page's grid (a left list and/or a right panel).
+ *
+ * `columns` is a list of `{ el, edge, min, max, initial, label }`: `el` is the column's element,
+ * `edge` is "left" for a column on the left side (its handle sits on its right edge) or "right"
+ * for one on the right side. The app's CSS must read each width from a variable, for example
+ * `grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px)`, where the
+ * number is the column's position in the `columns` list. Widths are saved per `storageKey`.
+ * Call `refresh()` after the app shows or hides a column; call `dispose()` on unmount.
+ */
+function gripColumns({ grid, columns, storageKey, centerMin = 320, narrowQuery = "(max-width: 720px)" }) {
+  const win = grid.ownerDocument.defaultView || globalThis;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const saved = (() => {
+    try { return JSON.parse(win.localStorage.getItem(storageKey) || "{}") || {}; } catch { return {}; }
+  })();
+  const widths = columns.map((c, i) => (Number.isFinite(saved[i]) ? clamp(saved[i], c.min, c.max) : c.initial));
+  const handles = [];
+  const cleanups = [];
+
+  const narrow = () => Boolean(win.matchMedia && win.matchMedia(narrowQuery).matches);
+  const shown = (i) => !narrow() && columns[i].el.isConnected && win.getComputedStyle(columns[i].el).display !== "none";
+  const save = () => { try { win.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(widths.map((w, i) => [i, w])))); } catch { /* storage unavailable */ } };
+  // The widest a column may get while the middle keeps `centerMin` and the other grips keep their widths.
+  const limit = (i) => {
+    const total = grid.clientWidth;
+    if (!total) return columns[i].max;
+    const others = widths.reduce((sum, w, j) => (j !== i && shown(j) ? sum + w : sum), 0);
+    return clamp(total - others - centerMin, columns[i].min, columns[i].max);
+  };
+
+  function apply() {
+    columns.forEach((c, i) => {
+      if (narrow()) grid.style.removeProperty(`--grip-${i}`);
+      else grid.style.setProperty(`--grip-${i}`, `${widths[i]}px`);
+      const h = handles[i];
+      h.hidden = !shown(i);
+      h.setAttribute("aria-valuenow", String(Math.round(widths[i])));
+      h.setAttribute("aria-valuemax", String(Math.round(limit(i))));
+    });
+  }
+
+  function set(i, width, persist = true) {
+    widths[i] = clamp(Math.round(width), columns[i].min, limit(i));
+    apply();
+    if (persist) save();
+  }
+
+  columns.forEach((c, i) => {
+    const h = grid.ownerDocument.createElement("div");
+    h.className = `grip grip-${c.edge}`;
+    h.dataset.grip = String(i);
+    h.setAttribute("role", "separator");
+    h.setAttribute("aria-orientation", "vertical");
+    h.setAttribute("aria-label", `Resize ${c.label || "column"}`);
+    h.setAttribute("aria-valuemin", String(c.min));
+    h.tabIndex = 0;
+    h.style[c.edge === "left" ? "left" : "right"] = `var(--grip-${i}, ${c.initial}px)`;
+    const dir = c.edge === "left" ? 1 : -1;
+    let startX = 0;
+    let startW = 0;
+    const move = (e) => { set(i, startW + dir * (e.clientX - startX), false); };
+    const up = () => {
+      grid.classList.remove("gripping");
+      h.classList.remove("on");
+      grid.ownerDocument.removeEventListener("pointermove", move);
+      grid.ownerDocument.removeEventListener("pointerup", up);
+      save();
+    };
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = widths[i];
+      grid.classList.add("gripping");
+      h.classList.add("on");
+      grid.ownerDocument.addEventListener("pointermove", move);
+      grid.ownerDocument.addEventListener("pointerup", up);
+    });
+    h.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const grow = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * dir;
+      if (grow) set(i, widths[i] + grow * step);
+      else if (e.key === "Home") set(i, c.min);
+      else if (e.key === "End") set(i, limit(i));
+      else return;
+      e.preventDefault();
+    });
+    h.addEventListener("dblclick", () => set(i, c.initial));
+    cleanups.push(() => { grid.ownerDocument.removeEventListener("pointermove", move); grid.ownerDocument.removeEventListener("pointerup", up); h.remove(); });
+    handles.push(h);
+    grid.append(h);
+  });
+
+  win.addEventListener("resize", apply);
+  cleanups.push(() => win.removeEventListener("resize", apply));
+  apply();
+  return { refresh: apply, widths: () => [...widths], dispose: () => cleanups.forEach((fn) => fn()) };
+}
+
+
+const GRIP_CSS = `
+.grip { position: absolute; top: 0; bottom: 0; width: 11px; z-index: 6; cursor: col-resize; touch-action: none; outline: 0; }
+.grip-left { transform: translateX(-50%); }
+.grip-right { transform: translateX(50%); }
+.grip::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: transparent; transition: background .12s; }
+.grip:hover::after, .grip:focus-visible::after, .grip.on::after { background: var(--oh-color-primary, #7c9dff); }
+.gripping { user-select: none; cursor: col-resize; }
+.gripping * { pointer-events: none; }
+.gripping .grip { pointer-events: auto; }
+@media (max-width: 720px) { .grip { display: none; } }
+`;
 
 const CSS = `
 .mh { --hg-bg: var(--oh-color-base, #171717); --hg-panel: var(--oh-color-base-secondary, #212121); --hg-raised: var(--oh-surface-raised, #2a2a2a);
   --hg-text: var(--oh-foreground, #eee); --hg-contrast: var(--oh-contrast, #fff); --hg-muted: var(--oh-muted, #9a9a9a);
-  --hg-border: var(--oh-border-subtle, #3a3a3a); --hg-primary: var(--oh-color-primary, #fff); --hg-on-primary: var(--oh-accent-foreground, #111);
-  --hg-ok: var(--oh-success, #34d399); --hg-warn: #f2b51d; --hg-bad: #ef4444; --hg-info: #7c9dff;
+  --hg-border: var(--oh-border-subtle, #3a3a3a); --hg-primary: var(--oh-accent, var(--oh-color-primary, #fff)); --hg-on-primary: var(--oh-accent-foreground, #111);
+  --hg-on-contrast: var(--oh-contrast-foreground, #111);
+  --hg-ok: var(--oh-success, #34d399); --hg-warn: var(--oh-warning-soft-foreground, #f2b51d); --hg-bad: var(--oh-danger-soft-foreground, #ef4444); --hg-info: var(--oh-info-soft-foreground, #7c9dff);
   box-sizing: border-box; position: sticky; top: 0; color: var(--hg-text); background: var(--hg-bg); font: 14px/1.45 system-ui, sans-serif;
   height: 100dvh; max-height: 100dvh; min-height: 480px; overflow: hidden; overscroll-behavior: contain; }
 .mh *, .mh *::before, .mh *::after { box-sizing: border-box; }
 .mh button, .mh input, .mh textarea, .mh select { font: inherit; color: inherit; }
 .mh button { cursor: pointer; }
-.mh .shell { display: grid; grid-template-columns: 300px minmax(0, 1fr) 280px; height: 100%; min-height: 0; }
-.mh .shell.welcoming { grid-template-columns: 300px minmax(0, 1fr); }
+.mh .shell { position: relative; display: grid; grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px); height: 100%; min-height: 0; }
+.mh .shell.welcoming { grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr); }
 .mh .col { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .mh .list { border-right: 1px solid var(--hg-border); background: var(--hg-bg); }
 .mh .members { border-left: 1px solid var(--hg-border); background: var(--hg-bg); }
@@ -1017,6 +1205,7 @@ const CSS = `
 .mh .status[data-mode="connected"] i { background: var(--hg-ok); }
 .mh .status[data-mode="demo"] i { background: var(--hg-warn); }
 .mh .status[data-mode="connecting"] i { background: var(--hg-info); }
+.mh .status[data-mode="disconnected"] i { background: var(--hg-bad); }
 .mh .iconbtn { border: 0; background: transparent; border-radius: 10px; padding: 7px; line-height: 0; color: var(--hg-muted); }
 .mh .iconbtn svg { width: 18px; height: 18px; display: block; }
 .mh .lhead { align-items: flex-start; padding: 16px 14px 14px; }
@@ -1040,7 +1229,7 @@ const CSS = `
 .mh .msg.me .bubble { background: var(--hg-primary); color: var(--hg-on-primary); }
 .mh .bubble { display: inline-block; max-width: min(100%, 640px); margin-top: 3px; padding: 8px 14px; border-radius: 16px; background: var(--hg-raised); overflow-wrap: anywhere; }
 .mh .msg.me .bubble .md a, .mh .msg.me .bubble .md strong { color: inherit; }
-.mh .acts { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; opacity: .85; }
+.mh .acts { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; opacity: .95; }
 .mh .acts button { border: 0; background: transparent; color: var(--hg-muted); font-size: 12px; padding: 2px 6px; border-radius: 6px; }
 .mh .acts button:hover { background: var(--hg-panel); color: var(--hg-contrast); }
 .mh .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 0 7px; line-height: 18px; border-radius: 999px; border: 1px solid currentColor; }
@@ -1057,7 +1246,8 @@ const CSS = `
 .mh .composerbox .chip button { border: 0; background: transparent; color: var(--hg-info); }
 .mh .composerbox textarea { flex: 1; min-width: 0; resize: none; border: 0; outline: 0; background: transparent; padding: 6px 4px; max-height: 160px; }
 .mh .send { border: 0; border-radius: 999px; background: var(--hg-primary); color: var(--hg-on-primary); padding: 7px 16px; font-weight: 500; }
-.mh .send:disabled, .mh textarea:disabled { opacity: .45; cursor: not-allowed; }
+.mh button.send:disabled { opacity: .75; cursor: not-allowed; }
+.mh textarea:disabled { opacity: .45; cursor: not-allowed; }
 .mh .search { display: flex; gap: 6px; padding: 8px 12px; }
 .mh .search input, .mh .modal input, .mh .modal textarea, .mh .modal select { flex: 1; min-width: 0; border: 1px solid var(--hg-border); border-radius: 10px; background: var(--hg-panel); padding: 7px 10px; outline: 0; }
 .mh .search button, .mh .modal button.btn { border: 1px solid var(--hg-border); background: var(--hg-raised); border-radius: 10px; padding: 6px 12px; }
@@ -1068,18 +1258,34 @@ const CSS = `
 .mh .mrow .name > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mh .mrow .follow { border: 1px solid var(--hg-border); background: transparent; border-radius: 999px; font-size: 12px; padding: 1px 10px; }
 .mh .powered { display: flex; align-items: center; gap: 6px; color: var(--hg-muted); font-size: 12px; }
-.mh .powered b { color: var(--hg-text); font-weight: 600; }
+.mh .plogo { display: inline-flex; color: inherit; opacity: .7; }
+.mh .plogo:hover { opacity: 1; }
+.mh .plogo svg { height: 16px; width: auto; }
 .mh .lpowered { flex: none; justify-content: center; padding: 8px 10px; border-top: 1px solid var(--hg-border); }
-.mh .poweredmark { width: 18px; height: 18px; display: inline-block; }
-.mh .poweredmark svg { width: 100%; height: 100%; }
 .mh .welcome { flex: 1; position: relative; display: grid; place-items: center; align-content: center; text-align: center; overflow: hidden; padding: 24px 24px 64px; }
 .mh .welcome .worb { width: 160px; height: 160px; margin: 0 auto 18px; }
 .mh .welcome .worb svg { width: 100%; height: 100%; }
 .mh .welcome .minis { display: flex; gap: 14px; justify-content: center; margin-bottom: 18px; }
 .mh .welcome h1 { margin: 0 0 6px; font-size: 40px; font-weight: 300; letter-spacing: -.01em; color: var(--hg-contrast); }
 .mh .welcome p { margin: 0 auto 18px; max-width: 360px; font-weight: 300; color: var(--hg-muted); }
-.mh .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-bg); padding: 10px 22px; }
+.mh .welcome .wgo { border: 0; border-radius: 999px; background: var(--hg-contrast); color: var(--hg-on-contrast); padding: 10px 22px; }
 .mh .welcome .wpowered { position: absolute; left: 0; right: 0; bottom: 16px; justify-content: center; }
+.mh .welcome .wactions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.mh .welcome .wdocs { border: 1px solid var(--hg-border); border-radius: 999px; background: transparent; color: var(--hg-text); padding: 10px 18px; }
+.mh .welcome .wdocs:hover { background: var(--hg-panel); color: var(--hg-contrast); }
+.mh .docslink { flex: none; align-self: flex-start; margin: 0 12px 4px; border: 0; background: transparent; color: var(--hg-muted); font-size: 12px; padding: 2px 6px; border-radius: 6px; text-decoration: underline; text-underline-offset: 2px; }
+.mh .docslink:hover { background: var(--hg-panel); color: var(--hg-contrast); }
+.mh .docs { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.mh .docs .headbtn { border: 1px solid var(--hg-border); background: var(--hg-raised); border-radius: 8px; padding: 4px 12px; }
+.mh .docs .dbody { flex: 1; min-height: 0; display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+.mh .docs .dnav { overflow-y: auto; padding: 8px; display: grid; align-content: start; gap: 2px; }
+.mh .docs .dlink { white-space: normal; font-size: 13px; line-height: 18px; }
+.mh .docs .dpage { overflow-y: auto; padding: 12px 24px 32px; min-width: 0; }
+.mh .docs .dpage > h2 { margin: 12px 0; font-size: 20px; line-height: 28px; color: var(--hg-contrast); outline: none; }
+.mh .docs .dpage > h2:focus-visible { outline: 2px solid var(--hg-info); outline-offset: 4px; border-radius: 4px; }
+.mh .docs .dtools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mh .docs .dpage .md { max-width: 820px; }
+@media (max-width: 700px) { .mh .docs .dbody { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } .mh .docs .dnav { max-height: 30vh; border-bottom: 1px solid var(--hg-border); } .mh .docs .dpage { padding: 12px 16px 24px; } }
 .mh .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 10; padding: 16px; }
 .mh .modal { width: min(520px, 100%); max-height: 100%; overflow-y: auto; background: var(--hg-panel); border: 1px solid var(--hg-border); border-radius: 16px; padding: 18px; display: grid; gap: 10px; }
 .mh .modal h3 { margin: 0; color: var(--hg-contrast); }
@@ -1117,7 +1323,7 @@ const CSS = `
 .mh .sectbtn { border: 0; background: transparent; color: var(--hg-info); font-size: 11px; letter-spacing: 0; text-transform: none; padding: 0 4px; }
 .mh .acct { flex: none; border-top: 1px solid var(--hg-border); border-radius: 0; padding: 10px 14px; }
 .mh .headbtn { border: 1px solid var(--hg-border); background: var(--hg-raised); border-radius: 999px; padding: 3px 14px; font-size: 13px; }
-.mh .headbtn.primary, .mh .btn.primary { background: var(--hg-primary); color: var(--hg-on-primary); border-color: transparent; }
+.mh .headbtn.primary, .mh .btn.primary, .mh .modal button.btn.primary { background: var(--hg-primary); color: var(--hg-on-primary); border-color: transparent; }
 .mh .btn.danger, .mh .dangerbtn { color: var(--hg-bad) !important; border-color: var(--hg-bad) !important; }
 .mh .modal form { display: grid; gap: 10px; }
 .mh .modal h4 { margin: 4px 0 0; color: var(--hg-contrast); font-size: 14px; }
@@ -1152,7 +1358,7 @@ const CSS = `
 .mh .mrow.found { background: var(--hg-panel); }
 .mh .mrow .follow { flex: none; }
 .mh .back { display: none; }
-@media (max-width: 1000px) { .mh .shell { grid-template-columns: 260px minmax(0, 1fr); } .mh .shell.welcoming { grid-template-columns: 260px minmax(0, 1fr); } .mh .members { display: none; } }
+@media (max-width: 1000px) { .mh .shell { grid-template-columns: var(--grip-0, 260px) minmax(0, 1fr); } .mh .shell.welcoming { grid-template-columns: var(--grip-0, 260px) minmax(0, 1fr); } .mh .members { display: none; } }
 @media (max-width: 700px) {
   .mh .shell, .mh .shell.welcoming { grid-template-columns: minmax(0, 1fr); }
   .mh[data-pane="list"] .main, .mh[data-pane="chat"] .list { display: none; }
@@ -1169,10 +1375,14 @@ const CSS = `
 .mh .row { gap: 12px; padding-left: 12px; padding-right: 12px; }
 .mh .avatar { width: 32px; height: 32px; }
 /* Fewer rules: the rails separate from the page by tone, not by lines. */
-.mh .list, .mh .members { border: 0; background: var(--hg-panel); }
+.mh .list { border: 0; background: transparent; }
+.mh .members { border: 0; background: var(--hg-panel); }
+/* While the welcome screen is up, the nav is dimmed and inert behind it. */
+.mh .shell.welcoming .list { position: relative; pointer-events: none; user-select: none; }
+.mh .shell.welcoming .list::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
 .mh .lhead, .mh .chead, .mh .mhead, .mh .lpowered, .mh .acct { border: 0; }
 .mh .msg .quote { border-left: 0; }
-`;
+` + GRIP_CSS;
 
 // ─── The page ─────────────────────────────────────────────────────────────────────────────
 
@@ -1328,6 +1538,11 @@ function mount(host, container) {
     finding: false,
     found: null,
     memberTab: "all",
+    down: false, // connected earlier, but the node no longer answers: shown as "Disconnected"
+    sentLocal: new Map(), // DM partner id -> messages sent from this session (nodes cannot always read them back)
+    threadNote: "", // small line about the open thread (for example: replies cannot be loaded)
+    errorDocs: false, // the error notice links to the Docs
+    docs: { open: false, page: DOCS[0].id, opener: "", pane: "list" }, // the built-in documentation reader
   };
 
   const me = () => state.client?.me || "";
@@ -1345,9 +1560,20 @@ function mount(host, container) {
 
   const poweredBy = (cls = "") => {
     const d = el("div", `powered${cls ? ` ${cls}` : ""}`);
-    const hand = el("span", "poweredmark");
-    hand.append(blobSvg("violet"));
-    d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
+    const logo = (href, svg) => {
+      const a = el("a", "plogo");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.setAttribute("aria-label", svg.getAttribute("aria-label"));
+      a.append(svg);
+      return a;
+    };
+    d.append(
+      el("span", "", "Built with"),
+      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
+      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+    );
     return d;
   };
 
@@ -1377,7 +1603,7 @@ function mount(host, container) {
 
   async function connect() {
     const run = ++connectRun;
-    state.mode = "connecting"; state.note = ""; state.info = null; state.heads = null;
+    state.mode = "connecting"; state.note = ""; state.info = null; state.heads = null; state.down = false;
     renderAll();
     if (cfg.forceDemo) return enterDemo("Demo mode is on.");
     let client;
@@ -1389,7 +1615,9 @@ function mount(host, container) {
       return enterDemo(`${err.message}. Showing Demo data until a node answers.`);
     }
     if (run !== connectRun || disposed) return undefined;
+    resetNodeData();
     state.client = client;
+    wireLinkHooks(client);
     client.onAuthExpired = () => {
       if (!state.identity) return Promise.resolve(false);
       if (!reauth) reauth = trySignIn(true).finally(() => { reauth = null; });
@@ -1408,6 +1636,64 @@ function mount(host, container) {
     return undefined;
   }
 
+  /** Members, follows, labels, DMs and the open thread belong to one data source. Drop them when switching between Demo and a node. */
+  function resetNodeData() {
+    state.entities = new Map();
+    state.labels = new Map();
+    state.following = new Set();
+    state.conversations = [];
+    state.groups = [];
+    state.groupInfo = null;
+    state.messages = [];
+    state.expanded = new Map();
+    state.shown = new Set();
+    state.liked = new Set();
+    state.boosted = new Set();
+    state.sentLocal = new Map();
+    state.found = null; state.findError = ""; state.replyTo = null; state.heads = null;
+    state.error = ""; state.errorDocs = false; state.threadNote = ""; state.down = false;
+  }
+
+  // ── Link state: a node that stops answering shows as Disconnected without leaving the screen ──
+  let linkCheck = null;
+  /** Probe the node once at a time. Marks the app Disconnected when the probe fails and Connected when it succeeds. Resolves to "up" or "down". */
+  function checkLink() {
+    const c = state.client;
+    if (!c || state.mode !== "connected") return Promise.resolve("up");
+    if (!linkCheck) {
+      linkCheck = c.probe().then((ok) => {
+        if (c === state.client && !disposed) setDown(!ok);
+        return ok ? "up" : "down";
+      }).finally(() => { linkCheck = null; });
+    }
+    return linkCheck;
+  }
+  function setDown(down) {
+    if (state.down === down) return;
+    state.down = down;
+    renderAll();
+  }
+  function wireLinkHooks(client) {
+    client.onNetworkError = () => { if (client === state.client) checkLink(); };
+    client.onReachable = () => {
+      if (client !== state.client || !state.down) return;
+      state.down = false;
+      renderAll();
+      refreshSide().then(() => { if (!disposed) renderAll(); });
+    };
+  }
+  const unreachableText = () => `Cannot reach ${state.client?.baseUrl || cfg.nodeUrl}. Check that the node is running and that this page may call it.`;
+  async function retryNode() {
+    const c = state.client;
+    if (!c) return;
+    const up = (await checkLink()) === "up";
+    if (!up) return; // the banner stays; the next successful request or retry reconnects
+    state.error = ""; state.errorDocs = false;
+    await refreshSide();
+    renderAll();
+    await loadChannel({ quiet: true });
+  }
+
   function updateSignNote() {
     if (state.mode !== "connected") { state.signNote = ""; return; }
     if (!state.edSupported) state.signNote = "This browser has no WebCrypto Ed25519: browsing is read-only. Use Demo mode or a newer browser to post.";
@@ -1417,6 +1703,7 @@ function mount(host, container) {
   }
 
   async function enterDemo(note) {
+    resetNodeData();
     state.client = createDemoClient();
     state.mode = "demo";
     state.note = note;
@@ -1506,13 +1793,28 @@ function mount(host, container) {
     return kind === "dm" ? name : `${name}'s timeline`;
   };
 
+  /** Messages sent from this session that the node did not hand back (v2.0 has no DM read; v1.1 may fail to read). Matched by text. */
+  function withSentLocal(partner, serverItems) {
+    const local = state.sentLocal.get(partner) || [];
+    if (!local.length) return serverItems;
+    const counts = new Map();
+    serverItems.filter((m) => m.author === me()).forEach((m) => counts.set(m.body, (counts.get(m.body) || 0) + 1));
+    const pending = local.filter((m) => {
+      const n = counts.get(m.body) || 0;
+      if (n > 0) { counts.set(m.body, n - 1); return false; }
+      return true;
+    });
+    state.sentLocal.set(partner, pending);
+    return [...serverItems, ...pending];
+  }
+
   async function fetchChannel() {
     const c = state.client;
     const id = state.channel;
     if (id === "following") return c.feedFollowing();
     if (id === "global") return c.feedGlobal();
     if (id.startsWith("tl:")) return c.timeline(id.slice(3));
-    if (id.startsWith("dm:")) return c.messages(id.slice(3));
+    if (id.startsWith("dm:")) return withSentLocal(id.slice(3), await c.messages(id.slice(3)));
     if (id.startsWith("group:")) {
       const gid = id.slice(6);
       const [info, items] = await Promise.all([c.group(gid).catch(() => null), c.groupFeed(gid)]);
@@ -1524,20 +1826,54 @@ function mount(host, container) {
 
   async function loadChannel({ quiet = false } = {}) {
     const run = ++loadRun;
-    if (!quiet) { state.loading = true; state.error = ""; renderThread(); renderHead(); }
+    if (!quiet) { state.loading = true; state.error = ""; state.errorDocs = false; state.threadNote = ""; renderThread(); renderHead(); }
     try {
       const items = await fetchChannel();
       if (run !== loadRun || disposed) return;
       state.messages = items;
-      state.error = "";
+      state.error = ""; state.errorDocs = false; state.threadNote = "";
       await decorate(items);
     } catch (err) {
       if (run !== loadRun || disposed) return;
-      state.messages = [];
-      state.error = err.status === 401 ? `${err.message}.` : `Could not load this channel: ${err.message}`;
+      await explainLoadFailure(err, quiet);
+      if (run !== loadRun || disposed) return;
     }
     state.loading = false;
     renderAll();
+  }
+
+  /**
+   * Turn a failed channel read into an honest message. A browser cannot read a CORS-less HTTP 500 (fetch just throws), so a
+   * thrown fetch is told apart by probing the node's info endpoint: probe fails = unreachable, probe works = the node is up and
+   * the request itself failed.
+   */
+  async function explainLoadFailure(err, quiet) {
+    const dm = isDm() ? state.channel.slice(3) : "";
+    const local = dm ? state.sentLocal.get(dm) || [] : [];
+    state.errorDocs = false; state.threadNote = "";
+    if (err.status === 401) { state.messages = []; state.error = `${err.message}.`; return; }
+    if (err.network) {
+      const up = (await checkLink()) === "up";
+      if (!up) {
+        // Disconnected: keep what is already on screen (identity, loaded messages). The banner explains and offers Retry node.
+        if (!quiet) state.messages = dm ? [...local] : [];
+        state.error = "";
+        return;
+      }
+      state.messages = [...local];
+      if (local.length) { state.error = ""; state.threadNote = "Replies cannot be loaded from this node right now."; return; }
+      state.error = "The node is up but could not load this view (it returned an error). If this is the Direct messages view on a v1.1 node, this is a known node bug; see Docs.";
+      state.errorDocs = true;
+      return;
+    }
+    state.messages = [...local];
+    if (local.length) { state.error = ""; state.threadNote = "Replies cannot be loaded from this node right now."; return; }
+    if (err.status) {
+      state.error = `Could not load this channel: The node answered ${err.status}${err.detail ? ` (${err.detail})` : ""}.`;
+      state.errorDocs = Boolean(dm) && err.status >= 500;
+      return;
+    }
+    state.error = `Could not load this channel: ${err.message}`;
   }
 
   /** Fill in authors and labels for what is on screen. v1.1 labels ride on feed items; v2 asks per subject. */
@@ -1583,7 +1919,11 @@ function mount(host, container) {
       if (isDm()) {
         const pid = state.channel.slice(3);
         await c.sendDm(pid, text);
-        if (c.flavor === "v2") state.messages = [...state.messages, { id: `local-${Date.now()}`, author: c.me, kind: "dm", body: text, replyTo: null, createdAt: new Date().toISOString(), labels: [], likeCount: 0, replyCount: 0, media: [], authorName: null, authorHandle: null, authorAgent: false }];
+        // Show it at once (marked Sent): v2.0 cannot read DMs back and v1.1 may fail to.
+        const sent = { id: `local-${Date.now()}`, author: c.me, kind: "dm", body: text, replyTo: null, createdAt: new Date().toISOString(), labels: [], likeCount: 0, replyCount: 0, media: [], authorName: null, authorHandle: null, authorAgent: false, sent: true };
+        state.sentLocal.set(pid, [...(state.sentLocal.get(pid) || []), sent]);
+        state.messages = [...state.messages, sent];
+        toast("Message sent.");
       } else {
         await c.post(text, { replyTo: state.replyTo?.id || null, groupId: groupIdOf(), media: c.caps.media ? state.media : [] });
       }
@@ -1663,6 +2003,7 @@ function mount(host, container) {
   }
 
   function openChannel(id) {
+    if (state.docs.open) { state.docs.open = false; renderAll(); }
     state.channel = id; cfg.channel = id; persist();
     state.messages = []; state.replyTo = null; state.expanded = new Map(); state.groupInfo = null; state.confirmDelete = "";
     root.dataset.pane = "chat";
@@ -1682,6 +2023,15 @@ function mount(host, container) {
   const memCol = el("aside", "col members");
   shell.append(listCol, mainCol, memCol);
   root.append(shell);
+  const grip = gripColumns({
+    grid: shell,
+    storageKey: "grip:mesh-hangout",
+    narrowQuery: "(max-width: 700px)",
+    columns: [
+      { el: listCol, edge: "left", min: 220, max: 480, initial: 300, label: "list" },
+      { el: memCol, edge: "right", min: 200, max: 400, initial: 280, label: "members" },
+    ],
+  });
   const overlayHost = el("div", "overlays");
   root.append(overlayHost);
 
@@ -2233,9 +2583,10 @@ function mount(host, container) {
   // ── Rendering ───────────────────────────────────────────────────────────────────────────
   const statusPill = () => {
     const s = el("span", "status");
-    s.dataset.mode = state.mode;
+    const down = state.mode === "connected" && state.down;
+    s.dataset.mode = down ? "disconnected" : state.mode;
     s.append(el("i"));
-    const label = state.mode === "connected" ? `Connected · ${state.info?.nodeId || "node"}` : state.mode === "demo" ? "Demo" : "Connecting…";
+    const label = down ? `Disconnected · ${state.info?.nodeId || "node"}` : state.mode === "connected" ? `Connected · ${state.info?.nodeId || "node"}` : state.mode === "demo" ? "Demo" : "Connecting…";
     s.append(document.createTextNode(label));
     s.title = state.mode === "connected" ? `${cfg.nodeUrl} · MESH ${state.info?.protocolVersion || ""}` : state.note || "";
     return s;
@@ -2353,10 +2704,13 @@ function mount(host, container) {
     }
     acct.setAttribute("aria-label", selfId ? "Account" : "Create your identity");
     acct.addEventListener("click", () => openAccount());
-    listCol.append(acct, poweredBy("lpowered"));
+    listCol.append(acct);
+    if (cfg.welcomed) listCol.append(btn("Docs", () => openDocs("index", ".docslink"), "docslink"));
+    listCol.append(poweredBy("lpowered"));
   }
 
   function renderHead() {
+    if (state.docs.open) return;
     const old = mainCol.querySelector(".chead");
     const head = el("div", "chead");
     head.append(btn("‹", () => { root.dataset.pane = "list"; }, "iconbtn back"));
@@ -2403,6 +2757,7 @@ function mount(host, container) {
     if (author?.agent || m.authorAgent || authorLabels.some((l) => l.type === "bot")) who.append(el("span", "badge info", "Agent"));
     authorLabels.filter((l) => l.type === "verified" || l.type === "trusted").forEach((l) => who.append(badgeFor(l)));
     who.append(el("small", "", shortTime(m.createdAt)));
+    if (m.sent) who.append(el("span", "badge info sent", "Sent"));
     const msgLabels = visibleLabels(state.labels.get(m.id) || m.labels).filter((l) => MESSAGE_LABELS.includes(l.type));
     msgLabels.forEach((l) => who.append(badgeFor(l)));
     body.append(who);
@@ -2477,6 +2832,7 @@ function mount(host, container) {
   }
 
   function renderThread() {
+    if (state.docs.open) return;
     let th = mainCol.querySelector(".thread");
     if (!th) { th = el("div", "thread"); mainCol.querySelector(".chead")?.after(th); }
     const atBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 80 || !th.childElementCount;
@@ -2484,7 +2840,7 @@ function mount(host, container) {
     if (state.loading && !state.messages.length) { th.append(el("div", "empty", "Loading…")); return; }
     if (!state.messages.length) {
       const e = el("div", "empty");
-      const msg = state.error || (state.channel === "following" && !state.following.size ? "Nothing here yet. Follow a member to fill this feed." : "No messages yet.");
+      const msg = state.error || (state.down ? "Nothing is loaded: the node is not answering." : state.channel === "following" && !state.following.size ? "Nothing here yet. Follow a member to fill this feed." : "No messages yet.");
       e.append(el("div", "", msg));
       if (state.mode === "connected" && !state.client.signedIn && state.channel === "following") e.append(btn("Set up your identity", () => openAccount(), "btn"));
       th.append(e);
@@ -2506,6 +2862,7 @@ function mount(host, container) {
   }
 
   function renderNotices() {
+    if (state.docs.open) return;
     mainCol.querySelectorAll(".notice").forEach((n) => n.remove());
     const anchor = mainCol.querySelector(".chead");
     if (!anchor) return;
@@ -2517,7 +2874,9 @@ function mount(host, container) {
       anchor.after(n);
     };
     const notes = [];
-    if (state.error) notes.push(["error", state.error, null, "alert"]);
+    if (state.down && state.mode === "connected") notes.push(["warn", unreachableText(), ["Retry node", () => { retryNode(); }], "alert"]);
+    if (state.error) notes.push(["error", state.error, state.errorDocs ? ["Docs", () => openDocs("about")] : null, "alert"]);
+    if (state.threadNote) notes.push(["warn", state.threadNote, null, "status"]);
     if (state.toast) notes.push([state.toast.kind === "err" ? "error" : "ok", state.toast.text, null, "status"]);
     if (state.mode === "demo") notes.push(["warn", state.note ? `Demo mode: ${state.note}` : "Demo mode: sample data kept in memory.", ["Retry node", () => { cfg.forceDemo = false; persist(); connect(); }]]);
     else if (state.signNote) notes.push(["warn", state.signNote, ["Account", () => openAccount()]]);
@@ -2525,6 +2884,7 @@ function mount(host, container) {
   }
 
   function renderComposer() {
+    if (state.docs.open) return;
     let wrap = mainCol.querySelector(".composerwrap");
     if (!wrap) { wrap = el("div", "composerwrap"); mainCol.append(wrap); }
     const hadFocus = wrap.contains(document.activeElement) && document.activeElement?.tagName === "TEXTAREA";
@@ -2697,6 +3057,89 @@ function mount(host, container) {
     memCol.append(scroll);
   }
 
+  // ── Documentation reader: replaces the main column; the page list sits at its left ────────
+  function openDocs(pageId = state.docs.page, opener = "") {
+    state.docs.opener = opener;
+    state.docs.pane = root.dataset.pane;
+    state.docs.page = DOCS.some((d) => d.id === pageId) ? pageId : DOCS[0].id;
+    state.docs.open = true;
+    root.dataset.pane = "chat";
+    mainCol.replaceChildren();
+    renderAll();
+    focusDocHeading();
+  }
+
+  function closeDocs() {
+    state.docs.open = false;
+    root.dataset.pane = state.docs.pane;
+    mainCol.replaceChildren();
+    renderAll();
+    if (state.docs.opener) root.querySelector(state.docs.opener)?.focus?.();
+  }
+
+  function focusDocHeading() { mainCol.querySelector(".dpage h2")?.focus?.(); }
+
+  function chooseDoc(id) {
+    state.docs.page = id;
+    renderDocs(true);
+    focusDocHeading();
+  }
+
+  function downloadText(name, text) {
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
+      const a = el("a");
+      a.href = url; a.download = name;
+      root.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      return true;
+    } catch { return false; }
+  }
+
+  function renderDocs(force = false) {
+    const page = DOCS.find((d) => d.id === state.docs.page) || DOCS[0];
+    const current = mainCol.querySelector(".docs");
+    if (current && current.dataset.page === page.id && !force) return;
+    mainCol.replaceChildren();
+    const wrap = el("div", "docs");
+    wrap.dataset.page = page.id;
+    const head = el("div", "chead");
+    head.append(btn("Back", closeDocs, "headbtn docsback"));
+    const g = el("div", "grow");
+    g.append(el("h2", "", "Documentation"), el("small", "", "MESH protocol and this app"));
+    head.append(g);
+    const body = el("div", "dbody");
+
+    const nav = el("nav", "dnav");
+    nav.setAttribute("aria-label", "Documentation pages");
+    DOCS.forEach((d) => {
+      const b = btn(d.title, () => chooseDoc(d.id), "row dlink");
+      if (d.id === page.id) b.setAttribute("aria-current", "page");
+      nav.append(b);
+    });
+
+    const article = el("article", "dpage");
+    const tools = el("div", "dtools");
+    const note = el("span", "sub");
+    note.setAttribute("role", "status");
+    note.setAttribute("aria-live", "polite");
+    tools.append(
+      btn("Copy Markdown", async () => {
+        try { await navigator.clipboard.writeText(page.markdown); note.textContent = "Copied."; } catch { note.textContent = "Copy is not available in this browser."; }
+      }, "headbtn dcopy"),
+      btn("Download .md", () => { note.textContent = downloadText(`mesh-${page.id}.md`, page.markdown) ? "Download started." : "Download is not available in this browser."; }, "headbtn ddownload"),
+      note,
+    );
+    const title = el("h2", "", page.title);
+    title.tabIndex = -1;
+    // The page title is the heading above; drop the Markdown's own leading "# " line from the rendered body.
+    const shown = page.markdown.replace(/^# .*\n+/, "");
+    article.append(tools, title, renderMarkdown(shown, { httpOnly: true }));
+    body.append(nav, article);
+    wrap.append(head, body);
+    mainCol.append(wrap);
+  }
+
   function renderWelcome() {
     mainCol.replaceChildren();
     const w = el("div", "welcome");
@@ -2706,7 +3149,12 @@ function mount(host, container) {
     ["blue", "green", "orange", "pink"].forEach((b) => { const a = el("span", "avatar"); a.append(blobSvg(b)); minis.append(a); });
     const box = el("div");
     box.append(orb, minis, el("h1", "", "Welcome to MESH"), el("p", "", "Talk with people and AI agents on a protocol where identities are keys, content is a signed DAG, and moderation is something you compose."));
-    box.append(btn("Get started", () => { cfg.welcomed = true; persist(); renderAll(); }, "wgo"));
+    const actions = el("div", "wactions");
+    actions.append(
+      btn("Get started", () => { cfg.welcomed = true; persist(); renderAll(); }, "wgo"),
+      btn("Learn about the MESH protocol", () => openDocs("index", ".wdocs"), "wdocs"),
+    );
+    box.append(actions);
     w.append(box, poweredBy("wpowered"));
     mainCol.append(w);
   }
@@ -2715,8 +3163,10 @@ function mount(host, container) {
     if (disposed) return;
     const welcoming = !cfg.welcomed;
     shell.classList.toggle("welcoming", welcoming);
-    memCol.style.display = welcoming ? "none" : "";
+    memCol.style.display = welcoming || state.docs.open ? "none" : "";
+    grip.refresh();
     renderRail();
+    if (state.docs.open) { renderDocs(); return; }
     if (welcoming) { renderWelcome(); return; }
     if (!mainCol.querySelector(".chead") || mainCol.querySelector(".welcome")) { mainCol.replaceChildren(); }
     renderHead();
@@ -2729,5 +3179,5 @@ function mount(host, container) {
   renderAll();
   connect();
   pollTimer = setInterval(() => { if (state.mode === "connected" && cfg.welcomed && !state.loading && !state.draft && !state.overlay) loadChannel({ quiet: true }); }, 20_000);
-  return () => { disposed = true; clearInterval(pollTimer); clearTimeout(toastTimer); root.remove(); style.remove(); };
+  return () => { disposed = true; grip.dispose(); clearInterval(pollTimer); clearTimeout(toastTimer); root.remove(); style.remove(); };
 }

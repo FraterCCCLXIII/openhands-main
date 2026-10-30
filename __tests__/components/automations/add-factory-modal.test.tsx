@@ -1,3 +1,4 @@
+import * as vitestDemoOn from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -60,3 +61,7 @@ describe("AddFactoryModal", () => {
     expect(useFeedFactoriesStore.getState().custom).toEqual([]);
   });
 });
+
+// These cover the simulated team, which is opt-in.
+vitestDemoOn.beforeEach(() => window.history.pushState({}, "", "/?demoTeam=on"));
+vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));

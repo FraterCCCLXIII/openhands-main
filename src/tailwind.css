@@ -1064,6 +1064,11 @@ code .token {
   -webkit-app-region: drag;
 }
 
+/* Interactive control inside an app-region-drag area. */
+@utility app-region-no-drag {
+  -webkit-app-region: no-drag;
+}
+
 /* Hover marquee label (src/ui/dropdown/hover-marquee-label.tsx).
    Overflowing labels scroll on parent `.group` hover; hover-out crossfades back
    to the truncated start. Edge fades exist only on the `-clip` layer, which is

@@ -245,12 +245,64 @@ export async function qrSvg(text) {
 }
 
 /** The link that opens Meet on a room: this page with ?room= set. */
-export function inviteLink(href, room) {
+export function inviteLink(href, room, server = {}) {
   const url = new URL(href);
   url.search = "";
   url.hash = "";
   url.searchParams.set("room", room);
+  // Remote invitees cannot use this browser's localhost defaults, so a server that is
+  // reachable from elsewhere travels in the link. Only addresses, never a key or secret.
+  const lk = validServerUrl(server.serverUrl, ["ws:", "wss:"]);
+  const tok = validServerUrl(server.tokenUrl, ["http:", "https:"]);
+  if (lk && !isLocalOnly(lk)) url.searchParams.set("lk", lk);
+  if (tok && !isLocalOnly(tok)) url.searchParams.set("tok", tok);
   return url.toString();
+}
+
+/** The URL as a string when it parses, uses one of the schemes, and carries no credentials; else "". */
+export function validServerUrl(value, protocols) {
+  try {
+    const u = new URL(String(value || "").trim());
+    return protocols.includes(u.protocol) && !u.username && !u.password ? u.toString() : "";
+  } catch { return ""; }
+}
+
+/** Reads ?room=, ?lk= and ?tok= from an invite link; anything invalid is dropped. */
+export function parseInvite(search) {
+  const q = new URLSearchParams(search || "");
+  const room = cleanName(q.get("room"));
+  return { room, serverUrl: validServerUrl(q.get("lk"), ["ws:", "wss:"]), tokenUrl: validServerUrl(q.get("tok"), ["http:", "https:"]) };
+}
+
+/** Quiet hints for the lobby about what will stop a remote call from working. */
+export function lobbyWarnings({ pageUrl, serverUrl, tokenUrl = "" }) {
+  const out = [];
+  let page = null;
+  try { page = new URL(pageUrl); } catch { /* not a web page */ }
+  const server = String(serverUrl || "").trim();
+  const serverLocal = isLocalOnly(server) || isLocalOnly(`ws://${server}`);
+  const serverValid = !!validServerUrl(server, ["ws:", "wss:"]);
+  const web = page && (page.protocol === "http:" || page.protocol === "https:");
+  if (page?.protocol === "https:" && /^ws:\/\//i.test(server) && !serverLocal) out.push("This page is https, so the browser will block ws://. Use a wss:// server.");
+  if (web && page.protocol !== "https:" && !isLocalOnly(page.href)) out.push("Camera and microphone need https or localhost.");
+  if (web && !isLocalOnly(page.href) && serverLocal) out.push("This points at your own computer. Ask the host for their LiveKit server and token endpoint, or open their invite link.");
+  if (!String(tokenUrl || "").trim() && serverValid && !serverLocal) out.push("No token endpoint: the browser will sign its own token with the key in Settings. Use a token endpoint for anything other than local testing.");
+  return out;
+}
+
+/** True when the link only opens on this computer (localhost, loopback or a .local name). */
+export function isLocalOnly(href) {
+  try {
+    const h = new URL(href).hostname;
+    return h === "localhost" || h === "::1" || h === "[::1]" || /^127\./.test(h) || h.endsWith(".localhost");
+  } catch { return false; }
+}
+
+/** The address invite links are built from: the public address if one is set, else this page. */
+export function shareBaseUrl(shareBase, pageHref) {
+  const raw = String(shareBase || "").trim();
+  if (!raw) return pageHref;
+  try { return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).toString(); } catch { return pageHref; }
 }
 
 export const inviteMessage = (host, room, link) => ({
@@ -266,6 +318,52 @@ export const mailtoLink = (emails, { subject, body }) =>
 export const smsLink = (phones, { body }) => `sms:${phones.map((x) => x.replace(/[^\d+]/g, "")).filter(Boolean).join(",")}?&body=${encodeURIComponent(body)}`;
 
 export const whatsappLink = ({ body }) => `https://wa.me/?text=${encodeURIComponent(body)}`;
+
+/** Simulated call used by "Preview the UI": people, a scripted chat and feed events. */
+export const DEMO_PEOPLE = [
+  { name: "Ada", kind: "human", role: "Product lead" },
+  { name: "Grace", kind: "agent", role: "Code reviewer", model: "Claude Sonnet 5.5" },
+  { name: "Linus", kind: "agent", role: "Builder", model: "Claude Opus 5.5" },
+  { name: "Margaret", kind: "human", role: "Designer" },
+];
+export const DEMO_NAMES = DEMO_PEOPLE.map((p) => p.name);
+
+/** Human or agent, with role and model, from a LiveKit participant (metadata is JSON {kind, role, model}). */
+export function participantInfo(participant) {
+  let meta = {};
+  try { meta = JSON.parse(participant?.metadata || "{}") || {}; } catch { meta = {}; }
+  const agent = meta.kind === "agent" || participant?.kind === 4;
+  return { kind: agent ? "agent" : "human", role: String(meta.role || (agent ? "Agent" : "")), model: agent ? String(meta.model || "") : "" };
+}
+export const DEMO_SCRIPT = [
+  { kind: "event", text: "Ada joined" },
+  { from: "Ada", text: "Morning! Can everyone hear me?" },
+  { kind: "event", text: "Grace joined" },
+  { from: "Grace", text: "Loud and clear. Sharing the board in a sec." },
+  { kind: "event", text: "Grace started sharing their screen" },
+  { from: "Linus", text: "The new feed styles look great." },
+  { kind: "event", text: "Margaret joined" },
+  { from: "Margaret", text: "Sorry I'm late, what did I miss?" },
+  { from: "Ada", text: "We're walking through conversations and the feed." },
+];
+
+/**
+ * The agent's replies. Local and rule-based for now: it acknowledges what it heard.
+ * Swap this for a call into a live agent conversation to give it a real brain.
+ */
+export function agentReply(heard) {
+  const text = String(heard || "").trim();
+  if (!text) return "";
+  if (/\b(hello|hi|hey)\b/i.test(text)) return "Hi, I'm here and listening.";
+  if (/\b(summar|recap|notes)\b/i.test(text)) return "I'll write up the notes when the call ends.";
+  if (/\?$/.test(text)) return `Good question. I heard: ${text.slice(0, 120)}`;
+  return `Got it: ${text.slice(0, 120)}`;
+}
+
+/** Which speech features this browser offers (the desktop app may offer neither). */
+export function speechSupport(win = globalThis) {
+  return { listen: Boolean(win.SpeechRecognition || win.webkitSpeechRecognition), speak: Boolean(win.speechSynthesis && win.SpeechSynthesisUtterance) };
+}
 
 const loadLivekit = () => globalThis.__meetLivekit || import(/* @vite-ignore */ LIVEKIT_URL);
 
@@ -312,15 +410,127 @@ export function techRail(ids) {
   return rail;
 }
 
+/**
+ * Drag handles for the outer columns of a page's grid (a left list and/or a right panel).
+ *
+ * `columns` is a list of `{ el, edge, min, max, initial, label }`: `el` is the column's element,
+ * `edge` is "left" for a column on the left side (its handle sits on its right edge) or "right"
+ * for one on the right side. The app's CSS must read each width from a variable, for example
+ * `grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px)`, where the
+ * number is the column's position in the `columns` list. Widths are saved per `storageKey`.
+ * Call `refresh()` after the app shows or hides a column; call `dispose()` on unmount.
+ */
+function gripColumns({ grid, columns, storageKey, centerMin = 320, narrowQuery = "(max-width: 720px)" }) {
+  const win = grid.ownerDocument.defaultView || globalThis;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const saved = (() => {
+    try { return JSON.parse(win.localStorage.getItem(storageKey) || "{}") || {}; } catch { return {}; }
+  })();
+  const widths = columns.map((c, i) => (Number.isFinite(saved[i]) ? clamp(saved[i], c.min, c.max) : c.initial));
+  const handles = [];
+  const cleanups = [];
+
+  const narrow = () => Boolean(win.matchMedia && win.matchMedia(narrowQuery).matches);
+  const shown = (i) => !narrow() && columns[i].el.isConnected && win.getComputedStyle(columns[i].el).display !== "none";
+  const save = () => { try { win.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(widths.map((w, i) => [i, w])))); } catch { /* storage unavailable */ } };
+  // The widest a column may get while the middle keeps `centerMin` and the other grips keep their widths.
+  const limit = (i) => {
+    const total = grid.clientWidth;
+    if (!total) return columns[i].max;
+    const others = widths.reduce((sum, w, j) => (j !== i && shown(j) ? sum + w : sum), 0);
+    return clamp(total - others - centerMin, columns[i].min, columns[i].max);
+  };
+
+  function apply() {
+    columns.forEach((c, i) => {
+      if (narrow()) grid.style.removeProperty(`--grip-${i}`);
+      else grid.style.setProperty(`--grip-${i}`, `${widths[i]}px`);
+      const h = handles[i];
+      h.hidden = !shown(i);
+      h.setAttribute("aria-valuenow", String(Math.round(widths[i])));
+      h.setAttribute("aria-valuemax", String(Math.round(limit(i))));
+    });
+  }
+
+  function set(i, width, persist = true) {
+    widths[i] = clamp(Math.round(width), columns[i].min, limit(i));
+    apply();
+    if (persist) save();
+  }
+
+  columns.forEach((c, i) => {
+    const h = grid.ownerDocument.createElement("div");
+    h.className = `grip grip-${c.edge}`;
+    h.dataset.grip = String(i);
+    h.setAttribute("role", "separator");
+    h.setAttribute("aria-orientation", "vertical");
+    h.setAttribute("aria-label", `Resize ${c.label || "column"}`);
+    h.setAttribute("aria-valuemin", String(c.min));
+    h.tabIndex = 0;
+    h.style[c.edge === "left" ? "left" : "right"] = `var(--grip-${i}, ${c.initial}px)`;
+    const dir = c.edge === "left" ? 1 : -1;
+    let startX = 0;
+    let startW = 0;
+    const move = (e) => { set(i, startW + dir * (e.clientX - startX), false); };
+    const up = () => {
+      grid.classList.remove("gripping");
+      h.classList.remove("on");
+      grid.ownerDocument.removeEventListener("pointermove", move);
+      grid.ownerDocument.removeEventListener("pointerup", up);
+      save();
+    };
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = widths[i];
+      grid.classList.add("gripping");
+      h.classList.add("on");
+      grid.ownerDocument.addEventListener("pointermove", move);
+      grid.ownerDocument.addEventListener("pointerup", up);
+    });
+    h.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const grow = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * dir;
+      if (grow) set(i, widths[i] + grow * step);
+      else if (e.key === "Home") set(i, c.min);
+      else if (e.key === "End") set(i, limit(i));
+      else return;
+      e.preventDefault();
+    });
+    h.addEventListener("dblclick", () => set(i, c.initial));
+    cleanups.push(() => { grid.ownerDocument.removeEventListener("pointermove", move); grid.ownerDocument.removeEventListener("pointerup", up); h.remove(); });
+    handles.push(h);
+    grid.append(h);
+  });
+
+  win.addEventListener("resize", apply);
+  cleanups.push(() => win.removeEventListener("resize", apply));
+  apply();
+  return { refresh: apply, widths: () => [...widths], dispose: () => cleanups.forEach((fn) => fn()) };
+}
+
+/** CSS for the handles; add it to the app's stylesheet and make the grid `position: relative`. */
+const GRIP_CSS = `
+.grip { position: absolute; top: 0; bottom: 0; width: 11px; z-index: 6; cursor: col-resize; touch-action: none; outline: 0; }
+.grip-left { transform: translateX(-50%); }
+.grip-right { transform: translateX(50%); }
+.grip::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: transparent; transition: background .12s; }
+.grip:hover::after, .grip:focus-visible::after, .grip.on::after { background: var(--oh-color-primary, #7c9dff); }
+.gripping { user-select: none; cursor: col-resize; }
+.gripping * { pointer-events: none; }
+.gripping .grip { pointer-events: auto; }
+@media (max-width: 720px) { .grip { display: none; } }
+`;
+
 const CSS = `
 .mt { --mt-bg: var(--oh-color-base, #171717); --mt-panel: var(--oh-color-base-secondary, #212121); --mt-text: var(--oh-foreground, #eee);
-  --mt-muted: var(--oh-muted, #9a9a9a); --mt-border: var(--oh-border-subtle, #3a3a3a); --mt-contrast: var(--oh-contrast, #fff); --mt-danger: #ef4444; --mt-ok: #34d399;
-  box-sizing: border-box; color: var(--mt-text); background: var(--mt-bg); font: 14px/1.45 system-ui, sans-serif; height: 100dvh; min-height: 480px; overflow: hidden; display: flex; }
-.mt .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.mt .nav { width: 260px; flex: none; background: var(--mt-panel); display: flex; flex-direction: column; min-height: 0; }
+  --mt-muted: var(--oh-muted, #9a9a9a); --mt-border: var(--oh-border-subtle, #3a3a3a); --mt-contrast: var(--oh-contrast, #fff); --mt-on-contrast: var(--oh-contrast-foreground, #111); --mt-danger: #ef4444; --mt-danger-solid: #dc2626; --mt-ok: #34d399;
+  box-sizing: border-box; color: var(--mt-text); background: var(--mt-bg); font: 14px/1.45 system-ui, sans-serif; height: 100dvh; min-height: 480px; overflow: hidden; position: relative; display: grid; grid-template-columns: var(--grip-0, 260px) minmax(0, 1fr); }
+.mt .main { min-width: 0; display: flex; flex-direction: column; }
+.mt .nav { min-width: 0; background: transparent; display: flex; flex-direction: column; min-height: 0; }
 .mt .navtop { padding: 14px 12px 10px; display: grid; gap: 10px; }
 .mt .navhead { display: flex; gap: 6px; align-items: center; font-weight: 400; color: var(--mt-contrast); }
-.mt .newroom { flex: 1; min-width: 0; height: 34px; border: 0; border-radius: 10px; background: var(--mt-primary, #fff); color: var(--mt-on-primary, #111); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.mt .newroom { flex: 1; min-width: 0; height: 34px; border: 0; border-radius: 10px; background: var(--mt-contrast); color: var(--mt-on-contrast); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .mt .navicon { flex: none; width: 34px; height: 34px; border: 0; border-radius: 10px; background: transparent; color: var(--mt-muted); display: grid; place-items: center; cursor: pointer; }
 .mt .navicon:hover, .mt .navicon[aria-pressed="true"] { background: var(--mt-raised, rgba(255,255,255,.08)); color: var(--mt-contrast); }
 .mt .navicon svg { width: 18px; height: 18px; }
@@ -344,7 +554,7 @@ const CSS = `
 .mt .invitelist label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mt-text); }
 .mt .inviteacts { display: flex; flex-wrap: wrap; gap: 6px; }
 .mt .sharetabs { display: flex; gap: 4px; }
-.mt .sharetabs .mini[aria-pressed="true"] { background: var(--mt-contrast); color: var(--mt-bg); border-color: var(--mt-contrast); }
+.mt .sharetabs .mini[aria-pressed="true"] { background: var(--mt-contrast); color: var(--mt-on-contrast); border-color: var(--mt-contrast); }
 .mt .bigcode { font: 600 22px ui-monospace, monospace; text-align: center; color: var(--mt-contrast); padding: 10px; border: 1px dashed var(--mt-border); border-radius: 10px; user-select: all; }
 .mt .qrbox { width: 200px; height: 200px; margin: 0 auto; border-radius: 8px; overflow: hidden; background: #fff; display: grid; place-items: center; }
 .mt .qrbox svg { width: 100%; height: 100%; }
@@ -359,14 +569,14 @@ const CSS = `
 .mt .check .grow { flex: 1; min-width: 0; display: grid; }
 .mt .check code { font: 12px ui-monospace, monospace; color: var(--mt-muted); overflow-wrap: anywhere; }
 .mt .modalfoot { display: flex; justify-content: flex-end; gap: 8px; }
-.mt .techrail { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--mt-border); color: var(--mt-muted); font-size: 11px; }
+.mt .techrail { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--mt-muted); font-size: 11px; }
 .mt .techlabel { letter-spacing: .06em; text-transform: uppercase; }
 .mt .tech { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: inherit; text-decoration: none; opacity: .8; }
 .mt .tech:hover { opacity: 1; background: color-mix(in srgb, currentColor 12%, transparent); }
 .mt .tech img { width: 14px; height: 14px; display: block; }
 .mt .techmono { font-weight: 700; font-size: 11px; }
 .mt .callbar { display: flex; align-items: center; gap: 10px; justify-content: center; }
-@media (max-width: 520px) { .mt .nav { display: none; } }
+@media (max-width: 520px) { .mt { grid-template-columns: minmax(0, 1fr); } .mt .nav { display: none; } }
 .mt *, .mt *::before, .mt *::after { box-sizing: border-box; }
 .mt button { font: inherit; color: inherit; }
 .mt .lobby { margin: auto; width: min(420px, 92%); display: grid; gap: 10px; }
@@ -379,11 +589,11 @@ const CSS = `
 @media (max-width: 900px) { .mt .lobbyart { display: none; } }
 .mt label { display: grid; gap: 4px; font-size: 12px; color: var(--mt-muted); }
 .mt input { padding: 8px 12px; border-radius: 10px; font-size: 14px; border: 1px solid var(--mt-border); background: var(--mt-panel); color: var(--mt-text); font: inherit; }
-.mt .primary { border: 0; border-radius: 10px; background: var(--mt-contrast); color: var(--mt-bg); padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.mt .primary { border: 0; border-radius: 10px; background: var(--mt-contrast); color: var(--mt-on-contrast); padding: 10px 16px; font-weight: 600; cursor: pointer; }
 .mt .primary:disabled { opacity: .5; cursor: default; }
 .mt .note { color: var(--mt-muted); font-size: 12px; margin: 0; }
 .mt .err { color: var(--mt-danger); font-size: 13px; margin: 0; }
-.mt .meeting { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.mt .meeting { flex: 1; min-height: 0; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) var(--grip-0, 300px); }
 .mt .stage { min-width: 0; padding: 12px; overflow: auto; }
 .mt .grid { display: grid; gap: 8px; height: 100%; align-content: center; }
 .mt .tile { position: relative; background: var(--mt-panel); border: 1px solid var(--mt-border); border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; display: grid; place-items: center; }
@@ -393,8 +603,36 @@ const CSS = `
 .mt .avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; font-weight: 600; background: var(--mt-border); }
 .mt .label { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; }
 .mt .label.muted::after { content: " · muted"; color: var(--mt-danger); }
-.mt .chat { width: 300px; border-left: 1px solid var(--mt-border); display: flex; flex-direction: column; min-height: 0; }
+.mt .chat { min-width: 0; border-left: 1px solid var(--mt-border); display: flex; flex-direction: column; min-height: 0; }
 .mt .chatlog { flex: 1; overflow: auto; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.mt .tile.screen { display: block; padding: 0; }
+.mt .miniapp { position: absolute; inset: 0; display: flex; flex-direction: column; background: #151515; font: 10px/1.35 ui-monospace, monospace; color: #cfcfcf; }
+.mt .mabar { display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: #222; border-bottom: 1px solid #333; }
+.mt .mabar i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.mt .mabar span { margin-left: 6px; color: #9a9a9a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt .mabody { flex: 1; display: flex; min-height: 0; }
+.mt .maside { width: 22%; padding: 6px; display: grid; gap: 3px; align-content: start; background: #1b1b1b; border-right: 1px solid #2a2a2a; }
+.mt .maside span { padding: 2px 5px; border-radius: 4px; color: #9a9a9a; }
+.mt .maside span.on { background: #2e2e2e; color: #fff; }
+.mt .mamain { flex: 1; padding: 6px 8px; display: grid; gap: 5px; align-content: start; min-width: 0; }
+.mt .machat p { margin: 0 0 3px; padding: 3px 6px; border-radius: 6px; }
+.mt .machat .you { background: #2a2a2a; width: fit-content; max-width: 90%; }
+.mt .machat .bot { color: #b9b9b9; }
+.mt .madiff { margin: 0; padding: 4px 6px; border-radius: 6px; background: #101010; border: 1px solid #2a2a2a; overflow: hidden; font: inherit; }
+.mt .madiff .add { color: #4ade80; }
+.mt .madiff .del { color: #f87171; }
+.mt .maprog { height: 4px; border-radius: 2px; background: #2a2a2a; overflow: hidden; }
+.mt .maprog b { display: block; height: 100%; width: 40%; background: #7c5cff; animation: mt-prog 3.2s ease-in-out infinite; }
+@keyframes mt-prog { 0% { width: 10%; } 70% { width: 90%; } 100% { width: 10%; } }
+.mt .tile .badge { position: absolute; top: 8px; left: 8px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.78); color: #ddd; }
+.mt .tile .badge.agent { background: var(--mt-accent, #6d4aff); color: #fff; }
+.mt .tile .label .sub { display: block; font-size: 11px; opacity: .7; font-weight: 400; }
+.mt .tile canvas.tilekami { width: 130px; height: 130px; }
+.mt .tile.big { grid-column: 1 / -1; }
+.mt .tile.big canvas.tilekami { width: 190px; height: 190px; }
+.mt .views { display: inline-flex; gap: 4px; }
+.mt .tile.agent .avatar { background: var(--mt-accent, #6d4aff); color: #fff; }
+.mt .evt { font-size: 12px; text-align: center; color: var(--mt-muted, #888); padding: 2px 0; }
 .mt .msg b { font-weight: 600; color: var(--mt-contrast); }
 .mt .mhead { flex: none; display: grid; gap: 0; padding: 12px 16px; border-bottom: 1px solid var(--mt-border); font-weight: 600; color: var(--mt-contrast); background: var(--mt-bg); }
 .mt .mhead small { font-size: 12px; font-weight: 400; color: var(--mt-muted); }
@@ -402,10 +640,14 @@ const CSS = `
 .mt .chatform input { flex: 1; min-width: 0; }
 .mt .bar { display: flex; justify-content: center; gap: 8px; padding: 10px; border-top: 1px solid var(--mt-border); }
 .mt .ctl { border: 1px solid var(--mt-border); background: var(--mt-panel); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
-.mt .ctl[aria-pressed="false"] { background: var(--mt-danger); border-color: var(--mt-danger); color: #fff; }
-.mt .ctl.leave { background: var(--mt-danger); border-color: var(--mt-danger); color: #fff; }
+.mt .ctl { display: inline-flex; align-items: center; gap: 8px; }
+.mt .ctl .ico { width: 18px; height: 18px; flex: none; }
+.mt .views .ctl[aria-pressed="false"] { background: var(--mt-panel); border-color: var(--mt-border); color: inherit; }
+.mt .views .ctl[aria-pressed="true"] { background: var(--mt-contrast); color: var(--mt-on-contrast); }
+.mt .ctl[aria-pressed="false"] { background: var(--mt-danger-solid); border-color: var(--mt-danger-solid); color: #fff; }
+.mt .ctl.leave { background: var(--mt-danger-solid); border-color: var(--mt-danger-solid); color: #fff; }
 @media (max-width: 560px) { .mt .meeting { grid-template-columns: minmax(0, 1fr); } .mt .chat { display: none; } }
-`;
+` + GRIP_CSS;
 
 // ─── The lobby picture: a call in progress, and a Flux Kamiji looking on ──
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -450,13 +692,66 @@ function callGraphic() {
 }
 
 /** A small living Flux: a wobbling body whose colours drift, with pill eyes that blink. */
-function fluxKamiji() {
+/** A small stand-in for a shared screen: the app someone is working on, with a chat, a diff and a progress bar. */
+export function miniAppScreen() {
+  const win = el("div", "miniapp");
+  const bar = el("div", "mabar");
+  ["#ff5f57", "#febc2e", "#28c840"].forEach((c) => { const d = el("i"); d.style.background = c; bar.append(d); });
+  bar.append(el("span", "", "OpenHands · Add bottom grip to pull up conversations"));
+  const body = el("div", "mabody");
+  const side = el("div", "maside");
+  ["New Chat", "Apps", "Factory", "Feed", "Meet"].forEach((t, i) => side.append(el("span", i === 4 ? "on" : "", t)));
+  const main = el("div", "mamain");
+  const chat = el("div", "machat");
+  chat.append(el("p", "you", "can you add a grip at the bottom of the list?"), el("p", "bot", "Adding a ReorderGrip below the conversation list…"));
+  const diff = el("pre", "madiff");
+  [["-", "const rows = conversations;"], ["+", "const rows = useGrip(conversations);"], ["+", "<ReorderGrip onDrag={pullUp} />"]].forEach(([sign, line]) => diff.append(el("span", sign === "+" ? "add" : "del", `${sign} ${line}\n`)));
+  const prog = el("div", "maprog");
+  prog.append(el("b"));
+  main.append(chat, diff, prog);
+  body.append(side, main);
+  win.append(bar, body);
+  return win;
+}
+
+const ICONS = {
+  mic: ["M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z", "M19 10v2a7 7 0 0 1-14 0v-2", "M12 19v3"],
+  micOff: ["M2 2l20 20", "M9 9v3a3 3 0 0 0 5.1 2.1", "M15 9.3V5a3 3 0 0 0-5.9-.6", "M19 10v2a7 7 0 0 1-.8 3.2", "M5 10v2a7 7 0 0 0 11.2 5.6", "M12 19v3"],
+  camera: ["m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11", "M3 6h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"],
+  cameraOff: ["M2 2l20 20", "M7 6h6a2 2 0 0 1 2 2v3", "M15 15v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2", "m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11"],
+  screen: ["M3 4h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z", "M8 21h8", "M12 17v4"],
+  share: ["M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7", "M16 6l-4-4-4 4", "M12 2v13"],
+  agent: ["M12 8V4H8", "M6 8h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z", "M2 14h2", "M20 14h2", "M15 13v2", "M9 13v2"],
+  listen: ["M6 8.5a6 6 0 0 1 12 0c0 3.5-3 4.5-3 7.5a3 3 0 0 1-6 0"],
+  volume: ["M11 5 6 9H2v6h4l5 4V5Z", "M15.5 8.5a5 5 0 0 1 0 7", "M19 5a9 9 0 0 1 0 14"],
+  volumeOff: ["M11 5 6 9H2v6h4l5 4V5Z", "M22 9l-6 6", "M16 9l6 6"],
+  leave: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
+  grid: ["M3 3h7v7H3Z", "M14 3h7v7h-7Z", "M3 14h7v7H3Z", "M14 14h7v7h-7Z"],
+  avatars: ["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z", "M8 14s1.5 2 4 2 4-2 4-2", "M9 9h.01", "M15 9h.01"],
+  speaker: ["M3 3h18v12H3Z", "M3 19h5", "M10 19h4", "M16 19h5"],
+  send: ["M22 2 11 13", "M22 2l-7 20-4-9-9-4 20-7Z"],
+  close: ["M18 6 6 18", "M6 6l12 12"],
+};
+
+/** Puts a line icon before a button's label. */
+function withIcon(button, name) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  [["viewBox", "0 0 24 24"], ["fill", "none"], ["stroke", "currentColor"], ["stroke-width", "1.8"], ["stroke-linecap", "round"], ["stroke-linejoin", "round"], ["aria-hidden", "true"], ["class", "ico"]].forEach(([k, v]) => svg.setAttribute(k, v));
+  (ICONS[name] || []).forEach((d) => svgEl(svg, "path", { d }));
+  button.prepend(svg);
+  return button;
+}
+
+/** A stable colour shift per name, so each person gets their own Kamiji. */
+export const kamijiHue = (name) => ([...String(name || "")].reduce((a, c) => a + c.charCodeAt(0), 0) * 47) % 360;
+
+function fluxKamiji({ hueOffset = 0, talking = () => false, label = "A Flux Kamiji" } = {}) {
   const canvas = document.createElement("canvas");
   canvas.className = "fluxkamiji";
   canvas.width = 240;
   canvas.height = 240;
   canvas.setAttribute("role", "img");
-  canvas.setAttribute("aria-label", "A Flux Kamiji");
+  canvas.setAttribute("aria-label", label);
   const ctx = canvas.getContext ? canvas.getContext("2d") : null;
   if (!ctx) return canvas;
   const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -464,8 +759,8 @@ function fluxKamiji() {
   const draw = (ms) => {
     const t = ms / 1000;
     ctx.clearRect(0, 0, W, W);
-    const R = 76 + Math.sin(t * 1.4) * 3;
-    const hue = 250 + Math.sin(t * 0.5) * 70;
+    const R = 76 + Math.sin(t * 1.4) * 3 + (talking() ? Math.sin(t * 16) * 4 : 0);
+    const hue = 250 + hueOffset + Math.sin(t * 0.5) * 70;
     const g = ctx.createRadialGradient(W / 2 - 24, W / 2 - 30, 10, W / 2, W / 2, R + 30);
     g.addColorStop(0, `hsl(${hue + 80} 90% 68%)`);
     g.addColorStop(0.55, `hsl(${hue} 85% 60%)`);
@@ -528,15 +823,26 @@ function mount(container, host) {
   let disposed = false;
   let lk = null;
   let room = null;
+  let grips = [];
+  const regrip = (specs) => {
+    grips.forEach((g) => g.dispose());
+    grips = specs.map(([grid, column, key]) => gripColumns({ grid, columns: [column], storageKey: `grip:meet:${key}` }));
+  };
 
   const saved = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") }; } catch { return { ...DEFAULTS }; } })();
-  const state = { ...saved, contacts: Array.isArray(saved.contacts) ? saved.contacts : [], query: "", picked: "", settings: false, ghRef: "", serverUp: null, starting: false, serverNote: "", checks: {}, runNote: {}, invite: false, shareTab: "link", invitees: [], inviteNote: "", importing: false, importText: "", importNote: "", phase: "lobby", error: "", mic: true, cam: true, screen: false, chat: [], draft: "" };
+  const state = { ...saved, contacts: Array.isArray(saved.contacts) ? saved.contacts : [], query: "", picked: "", settings: false, ghRef: "", serverUp: null, starting: false, serverNote: "", checks: {}, runNote: {}, invite: false, shareTab: "link", invitees: [], inviteNote: "", importing: false, importText: "", importNote: "", phase: "lobby", view: "grid", agent: false, listen: true, voice: true, agentTalking: false, demo: false, demoTimer: null, speaker: 0, error: "", mic: true, cam: true, screen: false, chat: [], draft: "" };
   try {
-    const invited = new URLSearchParams(location.search).get("room");
-    if (invited) { state.room = cleanName(invited); state.invitedTo = state.room; }
+    const invite = parseInvite(location.search);
+    if (invite.room) { state.room = invite.room; state.invitedTo = invite.room; }
+    // Server settings from the link fill the lobby only; persist() keeps the saved ones until Join.
+    if (invite.room && (invite.serverUrl || invite.tokenUrl)) {
+      state.inviteServer = { serverUrl: saved.serverUrl, tokenUrl: saved.tokenUrl };
+      if (invite.serverUrl) state.serverUrl = invite.serverUrl;
+      if (invite.tokenUrl) state.tokenUrl = invite.tokenUrl;
+    }
   } catch { /* no location */ }
   const persist = () => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: state.name, room: state.room, serverUrl: state.serverUrl, tokenUrl: state.tokenUrl, apiKey: state.apiKey, apiSecret: state.apiSecret, folder: state.folder, contacts: state.contacts })); } catch { /* storage unavailable */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: state.name, room: state.room, serverUrl: (state.inviteServer || state).serverUrl, tokenUrl: (state.inviteServer || state).tokenUrl, apiKey: state.apiKey, apiSecret: state.apiSecret, folder: state.folder, shareBase: state.shareBase, contacts: state.contacts })); } catch { /* storage unavailable */ }
   };
 
   const inMeeting = () => new Set(room && state.phase === "meeting" ? [...room.remoteParticipants.values()].map((p) => p.identity.toLowerCase()) : []);
@@ -840,7 +1146,7 @@ function mount(container, host) {
   }
 
   function invitePanel() {
-    const link = inviteLink(location.href, cleanName(state.room) || DEFAULTS.room);
+    const link = inviteLink(shareBaseUrl(state.shareBase, location.href), cleanName(state.room) || DEFAULTS.room, { serverUrl: state.serverUrl, tokenUrl: state.tokenUrl });
     const msg = inviteMessage(state.name, cleanName(state.room), link);
     const picked = state.contacts.filter((c) => state.invitees.includes(c.id));
     const box = el("div", "invitebox");
@@ -907,12 +1213,21 @@ function mount(container, host) {
     } else {
       box.append(linkField, acts);
     }
+    if (state.shareTab === "link" || state.shareTab === "qr") {
+      const pub = el("input");
+      pub.placeholder = "Public address, e.g. meet.example.com or your tunnel URL";
+      pub.setAttribute("aria-label", "Public address for invite links");
+      pub.value = state.shareBase || "";
+      pub.addEventListener("change", () => { state.shareBase = pub.value.trim(); persist(); render(); });
+      box.append(pub);
+      if (isLocalOnly(link)) box.append(el("p", "err", "This link only opens on this computer. Set a public address above (a tunnel or your network address) so other people can use it."));
+    }
     box.append(el("p", "note invitenote", state.inviteNote));
     return box;
   }
 
   function inviteToggle() {
-    const b = el("button", "ctl", state.invite ? "Close share" : "Share");
+    const b = withIcon(el("button", "ctl", state.invite ? "Close share" : "Share"), state.invite ? "close" : "share");
     b.type = "button";
     b.addEventListener("click", () => { state.invite = !state.invite; state.inviteNote = ""; render(); });
     return b;
@@ -931,26 +1246,38 @@ function mount(container, host) {
   function lobby() {
     const box = el("form", "lobby");
     const who = state.contacts.find((c) => c.id === state.picked);
-    box.append(el("h1", "", who ? `Call ${who.name}` : "Meet"), field("Your name", "name"), field("Room or code", "room"), field("LiveKit server", "serverUrl"), field("Token endpoint", "tokenUrl"));
+    box.append(el("h1", "", who ? `Call ${who.name}` : "Meet"), field("Your name", "name"), field("Room or code", "room"));
+    // The server status card holds the server fields, below its text.
+    const card = el("div", "check");
+    card.append(el("span", `pres${state.serverUp === false ? " bad" : state.serverUp ? " on" : ""}`));
+    const grow = el("div", "grow");
+    grow.append(
+      el("span", "", state.serverUp === false ? "The meeting server isn't running" : state.serverUp ? "The meeting server is running" : "Checking the meeting server…"),
+      el("span", "note", state.serverUp === false ? (state.serverNote || "Start it to join calls on this machine.") : "Calls on this machine go through this server."),
+      field("LiveKit server", "serverUrl"),
+      field("Token endpoint", "tokenUrl"),
+    );
+    card.append(grow);
     if (state.serverUp === false) {
-      const warn = el("div", "check");
-      warn.append(el("span", "pres bad"));
-      const grow = el("div", "grow");
-      grow.append(el("span", "", "The meeting server isn't running"), el("span", "note", state.serverNote || "Start it to join calls on this machine."));
-      warn.append(grow);
       const go = el("button", "mini", state.starting ? "Starting…" : "Start it");
       go.type = "button";
       go.disabled = state.starting;
       go.addEventListener("click", startServer);
-      warn.append(go);
-      box.append(warn);
+      card.append(go);
     }
+    box.append(card);
     if (state.invitedTo) box.append(el("p", "note", `You were invited to "${state.invitedTo}". Enter your name and join.`));
+    if (state.inviteServer) box.append(el("p", "note", "Server settings came from the invite link."));
+    lobbyWarnings({ pageUrl: location.href, serverUrl: state.serverUrl, tokenUrl: state.tokenUrl }).forEach((w) => box.append(el("p", "note warn", w)));
     if (state.error) box.append(el("p", "err", state.error));
     const join = el("button", "primary", state.phase === "joining" ? "Joining…" : "Join");
     join.type = "submit";
     join.disabled = state.phase === "joining";
     box.append(join);
+    const demo = el("button", "mini", "Preview the UI (demo)");
+    demo.type = "button";
+    demo.addEventListener("click", startDemo);
+    box.append(demo);
     box.append(inviteToggle());
     if (state.invite) box.append(invitePanel());
     box.append(el("p", "note", "Meet runs on a LiveKit server on this machine. If it is not running, use Start it above, or open Settings."));
@@ -963,6 +1290,7 @@ function mount(container, host) {
     const roomName = cleanName(state.room);
     if (!name || !roomName) { state.error = "Enter your name and a room."; render(); return; }
     state.name = name; state.room = roomName; state.error = ""; state.phase = "joining";
+    state.inviteServer = null;
     persist(); render();
     try {
       let token;
@@ -976,7 +1304,7 @@ function mount(container, host) {
       lk = await loadLivekit();
       if (disposed) return;
       room = new lk.Room({ adaptiveStream: true, dynacast: true });
-      const refresh = () => { if (!disposed) { renderStage(); renderNav(); } };
+      const refresh = () => { if (!disposed) { renderHead(); renderStage(); renderNav(); } };
       Object.values({ a: "ParticipantConnected", b: "ParticipantDisconnected", c: "TrackSubscribed", d: "TrackUnsubscribed", e: "TrackMuted", f: "TrackUnmuted", g: "LocalTrackPublished", h: "LocalTrackUnpublished", i: "ActiveSpeakersChanged" })
         .forEach((ev) => room.on(lk.RoomEvent[ev], refresh));
       room.on(lk.RoomEvent.DataReceived, (bytes, participant) => {
@@ -999,7 +1327,98 @@ function mount(container, host) {
     }
   }
 
+  let recognition = null;
+
+  function stopListening() {
+    const r = recognition;
+    recognition = null;
+    try { r?.stop(); } catch { /* already stopped */ }
+  }
+
+  function agentSay(text) {
+    if (!text) return;
+    state.chat.push({ from: "Agent", text });
+    renderChat();
+    const sup = speechSupport();
+    if (state.voice && sup.speak) {
+      const u = new globalThis.SpeechSynthesisUtterance(text);
+      u.onstart = () => { state.agentTalking = true; renderStage(); };
+      u.onend = () => { state.agentTalking = false; renderStage(); };
+      globalThis.speechSynthesis.speak(u);
+    }
+  }
+
+  function hear(text, via) {
+    state.chat.push({ from: via === "voice" ? "You (voice)" : "You", text });
+    renderChat();
+    if (state.agent) setTimeout(() => { if (!disposed && state.agent) agentSay(agentReply(text)); }, 500);
+  }
+
+  function startListening() {
+    stopListening();
+    if (!state.agent || !state.listen) return;
+    const Rec = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
+    if (!Rec) { state.error = "Voice listening isn't available here. Type to the agent instead."; return; }
+    const r = new Rec();
+    recognition = r;
+    r.continuous = true;
+    r.interimResults = false;
+    r.onresult = (ev) => {
+      for (let i = ev.resultIndex; i < ev.results.length; i += 1) {
+        if (ev.results[i].isFinal) hear(String(ev.results[i][0].transcript || "").trim(), "voice");
+      }
+    };
+    r.onerror = (ev) => {
+      state.error = ev.error === "not-allowed" ? "Allow microphone access to let the agent listen." : "The agent can't listen right now. Type to it instead.";
+      stopListening();
+      render();
+    };
+    r.onend = () => { if (recognition === r && state.agent && state.listen && !disposed) { try { r.start(); } catch { /* restarting */ } } };
+    try { r.start(); } catch { /* already started */ }
+  }
+
+  function inviteAgent() {
+    state.agent = true;
+    state.chat.push({ kind: "event", text: "Agent joined" });
+    startListening();
+    render();
+    setTimeout(() => { if (!disposed && state.agent) agentSay("Hi, I'm here. I can listen and talk, or you can type to me."); }, 400);
+  }
+
+  function removeAgent() {
+    state.agent = false;
+    stopListening();
+    globalThis.speechSynthesis?.cancel();
+    state.agentTalking = false;
+    state.chat.push({ kind: "event", text: "Agent left" });
+    render();
+  }
+
+  function stopDemo() {
+    clearInterval(state.demoTimer);
+    state.demoTimer = null;
+    state.demo = false;
+  }
+
+  function startDemo() {
+    state.demo = true; state.phase = "meeting"; state.error = ""; state.mic = true; state.cam = true; state.screen = false;
+    state.chat = []; state.speaker = 0;
+    if (!state.name) state.name = "You";
+    let step = 0;
+    render();
+    state.demoTimer = setInterval(() => {
+      if (disposed) { stopDemo(); return; }
+      state.speaker = (state.speaker + 1) % (DEMO_PEOPLE.length + 1);
+      if (step < DEMO_SCRIPT.length) { state.chat.push(DEMO_SCRIPT[step]); step += 1; renderChat(); }
+      renderStage();
+    }, 2200);
+  }
+
   function leave() {
+    stopDemo();
+    state.agent = false;
+    stopListening();
+    globalThis.speechSynthesis?.cancel();
     room?.disconnect();
     room = null;
     state.phase = "lobby";
@@ -1020,12 +1439,78 @@ function mount(container, host) {
     }
     const mic = participant.getTrackPublication?.(lk.Track.Source.Microphone);
     const muted = !isScreen && (!mic || mic.isMuted);
-    tile.append(el("span", `label${muted ? " muted" : ""}`, label));
+    labelFor(tile, label, isScreen ? { kind: "human", role: "", model: "" } : participantInfo(participant), muted ? " muted" : "");
+    tile.dataset.name = participant.identity || label;
     return tile;
+  }
+
+  /** A name pill with the role (and model, for agents) under it, plus a Human/Agent badge on the tile. */
+  function labelFor(tile, text, info, extraClass = "") {
+    const label = el("span", `label${extraClass}`, text);
+    const sub = [info.role, info.model].filter(Boolean).join(" · ");
+    if (sub) label.append(el("small", "sub", sub));
+    tile.dataset.kind = info.kind;
+    tile.append(el("span", `badge ${info.kind}`, info.kind === "agent" ? "Agent" : "Human"), label);
+  }
+
+  /** Applies the view mode: Kamiji avatars in place of initials/video, and the speaker layout. */
+  function applyView(tiles) {
+    tiles.forEach((tile) => {
+      if (tile.classList.contains("screen")) return;
+      const agent = tile.classList.contains("agent");
+      if (state.view === "grid" && !agent) return;
+      const name = tile.dataset.name || "";
+      const kami = fluxKamiji({ hueOffset: agent ? 140 : kamijiHue(name), talking: () => tile.classList.contains("speaking"), label: `${name}'s Kamiji` });
+      kami.classList.add("tilekami");
+      const old = tile.querySelector("video, .avatar");
+      if (old) old.replaceWith(kami); else tile.prepend(kami);
+    });
+    if (state.view !== "speaker") return tiles;
+    const people = tiles.filter((t) => !t.classList.contains("screen"));
+    const lead = tiles.find((t) => t.classList.contains("screen")) || people.find((t) => t.classList.contains("speaking")) || people[0];
+    if (!lead) return tiles;
+    lead.classList.add("big");
+    return [lead, ...tiles.filter((t) => t !== lead)];
+  }
+
+  function setGrid(grid, tiles) {
+    const ordered = applyView(tiles);
+    const cols = state.view === "speaker" ? Math.max(1, ordered.length - 1) : gridColumns(ordered.length);
+    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    grid.append(...ordered);
+  }
+
+  function agentTile() {
+    const tile = el("div", `tile agent${state.agentTalking ? " speaking" : ""}`);
+    tile.dataset.name = "Agent";
+    tile.append(el("div", "avatar", "AI"));
+    labelFor(tile, state.listen ? "Agent · listening" : "Agent", { kind: "agent", role: "Assistant", model: "Built-in replies" });
+    return tile;
+  }
+
+  function renderDemoStage(grid) {
+    grid.replaceChildren();
+    const people = [...DEMO_PEOPLE, { name: `${state.name} (you)`, kind: "human", role: "Host" }];
+    const tiles = people.map((person, i) => {
+      const tile = el("div", `tile${i === state.speaker && !state.agentTalking ? " speaking" : ""}`);
+      tile.dataset.name = person.name;
+      tile.append(el("div", "avatar", initials(person.name)));
+      labelFor(tile, person.name, person);
+      return tile;
+    });
+    if (state.agent) tiles.push(agentTile());
+    if (state.chat.some((m) => m.text === "Grace started sharing their screen")) {
+      const screen = el("div", "tile screen");
+      screen.append(miniAppScreen());
+      labelFor(screen, "Grace, screen", { kind: "agent", role: "Code reviewer", model: "Claude Sonnet 5.5" });
+      tiles.unshift(screen);
+    }
+    setGrid(grid, tiles);
   }
 
   function renderStage() {
     const grid = root.querySelector(".grid");
+    if (grid && state.demo) { renderDemoStage(grid); return; }
     if (!grid || !room) return;
     grid.replaceChildren();
     const people = [room.localParticipant, ...room.remoteParticipants.values()];
@@ -1035,8 +1520,8 @@ function mount(container, host) {
       if (p.getTrackPublication(lk.Track.Source.ScreenShare)) tiles.push(tileFor(p, lk.Track.Source.ScreenShare, `${p.identity}${mine ? " (you)" : ""}, screen`));
       tiles.push(tileFor(p, lk.Track.Source.Camera, `${p.identity}${mine ? " (you)" : ""}`));
     });
-    grid.style.gridTemplateColumns = `repeat(${gridColumns(tiles.length)}, minmax(0, 1fr))`;
-    grid.append(...tiles);
+    if (state.agent) tiles.push(agentTile());
+    setGrid(grid, tiles);
     // remote audio must be attached somewhere to play
     room.remoteParticipants.forEach((p) => {
       const audio = p.getTrackPublication(lk.Track.Source.Microphone)?.track;
@@ -1051,12 +1536,13 @@ function mount(container, host) {
   function renderChat() {
     const log = root.querySelector(".chatlog");
     if (!log) return;
-    log.replaceChildren(...state.chat.map((m) => { const row = el("div", "msg"); row.append(el("b", "", `${m.from}: `), document.createTextNode(m.text)); return row; }));
+    log.replaceChildren(...state.chat.map((m) => { if (m.kind === "event") return el("div", "evt", m.text); const row = el("div", "msg"); row.append(el("b", "", `${m.from}: `), document.createTextNode(m.text)); return row; }));
     log.scrollTop = log.scrollHeight;
   }
 
-  function control(label, key, onChange) {
+  function control(label, key, onChange, icons = []) {
     const b = el("button", "ctl", label);
+    if (icons.length) withIcon(b, state[key] ? icons[0] : (icons[1] || icons[0]));
     b.type = "button";
     b.setAttribute("aria-pressed", String(state[key]));
     b.addEventListener("click", async () => {
@@ -1079,30 +1565,54 @@ function mount(container, host) {
     input.setAttribute("aria-label", "Message the room");
     input.value = state.draft;
     input.addEventListener("input", () => { state.draft = input.value; });
-    const send = el("button", "ctl", "Send");
+    const send = withIcon(el("button", "ctl", "Send"), "send");
     send.type = "submit";
     form.append(input, send);
     form.addEventListener("submit", (ev) => {
       ev.preventDefault();
       const text = state.draft.trim();
-      if (!text || !room) return;
-      room.localParticipant.publishData(encodeChat(text), { reliable: true });
-      state.chat.push({ from: "You", text });
+      if (!text || (!room && !state.demo)) return;
+      if (room) room.localParticipant.publishData(encodeChat(text), { reliable: true });
       state.draft = ""; input.value = "";
-      renderChat();
+      hear(text, "text");
     });
     chat.append(el("div", "chatlog"), form);
     wrap.append(stage, chat);
 
     const bar = el("div", "bar");
     const lp = () => room.localParticipant;
+    const live = (fn) => (on) => (state.demo ? undefined : fn(on));
     bar.append(
-      control("Mic", "mic", (on) => lp().setMicrophoneEnabled(on)),
-      control("Camera", "cam", (on) => lp().setCameraEnabled(on)),
-      control("Share screen", "screen", (on) => lp().setScreenShareEnabled(on)),
+      control("Mic", "mic", live((on) => lp().setMicrophoneEnabled(on)), ["mic", "micOff"]),
+      control("Camera", "cam", live((on) => lp().setCameraEnabled(on)), ["camera", "cameraOff"]),
+      control("Share screen", "screen", live((on) => lp().setScreenShareEnabled(on)), ["screen"]),
     );
+    const views = el("div", "views");
+    [["grid", "Grid"], ["avatars", "Avatars"], ["speaker", "Speaker"]].forEach(([id, label]) => {
+      const b = withIcon(el("button", "ctl", label), id);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.view === id));
+      b.addEventListener("click", () => { state.view = id; render(); });
+      views.append(b);
+    });
+    bar.append(views);
     bar.append(inviteToggle());
-    const out = el("button", "ctl leave", "Leave");
+    if (!state.agent) {
+      const ia = withIcon(el("button", "ctl", "Invite agent"), "agent");
+      ia.type = "button";
+      ia.addEventListener("click", inviteAgent);
+      bar.append(ia);
+    } else {
+      const sup = speechSupport();
+      const lis = control("Agent listens", "listen", (on) => { if (on) startListening(); else stopListening(); }, ["listen"]);
+      if (!sup.listen) lis.title = "Voice listening isn't supported in this window; type to the agent.";
+      bar.append(lis, control("Agent speaks", "voice", (on) => { if (!on) globalThis.speechSynthesis?.cancel(); }, ["volume", "volumeOff"]));
+      const rm = withIcon(el("button", "ctl", "Remove agent"), "close");
+      rm.type = "button";
+      rm.addEventListener("click", removeAgent);
+      bar.append(rm);
+    }
+    const out = withIcon(el("button", "ctl leave", "Leave"), "leave");
     out.type = "button";
     out.addEventListener("click", leave);
     bar.append(out);
@@ -1110,16 +1620,29 @@ function mount(container, host) {
     return [wrap, bar];
   }
 
+  function fillHead(mh) {
+    const n = (state.demo ? DEMO_PEOPLE.length + 1 : (room ? room.remoteParticipants.size : 0) + 1) + (state.agent ? 1 : 0);
+    mh.replaceChildren(el("span", "", state.demo ? "Demo call" : state.room), el("small", "", `${n} ${n === 1 ? "person" : "people"} · ${state.name}`));
+  }
+
+  function renderHead() {
+    const mh = root.querySelector(".mhead");
+    if (mh) fillHead(mh);
+  }
+
   function render() {
     if (disposed) return;
     root.replaceChildren();
     const main = el("div", "main");
-    root.append(navCol(), main);
-    if (state.phase === "meeting" && room) {
+    const nav = navCol();
+    root.append(nav, main);
+    const specs = [[root, { el: nav, edge: "left", min: 200, max: 480, initial: 260, label: "contacts" }, "contacts"]];
+    if (state.phase === "meeting" && (room || state.demo)) {
       const mh = el("div", "mhead");
-      const n = room.remoteParticipants.size + 1;
-      mh.append(el("span", "", state.room), el("small", "", `${n} ${n === 1 ? "person" : "people"} · ${state.name}`));
-      main.append(mh, ...meeting());
+      fillHead(mh);
+      const [wrap, bar] = meeting();
+      main.append(mh, wrap, bar);
+      specs.push([wrap, { el: wrap.querySelector(".chat"), edge: "right", min: 200, max: 480, initial: 300, label: "chat" }, "chat"]);
       renderStage();
       renderChat();
     } else {
@@ -1129,6 +1652,7 @@ function mount(container, host) {
         main.append(stage);
       }
     }
+    regrip(specs);
     renderNav();
     if (state.settings) root.append(settingsModal());
     if (state.importing) root.append(addContactsModal());
@@ -1136,5 +1660,5 @@ function mount(container, host) {
 
   render();
   detectServer();
-  return () => { disposed = true; room?.disconnect(); root.remove(); };
+  return () => { disposed = true; grips.forEach((g) => g.dispose()); stopDemo(); stopListening(); globalThis.speechSynthesis?.cancel(); room?.disconnect(); root.remove(); };
 }

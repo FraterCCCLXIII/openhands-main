@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { AddFactoryModal } from "#/components/features/automations/factory/add-factory-modal";
@@ -7,25 +8,47 @@ import { FeedCustomIcon } from "#/components/features/feed/feed-custom-icon";
 import { FeedIconTile } from "#/components/features/feed/feed-icon-tile";
 import { useNavigation } from "#/context/navigation-context";
 import { usePaginatedConversations } from "#/hooks/query/use-paginated-conversations";
-import { useFeedFactories } from "#/hooks/use-feed-factories";
+import {
+  useFactoryResolver,
+  useFeedFactories,
+} from "#/hooks/use-feed-factories";
 import { I18nKey } from "#/i18n/declaration";
 import { ExecutionStatus } from "#/types/agent-server/core/base/common";
 import { factoryIconKey } from "#/utils/feed-icon-keys";
-import { getFeedFactory } from "#/utils/feed-team-demo";
 import { settingsLikeMainScrollClassName } from "#/utils/settings-like-page-layout-classes";
 import { cn } from "#/utils/utils";
+
+const NEW_FACTORY_PARAM = "new";
 
 /** Every factory as a tile: how many agents work in it and how many are running now. */
 export default function FactoryScreen() {
   const { t } = useTranslation("openhands");
   const { navigate } = useNavigation();
   const factories = useFeedFactories();
+  const resolveFactory = useFactoryResolver();
   const { data } = usePaginatedConversations();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [adding, setAdding] = useState(false);
+
+  // `/factory?new=1` is the New Chat menu's "New factory" link: open the modal
+  // once, then drop the param so a reload or Back does not reopen it.
+  const wantsNewFactory = searchParams.get(NEW_FACTORY_PARAM) === "1";
+  useEffect(() => {
+    if (!wantsNewFactory) return;
+    setAdding(true);
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete(NEW_FACTORY_PARAM);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [wantsNewFactory, setSearchParams]);
 
   const all = data?.pages.flatMap((page) => page.items) ?? [];
   const stats = (id: string) => {
-    const mine = all.filter((c) => getFeedFactory(c.id).id === id);
+    const mine = all.filter((c) => resolveFactory(c)?.id === id);
     return {
       count: mine.length,
       live: mine.filter((c) => c.execution_status === ExecutionStatus.RUNNING)

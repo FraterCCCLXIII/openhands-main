@@ -449,6 +449,106 @@ export function parseImport(text) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────
 
+/**
+ * Drag handles for the outer columns of a page's grid (a left list and/or a right panel).
+ *
+ * `columns` is a list of `{ el, edge, min, max, initial, label }`: `el` is the column's element,
+ * `edge` is "left" for a column on the left side (its handle sits on its right edge) or "right"
+ * for one on the right side. The app's CSS must read each width from a variable, for example
+ * `grid-template-columns: var(--grip-0, 300px) minmax(0, 1fr) var(--grip-1, 280px)`, where the
+ * number is the column's position in the `columns` list. Widths are saved per `storageKey`.
+ * Call `refresh()` after the app shows or hides a column; call `dispose()` on unmount.
+ */
+function gripColumns({ grid, columns, storageKey, centerMin = 320, narrowQuery = "(max-width: 720px)" }) {
+  const win = grid.ownerDocument.defaultView || globalThis;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const saved = (() => {
+    try { return JSON.parse(win.localStorage.getItem(storageKey) || "{}") || {}; } catch { return {}; }
+  })();
+  const widths = columns.map((c, i) => (Number.isFinite(saved[i]) ? clamp(saved[i], c.min, c.max) : c.initial));
+  const handles = [];
+  const cleanups = [];
+
+  const narrow = () => Boolean(win.matchMedia && win.matchMedia(narrowQuery).matches);
+  const shown = (i) => !narrow() && columns[i].el.isConnected && win.getComputedStyle(columns[i].el).display !== "none";
+  const save = () => { try { win.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(widths.map((w, i) => [i, w])))); } catch { /* storage unavailable */ } };
+  // The widest a column may get while the middle keeps `centerMin` and the other grips keep their widths.
+  const limit = (i) => {
+    const total = grid.clientWidth;
+    if (!total) return columns[i].max;
+    const others = widths.reduce((sum, w, j) => (j !== i && shown(j) ? sum + w : sum), 0);
+    return clamp(total - others - centerMin, columns[i].min, columns[i].max);
+  };
+
+  function apply() {
+    columns.forEach((c, i) => {
+      if (narrow()) grid.style.removeProperty(`--grip-${i}`);
+      else grid.style.setProperty(`--grip-${i}`, `${widths[i]}px`);
+      const h = handles[i];
+      h.hidden = !shown(i);
+      h.setAttribute("aria-valuenow", String(Math.round(widths[i])));
+      h.setAttribute("aria-valuemax", String(Math.round(limit(i))));
+    });
+  }
+
+  function set(i, width, persist = true) {
+    widths[i] = clamp(Math.round(width), columns[i].min, limit(i));
+    apply();
+    if (persist) save();
+  }
+
+  columns.forEach((c, i) => {
+    const h = grid.ownerDocument.createElement("div");
+    h.className = `grip grip-${c.edge}`;
+    h.dataset.grip = String(i);
+    h.setAttribute("role", "separator");
+    h.setAttribute("aria-orientation", "vertical");
+    h.setAttribute("aria-label", `Resize ${c.label || "column"}`);
+    h.setAttribute("aria-valuemin", String(c.min));
+    h.tabIndex = 0;
+    h.style[c.edge === "left" ? "left" : "right"] = `var(--grip-${i}, ${c.initial}px)`;
+    const dir = c.edge === "left" ? 1 : -1;
+    let startX = 0;
+    let startW = 0;
+    const move = (e) => { set(i, startW + dir * (e.clientX - startX), false); };
+    const up = () => {
+      grid.classList.remove("gripping");
+      h.classList.remove("on");
+      grid.ownerDocument.removeEventListener("pointermove", move);
+      grid.ownerDocument.removeEventListener("pointerup", up);
+      save();
+    };
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startX = e.clientX;
+      startW = widths[i];
+      grid.classList.add("gripping");
+      h.classList.add("on");
+      grid.ownerDocument.addEventListener("pointermove", move);
+      grid.ownerDocument.addEventListener("pointerup", up);
+    });
+    h.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const grow = (e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0) * dir;
+      if (grow) set(i, widths[i] + grow * step);
+      else if (e.key === "Home") set(i, c.min);
+      else if (e.key === "End") set(i, limit(i));
+      else return;
+      e.preventDefault();
+    });
+    h.addEventListener("dblclick", () => set(i, c.initial));
+    cleanups.push(() => { grid.ownerDocument.removeEventListener("pointermove", move); grid.ownerDocument.removeEventListener("pointerup", up); h.remove(); });
+    handles.push(h);
+    grid.append(h);
+  });
+
+  win.addEventListener("resize", apply);
+  cleanups.push(() => win.removeEventListener("resize", apply));
+  apply();
+  return { refresh: apply, widths: () => [...widths], dispose: () => cleanups.forEach((fn) => fn()) };
+}
+
+
 const STYLE = `
 .rt { --rt-bg: var(--oh-color-base, #0B0E14); --rt-panel: var(--oh-color-base-secondary, #21252F); --rt-raised: var(--oh-surface-raised, #2C313F);
   --rt-text: var(--oh-foreground, #EEF2F7); --rt-contrast: var(--oh-contrast, #FFFFFF); --rt-muted: var(--oh-muted, #A3B0C4);
@@ -509,7 +609,7 @@ const STYLE = `
 .rt .cols { display: flex; align-items: flex-end; gap: 3px; height: 80px; }
 .rt .cols .col { flex: 1; background: color-mix(in srgb, var(--rt-primary) 55%, transparent); border-radius: 2px 2px 0 0; min-height: 2px; }
 .rt .sysrow { display: grid; grid-template-columns: max-content 1fr max-content; gap: 10px; align-items: center; }
-.rt .chip.risk-low { color: var(--rt-success); border-color: var(--rt-success); } .rt .chip.risk-medium { color: var(--rt-warn); border-color: var(--rt-warn); } .rt .chip.risk-high { color: var(--rt-danger); border-color: var(--rt-danger); }
+.rt .chip.risk-low { color: var(--rt-success); border-color: var(--rt-success); } .rt .chip.risk-medium { color: var(--oh-feedback-warning, var(--rt-warn)); border-color: var(--rt-warn); } .rt .chip.risk-high { color: var(--rt-danger); border-color: var(--rt-danger); }
 .rt .k-system { --c: var(--rt-warn); }
 .rt .card table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .rt .card th { text-align: left; color: var(--rt-muted); font-weight: 500; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--rt-border); }
@@ -536,7 +636,7 @@ const STYLE = `
 .rt .pm .id { font-weight: 500; color: var(--rt-contrast); } .rt .pm .sub { color: var(--rt-muted); font-size: 11px; }
 .rt .pm .tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10px; border: 1px solid var(--rt-border); color: var(--rt-muted); }
 .rt .pm .tag.ours { color: var(--rt-success); border-color: var(--rt-success); } .rt .pm .tag.used { color: var(--rt-primary); border-color: var(--rt-primary); }
-.rt .shell { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+.rt .shell { display: grid; grid-template-columns: var(--grip-0, 290px) minmax(0, 1fr); gap: 20px; align-items: start; position: relative; }
 .rt .main { min-width: 0; }
 .rt .nav { position: sticky; top: 0; max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 8px; }
 .rt .nav h2 { margin: 0; padding: 0 6px; }
@@ -594,6 +694,16 @@ const STYLE = `
 .rt .info { background: none; border: 0; padding: 2px; border-radius: 50%; color: var(--rt-muted); display: inline-flex; cursor: help; }
 .rt .info:hover, .rt .info:focus-visible, .rt .info[aria-expanded="true"] { color: var(--rt-contrast); }
 .rt .infobox { position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40; width: min(460px, 86vw); background: var(--rt-panel); border: 1px solid var(--rt-border); border-radius: 10px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 12px; line-height: 1.5; color: var(--rt-muted); }
+.grip { position: absolute; top: 0; bottom: 0; width: 11px; z-index: 6; cursor: col-resize; touch-action: none; outline: 0; }
+.grip-left { transform: translateX(-50%); }
+.grip-right { transform: translateX(50%); }
+.grip::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: transparent; transition: background .12s; }
+.grip:hover::after, .grip:focus-visible::after, .grip.on::after { background: var(--oh-color-primary, #7c9dff); }
+.gripping { user-select: none; cursor: col-resize; }
+.gripping * { pointer-events: none; }
+.gripping .grip { pointer-events: auto; }
+@media (max-width: 720px) { .grip { display: none; } }
+.rt .grip-left { margin-left: 10px; }
 `;
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────
@@ -1483,9 +1593,11 @@ function mountTimeline(host, { container }) {
     return m;
   }
 
+  let grip = null;
   function render() {
     if (disposed) return;
     tip = null;
+    grip?.dispose();
     root.replaceChildren();
     const shell = el("div", "shell");
     const nav = el("nav", "nav");
@@ -1493,6 +1605,7 @@ function mountTimeline(host, { container }) {
     const main = el("div", "main");
     shell.append(nav, main);
     root.append(shell);
+    grip = gripColumns({ grid: shell, storageKey: "grip:run-timeline", narrowQuery: "(max-width: 900px)", columns: [{ el: nav, edge: "left", min: 200, max: 480, initial: 290, label: "conversation list" }] });
 
     const navHead = el("div", "navhead");
     const aboutBtn = button("About", () => { ui.view = "about"; ui.menuOpen = false; render(); }, "linkbtn");
@@ -1668,6 +1781,7 @@ function mountTimeline(host, { container }) {
   loadConversations();
   return () => {
     disposed = true;
+    grip?.dispose();
     window.clearInterval(pollTimer);
     style.remove();
     root.remove();

@@ -31,7 +31,7 @@ export function installBootOverlay(initial) {
       background: rgba(16, 16, 16, 0.66);
       -webkit-backdrop-filter: blur(6px);
       backdrop-filter: blur(6px);
-      -webkit-app-region: no-drag;
+      -webkit-app-region: drag;
       transition: opacity 200ms ease;
       font-family: -apple-system, "SF Pro", BlinkMacSystemFont, "Segoe UI", "Roboto",
         "Helvetica Neue", sans-serif;
@@ -43,6 +43,7 @@ export function installBootOverlay(initial) {
     #oh-boot-overlay * { box-sizing: border-box; }
 
     #oh-boot-overlay .oh-boot-card {
+      -webkit-app-region: no-drag;
       width: 460px;
       max-width: 100%;
       max-height: 100%;

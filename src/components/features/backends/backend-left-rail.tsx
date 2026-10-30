@@ -14,6 +14,8 @@ import { useActiveBackendContext } from "#/contexts/active-backend-context";
 import { I18nKey } from "#/i18n/declaration";
 import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 import { cn } from "#/utils/utils";
+import { isMacDesktopShell } from "#/utils/desktop-shell";
+import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
 import { AddBackendModal } from "./add-backend-modal";
 import {
   AccountIdentityTile,
@@ -64,6 +66,10 @@ export function BackendLeftRail() {
   const { backends, options, healthByBackendId } = useBackendOptions();
   const selectOption = useSelectBackendOption(options);
   const [addModalOpen, setAddModalOpen] = React.useState(false);
+  const isFullScreen = useDesktopFullScreen();
+  // macOS desktop: the rail runs to the window's top edge and is wide enough
+  // to hold the traffic lights, which sit in its top band.
+  const showTitleBand = isMacDesktopShell() && !isFullScreen;
 
   if (!enabled) return null;
 
@@ -77,7 +83,14 @@ export function BackendLeftRail() {
       <nav
         data-testid="backend-left-rail"
         aria-label={t(I18nKey.BACKEND$LEFT_RAIL)}
-        className="hidden h-full w-14 shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-r-[0.5px] border-border bg-base-secondary py-3 md:flex"
+        className={cn(
+          "hidden h-full w-14 shrink-0 flex-col items-center gap-2 overflow-y-auto border-r border-r-[0.5px] border-border bg-base-secondary md:flex",
+          // py-3 would override a top-only padding (shorthand wins), so the
+          // title band sets its own top and bottom padding.
+          showTitleBand
+            ? "app-region-drag pt-16 pb-3 md:-mt-7 md:h-[calc(100%+1.75rem)] md:w-20 [&>*]:app-region-no-drag"
+            : "py-3",
+        )}
       >
         {options.map((option) => {
           const { backendId } = parseOptionValue(option.value);

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
+import { useExtensionPageMount } from "#/components/features/canvas-extensions/extension-page-host";
 import { I18nKey } from "#/i18n/declaration";
 
 export default function CanvasExtensionPage() {
@@ -12,9 +13,6 @@ export default function CanvasExtensionPage() {
   const extensionName = params.extensionName ?? "";
   const routePath = params["*"] ?? "";
   const { pages, activating, errors } = useCanvasExtensionsRuntime();
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [mountError, setMountError] = React.useState<string | null>(null);
-
   const page = React.useMemo(
     () =>
       pages
@@ -30,49 +28,14 @@ export default function CanvasExtensionPage() {
         ),
     [extensionName, pages, routePath],
   );
-
-  React.useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !page) return undefined;
-    let disposed = false;
-    let disposeMount: (() => void) | undefined;
-    setMountError(null);
-    container.replaceChildren();
-
-    const remainder = routePath
-      .slice(page.contribution.path.length)
-      .replace(/^\/+/, "");
-    Promise.resolve()
-      .then(() =>
-        page.mount({
-          container,
-          path: remainder,
-          navigate: (path) => navigate(path),
-        }),
-      )
-      .then((dispose) => {
-        if (typeof dispose !== "function") return;
-        if (disposed) dispose();
-        else disposeMount = dispose;
-      })
-      .catch((error: unknown) => {
-        if (!disposed) {
-          setMountError(
-            error instanceof Error ? error.message : "Extension page failed.",
-          );
-        }
-      });
-
-    return () => {
-      disposed = true;
-      try {
-        disposeMount?.();
-      } catch (error) {
-        console.error("Canvas Extension page cleanup failed", error);
-      }
-      container.replaceChildren();
-    };
-  }, [navigate, page, routePath]);
+  const remainder = page
+    ? routePath.slice(page.contribution.path.length).replace(/^\/+/, "")
+    : "";
+  const { containerRef, mountError } = useExtensionPageMount(
+    page,
+    remainder,
+    navigate,
+  );
 
   if (activating && !page) {
     return (

@@ -4,6 +4,7 @@ import {
   type Roster,
 } from "#/components/features/automations/factory/factory-routing-context";
 import type { FactoryData } from "#/components/features/automations/factory/use-factory-data";
+import { useKnownFeedAgents } from "#/hooks/use-known-feed-agents";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 
 const NO_AGENTS: readonly string[] = [];
@@ -16,8 +17,9 @@ export function useFactoryRoster(factoryId: string, data: FactoryData): Roster {
   const coordinator = useFeedFactoriesStore(
     (state) => state.coordinators[factoryId],
   );
+  const known = useKnownFeedAgents();
   return useMemo(
-    () => buildRoster(data, added, coordinator),
-    [data, added, coordinator],
+    () => buildRoster(data, added, coordinator, known),
+    [data, added, coordinator, known],
   );
 }

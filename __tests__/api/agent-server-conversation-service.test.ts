@@ -5,9 +5,11 @@ import {
   SettingsClient,
   VSCodeClient,
 } from "@openhands/typescript-client/clients";
+import { HttpError } from "@openhands/typescript-client";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { server } from "#/mocks/node";
+import { displayWarningToast } from "#/utils/custom-toast-handlers";
 import { WORKSPACE_TAG_KEY } from "#/api/agent-server-adapter";
 import {
   __resetActiveStoreForTests,
@@ -102,6 +104,11 @@ vi.mock("@openhands/typescript-client/clients", async () => {
     }),
   };
 });
+
+vi.mock("#/utils/custom-toast-handlers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("#/utils/custom-toast-handlers")>()),
+  displayWarningToast: vi.fn(),
+}));
 
 vi.mock("#/api/agent-server-config", () => ({
   DEFAULT_WORKING_DIR: "workspace/project",
@@ -702,6 +709,87 @@ describe("AgentServerConversationService", () => {
       );
     });
 
+    describe("client tool schema conflict", () => {
+      const conflict = (tool: string) =>
+        new HttpError(422, "Unprocessable Entity", {
+          detail: `Client tool '${tool}' is already registered with a different parameters schema. Client tool names must map to a single, stable schema within a process.`,
+        });
+      const sentToolNames = (callIndex: number) =>
+        (
+          mockHttpPost.mock.calls[callIndex][1] as {
+            client_tools: Array<{ name: string }>;
+          }
+        ).client_tools.map((tool) => tool.name);
+
+      beforeEach(() => {
+        mockGetSettings.mockResolvedValue({
+          agent_settings: { llm: { model: "gpt-4o" } },
+          conversation_settings: {},
+        });
+        mockGetSettingsForConversation.mockResolvedValue({
+          agentSettings: { llm: { model: "gpt-4o" } },
+          conversationSettings: {},
+          secretsEncrypted: true,
+        });
+      });
+
+      it("retries once without the canvas ui tool and warns when the server already pins another schema", async () => {
+        mockHttpPost
+          .mockRejectedValueOnce(conflict("canvas_ui_control_v2"))
+          .mockResolvedValueOnce({
+            data: {
+              id: "c1",
+              created_at: "2024-01-01",
+              updated_at: "2024-01-01",
+            },
+          });
+
+        const result = await AgentServerConversationService.createConversation({
+          agentProfileId: "profile-1",
+          agentProfileKind: "openhands",
+        });
+
+        expect(result.id).toBe("c1");
+        expect(mockHttpPost).toHaveBeenCalledTimes(2);
+        expect(sentToolNames(0)).toContain("canvas_ui_control_v2");
+        expect(sentToolNames(0)).not.toContain("canvas_ui_control");
+        expect(sentToolNames(1)).not.toContain("canvas_ui_control_v2");
+        expect(sentToolNames(1)).toContain("request_secret");
+        expect(displayWarningToast).toHaveBeenCalledTimes(1);
+      });
+
+      it("does not retry an unrelated creation error", async () => {
+        mockHttpPost.mockRejectedValue(
+          new HttpError(422, "Unprocessable Entity", {
+            detail: "bad workspace",
+          }),
+        );
+
+        await expect(
+          AgentServerConversationService.createConversation({
+            agentProfileId: "profile-1",
+            agentProfileKind: "openhands",
+          }),
+        ).rejects.toThrow();
+
+        expect(mockHttpPost).toHaveBeenCalledTimes(1);
+        expect(displayWarningToast).not.toHaveBeenCalled();
+      });
+
+      it("gives up after a single retry when the conflict persists", async () => {
+        mockHttpPost.mockRejectedValue(conflict("canvas_ui_control_v2"));
+
+        await expect(
+          AgentServerConversationService.createConversation({
+            agentProfileId: "profile-1",
+            agentProfileKind: "openhands",
+          }),
+        ).rejects.toThrow();
+
+        expect(mockHttpPost).toHaveBeenCalledTimes(2);
+      });
+    });
+
     it("generates a unique conversation_id and isolated working_dir per call", async () => {
       mockGetSettings.mockResolvedValue({
         agent_settings: { llm: { model: "gpt-4o" } },
@@ -1098,8 +1186,9 @@ describe("AgentServerConversationService", () => {
         searchConversations: searchSpy,
       });
 
-      const result =
-        await AgentServerConversationService.searchConversations({ limit: 10 });
+      const result = await AgentServerConversationService.searchConversations({
+        limit: 10,
+      });
 
       expect(result.items[0]?.sandbox_status).toBe("PAUSED");
     });
@@ -1581,7 +1670,7 @@ describe("AgentServerConversationService", () => {
         automationmaterializeddraftid: "auto-1",
       });
       expect(body.client_tools.map((tool) => tool.name)).toEqual([
-        "canvas_ui_control",
+        "canvas_ui_control_v2",
         "launch_child_conversation",
         "automation_form_update",
       ]);

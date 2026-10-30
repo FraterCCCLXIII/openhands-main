@@ -4,9 +4,23 @@ export type PipelineStepKind = "human" | "auto" | "system";
 /** Which live figure a step shows, drawn from the factory's conversations. */
 export type PipelineCountKind = "conversations" | "live" | "prs";
 
+import { DEFAULT_HUMAN_ROLES } from "#/constants/factory-human-roles";
+
+/** The part a person plays at a human-in-the-loop gate; names the slot. */
+export type HumanRoleKind = "reviewer" | "approver" | "signer";
+
 export interface PipelineStep {
   id: string;
   kind: PipelineStepKind;
+  /**
+   * True only for a gate a person must pass (review, approval, sign-off).
+   * Trigger steps that merely start the flow are not gates.
+   */
+  humanInTheLoop?: boolean;
+  /** What the people at this gate are called. Set with `humanInTheLoop`. */
+  humanRoleKind?: HumanRoleKind;
+  /** How many people this gate asks for until the factory changes it. */
+  defaultHumanRoles?: number;
   /** Position on the canvas, in pixels. */
   x: number;
   y: number;
@@ -45,6 +59,18 @@ const step = (
   count?: PipelineCountKind,
 ): PipelineStep => ({ id, kind, x, y, width, height, title, lines, count });
 
+/** Marks a human step as a gate and says who staffs it. */
+const gate = (
+  base: PipelineStep,
+  humanRoleKind: HumanRoleKind,
+  defaultHumanRoles = DEFAULT_HUMAN_ROLES,
+): PipelineStep => ({
+  ...base,
+  humanInTheLoop: true,
+  humanRoleKind,
+  defaultHumanRoles,
+});
+
 /** The agentic software delivery flow from the Projects hub, as a template. */
 const AGENTIC_SDLC: PipelineTemplate = {
   id: "agentic-sdlc",
@@ -65,15 +91,21 @@ const AGENTIC_SDLC: PipelineTemplate = {
       "Defines outcome",
     ]),
     step("ticket", "auto", 40, 110, 340, 62, "Ticket", [], "conversations"),
-    step("hitl1", "human", 40, 200, 340, 56, "HITL review first", [
-      "Elevated to autonomous later",
-    ]),
+    gate(
+      step("hitl1", "human", 40, 200, 340, 56, "HITL review first", [
+        "Elevated to autonomous later",
+      ]),
+      "reviewer",
+    ),
     step("plan", "auto", 40, 290, 340, 82, "Plan agent", [
       "Defines implementation spec (architect agent)",
     ]),
-    step("hitl2", "human", 40, 400, 340, 56, "HITL review first", [
-      "Elevated to autonomous later",
-    ]),
+    gate(
+      step("hitl2", "human", 40, 400, 340, 56, "HITL review first", [
+        "Elevated to autonomous later",
+      ]),
+      "reviewer",
+    ),
     step(
       "code",
       "auto",
@@ -107,9 +139,12 @@ const AGENTIC_SDLC: PipelineTemplate = {
       "prs",
     ),
     step("risk", "auto", 660, 640, 200, 84, "Low-risk change?"),
-    step("eng", "human", 790, 760, 170, 84, "Code review", [
-      "Additional review by an engineer",
-    ]),
+    gate(
+      step("eng", "human", 790, 760, 170, 84, "Code review", [
+        "Additional review by an engineer",
+      ]),
+      "reviewer",
+    ),
     step("deploy", "auto", 560, 880, 400, 96, "Agentic deploy", [
       "Babysits the change into prod, including feature flag rollout",
     ]),
@@ -169,9 +204,12 @@ const INCIDENT_RESPONSE: PipelineTemplate = {
       ["Groups alerts, finds the likely cause"],
       "conversations",
     ),
-    step("approve", "human", 580, 120, 240, 80, "On-call approval", [
-      "Approves the mitigation",
-    ]),
+    gate(
+      step("approve", "human", 580, 120, 240, 80, "On-call approval", [
+        "Approves the mitigation",
+      ]),
+      "approver",
+    ),
     step(
       "mitigate",
       "auto",
@@ -197,9 +235,12 @@ const INCIDENT_RESPONSE: PipelineTemplate = {
     step("verify", "auto", 280, 300, 240, 90, "Verifier", [
       "Checks the fix against the incident",
     ]),
-    step("post", "human", 0, 300, 220, 80, "Postmortem", [
-      "Owner reviews the draft",
-    ]),
+    gate(
+      step("post", "human", 0, 300, 220, 80, "Postmortem", [
+        "Owner reviews the draft",
+      ]),
+      "reviewer",
+    ),
   ],
   links: [
     { source: "alert", target: "triage" },
@@ -240,9 +281,13 @@ const RELEASE_TRAIN: PipelineTemplate = {
       ["Regression and smoke tests"],
       "live",
     ),
-    step("signoff", "human", 580, 100, 220, 84, "Release sign-off", [
-      "Release manager approves",
-    ]),
+    gate(
+      step("signoff", "human", 580, 100, 220, 84, "Release sign-off", [
+        "Release manager approves",
+      ]),
+      "signer",
+      2,
+    ),
     step("canary", "auto", 860, 100, 220, 84, "Canary rollout", [
       "1% then 10% then 50%",
     ]),
@@ -307,9 +352,12 @@ const DATA_QUALITY: PipelineTemplate = {
       ["Opens a pull request"],
       "prs",
     ),
-    step("review", "human", 860, 180, 220, 84, "Data owner review", [
-      "Approves the fix",
-    ]),
+    gate(
+      step("review", "human", 860, 180, 220, 84, "Data owner review", [
+        "Approves the fix",
+      ]),
+      "reviewer",
+    ),
     step(
       "publish",
       "auto",

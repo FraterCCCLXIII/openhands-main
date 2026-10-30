@@ -1,3 +1,4 @@
+import * as vitestDemoOn from "vitest";
 import { screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { FeedFactoryHeader } from "#/components/features/feed/feed-factory-header";
@@ -95,3 +96,7 @@ describe("FeedFactoryHeader", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+// These cover the simulated team, which is opt-in.
+vitestDemoOn.beforeEach(() => window.history.pushState({}, "", "/?demoTeam=on"));
+vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));

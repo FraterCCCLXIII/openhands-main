@@ -139,6 +139,18 @@ describe("page", () => {
     expect(container.querySelector(".mp")).toBeNull();
   });
 
+  it("inks the planned and in-progress chips so they stay readable on a light theme", () => {
+    let mount;
+    activate(hostWith((_, m) => { mount = m; }));
+    const cleanup = mount({ container });
+    const css = [...document.head.querySelectorAll("style")].map((s) => s.textContent).join("\n");
+    for (const status of ["s-planned", "s-in_progress"]) {
+      const rule = css.match(new RegExp(`\\.chip\\.${status}\\s*\\{([^}]*)\\}`))[1];
+      expect(rule).toMatch(/color:\s*color-mix\(.*,\s*var\(--mp-contrast\)\)/);
+    }
+    cleanup();
+  });
+
   it("switches views from the tabs", () => {
     let mount;
     activate(hostWith((_, m) => { mount = m; }));

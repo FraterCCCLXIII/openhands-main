@@ -23,6 +23,8 @@ export interface FeedDemoAgent {
   Icon: LucideIcon;
   /** Tailwind classes for the avatar's tint and glyph color. */
   className: string;
+  /** Set for a real agent profile; absent for a simulated persona. */
+  profileId?: string;
 }
 
 export const FEED_DEMO_AGENTS: readonly FeedDemoAgent[] = [

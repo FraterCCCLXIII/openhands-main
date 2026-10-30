@@ -120,6 +120,8 @@ host API contains:
 - `apiVersion: "1"`
 - immutable extension/backend metadata
 - `registerPage(id, mount)` for page factories declared by the manifest
+- `registerCreateAction(action)` and `onIntent(callback)` for entries in the
+  New Chat menu (see below)
 - `navigate(path)` using Canvas base-path-aware routing
 - `agentServer.request(...)`, an authenticated request helper targeting the
   extension's owning backend
@@ -128,6 +130,82 @@ The runtime fetches the bundle as authenticated text and imports it through a
 temporary Blob URL. A direct `<script src>` or `import(backendUrl)` cannot carry
 `X-Session-API-Key`, so it is not the v1 loading path. Importing the bundle does
 not activate it; Canvas calls `activate` only for an enabled installation.
+
+### Create actions (New Chat menu)
+
+An extension can add its own entries to the left nav's New Chat dropdown, after
+the built-in ones and under a divider. They are registered at runtime, not in
+the manifest, so the Agent Server schema and `minimumAgentServer` are
+unchanged and extensions that never call the API keep working. Both
+`registerCreateAction` and `onIntent` are additive to host API `"1"`; a
+component built for an older host must feature-detect them.
+
+```ts
+interface CanvasExtensionCreateAction {
+  id: string; // lowercase letters, digits, hyphens; unique within the extension
+  label: string; // 1-40 characters, sentence case: "New document"
+  description?: string; // row tooltip, up to 200 characters
+  icon?: { svg: string }; // inline <svg> using currentColor, at most 4096 characters
+  pageId: string; // a page this extension declared in `contributes.pages`
+  intent?: string; // opaque, up to 200 characters; defaults to `id`
+}
+```
+
+Rules:
+
+- An invalid registration (bad `id`, empty or long `label`, `pageId` not
+  declared in the manifest, malformed or oversized `icon.svg`, or a duplicate
+  `id`) throws an `Error` from `registerCreateAction`, like `registerPage`.
+  Nothing is stored for it, so the extension's other registrations are
+  unaffected.
+- Actions appear once activation resolves, ordered by extension name and then
+  registration order. The returned disposer, disabling, uninstalling, updating,
+  and switching backends remove them.
+- Selecting a row navigates to the declared page (keeping the `?backend=`
+  selection) and queues an intent `{ id, action, at }`: `id` is the action id,
+  `action` is the action's `intent` string, `at` is epoch milliseconds.
+- Icons are untrusted. Canvas never inserts the markup as HTML; it paints it as
+  a CSS mask over the menu text colour, so only the shape matters and scripts
+  never run. Without `icon`, the row shows the extension's own icon.
+- The label comes from the extension and is not translated by Canvas.
+
+Intent delivery is consumed once and never persisted:
+
+- If the page is not mounted, the intent arrives as
+  `mount({ intent })` and is cleared right after. A later plain visit sees
+  `intent: null`. An intent whose navigation never landed is dropped after 10
+  seconds.
+- If the page is already mounted and the extension subscribed with
+  `host.onIntent(callback)`, the callback receives the same object and the
+  page is not remounted. Without a subscriber, the intent waits for the next
+  mount (within the 10 second window).
+- Conversation drawer tabs mount through the same page host and follow the same
+  rules.
+
+```ts
+export function activate(host) {
+  const disposers = [
+    host.registerPage("editor", ({ container, intent }) => {
+      startEditor(container, intent?.action === "create:document");
+    }),
+    host.onIntent((intent) => startNewDocument(intent.action)),
+    host.registerCreateAction({
+      id: "new-document",
+      label: "New document",
+      description: "Start a blank document",
+      icon: {
+        svg: '<svg viewBox="0 0 16 16"><path fill="currentColor" d="M3 1h7l3 3v11H3z"/></svg>',
+      },
+      pageId: "editor",
+      intent: "create:document",
+    }),
+  ];
+  return () => disposers.forEach((dispose) => dispose());
+}
+```
+
+The built-in **New factory** row is not an extension action: it links to
+`/factory?new=1`, which opens the Add Factory modal and removes the parameter.
 
 ### Optional app backend views
 

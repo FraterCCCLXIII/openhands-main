@@ -163,6 +163,18 @@ describe("Usage Insights extension", () => {
     );
   });
 
+  it("keeps the primary button's own background and text colour on hover, so its label never disappears", async () => {
+    const { mountPage, navigate } = setup();
+    const container = document.createElement("div");
+    const cleanup = mountPage({ container, path: "", navigate });
+    await vi.waitFor(() => expect(container.textContent).toContain("Usage Insights"));
+    const css = [...document.head.querySelectorAll("style")].map((s) => s.textContent).join("\n");
+    const hover = css.match(/\.usage-insights__button--primary:hover\s*\{([^}]*)\}/)[1];
+    expect(hover).toMatch(/background:/);
+    expect(hover).toMatch(/(^|[;\s])color:\s*var\(--ui-on-primary\)/);
+    cleanup();
+  });
+
   it("renders the overview page with heading and description", async () => {
     const { mountPage, navigate } = setup();
     const container = document.createElement("div");

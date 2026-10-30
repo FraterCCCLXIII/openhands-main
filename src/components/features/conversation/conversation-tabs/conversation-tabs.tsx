@@ -36,6 +36,7 @@ import { useAgentState, usePlanningAgentState } from "#/hooks/use-agent-state";
 import { AgentState } from "#/types/agent-state";
 import { Typography } from "#/ui/typography";
 import { mobileTopBarIconClassName } from "#/utils/mobile-top-bar-icon-button-classes";
+import { useExtensionDrawerTabs } from "#/hooks/use-extension-drawer-tabs";
 
 export function ConversationTabs({
   variant = "default",
@@ -55,6 +56,7 @@ export function ConversationTabs({
 
   const { hasTaskList } = useTaskList();
   const { backend } = useActiveBackend();
+  const extensionTabs = useExtensionDrawerTabs();
 
   const { handleBuildPlanClick } = useHandleBuildPlanClick();
   const { curAgentState } = useAgentState();
@@ -175,6 +177,19 @@ export function ConversationTabs({
       label: t(CONVERSATION_TAB_LABEL_KEYS.tasklist),
     });
   }
+
+  // Canvas Extension pages follow the built-in tabs.
+  extensionTabs.forEach(({ tab, label, icon }) => {
+    tabs.push({
+      tabValue: tab,
+      isActive: isTabActive(tab),
+      icon: icon as (typeof tabs)[number]["icon"],
+      onClick: () => selectTab(tab),
+      tooltipContent: label,
+      tooltipAriaLabel: label,
+      label,
+    });
+  });
 
   // Pinned tabs always show in the bar. Unpinned tabs stay hidden unless the
   // user has that tab selected — then it appears while active so the bar

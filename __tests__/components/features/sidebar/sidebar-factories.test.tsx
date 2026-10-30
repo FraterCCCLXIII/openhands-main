@@ -1,3 +1,4 @@
+import * as vitestDemoOn from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "test-utils";
@@ -83,3 +84,7 @@ describe("SidebarFactories", () => {
     }
   });
 });
+
+// These cover the simulated team, which is opt-in.
+vitestDemoOn.beforeEach(() => window.history.pushState({}, "", "/?demoTeam=on"));
+vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));

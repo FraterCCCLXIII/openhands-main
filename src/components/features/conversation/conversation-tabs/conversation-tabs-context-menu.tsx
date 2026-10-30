@@ -18,6 +18,7 @@ import { PinToggleIcon } from "#/components/shared/pin-toggle-icon";
 import DoubleCheckIcon from "#/icons/double-check.svg?react";
 import { useTaskList } from "#/hooks/use-task-list";
 import { useSelectConversationTab } from "#/hooks/use-select-conversation-tab";
+import { useExtensionDrawerTabs } from "#/hooks/use-extension-drawer-tabs";
 import { useIsArchivedConversation } from "#/hooks/use-is-archived-conversation";
 import { ArchivedDisabledTooltip } from "../../context-menu/archived-disabled-tooltip";
 import { cn } from "#/utils/utils";
@@ -108,7 +109,14 @@ export function ConversationTabsContextMenu({
   const { hasTaskList } = useTaskList();
   const isArchivedConversation = useIsArchivedConversation();
 
-  const tabConfig = [
+  const extensionTabs = useExtensionDrawerTabs();
+
+  const tabConfig: {
+    tab: string;
+    icon: React.ComponentType<{ className: string }>;
+    i18nKey?: I18nKey;
+    label?: string;
+  }[] = [
     {
       tab: "planner",
       icon: ListTodo,
@@ -136,6 +144,10 @@ export function ConversationTabsContextMenu({
       i18nKey: I18nKey.COMMON$TASK_LIST,
     });
   }
+
+  extensionTabs.forEach(({ tab, label, icon }) => {
+    tabConfig.push({ tab, icon, label });
+  });
 
   const handleOpenTab = (tab: string) => {
     if (isArchivedConversation) {
@@ -186,7 +198,7 @@ export function ConversationTabsContextMenu({
       spacing={isPortaled ? "none" : "default"}
       className={cn("z-[9999] w-fit", isPortaled ? "mt-0" : "mt-2")}
     >
-      {tabConfig.map(({ tab, icon: Icon, i18nKey }) => {
+      {tabConfig.map(({ tab, icon: Icon, i18nKey, label }) => {
         const pinned = !state.unpinnedTabs.includes(tab);
         return (
           <li key={tab} className="list-none">
@@ -217,7 +229,9 @@ export function ConversationTabsContextMenu({
                   >
                     <Icon className="h-4 w-4" />
                   </span>
-                  <span className="text-sm">{t(i18nKey)}</span>
+                  <span className="text-sm">
+                    {label ?? (i18nKey ? t(i18nKey) : tab)}
+                  </span>
                 </button>
                 <button
                   type="button"

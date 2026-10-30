@@ -1,5 +1,5 @@
 import { AUTOMATION_FORM_UPDATE_ACTION_KIND } from "#/constants/automation-form";
-import { CANVAS_UI_CLIENT_ACTION_KIND } from "#/constants/canvas-ui";
+import { CANVAS_UI_CLIENT_ACTION_KINDS } from "#/constants/canvas-ui";
 import { LAUNCH_CHILD_CONVERSATION_ACTION_KIND } from "#/constants/child-conversation";
 import { REQUEST_SECRET_ACTION_KIND } from "#/constants/secret-request";
 import { ActionBase } from "./base";
@@ -317,7 +317,7 @@ export interface SwitchLLMAction extends ActionBase<"SwitchLLMAction"> {
  * conversations use the SDK-generated client action kind.
  */
 export interface CanvasUIAction extends ActionBase<
-  "CanvasUIAction" | typeof CANVAS_UI_CLIENT_ACTION_KIND
+  "CanvasUIAction" | (typeof CANVAS_UI_CLIENT_ACTION_KINDS)[number]
 > {
   command: "navigate_to_file" | "open_tab" | "show_preview" | "open_url";
   path?: string | null;

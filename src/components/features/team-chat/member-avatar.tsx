@@ -1,11 +1,10 @@
-import { KamijiAvatar } from "#/components/features/kamiji/kamiji-avatar";
-import { getKamijiColor } from "#/components/features/kamiji/kamiji-expressions";
+import { KamijiAgentAvatar } from "#/components/features/kamiji/kamiji-agent-avatar";
 import type { TeamMember } from "#/chat-transport/nostr";
 import { cn } from "#/utils/utils";
 import { Initials } from "./team-chat-ui";
 
 /**
- * A member's avatar: a Kamiji hand for an agent, tinted per agent, and initials for a person,
+ * A member's avatar: a Kamiji Mochi for an agent, one per agent name, and initials for a person,
  * with a presence dot when we know whether they are around.
  */
 export function MemberAvatar({
@@ -22,11 +21,7 @@ export function MemberAvatar({
       data-testid={agent ? "member-avatar-agent" : "member-avatar-person"}
     >
       {agent ? (
-        <KamijiAvatar
-          color={getKamijiColor(member.name)}
-          expression="happy"
-          size={size}
-        />
+        <KamijiAgentAvatar name={member.name} size={size} />
       ) : (
         <Initials name={member.name} />
       )}

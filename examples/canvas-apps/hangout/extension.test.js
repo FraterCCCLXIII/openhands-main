@@ -162,10 +162,20 @@ describe("welcome from the rail", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const dispose = mountFn({ container });
-    expect(container.querySelector(".welcome .wpowered").textContent).toBe("Powered byKamijiandKosmos");
+    expect(container.querySelector(".welcome .wpowered span").textContent).toBe("Built with");
+    const built = container.querySelector(".welcome .wpowered");
+    expect(built.textContent).toContain("Built with");
+    expect(built.textContent).not.toContain("Powered by");
+    const kamiji = built.querySelector('a[aria-label="Kamiji"]');
+    const kosmos = built.querySelector('a[aria-label="Kosmos"]');
+    expect(kamiji.getAttribute("href")).toBe("https://github.com/FraterCCCLXIII/kamiji");
+    expect(kosmos.getAttribute("href")).toBe("https://kosmos.computer");
+    expect(kamiji.querySelector("svg")).not.toBeNull();
+    expect(kosmos.querySelector("svg")).not.toBeNull();
+
     container.querySelector(".wgo").click();
     expect(container.querySelector(".welcome")).toBeNull();
-    expect(container.querySelector(".list .lpowered").textContent).toContain("Kosmos");
+    expect(container.querySelector(".list .lpowered a[aria-label=\"Kosmos\"]")).not.toBeNull();
     const buttons = [...container.querySelectorAll(".rail .rbtn")];
     expect(buttons.at(-1).getAttribute("aria-label")).toBe("Welcome");
     buttons.at(-1).click();
@@ -741,9 +751,7 @@ describe("Hangout page", () => {
     const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
     await tick();
     container.querySelector('.rail [aria-label="Studio"]').click();
-    expect(container.querySelector(".powered").textContent).toContain("Powered by");
-    expect(container.querySelector(".powered").textContent).toContain("Kamiji");
-    expect(container.querySelector(".powered").textContent).toContain("Kosmos");
+    expect(container.querySelector(".powered").textContent).toContain("Built with");
     const options = [...container.querySelectorAll(".sopt")];
     expect(options.length).toBe(LOOK_SHAPES.length + LOOK_EXPRESSIONS.length + LOOK_EYES.length);
     expect(LOOK_SHAPES.length).toBeGreaterThanOrEqual(24);
@@ -930,5 +938,49 @@ describe("built-with rail", () => {
     links[0].querySelector("img").dispatchEvent(new Event("error"));
     expect(links[0].querySelector("img")).toBeNull();
     expect(links[0].textContent).toBe("W");
+  });
+});
+
+describe("draggable column dividers", () => {
+  it("renders separators, resizes a column by dragging and restores the saved width after a remount", async () => {
+    const { container, dispose } = mountWith(async () => ({ ok: true, json: async () => ({}) }));
+    await tick();
+    const grid = container.querySelector(".shell");
+    const handle = grid.querySelector(":scope > .colgrip");
+    expect(handle.getAttribute("role")).toBe("separator");
+    expect(grid.style.getPropertyValue("--grip-0")).toBe("320px");
+    handle.dispatchEvent(new MouseEvent("pointerdown", { clientX: 100, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointermove", { clientX: 150, bubbles: true }));
+    document.dispatchEvent(new MouseEvent("pointerup", { bubbles: true }));
+    expect(grid.style.getPropertyValue("--grip-0")).toBe("370px");
+    const handleCount = grid.querySelectorAll(".colgrip").length;
+    dispose();
+    container.remove();
+    // The mount helper clears storage first; keep the saved width for the remount.
+    vi.spyOn(Storage.prototype, "clear").mockImplementation(() => {});
+    const again = mountWith(async () => ({ ok: true, json: async () => ({}) }));
+    await tick();
+    const grid2 = again.container.querySelector(".shell");
+    expect(grid2.style.getPropertyValue("--grip-0")).toBe("370px");
+    expect(grid2.querySelectorAll(".colgrip").length).toBe(handleCount);
+    vi.restoreAllMocks();
+  });
+});
+
+describe("button colours", () => {
+  it("gives every solid contrast or primary fill its own foreground token, and fixed dark panels their own text colour", () => {
+    const { container } = mountWith(async () => ({ ok: false, status: 404, json: async () => ({}) }));
+    const css = container.querySelector("style").textContent;
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) => ({ sel: sel.trim(), body }));
+    const decl = (body, prop) => new RegExp(`(?:^|[;\\s])${prop}\\s*:\\s*([^;]+)`).exec(body)?.[1].trim();
+    const darkHex = (v) => /^#[0-9a-f]{6}$/i.test(v || "") && [1, 3, 5].reduce((n, i) => n + parseInt(v.slice(i, i + 2), 16), 0) < 150;
+    for (const { sel, body } of rules) {
+      if (/::|\binput\b/.test(sel)) continue; // pseudo-element marks and switch tracks carry no text
+      const bg = decl(body, "background");
+      const color = decl(body, "color");
+      if (bg === "var(--hg-contrast)") expect(color, sel).toBe("var(--hg-on-contrast)");
+      if (bg === "var(--hg-primary)") expect(color, sel).toBe("var(--hg-on-primary)");
+      if (darkHex(bg)) expect(color, sel).toMatch(/^#[0-9a-f]{3,6}$/i);
+    }
   });
 });

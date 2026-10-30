@@ -65,7 +65,7 @@ import {
 import { useArchivedConversationsStore } from "#/stores/archived-conversations-store";
 import { usePinnedConversationsStore } from "#/stores/pinned-conversations-store";
 import { useSidebarFactoryStore } from "#/stores/sidebar-factory-store";
-import { getFeedFactory } from "#/utils/feed-team-demo";
+import { useFactoryResolver } from "#/hooks/use-feed-factories";
 import { uniqueById } from "#/utils/unique-by-id";
 import {
   isEffectivelyArchivedConversation,
@@ -329,6 +329,7 @@ export function ConversationPanel({
   // (explicitly archived or missing-runtime) filtered out unless the user has
   // opted into "Show archived".
   const sidebarFactoryId = useSidebarFactoryStore((state) => state.factoryId);
+  const resolveFactory = useFactoryResolver();
   const conversations = React.useMemo(() => {
     const visible = showArchivedConversations
       ? allLoadedConversations
@@ -337,9 +338,10 @@ export function ConversationPanel({
         );
     // The factory list above narrows this to one factory's agents.
     return sidebarFactoryId
-      ? visible.filter((c) => getFeedFactory(c.id).id === sidebarFactoryId)
+      ? visible.filter((c) => resolveFactory(c)?.id === sidebarFactoryId)
       : visible;
   }, [
+    resolveFactory,
     allLoadedConversations,
     isRowArchived,
     showArchivedConversations,

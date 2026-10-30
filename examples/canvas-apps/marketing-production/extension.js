@@ -687,7 +687,7 @@ const STYLE = `
 .mp .toast { position: fixed; right: 20px; bottom: 20px; background: var(--mp-raised); border: 1px solid var(--mp-border); border-radius: 10px; padding: 8px 14px; z-index: 40; }
 .mp .toast.err { border-color: var(--mp-danger); }
 .mp .chip { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11px; background: var(--mp-raised); color: var(--mp-muted); border: 1px solid var(--mp-border); }
-.mp .chip.s-planned { color: var(--mp-info); } .mp .chip.s-in_progress { color: var(--mp-primary); }
+.mp .chip.s-planned { color: color-mix(in srgb, var(--mp-info) 50%, var(--mp-contrast)); } .mp .chip.s-in_progress { color: color-mix(in srgb, var(--mp-primary) 70%, var(--mp-contrast)); }
 .mp .chip.s-at_risk { color: var(--mp-danger); } .mp .chip.s-shipped { color: var(--mp-success); }
 /* timeline */
 .mp, .mp .sheet { overscroll-behavior-x: contain; }

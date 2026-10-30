@@ -14,9 +14,11 @@ import {
 import {
   FEED_ME_ID,
   feedProfilePath,
-  getFeedFactory,
   isFeedTeamDemoEnabled,
 } from "#/utils/feed-team-demo";
+import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
+import { agentTint } from "#/utils/feed-agent-identity";
+import { FeedConversationList } from "./feed-conversation-list";
 import { FeedFilterRow } from "./feed-filter-row";
 import { FeedCustomIcon } from "./feed-custom-icon";
 import { FeedIconMenu } from "./feed-icon-menu";
@@ -27,13 +29,15 @@ import {
   personIconKey,
 } from "#/utils/feed-icon-keys";
 import { FeedProjectRow } from "./feed-project-row";
-import { useFeedFactories } from "#/hooks/use-feed-factories";
+import {
+  useFactoryResolver,
+  useFeedFactories,
+} from "#/hooks/use-feed-factories";
 import { FeedRowStats } from "./feed-row-stats";
 import {
   FEED_DEMO_AGENTS,
   FEED_DEMO_AGENT_FILTER_PREFIX,
   pickFeedDemoAgent,
-  pickFeedTint,
 } from "#/utils/feed-demo-agents";
 import { FeedUserAvatar } from "./feed-user-avatar";
 import { NavigationLink } from "#/components/shared/navigation-link";
@@ -58,11 +62,14 @@ export function FeedFilterSidebar({
   const profileCounts = countFeedAgentProfiles(conversations);
   const backendScopedPath = useBackendScopedPath();
   const factories = useFeedFactories();
+  const resolveFactory = useFactoryResolver();
+  const agentConfigs = useFeedAgentConfigStore((state) => state.configs);
   const teamDemo = isFeedTeamDemoEnabled(window.location.search);
-  const stats = (group: AppConversation[]) =>
-    teamDemo ? <FeedRowStats conversations={group} /> : undefined;
-  const factoryCount = (id: string) =>
-    conversations.filter((c) => getFeedFactory(c.id).id === id).length;
+  const stats = (group: AppConversation[]) => (
+    <FeedRowStats conversations={group} />
+  );
+  const inFactory = (id: string) =>
+    conversations.filter((c) => resolveFactory(c)?.id === id);
   const profiles = (profileData?.profiles ?? []).filter(
     (profile): profile is typeof profile & { id: string } => !!profile.id,
   );
@@ -94,53 +101,57 @@ export function FeedFilterSidebar({
           />
         </span>
       </div>
-      {teamDemo ? (
-        <section data-testid="feed-factories">
-          <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
-            {t(I18nKey.FEED$FACTORIES)}
-          </h2>
-          <ul className="flex flex-col gap-0.5">
+      <section data-testid="feed-factories">
+        <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
+          {t(I18nKey.FEED$FACTORIES)}
+        </h2>
+        <ul className="flex flex-col gap-0.5">
+          <FeedFilterRow
+            testId="feed-filter-factory-all"
+            label={t(I18nKey.FEED$ALL)}
+            icon={<LayoutGrid size={20} />}
+            meta={stats(conversations)}
+            count={conversations.length}
+            selected={filter.factoryId === null}
+            onSelect={() => onChange({ ...filter, factoryId: null })}
+          />
+          {factories.map(({ id, name, Icon, className }) => (
             <FeedFilterRow
-              testId="feed-filter-factory-all"
-              label={t(I18nKey.FEED$ALL)}
-              icon={<LayoutGrid size={20} />}
-              meta={stats(conversations)}
-              count={conversations.length}
-              selected={filter.factoryId === null}
-              onSelect={() => onChange({ ...filter, factoryId: null })}
+              key={id}
+              testId="feed-filter-factory"
+              label={name}
+              count={inFactory(id).length}
+              meta={stats(inFactory(id))}
+              icon={
+                <FeedCustomIcon
+                  iconKey={factoryIconKey(id)}
+                  size={36}
+                  radius={12}
+                  glyph={<Icon size={20} />}
+                  fallback={
+                    <FeedIconTile className={className}>
+                      <Icon size={20} />
+                    </FeedIconTile>
+                  }
+                />
+              }
+              action={
+                <FeedIconMenu iconKey={factoryIconKey(id)} subject={name} />
+              }
+              selected={filter.factoryId === id}
+              onSelect={() => onChange({ ...filter, factoryId: id })}
             />
-            {factories.map(({ id, name, Icon, className }) => (
-              <FeedFilterRow
-                key={id}
-                testId="feed-filter-factory"
-                label={name}
-                count={factoryCount(id)}
-                meta={stats(
-                  conversations.filter((c) => getFeedFactory(c.id).id === id),
-                )}
-                icon={
-                  <FeedCustomIcon
-                    iconKey={factoryIconKey(id)}
-                    size={36}
-                    radius={12}
-                    glyph={<Icon size={20} />}
-                    fallback={
-                      <FeedIconTile className={className}>
-                        <Icon size={20} />
-                      </FeedIconTile>
-                    }
-                  />
-                }
-                action={
-                  <FeedIconMenu iconKey={factoryIconKey(id)} subject={name} />
-                }
-                selected={filter.factoryId === id}
-                onSelect={() => onChange({ ...filter, factoryId: id })}
-              />
-            ))}
-          </ul>
-        </section>
-      ) : null}
+          ))}
+        </ul>
+        {factories.length === 0 ? (
+          <p
+            data-testid="feed-factories-empty"
+            className="px-2 pt-1 text-sm text-muted"
+          >
+            {t(I18nKey.FEED$FACTORIES_EMPTY)}
+          </p>
+        ) : null}
+      </section>
 
       <section>
         <h2 className="mb-1 px-2 text-[17px] font-semibold text-muted">
@@ -212,7 +223,12 @@ export function FeedFilterSidebar({
                     />
                   }
                   fallback={
-                    <FeedIconTile className={pickFeedTint(profile.id)}>
+                    <FeedIconTile
+                      className={agentTint(
+                        profile.id,
+                        agentConfigs[profile.name],
+                      )}
+                    >
                       <AgentBrandIcon
                         kind={
                           profile.agent_kind === "acp"
@@ -237,6 +253,14 @@ export function FeedFilterSidebar({
               }
             />
           ))}
+          {profiles.length === 0 && !teamDemo ? (
+            <p
+              data-testid="feed-agents-empty"
+              className="px-2 pt-1 text-sm text-muted"
+            >
+              {t(I18nKey.FEED$AGENTS_EMPTY)}
+            </p>
+          ) : null}
           {teamDemo
             ? FEED_DEMO_AGENTS.map(({ name, Icon, className }) => {
                 const id = `${FEED_DEMO_AGENT_FILTER_PREFIX}${name}`;
@@ -277,6 +301,7 @@ export function FeedFilterSidebar({
             : null}
         </ul>
       </section>
+      <FeedConversationList conversations={conversations} filter={filter} />
     </nav>
   );
 }

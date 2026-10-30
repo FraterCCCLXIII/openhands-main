@@ -1,5 +1,5 @@
 import { I18nKey } from "#/i18n/declaration";
-import type { ConversationTab } from "#/stores/conversation-store";
+import type { StaticConversationTab } from "#/stores/conversation-store";
 
 /**
  * DOM id of the drawer's tab panel, referenced by every tab's `aria-controls`.
@@ -11,7 +11,10 @@ import type { ConversationTab } from "#/stores/conversation-store";
 export const CONVERSATION_TAB_PANEL_ID = "conversation-tab-panel";
 
 /** Each tab's name: shown in the strip and naming the panel it controls. */
-export const CONVERSATION_TAB_LABEL_KEYS: Record<ConversationTab, I18nKey> = {
+export const CONVERSATION_TAB_LABEL_KEYS: Record<
+  StaticConversationTab,
+  I18nKey
+> = {
   files: I18nKey.COMMON$FILES,
   commits: I18nKey.DIFF_VIEWER$COMMITS,
   planner: I18nKey.COMMON$PLANNER,

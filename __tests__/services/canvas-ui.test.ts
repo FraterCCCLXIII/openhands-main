@@ -221,6 +221,7 @@ describe("isCanvasUIActionEvent", () => {
   it.each([
     ["CanvasUIAction", LEGACY_CANVAS_UI_TOOL_NAME],
     [CANVAS_UI_CLIENT_ACTION_KIND, CANVAS_UI_CLIENT_TOOL_NAME],
+    ["ClientAction_canvas_ui_control", "canvas_ui_control"],
   ])("returns true for a %s ActionEvent from %s", (kind, toolName) => {
     expect(
       isCanvasUIActionEvent(

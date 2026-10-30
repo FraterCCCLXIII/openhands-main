@@ -5,11 +5,13 @@ import { SidebarGrip } from "./sidebar-grip";
 import { FeedCustomIcon } from "#/components/features/feed/feed-custom-icon";
 import { FeedIconTile } from "#/components/features/feed/feed-icon-tile";
 import { usePaginatedConversations } from "#/hooks/query/use-paginated-conversations";
-import { useFeedFactories } from "#/hooks/use-feed-factories";
+import {
+  useFactoryResolver,
+  useFeedFactories,
+} from "#/hooks/use-feed-factories";
 import { I18nKey } from "#/i18n/declaration";
 import { useSidebarFactoryStore } from "#/stores/sidebar-factory-store";
 import { factoryIconKey } from "#/utils/feed-icon-keys";
-import { getFeedFactory } from "#/utils/feed-team-demo";
 import { ExecutionStatus } from "#/types/agent-server/core/base/common";
 import { cn } from "#/utils/utils";
 
@@ -74,6 +76,7 @@ function FactoryRow({
 export function SidebarFactories() {
   const { t } = useTranslation("openhands");
   const factories = useFeedFactories();
+  const resolveFactory = useFactoryResolver();
   const { data } = usePaginatedConversations();
   const factoryId = useSidebarFactoryStore((s) => s.factoryId);
   const visibleRows = useSidebarFactoryStore((s) => s.visibleRows);
@@ -85,7 +88,8 @@ export function SidebarFactories() {
     const all = data?.pages.flatMap((page) => page.items) ?? [];
     const byFactory = new Map<string, { count: number; live: boolean }>();
     all.forEach((c) => {
-      const id = getFeedFactory(c.id).id;
+      const id = resolveFactory(c)?.id;
+      if (!id) return;
       const cur = byFactory.get(id) ?? { count: 0, live: false };
       byFactory.set(id, {
         count: cur.count + 1,
@@ -97,7 +101,9 @@ export function SidebarFactories() {
       byFactory,
       anyLive: all.some((c) => c.execution_status === ExecutionStatus.RUNNING),
     };
-  }, [data]);
+  }, [data, resolveFactory]);
+
+  if (factories.length === 0) return null;
 
   const shown = Math.min(Math.max(visibleRows, 1), factories.length);
   const rows = factories.slice(0, shown);

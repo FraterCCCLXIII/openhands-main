@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "pullboard",
+  "display_name": "Pullboard",
+  "version": "0.1.0",
+  "description": "Pullboard (pullboard-dev/pullboard): a local-first work board where agents build from a spec you approve and a second agent verifies every change.",
+  "entrypoint": "extension.js",
+  "contributes": {
+    "pages": [
+      {
+        "id": "pullboard",
+        "title": "Pullboard",
+        "path": "/home",
+        "nav_label": "Pullboard"
+      }
+    ]
+  }
+}
