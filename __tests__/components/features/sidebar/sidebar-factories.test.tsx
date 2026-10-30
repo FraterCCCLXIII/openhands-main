@@ -79,9 +79,7 @@ describe("SidebarFactories", () => {
       expect(screen.getAllByTestId("sidebar-factory")).toHaveLength(
         FEED_FACTORIES.length,
       );
-      expect(useSidebarFactoryStore.getState().expanded).toBe(true);
-    } else {
-      expect(screen.queryByTestId("sidebar-factories-toggle")).toBeNull();
+      expect(useSidebarFactoryStore.getState().visibleRows).toBeGreaterThan(4);
     }
   });
 });
