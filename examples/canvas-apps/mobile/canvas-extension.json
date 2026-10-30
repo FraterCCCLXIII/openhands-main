@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "mobile",
+  "display_name": "Mobile",
+  "version": "0.1.0",
+  "description": "A landing page for the OpenHands mobile app: what it does, how pairing works, and a button to pair your phone.",
+  "entrypoint": "extension.js",
+  "icon": "icon.svg",
+  "contributes": {
+    "pages": [
+      {
+        "id": "mobile",
+        "title": "Mobile app",
+        "path": "/mobile",
+        "nav_label": "Mobile app",
+        "description": "Pair the OpenHands mobile app with this computer."
+      }
+    ]
+  }
+}

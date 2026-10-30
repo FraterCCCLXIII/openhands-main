@@ -64331,6 +64331,24 @@
     "ca": "Nova fàbrica",
     "id": "Pabrik baru"
   },
+  "NAV$LLMS": {
+    "en": "LLMs",
+    "ja": "LLMs",
+    "zh-CN": "LLMs",
+    "zh-TW": "LLMs",
+    "ko-KR": "LLMs",
+    "no": "LLMs",
+    "ar": "LLMs",
+    "de": "LLMs",
+    "fr": "LLMs",
+    "it": "LLMs",
+    "pt": "LLMs",
+    "es": "LLMs",
+    "tr": "LLMs",
+    "uk": "LLMs",
+    "ca": "LLMs",
+    "id": "LLMs"
+  },
   "NAV$AGENTS": {
     "en": "Agents",
     "ja": "エージェント",

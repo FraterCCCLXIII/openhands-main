@@ -85,6 +85,16 @@
       "path": "examples/canvas-apps/kanban"
     },
     {
+      "name": "mobile",
+      "display_name": "Mobile",
+      "kind": "canvas-app",
+      "version": "0.1.0",
+      "description": "A landing page for the OpenHands mobile app: what it does, how QR pairing works, and a button to pair your phone.",
+      "owner": "FraterCCCLXIII",
+      "repo": "FraterCCCLXIII/openhands-main",
+      "path": "examples/canvas-apps/mobile"
+    },
+    {
       "name": "pullboard",
       "display_name": "Pullboard",
       "kind": "canvas-app-fixture",

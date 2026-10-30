@@ -4,6 +4,7 @@ import {
   Blocks,
   Bot,
   ChevronLeft,
+  Cpu,
   Factory,
   PanelLeftClose,
   PanelLeftOpen,
@@ -62,6 +63,7 @@ import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 const APPS_PATH = "/apps";
 const FACTORY_PATH = "/factory";
 const AGENTS_PATH = "/agents";
+const LLMS_PATH = "/settings/llm";
 const ICON_SIZE = 18;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
@@ -287,6 +289,13 @@ export function SidebarRailBody({
           testId="sidebar-agents-link"
           collapsed={collapsed}
           icon={<Bot width={ICON_SIZE} height={ICON_SIZE} />}
+        />
+        <SidebarNavLink
+          to={LLMS_PATH}
+          label={t(I18nKey.NAV$LLMS)}
+          testId="sidebar-llms-link"
+          collapsed={collapsed}
+          icon={<Cpu width={ICON_SIZE} height={ICON_SIZE} />}
         />
         {/* The interface manifest owns this entry's label, so an absent
             manifest leaves the rail without it rather than with host copy. */}

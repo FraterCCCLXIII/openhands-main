@@ -569,6 +569,32 @@ describe("Sidebar", () => {
     );
   });
 
+  it("places the LLMs row under Agents and navigates to LLM settings on click", () => {
+    // Arrange
+    const { navigate } = renderSidebar("/agents");
+    const agents = screen.getByTestId("sidebar-agents-link");
+    const llms = screen.getByTestId("sidebar-llms-link");
+
+    // Act
+    fireEvent.click(llms);
+
+    // Assert
+    expect(
+      agents.compareDocumentPosition(llms) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(llms).toHaveTextContent("LLMs");
+    expect(navigate).toHaveBeenCalledWith("/settings/llm", { replace: false });
+  });
+
+  it("marks the LLMs row as the current page on the LLM settings route", () => {
+    renderSidebar("/settings/llm");
+
+    expect(screen.getByTestId("sidebar-llms-link")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   it.each(["/customize", "/mcp", "/skills", "/plugins"])(
     "marks the Customize row as the current page on %s",
     (path) => {
