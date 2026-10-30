@@ -1,10 +1,16 @@
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
 import { BrandButton } from "#/components/features/settings/brand-button";
+import { modalTitleSmClassName } from "#/utils/modal-classes";
 import { ModalBackdrop } from "./modal-backdrop";
 
 interface ConfirmationModalProps {
   text: string;
+  /** Optional heading above the text. */
+  title?: string;
+  /** Optional icon drawn in a tile beside the heading. */
+  icon?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
   confirmText?: string;
@@ -18,6 +24,8 @@ interface ConfirmationModalProps {
 
 export function ConfirmationModal({
   text,
+  title,
+  icon,
   onConfirm,
   onCancel,
   confirmText,
@@ -35,9 +43,22 @@ export function ConfirmationModal({
     >
       <div
         data-testid="confirmation-modal"
-        className="bg-base-secondary p-4 rounded-3xl flex flex-col gap-4 border border-border"
+        className="modal-surface-gradient flex w-full max-w-md flex-col gap-5 rounded-3xl border border-border bg-base-secondary p-6 shadow-2xl"
       >
-        <p>{text}</p>
+        {title || icon ? (
+          <div className="flex items-center gap-3">
+            {icon ? (
+              <span
+                aria-hidden
+                className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-raised text-contrast"
+              >
+                {icon}
+              </span>
+            ) : null}
+            {title ? <h2 className={modalTitleSmClassName}>{title}</h2> : null}
+          </div>
+        ) : null}
+        <p className="text-sm leading-6 text-tertiary-light">{text}</p>
         <div className="w-full flex justify-end gap-2">
           <BrandButton
             testId="cancel-button"
