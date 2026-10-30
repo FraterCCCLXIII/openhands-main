@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ExternalLink, ShieldCheck, X } from "lucide-react";
+import { ExternalLink, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import {
   ExtensionsNavigation,
   ExtensionsCompactNavigation,
@@ -234,6 +234,16 @@ export default function CanvasExtensionsScreen() {
       ) : null}
       {pendingAction ? (
         <ConfirmationModal
+          title={
+            pendingAction.type === "enable"
+              ? t(I18nKey.SETTINGS$APPS_ENABLE_ACTION)
+              : undefined
+          }
+          icon={
+            pendingAction.type === "enable" ? (
+              <ShieldAlert className="size-5" />
+            ) : undefined
+          }
           text={confirmationText}
           onCancel={() => setPendingAction(null)}
           onConfirm={confirmAction}
