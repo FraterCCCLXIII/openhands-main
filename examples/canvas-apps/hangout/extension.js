@@ -135,7 +135,18 @@ export const LOOK_EXPRESSIONS = [
   ["proud", "Proud"], ["shy", "Shy"], ["unimpressed", "Unimpressed"], ["sleepy", "Sleepy"],
 ];
 export const LOOK_COLORS = ["#0b0b0c", "#8a5a3c", "#ef4444", "#f5760a", "#f2b51d", "#34d399", "#19b5a5", "#3b82f6", "#8b5cf6", "#ec4899", "#9a9a9a", "#efece4"];
-export const DEFAULT_LOOK = { shape: "circle", expression: "neutral", color: LOOK_COLORS[0] };
+export const LOOK_EYES = [
+  ["oval", "Oval"], ["round", "Round"], ["dot", "Dot"], ["cartoon", "Cartoon"], ["glossy", "Glossy"],
+  ["cat", "Cat"], ["sparkle", "Sparkle"], ["heart", "Heart"], ["cross", "Cross"], ["dizzy", "Dizzy"], ["lashes", "Lashes"],
+];
+export const LOOK_GAZES = [["center", "Center"], ["left", "Left"], ["right", "Right"], ["up", "Up"], ["down", "Down"]];
+export const LOOK_TOGGLES = [["brows", "Brows"], ["mouth", "Mouth"], ["effects", "Effects"], ["shine", "Shine"], ["glasses", "Glasses"]];
+export const DEFAULT_LOOK = {
+  shape: "circle", expression: "neutral", color: LOOK_COLORS[0],
+  eyeStyle: "oval", gaze: "center", eyeSize: 1, eyeSpacing: 1,
+  brows: true, mouth: true, effects: true, shine: false, glasses: false, blush: "auto",
+};
+const GAZE = { center: [0, 0], left: [-1.5, 0], right: [1.5, 0], up: [0, -1.3], down: [0, 1.3] };
 
 // Body outline per shape, with where the face sits and how big it is.
 const circ = (cx, cy, r) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
@@ -195,12 +206,18 @@ const luminance = (hex) => {
   return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
 };
 
-/** Draws one Kamiji face: body shape, expression and colour. Returns an <svg> element. */
-export function kamijiFace(look = DEFAULT_LOOK) {
+/** Draws one Kamiji face: body shape, expression, eye style and options. Returns an <svg> element. */
+export function kamijiFace(input = DEFAULT_LOOK) {
+  const look = { ...DEFAULT_LOOK, ...input };
   const body = BODIES[look.shape] || BODIES.circle;
   const face = FACES[look.expression] || FACES.neutral;
   const color = /^#[0-9a-f]{6}$/i.test(look.color) ? look.color : DEFAULT_LOOK.color;
-  const ink = luminance(color) < 0.5 ? "#ffffff" : "rgba(0,0,0,.82)";
+  const dark = luminance(color) < 0.5;
+  const ink = dark ? "#ffffff" : "rgba(0,0,0,.82)";
+  const pupil = "#15171a";
+  const size = Math.max(0.6, Math.min(1.5, Number(look.eyeSize) || 1));
+  const spread = Math.max(0.7, Math.min(1.4, Number(look.eyeSpacing) || 1));
+  const [gx, gy] = GAZE[look.gaze] || GAZE.center;
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 64 64");
   svg.setAttribute("aria-hidden", "true");
@@ -213,31 +230,80 @@ export function kamijiFace(look = DEFAULT_LOOK) {
   if (body.hand) drawHand(svg, color);
   const shape = body.hand ? null : add(svg, "path", { d: body.d, fill: color });
   if (shape && body.round) { shape.setAttribute("stroke", color); shape.setAttribute("stroke-width", "6"); shape.setAttribute("stroke-linejoin", "round"); }
+  if (look.shine && shape) {
+    const id = `kclip${Math.random().toString(36).slice(2, 8)}`;
+    const clip = add(svg, "clipPath", { id });
+    add(clip, "path", { d: body.d });
+    add(svg, "ellipse", { cx: 24, cy: 20, rx: 14, ry: 8, fill: "#ffffff", opacity: dark ? 0.16 : 0.4, "clip-path": `url(#${id})`, transform: "rotate(-28 24 20)" });
+  }
   const g = add(svg, "g", { transform: `translate(32 ${body.fy}) scale(${body.k})` });
   const stroke = { fill: "none", stroke: ink, "stroke-width": 2.4, "stroke-linecap": "round", "stroke-linejoin": "round" };
+  const eyeX = 8 * spread;
+
+  const ovalEye = (x, y, rx, ry, tilt) => {
+    const grp = add(g, "g", { transform: `rotate(${x < 0 ? tilt : -tilt} ${x} ${y})` });
+    rx *= size; ry *= size;
+    switch (look.eyeStyle) {
+      case "round": add(grp, "circle", { cx: x + gx * 0.4, cy: y + gy * 0.4, r: ((rx + ry) / 2) * 1.05, fill: ink }); break;
+      case "dot": add(grp, "circle", { cx: x + gx * 0.5, cy: y + gy * 0.5, r: 1.9 * size, fill: ink }); break;
+      case "cartoon":
+        add(grp, "ellipse", { cx: x, cy: y, rx: rx * 1.45, ry: ry * 1.2, fill: "#f4f6f7", stroke: "rgba(0,0,0,.28)", "stroke-width": 0.5 });
+        add(grp, "ellipse", { cx: x + gx, cy: y + gy + 0.4, rx: rx * 0.72, ry: ry * 0.8, fill: pupil });
+        add(grp, "circle", { cx: x + gx + rx * 0.35, cy: y + gy - ry * 0.25, r: 0.75, fill: "#fff" });
+        break;
+      case "glossy":
+        add(grp, "ellipse", { cx: x + gx * 0.5, cy: y + gy * 0.5, rx, ry, fill: ink });
+        add(grp, "circle", { cx: x + gx * 0.5 + rx * 0.3, cy: y + gy * 0.5 - ry * 0.35, r: 0.95, fill: dark ? color : "#fff" });
+        break;
+      case "cat":
+        add(grp, "ellipse", { cx: x, cy: y, rx: rx * 1.4, ry: ry * 1.1, fill: "#e9e2a8", stroke: "rgba(0,0,0,.25)", "stroke-width": 0.5 });
+        add(grp, "ellipse", { cx: x + gx, cy: y + gy, rx: 0.8, ry: ry * 0.95, fill: pupil });
+        break;
+      case "sparkle": add(grp, "path", { d: `M${x} ${y - ry * 1.3}Q${x + 0.6} ${y - 0.6} ${x + rx * 1.4} ${y}Q${x + 0.6} ${y + 0.6} ${x} ${y + ry * 1.3}Q${x - 0.6} ${y + 0.6} ${x - rx * 1.4} ${y}Q${x - 0.6} ${y - 0.6} ${x} ${y - ry * 1.3}Z`, fill: ink }); break;
+      case "heart": add(grp, "path", { d: `M${x} ${y + ry}C${x - rx * 3} ${y - 1} ${x - rx * 1.3} ${y - ry * 1.3} ${x} ${y - ry * 0.35}C${x + rx * 1.3} ${y - ry * 1.3} ${x + rx * 3} ${y - 1} ${x} ${y + ry}Z`, fill: "#ff5a7a" }); break;
+      case "cross": add(grp, "path", { d: `M${x - rx * 1.4} ${y - ry * 0.8}L${x + rx * 1.4} ${y + ry * 0.8}M${x + rx * 1.4} ${y - ry * 0.8}L${x - rx * 1.4} ${y + ry * 0.8}`, ...stroke }); break;
+      case "dizzy":
+        add(grp, "circle", { cx: x, cy: y, r: ry * 1.1, ...stroke, "stroke-width": 1.6 });
+        add(grp, "circle", { cx: x, cy: y, r: ry * 0.45, ...stroke, "stroke-width": 1.6 });
+        break;
+      case "lashes":
+        add(grp, "ellipse", { cx: x + gx * 0.5, cy: y + gy * 0.5, rx, ry, fill: ink });
+        [-1, 0, 1].forEach((i) => add(grp, "path", { d: `M${x + i * 2.2} ${y - ry - 0.6}l${i * 1.6} -2.2`, ...stroke, "stroke-width": 1.3 }));
+        break;
+      default: add(grp, "ellipse", { cx: x + gx * 0.5, cy: y + gy * 0.5, rx, ry, fill: ink });
+    }
+  };
   const eyeAt = (spec, x) => {
     const [kind, rx, ry, tilt] = spec;
     const y = face.down ? 1 : -1;
-    if (kind === "oval") add(g, "ellipse", { cx: x, cy: y, rx, ry, fill: ink, transform: `rotate(${x < 0 ? tilt : -tilt} ${x} ${y})` });
+    if (kind === "oval") ovalEye(x, y, rx, ry, tilt);
     else if (kind === "arc") add(g, "path", { d: `M${x - 4} ${y + 2}Q${x} ${y - 5} ${x + 4} ${y + 2}`, ...stroke });
     else if (kind === "smile") add(g, "path", { d: `M${x - 4} ${y - 1}Q${x} ${y + 5} ${x + 4} ${y - 1}`, ...stroke });
     else add(g, "path", { d: `M${x - 4} ${y}H${x + 4}`, ...stroke });
   };
-  eyeAt(face.eye, -8);
-  eyeAt(face.eye2 || face.eye, 8);
-  if (face.brow) {
+  eyeAt(face.eye, -eyeX);
+  eyeAt(face.eye2 || face.eye, eyeX);
+  if (look.glasses) {
+    [-eyeX, eyeX].forEach((x) => add(g, "circle", { cx: x, cy: -1, r: 7.6 * Math.max(size, 0.9), ...stroke, "stroke-width": 1.5 }));
+    add(g, "path", { d: `M${-eyeX + 7.4} -1Q0 -4 ${eyeX - 7.4} -1`, ...stroke, "stroke-width": 1.5 });
+  }
+  if (face.brow && look.brows) {
     const [by, tl, tr] = face.brow;
     add(g, "path", { d: "M-12 0H-4", ...stroke, transform: `translate(0 ${by}) rotate(${tl} -8 0)` });
     add(g, "path", { d: "M4 0H12", ...stroke, transform: `translate(0 ${by}) rotate(${tr} 8 0)` });
   }
-  if (face.blush) [-14, 14].forEach((x) => add(g, "ellipse", { cx: x, cy: 6, rx: 4, ry: 2.4, fill: "#ff7a8a", opacity: 0.45 }));
-  if (face.mouth === "o") add(g, "ellipse", { cx: 0, cy: 9, rx: face.small ? 2 : 3, ry: face.small ? 2.4 : 4, fill: ink });
-  else if (face.mouth) add(g, "path", { d: face.mouth, ...stroke, fill: /Z$/.test(face.mouth) ? ink : "none" });
-  else add(g, "path", { d: "M-5 9Q0 12 5 9", ...stroke });
-  if (face.sparkle) [[-17, -9], [17, -9]].forEach(([x, y]) => add(g, "path", { d: `M${x} ${y - 3}V${y + 3}M${x - 3} ${y}H${x + 3}`, ...stroke, "stroke-width": 1.6 }));
-  if (face.tear) add(g, "path", { d: "M-12 5q-2 4 0 6 2-2 0-6Z", fill: "#7dd3fc", stroke: "none" });
-  if (face.sweat) add(g, "path", { d: "M15 -8q-3 5 0 7 3-2 0-7Z", fill: "#7dd3fc", stroke: "none" });
-  if (face.zz) add(g, "path", { d: "M14 -12h6l-6 6h6", ...stroke, "stroke-width": 1.6 });
+  if (look.blush === "on" || (look.blush === "auto" && face.blush)) [-14, 14].forEach((x) => add(g, "ellipse", { cx: x * spread, cy: 6, rx: 4, ry: 2.4, fill: "#ff7a8a", opacity: 0.45 }));
+  if (look.mouth) {
+    if (face.mouth === "o") add(g, "ellipse", { cx: 0, cy: 9, rx: face.small ? 2 : 3, ry: face.small ? 2.4 : 4, fill: ink });
+    else if (face.mouth) add(g, "path", { d: face.mouth, ...stroke, fill: /Z$/.test(face.mouth) ? ink : "none" });
+    else add(g, "path", { d: "M-5 9Q0 12 5 9", ...stroke });
+  }
+  if (look.effects) {
+    if (face.sparkle) [[-17, -9], [17, -9]].forEach(([x, y]) => add(g, "path", { d: `M${x} ${y - 3}V${y + 3}M${x - 3} ${y}H${x + 3}`, ...stroke, "stroke-width": 1.6 }));
+    if (face.tear) add(g, "path", { d: "M-12 5q-2 4 0 6 2-2 0-6Z", fill: "#7dd3fc", stroke: "none" });
+    if (face.sweat) add(g, "path", { d: "M15 -8q-3 5 0 7 3-2 0-7Z", fill: "#7dd3fc", stroke: "none" });
+    if (face.zz) add(g, "path", { d: "M14 -12h6l-6 6h6", ...stroke, "stroke-width": 1.6 });
+  }
   return svg;
 }
 
@@ -717,6 +783,14 @@ const CSS = `
 .hg .scell { display: grid; justify-items: center; gap: 4px; font-size: 10.5px; color: var(--hg-muted); }
 .hg .smini { width: 34px; height: 34px; display: block; }
 .hg .smini svg { width: 100%; height: 100%; }
+.hg .sswitch { display: flex; align-items: center; justify-content: space-between; padding: 5px 2px; cursor: pointer; font-size: 13px; }
+.hg .sswitch input { appearance: none; width: 34px; height: 20px; border-radius: 999px; background: var(--hg-border); position: relative; cursor: pointer; transition: background .15s; }
+.hg .sswitch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--hg-bg); transition: transform .15s; }
+.hg .sswitch input:checked { background: var(--hg-primary); }
+.hg .sswitch input:checked::after { transform: translateX(14px); }
+.hg .sslider { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 8px; padding: 4px 2px; font-size: 13px; }
+.hg .sslider input { width: 100%; accent-color: var(--hg-primary); }
+.hg .spanel .seg { margin-bottom: 2px; }
 .hg .sswatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 .hg .swatch { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--hg-bg); outline: 1px solid var(--hg-border); cursor: pointer; }
 .hg .swatch[aria-pressed="true"] { outline: 2px solid var(--hg-text); }
@@ -1625,6 +1699,49 @@ function mount(host, container) {
       mini.append(kamijiFace({ ...look, expression: id }));
       cell.append(mini, el("span", "", label));
       return cell;
+    });
+    grid("Eyes", 4, LOOK_EYES, ([id]) => look.eyeStyle === id, ([id]) => set({ eyeStyle: id }), ([id, label]) => {
+      const cell = el("span", "scell");
+      const mini = el("span", "smini");
+      mini.append(kamijiFace({ ...look, eyeStyle: id, expression: look.expression === "happy" || look.expression === "laughing" ? "neutral" : look.expression }));
+      cell.append(mini, el("span", "", label));
+      return cell;
+    });
+    const segmented = (title, items, value, onPick) => {
+      panel.append(el("h4", "", title));
+      const seg = el("div", "seg");
+      items.forEach(([id, label]) => {
+        const b = el("button", "", label);
+        b.type = "button";
+        b.setAttribute("aria-pressed", String(value === id));
+        b.addEventListener("click", () => onPick(id));
+        seg.append(b);
+      });
+      panel.append(seg);
+    };
+    segmented("Gaze", LOOK_GAZES, look.gaze, (gaze) => set({ gaze }));
+    segmented("Blush", [["auto", "Auto"], ["on", "On"], ["off", "Off"]], look.blush, (blush) => set({ blush }));
+    panel.append(el("h4", "", "Face"));
+    LOOK_TOGGLES.forEach(([key, label]) => {
+      const row = el("label", "sswitch");
+      const input = el("input");
+      input.type = "checkbox";
+      input.setAttribute("role", "switch");
+      input.checked = Boolean(look[key]);
+      input.addEventListener("change", () => set({ [key]: input.checked }));
+      row.append(el("span", "", label), input);
+      panel.append(row);
+    });
+    [["eyeSize", "Eye size", 0.7, 1.4], ["eyeSpacing", "Eye spacing", 0.8, 1.3]].forEach(([key, label, min, max]) => {
+      const row = el("label", "sslider");
+      const input = el("input");
+      input.type = "range";
+      input.min = String(min); input.max = String(max); input.step = "0.05";
+      input.value = String(look[key]);
+      input.setAttribute("aria-label", label);
+      input.addEventListener("change", () => set({ [key]: Number(input.value) }));
+      row.append(el("span", "", label), input);
+      panel.append(row);
     });
     panel.append(el("h4", "", "Colour"));
     const sw = el("div", "sswatches");

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, kamijiFace, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -234,7 +234,7 @@ describe("Hangout page", () => {
     expect(container.querySelector(".powered").textContent).toContain("Kamiji");
     expect(container.querySelector(".powered").textContent).toContain("Kosmos");
     const options = [...container.querySelectorAll(".sopt")];
-    expect(options.length).toBe(LOOK_SHAPES.length + LOOK_EXPRESSIONS.length);
+    expect(options.length).toBe(LOOK_SHAPES.length + LOOK_EXPRESSIONS.length + LOOK_EYES.length);
     expect(LOOK_SHAPES.length).toBeGreaterThanOrEqual(24);
     expect(new Set(LOOK_SHAPES.map((x) => x[2])).size).toBeGreaterThanOrEqual(4);
     options.find((o) => o.textContent === "Hexagon").click();
@@ -255,5 +255,37 @@ describe("Kamiji face engine", () => {
     expect(kamijiFace({ shape: "circle", expression: "neutral", color: "#0b0b0c" }).querySelector("ellipse").getAttribute("fill")).toBe("#ffffff");
     expect(kamijiFace({ shape: "circle", expression: "neutral", color: "#efece4" }).querySelector("ellipse").getAttribute("fill")).toContain("rgba(0,0,0");
     expect(kamijiFace({ shape: "nope", expression: "nope", color: "javascript:x" }).querySelector("path").getAttribute("fill")).toBe(LOOK_COLORS[0]);
+  });
+
+  it("changes the eyes with style, gaze, size and the face switches", () => {
+    expect(LOOK_EYES.length).toBeGreaterThanOrEqual(10);
+    const base = { shape: "circle", expression: "attentive", color: LOOK_COLORS[0] };
+    LOOK_EYES.forEach(([eyeStyle]) => expect(kamijiFace({ ...base, eyeStyle }).querySelectorAll("path, ellipse, circle").length).toBeGreaterThan(2));
+    const big = kamijiFace({ ...base, eyeSize: 1.4 }).querySelector("g ellipse");
+    const small = kamijiFace({ ...base, eyeSize: 0.7 }).querySelector("g ellipse");
+    expect(Number(big.getAttribute("rx"))).toBeGreaterThan(Number(small.getAttribute("rx")));
+    const left = kamijiFace({ ...base, gaze: "left" }).querySelector("g ellipse").getAttribute("cx");
+    const right = kamijiFace({ ...base, gaze: "right" }).querySelector("g ellipse").getAttribute("cx");
+    expect(Number(left)).toBeLessThan(Number(right));
+    const count = (look) => kamijiFace({ ...base, ...look }).querySelectorAll("path, ellipse, circle").length;
+    expect(count({ glasses: true })).toBeGreaterThan(count({}));
+    expect(count({ brows: false })).toBeLessThan(count({}));
+    expect(count({ mouth: false })).toBeLessThan(count({}));
+    expect(count({ blush: "on" })).toBeGreaterThan(count({}));
+  });
+
+  it("offers eye styles and face switches in the Studio and applies them", async () => {
+    const { container, dispose } = mountWith(vi.fn().mockRejectedValue(new Error("offline")));
+    await tick();
+    [...container.querySelectorAll(".vbtn")].find((b) => b.textContent === "Studio").click();
+    [...container.querySelectorAll(".sopt")].find((o) => o.textContent === "Cartoon").click();
+    expect(container.querySelector(".sbig svg ellipse[fill='#f4f6f7']")).toBeTruthy();
+    const glasses = [...container.querySelectorAll(".sswitch")].find((r) => r.textContent === "Glasses").querySelector("input");
+    const before = container.querySelectorAll(".sbig svg circle").length;
+    glasses.checked = true;
+    glasses.dispatchEvent(new Event("change"));
+    expect(container.querySelectorAll(".sbig svg circle").length).toBeGreaterThan(before);
+    expect(LOOK_TOGGLES.length).toBeGreaterThanOrEqual(5);
+    dispose();
   });
 });
