@@ -91,7 +91,6 @@ export function AppStoreCard({ entry }: { entry: AppEntry }) {
         name={entry.name}
         displayName={entry.label}
         manifest={entry.installed?.manifest}
-        logoSize={48}
         className="h-24"
       />
       <div className="flex min-w-0 flex-col gap-2 p-4">

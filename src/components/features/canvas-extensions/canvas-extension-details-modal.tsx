@@ -95,7 +95,8 @@ export function CanvasExtensionDetailsModal({
           manifest={manifest}
           className="h-36 shrink-0 gap-4 px-6"
         >
-          <div className="min-w-0 pb-1">
+          {/* Keeps the title clear of the centred logo (half-width minus its 80px box and the tile gap). */}
+          <div className="min-w-0 max-w-[calc(50%-9.5rem)] pb-1">
             <h3 className="truncate text-xl font-semibold text-white">
               {displayName}
             </h3>
