@@ -113,7 +113,7 @@ describe("create room and share", () => {
 
   it("New room opens a lobby with a fresh code and the share panel open", () => {
     const { container } = mountMeet();
-    container.querySelector(".navhead .mini").click();
+    container.querySelector(".navhead .newroom").click();
     expect([...container.querySelectorAll(".lobby label")].find((l) => l.textContent.startsWith("Room")).querySelector("input").value).toMatch(/^[a-z]+-[a-z]+-\d\d$/);
     expect(container.querySelector(".invitebox")).not.toBeNull();
   });
@@ -138,7 +138,7 @@ describe("settings detection", () => {
   it("opens the settings modal from the nav and closes it with Done", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
     const { container } = mountMeet();
-    [...container.querySelectorAll(".navhead .mini")].find((b) => b.textContent === "Settings").click();
+    container.querySelector(".navhead [aria-label=\"Settings\"]").click();
     expect(container.querySelector('[role="dialog"]')).not.toBeNull();
     await tick(5);
     expect(container.querySelectorAll(".check .pres.bad").length).toBeGreaterThan(0);
