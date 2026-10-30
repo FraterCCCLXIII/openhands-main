@@ -1191,6 +1191,36 @@ describe("recommended automations", () => {
     expect(mockCreateConversationMutate).not.toHaveBeenCalled();
   });
 
+  it("shows the native integration first and the MCP server on its own tab", async () => {
+    // Arrange
+    await activateCloudBackend({ jiraEnabled: true });
+    renderLauncher({ withBackendProvider: true });
+    fireEvent.click(
+      await screen.findByTestId("recommended-automation-card-jira-issue-to-pr"),
+    );
+
+    // Assert: the native tab leads and the polling option is hidden
+    expect(
+      await screen.findByTestId("built-in-integration-choice-option-built-in"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("built-in-integration-choice-option-polling"),
+    ).not.toBeInTheDocument();
+
+    // Act
+    fireEvent.click(
+      screen.getByTestId("built-in-integration-choice-tab-polling"),
+    );
+
+    // Assert
+    expect(
+      screen.getByTestId("built-in-integration-choice-option-polling"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("built-in-integration-choice-option-built-in"),
+    ).not.toBeInTheDocument();
+  });
+
   it("connects the integration through its MCP server when the polling automation is chosen", async () => {
     // Arrange
     await activateCloudBackend({ jiraEnabled: true });
@@ -1200,6 +1230,9 @@ describe("recommended automations", () => {
     );
 
     // Act
+    fireEvent.click(
+      await screen.findByTestId("built-in-integration-choice-tab-polling"),
+    );
     fireEvent.click(
       await screen.findByTestId("built-in-integration-choice-continue-polling"),
     );
