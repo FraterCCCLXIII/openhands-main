@@ -52,6 +52,7 @@ import { PipelinePage } from "./pipeline-page";
 import { FactoryComposer } from "./factory-composer";
 import { FactoryAutomations } from "./factory-automations";
 import { FactoryGantt } from "./factory-gantt";
+import { FeedInboxList } from "#/components/features/feed/feed-inbox-list";
 import { FactoryIncoming } from "./factory-incoming";
 import { FactorySkills } from "./factory-skills";
 import { FactoryTeam } from "./factory-team";
@@ -369,12 +370,13 @@ export function FactoryPage() {
           : undefined
       }
       footer={
-        factory && section === "overview" ? (
+        factory && (section === "overview" || section === "incoming") ? (
           <FactoryComposer
             factory={factory}
             data={data}
             target={target}
             onTarget={setTarget}
+            showRecent={section === "overview"}
           />
         ) : undefined
       }
@@ -418,7 +420,10 @@ export function FactoryPage() {
               <h2 className="mb-3 text-base font-semibold text-foreground">
                 {rail.incoming.label}
               </h2>
-              <FactoryIncoming factory={factory} data={data} />
+              <div className="flex flex-col gap-6">
+                <FeedInboxList factoryId={factory.id} />
+                <FactoryIncoming factory={factory} data={data} />
+              </div>
             </section>
           ) : section === "schedule" ? (
             <section data-testid="factory-section-schedule">

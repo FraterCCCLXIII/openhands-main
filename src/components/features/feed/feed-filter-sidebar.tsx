@@ -20,9 +20,9 @@ import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
 import { agentTint } from "#/utils/feed-agent-identity";
 import { FeedSection } from "./feed-section";
 import { FeedSectionAddMenu } from "./feed-section-add-menu";
-import { FeedInboxPanel } from "./feed-inbox-panel";
+import { FeedInboxNav } from "./feed-inbox-nav";
 import {
-  countUnreadInboxItems,
+  countUnseenInboxItems,
   useFactoryInboxStore,
 } from "#/stores/factory-inbox-store";
 import { FeedConversationList } from "./feed-conversation-list";
@@ -71,9 +71,15 @@ export function FeedFilterSidebar({
   const factories = useFeedFactories();
   const resolveFactory = useFactoryResolver();
   const agentConfigs = useFeedAgentConfigStore((state) => state.configs);
-  const unreadInbox = useFactoryInboxStore((state) =>
-    countUnreadInboxItems(state.items, state.lastSeenAt),
+  const inboxItems = useFactoryInboxStore((state) => state.items);
+  const inboxLastSeenAt = useFactoryInboxStore((state) => state.lastSeenAt);
+  const inboxSeenByFactory = useFactoryInboxStore(
+    (state) => state.seenByFactory,
   );
+  const unreadInbox = countUnseenInboxItems(inboxItems, {
+    lastSeenAt: inboxLastSeenAt,
+    seenByFactory: inboxSeenByFactory,
+  });
   const teamDemo = isFeedTeamDemoEnabled(window.location.search);
   const stats = (group: AppConversation[]) => (
     <FeedRowStats conversations={group} />
@@ -127,9 +133,7 @@ export function FeedFilterSidebar({
           ) : null
         }
       >
-        {(open) => (
-          <FeedInboxPanel filter={filter} onChange={onChange} visible={open} />
-        )}
+        {() => <FeedInboxNav />}
       </FeedSection>
       <FeedSection
         id="factories"

@@ -36,7 +36,9 @@ import {
 } from "#/hooks/use-feed-factories";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { FeedSortMenu } from "./feed-sort-menu";
-import { FeedViewTabs, type FeedView } from "./feed-view-tabs";
+import { FeedViewTabs } from "./feed-view-tabs";
+import { FeedInboxList } from "./feed-inbox-list";
+import { useFeedView } from "#/hooks/use-feed-view";
 import {
   DEFAULT_FEED_SORT,
   sortFeedConversations,
@@ -52,7 +54,8 @@ export function Feed() {
   const { t } = useTranslation("openhands");
   const { openConversationId, close } = useOpenFeedConversation();
   const filter = useFeedFilterStore((state) => state.filter);
-  const [view, setView] = useState<FeedView>("feed");
+  const { view, inboxFactoryParam, setView, setInboxFactoryParam } =
+    useFeedView();
   const [sort, setSort] = useState<FeedSort>(DEFAULT_FEED_SORT);
   const columnRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -130,9 +133,12 @@ export function Feed() {
   const pendingCount = pendingCards.length;
 
   // A message just sent: show it at the top of the feed and move focus to it.
+  // The Inbox tab already lists what was sent, so it stays open.
+  const viewRef = useRef(view);
+  viewRef.current = view;
   useEffect(() => {
     if (!newestPendingId) return;
-    setView("feed");
+    if (viewRef.current === "notifications") setView("feed");
     const scroller = scrollRef.current;
     scroller?.scrollTo?.({ top: 0 });
     scroller
@@ -197,6 +203,37 @@ export function Feed() {
     }
   }, [filter, factory, setFilter]);
 
+  // The inbox is scoped by the selected factory, which has one owner: the feed
+  // filter. The URL param only carries it across reload and links, so
+  // whichever of the two changed last is copied to the other.
+  const scopeSync = useRef<{
+    param: string | null | undefined;
+    id: string | null;
+  }>({
+    param: undefined,
+    id: filter.factoryId,
+  });
+  useEffect(() => {
+    if (view !== "inbox") {
+      scopeSync.current = { param: undefined, id: filter.factoryId };
+      return;
+    }
+    const previous = scopeSync.current;
+    scopeSync.current = { param: inboxFactoryParam, id: filter.factoryId };
+    if (inboxFactoryParam !== previous.param) {
+      if (inboxFactoryParam !== filter.factoryId) {
+        setFilter({ ...filter, factoryId: inboxFactoryParam });
+      }
+    } else if (
+      filter.factoryId !== previous.id &&
+      filter.factoryId !== inboxFactoryParam
+    ) {
+      setInboxFactoryParam(filter.factoryId);
+    }
+    // setInboxFactoryParam and setFilter are stable enough for this sync.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, inboxFactoryParam, filter.factoryId]);
+
   if (openConversationId) {
     return (
       <FeedColumns conversationOpen>
@@ -233,12 +270,19 @@ export function Feed() {
       <div className="shrink-0 px-[calc(1rem+var(--feed-gutter,0px))] pt-4">
         <div className="mx-auto grid w-full max-w-[680px] grid-cols-[1fr_auto_1fr] items-center">
           <span aria-hidden />
-          <FeedViewTabs view={view} onChange={setView} />
-          <FeedSortMenu
-            sort={sort}
-            onChange={setSort}
-            className="justify-self-end"
+          <FeedViewTabs
+            view={view}
+            onChange={(next) => setView(next, filter.factoryId)}
           />
+          {view === "inbox" ? (
+            <span aria-hidden />
+          ) : (
+            <FeedSortMenu
+              sort={sort}
+              onChange={setSort}
+              className="justify-self-end"
+            />
+          )}
         </div>
       </div>
       <div className="relative min-h-0 flex-1">
@@ -253,27 +297,41 @@ export function Feed() {
         >
           <div className="mx-auto flex w-full max-w-[680px] flex-col gap-4 py-6">
             <h1 className="sr-only">{t(I18nKey.FEED$TITLE)}</h1>
-            <section
-              data-testid="feed"
-              className={cn(
-                "flex flex-col",
-                view === "feed" ? "gap-4" : "gap-2",
-              )}
-            >
-              {view === "feed"
-                ? [...pendingCards]
-                    .reverse()
-                    .map((item) => (
-                      <FeedPendingCard
-                        key={item.id}
-                        item={item}
-                        onDismiss={dismissPending}
-                      />
-                    ))
-                : null}
-              {body}
-            </section>
-            {hasNextPage ? (
+            {view === "inbox" ? (
+              <div
+                id="feed-tabpanel"
+                role="tabpanel"
+                aria-labelledby="feed-tab-inbox"
+              >
+                <FeedInboxList factoryId={filter.factoryId} />
+              </div>
+            ) : null}
+            {view === "inbox" ? null : (
+              <section
+                id="feed-tabpanel"
+                role="tabpanel"
+                aria-labelledby={`feed-tab-${view}`}
+                data-testid="feed"
+                className={cn(
+                  "flex flex-col",
+                  view === "feed" ? "gap-4" : "gap-2",
+                )}
+              >
+                {view === "feed"
+                  ? [...pendingCards]
+                      .reverse()
+                      .map((item) => (
+                        <FeedPendingCard
+                          key={item.id}
+                          item={item}
+                          onDismiss={dismissPending}
+                        />
+                      ))
+                  : null}
+                {body}
+              </section>
+            )}
+            {hasNextPage && view !== "inbox" ? (
               <button
                 type="button"
                 data-testid="feed-load-more"

@@ -38,6 +38,7 @@ export function useFactoryDispatch() {
   });
   const knownAgents = useKnownFeedAgents();
   const addItem = useFactoryInboxStore((state) => state.addItem);
+  const updateItem = useFactoryInboxStore((state) => state.updateItem);
   const assignConversation = useFeedFactoriesStore(
     (state) => state.assignConversation,
   );
@@ -45,20 +46,24 @@ export function useFactoryDispatch() {
   return useCallback(
     async (input: DispatchInput): Promise<void> => {
       const { decision, factoryId, factoryName, text } = input;
+      // The entry is logged at once as "sending", so every inbox view shows
+      // the request immediately; it settles when the call returns.
+      const entryId = `${factoryId}-${Date.now()}`;
+      addItem({
+        id: entryId,
+        factoryId,
+        text,
+        targetLabel: input.targetLabel,
+        kind: decision.kind,
+        agentName: decision.agentName,
+        conversationId: decision.conversationId,
+        conversationTitle: input.conversationTitle,
+        reasons: decision.reasons,
+        status: "sending",
+        createdAt: new Date().toISOString(),
+      });
       const log = (status: "sent" | "failed", conversationId: string | null) =>
-        addItem({
-          id: `${factoryId}-${Date.now()}`,
-          factoryId,
-          text,
-          targetLabel: input.targetLabel,
-          kind: decision.kind,
-          agentName: decision.agentName,
-          conversationId,
-          conversationTitle: input.conversationTitle,
-          reasons: decision.reasons,
-          status,
-          createdAt: new Date().toISOString(),
-        });
+        updateItem(entryId, { status, conversationId });
 
       // A new conversation shows in the Tower feed at once, as a card that
       // the real one replaces when the list refreshes.
@@ -121,6 +126,7 @@ export function useFactoryDispatch() {
     },
     [
       addItem,
+      updateItem,
       assignConversation,
       createConversation,
       knownAgents,

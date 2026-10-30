@@ -8,7 +8,6 @@ import { Feed } from "#/components/features/feed/feed";
 import AgentServerConversationService from "#/api/conversation-service/agent-server-conversation-service.api";
 import EventService from "#/api/event-service/event-service.api";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
-import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { useFeedPendingStore } from "#/stores/feed-pending-store";
 import { useFeedSectionsStore } from "#/stores/feed-sections-store";
@@ -35,36 +34,6 @@ vi.mock(
   },
 );
 
-const item = (
-  id: string,
-  factoryId: string,
-  text: string,
-  createdAt: string,
-  extra: Partial<
-    ReturnType<typeof useFactoryInboxStore.getState>["items"][number]
-  > = {},
-) => ({
-  id,
-  factoryId,
-  text,
-  targetLabel: "Factory inbox",
-  kind: "new" as const,
-  agentName: "OpenHands",
-  conversationId: `conv-${id}`,
-  conversationTitle: null,
-  reasons: [],
-  status: "sent" as const,
-  createdAt,
-  ...extra,
-});
-
-const factory = (id: string, name: string) => ({
-  id,
-  name,
-  description: "",
-  ownerId: "me",
-});
-
 const renderSidebar = () =>
   renderWithProviders(
     <MemoryRouter initialEntries={["/feed"]}>
@@ -75,112 +44,6 @@ const renderSidebar = () =>
       />
     </MemoryRouter>,
   );
-
-describe("Tower inbox", () => {
-  beforeEach(() => {
-    localStorage.clear();
-    useFeedFactoriesStore.setState({
-      custom: [factory("design", "Design Factory"), factory("ops", "Ops")],
-    });
-    useFactoryInboxStore.setState({ items: [], lastSeenAt: null });
-    useFeedSectionsStore.setState({ collapsed: {} });
-  });
-
-  it("lists sent requests newest first with factory, agent and an Open link", async () => {
-    useFactoryInboxStore.setState({
-      items: [
-        item("a", "design", "older request", "2026-01-01T00:00:00.000Z"),
-        item("b", "ops", "newer request", "2026-01-02T00:00:00.000Z", {
-          agentName: "Conductor Bo",
-        }),
-      ],
-      lastSeenAt: "2026-02-01T00:00:00.000Z",
-    });
-    renderSidebar();
-
-    const rows = await screen.findAllByTestId("feed-inbox-item");
-    expect(rows[0]).toHaveTextContent("newer request");
-    expect(rows[1]).toHaveTextContent("older request");
-    expect(
-      within(rows[0]).getByTestId("feed-inbox-item-factory"),
-    ).toHaveTextContent("Ops");
-    expect(within(rows[0]).getByTestId("feed-inbox-item-open")).toHaveAttribute(
-      "href",
-      expect.stringContaining("/feed?conversation=conv-b"),
-    );
-  });
-
-  it("badges unseen requests and clears the badge once the inbox is viewed", async () => {
-    useFactoryInboxStore.setState({
-      items: [item("a", "design", "hello", new Date().toISOString())],
-      lastSeenAt: "2020-01-01T00:00:00.000Z",
-    });
-    // Collapsed: not viewed, so the badge stays.
-    useFeedSectionsStore.setState({ collapsed: { inbox: true } });
-    renderSidebar();
-    expect(await screen.findByTestId("feed-inbox-badge")).toHaveTextContent(
-      "1",
-    );
-
-    await userEvent.click(screen.getByTestId("feed-section-toggle-inbox"));
-    await waitFor(() =>
-      expect(screen.queryByTestId("feed-inbox-badge")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("shows the empty state, and filters by the chosen factory", async () => {
-    renderSidebar();
-    expect(await screen.findByTestId("feed-inbox-empty")).toHaveTextContent(
-      "FEED$INBOX_EMPTY",
-    );
-
-    act(() => {
-      useFactoryInboxStore.setState({
-        items: [
-          item("a", "design", "design one", "2026-01-01T00:00:00.000Z"),
-          item("b", "ops", "ops one", "2026-01-02T00:00:00.000Z"),
-        ],
-      });
-    });
-    const onChange = vi.fn();
-    renderWithProviders(
-      <MemoryRouter>
-        <FeedFilterSidebar
-          conversations={[]}
-          filter={{ ...ALL_FEED_FILTER, factoryId: "design" }}
-          onChange={onChange}
-        />
-      </MemoryRouter>,
-    );
-    const inboxes = screen.getAllByTestId("feed-inbox");
-    const filtered = within(inboxes[inboxes.length - 1]);
-    expect(filtered.getAllByTestId("feed-inbox-item")).toHaveLength(1);
-    expect(filtered.getByText("design one")).toBeInTheDocument();
-    expect(filtered.queryByText("ops one")).not.toBeInTheDocument();
-  });
-
-  it("shows Starting… for a Cloud task id and offers no Open yet", async () => {
-    useFactoryInboxStore.setState({
-      items: [
-        item("a", "design", "cloud one", "2026-01-01T00:00:00.000Z", {
-          conversationId: "task-abc",
-        }),
-      ],
-      lastSeenAt: "2027-01-01T00:00:00.000Z",
-    });
-    vi.spyOn(AgentServerConversationService, "getStartTask").mockResolvedValue({
-      status: "WORKING",
-    } as never);
-    renderSidebar();
-    const row = await screen.findByTestId("feed-inbox-item");
-    expect(within(row).getByTestId("feed-inbox-item-status")).toHaveTextContent(
-      "FEED$INBOX_STARTING",
-    );
-    expect(
-      within(row).queryByTestId("feed-inbox-item-open"),
-    ).not.toBeInTheDocument();
-  });
-});
 
 describe("Tower sections", () => {
   beforeEach(() => {

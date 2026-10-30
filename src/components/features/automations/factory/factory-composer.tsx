@@ -55,6 +55,8 @@ interface FactoryComposerProps {
   data: FactoryData;
   target: FactoryTarget;
   onTarget: (target: FactoryTarget) => void;
+  /** Lists the latest requests above the input; off where the inbox shows. */
+  showRecent?: boolean;
 }
 
 /**
@@ -68,6 +70,7 @@ export function FactoryComposer({
   data,
   target,
   onTarget,
+  showRecent = true,
 }: FactoryComposerProps) {
   const { t } = useTranslation("openhands");
   const backendScopedPath = useBackendScopedPath();
@@ -138,7 +141,7 @@ export function FactoryComposer({
 
   return (
     <div data-testid="factory-composer" className="flex w-full flex-col gap-2">
-      {recent.length > 0 ? (
+      {showRecent && recent.length > 0 ? (
         <ul data-testid="factory-inbox-log" className="flex flex-col gap-1.5">
           {recent.map((item) => (
             <li

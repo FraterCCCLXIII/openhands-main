@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Bell, Newspaper, type LucideIcon } from "lucide-react";
+import { Bell, Inbox, Newspaper, type LucideIcon } from "lucide-react";
 import { I18nKey } from "#/i18n/declaration";
+import type { FeedView } from "#/hooks/use-feed-view";
 import { cn } from "#/utils/utils";
 
-export type FeedView = "feed" | "notifications";
+export type { FeedView };
 
 const FEED_VIEWS: Array<{ view: FeedView; label: I18nKey; Icon: LucideIcon }> =
   [
@@ -14,6 +15,7 @@ const FEED_VIEWS: Array<{ view: FeedView; label: I18nKey; Icon: LucideIcon }> =
       label: I18nKey.FEED$TAB_NOTIFICATIONS,
       Icon: Bell,
     },
+    { view: "inbox", label: I18nKey.FEED$INBOX, Icon: Inbox },
   ];
 
 interface PillBox {
@@ -55,11 +57,26 @@ export function FeedViewTabs({ view, onChange }: FeedViewTabsProps) {
     return () => observer.disconnect();
   }, [view]);
 
+  // Arrow keys move between tabs, as the roving tab stop promises.
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+    if (!step) return;
+    const index = FEED_VIEWS.findIndex((tab) => tab.view === view);
+    const next =
+      FEED_VIEWS[(index + step + FEED_VIEWS.length) % FEED_VIEWS.length].view;
+    event.preventDefault();
+    onChange(next);
+    requestAnimationFrame(() =>
+      document.getElementById(`feed-tab-${next}`)?.focus(),
+    );
+  };
+
   return (
     <div
       ref={rowRef}
       role="tablist"
       data-testid="feed-tabs"
+      aria-label={t(I18nKey.FEED$TITLE)}
       className="relative inline-flex items-center rounded-full bg-[var(--oh-surface-raised)] p-1 text-sm font-medium"
     >
       {pill ? (
@@ -80,9 +97,13 @@ export function FeedViewTabs({ view, onChange }: FeedViewTabsProps) {
             key={tabView}
             type="button"
             role="tab"
+            id={`feed-tab-${tabView}`}
             data-testid={`feed-tab-${tabView}`}
             aria-selected={isActive}
+            aria-controls="feed-tabpanel"
+            tabIndex={isActive ? 0 : -1}
             onClick={() => onChange(tabView)}
+            onKeyDown={onKeyDown}
             className={cn(
               "relative z-10 inline-flex items-center gap-2 rounded-full px-5 py-2",
               "cursor-pointer transition-colors",
