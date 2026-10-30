@@ -144,6 +144,8 @@ describe("FeedComposer", () => {
     expect(launchConversation.mock.calls[0][1]).toMatchObject({
       initialUserMsg: "fix the build",
       llmProfile: "kimi",
+      // Saved with the conversation, so the placement outlives this browser.
+      tags: { openhandsfactory: "f1" },
     });
     await waitFor(() =>
       expect(useFeedFactoriesStore.getState().assignments["conv-1"]).toEqual({
@@ -183,6 +185,7 @@ describe("FeedComposer", () => {
     await send();
 
     await waitFor(() => expect(launchConversation).toHaveBeenCalled());
+    expect(launchConversation.mock.calls[0][1]).not.toHaveProperty("tags");
     expect(useFeedFactoriesStore.getState().assignments).toEqual({});
   });
 

@@ -29,11 +29,11 @@ import { useFactoryConductor } from "#/hooks/use-factory-conductor";
 import { useFeedFilterStore } from "#/stores/feed-filter-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
+import { buildFactoryTags, TASK_ID_PREFIX } from "#/utils/factory-placement";
 import { resolveTowerLaunch } from "#/utils/resolve-tower-launch";
 import { FeedComposerMenu } from "./feed-composer-menu";
 
 const FEED_ENTRY_POINT = "feed_composer";
-const TASK_ID_PREFIX = "task-";
 const NO_FACTORY = "none";
 const CONDUCTOR = "conductor";
 const MODEL_DEFAULT = "default";
@@ -116,6 +116,9 @@ export function FeedComposer() {
         const created = await createConversation({
           query: hasAttachments ? undefined : text || undefined,
           entryPoint: FEED_ENTRY_POINT,
+          ...(placedFactory
+            ? { tags: buildFactoryTags(placedFactory.id) }
+            : {}),
           agentProfileId: launchedAs.profile?.id ?? undefined,
           llmProfile:
             llmProfile && launchedAs.profile?.agent_kind !== "acp"

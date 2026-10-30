@@ -13,6 +13,7 @@ import {
   type CustomFactory,
 } from "#/stores/feed-factories-store";
 import { pickFeedDemoAgent, pickFeedTint } from "./feed-demo-agents";
+import { getFactoryIdFromTags } from "./factory-placement";
 
 /** Query parameter that switches the simulated team on: `?demoTeam=on`. */
 export const FEED_TEAM_DEMO_PARAM = "demoTeam";
@@ -198,6 +199,7 @@ export function getFeedFactory(conversationId: string): FeedFactory {
 export interface FactoryConversationRef {
   id: string;
   launched_agent_profile?: { agent_profile_id: string } | null;
+  tags?: Record<string, string> | null;
 }
 
 /** Maps a conversation to its factory, or undefined when it has none. */
@@ -207,7 +209,7 @@ export type FactoryResolver = (
 
 /**
  * The factory a conversation really belongs to: the one the inbox placed it
- * in, else the first factory that has the agent profile it was launched with
+ * in (or tagged it with), else the first factory that has the agent profile it was launched with
  * as a member. Undefined when neither applies; only `?demoTeam=on` falls back
  * to a simulated factory.
  */
@@ -227,6 +229,11 @@ export function getConversationFactory(
   if (assigned) {
     const found = known.find((factory) => factory.id === assigned.factoryId);
     if (found) return found;
+  }
+  const taggedFactoryId = getFactoryIdFromTags(conversation.tags);
+  if (taggedFactoryId) {
+    const tagged = known.find((factory) => factory.id === taggedFactoryId);
+    if (tagged) return tagged;
   }
   const profileId = conversation.launched_agent_profile?.agent_profile_id;
   const agentName = profileId ? agentNameById?.get(profileId) : undefined;

@@ -9,6 +9,8 @@ import {
 import { getFeedProject } from "#/utils/feed-filters";
 import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
 import { useFactoryResolver } from "#/hooks/use-feed-factories";
+import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
+import { useKnownFeedAgents } from "#/hooks/use-known-feed-agents";
 import { useFeedAgentConfigStore } from "#/stores/feed-agent-config-store";
 import { toFeedAgent } from "#/utils/feed-agent-identity";
 import { getFeedAgent } from "#/utils/feed-agent";
@@ -92,12 +94,23 @@ export function useFactoryData(factoryId: string): FactoryData {
   const resolveFactory = useFactoryResolver();
   const { data } = useAgentProfiles();
   const configs = useFeedAgentConfigStore((state) => state.configs);
+  const assignments = useFeedFactoriesStore((state) => state.assignments);
+  const known = useKnownFeedAgents();
   return useMemo(() => {
     const profiles = new Map(
       (data?.profiles ?? []).map((profile) => [profile.id, profile]),
     );
-    // The agent behind a conversation is the profile it was launched with.
+    // The agent behind a conversation is the one the inbox placed it with
+    // (the default coordinator has no profile to launch as), else the profile
+    // it was launched with.
     const agentOf = (conversation: AppConversation): FeedDemoAgent => {
+      const placedAs = assignments[conversation.id]?.agentName;
+      if (placedAs) {
+        return (
+          known.find((agent) => agent.name === placedAs) ??
+          toFeedAgent({ name: placedAs })
+        );
+      }
       const profile = profiles.get(
         conversation.launched_agent_profile?.agent_profile_id ?? null,
       );
@@ -109,5 +122,14 @@ export function useFactoryData(factoryId: string): FactoryData {
       ...summarizeFactory(all, factoryId, resolveFactory, agentOf),
       isLoading,
     };
-  }, [all, factoryId, isLoading, resolveFactory, data, configs]);
+  }, [
+    all,
+    factoryId,
+    isLoading,
+    resolveFactory,
+    data,
+    configs,
+    assignments,
+    known,
+  ]);
 }

@@ -39,7 +39,7 @@ const fieldClassName =
 const KINDS = ["openhands", "acp"] as const;
 type Kind = (typeof KINDS)[number];
 
-const ROLE_LABEL: Record<FeedAgentRoleKey, I18nKey> = {
+export const ROLE_LABEL: Record<FeedAgentRoleKey, I18nKey> = {
   conductor: I18nKey.FEED$AGENT_ROLE_CONDUCTOR,
   dispatcher: I18nKey.FEED$AGENT_ROLE_DISPATCHER,
   worker: I18nKey.FEED$AGENT_ROLE_WORKER,
@@ -48,10 +48,24 @@ const ROLE_LABEL: Record<FeedAgentRoleKey, I18nKey> = {
   scout: I18nKey.FEED$AGENT_ROLE_SCOUT,
 };
 
+export interface AgentProfilePrefill {
+  name?: string;
+  llmRef?: string;
+  instructions?: string;
+  role?: FeedAgentRoleKey;
+  description?: string;
+  color?: string;
+  icon?: IconAppearanceValue;
+}
+
 interface AgentProfileModalProps {
   onClose: () => void;
   /** Name of the profile to edit; omit to create a new one. */
   editName?: string;
+  /** Starting values for a new profile, such as an agent template. */
+  prefill?: AgentProfilePrefill;
+  /** Called with the profile name once a new profile is saved. */
+  onCreated?: (name: string) => void;
 }
 
 /**
@@ -63,6 +77,8 @@ interface AgentProfileModalProps {
 export function AgentProfileModal({
   onClose,
   editName,
+  prefill,
+  onCreated,
 }: AgentProfileModalProps) {
   const { t } = useTranslation("openhands");
   const editing = Boolean(editName);
@@ -87,19 +103,23 @@ export function AgentProfileModal({
     meta: { disableToast: true },
   });
 
-  const [name, setName] = useState(editName ?? "");
+  const [name, setName] = useState(editName ?? prefill?.name ?? "");
   const [kind, setKind] = useState<Kind>("openhands");
-  const [llmRef, setLlmRef] = useState("");
+  const [llmRef, setLlmRef] = useState(prefill?.llmRef ?? "");
   const [acpServer, setAcpServer] = useState(acpKeys[0] ?? "");
-  const [instructions, setInstructions] = useState("");
+  const [instructions, setInstructions] = useState(prefill?.instructions ?? "");
   const [role, setRole] = useState<FeedAgentRoleKey>(
-    savedConfig?.role ?? "worker",
+    savedConfig?.role ?? prefill?.role ?? "worker",
   );
   const [description, setDescription] = useState(
-    savedConfig?.description ?? "",
+    savedConfig?.description ?? prefill?.description ?? "",
   );
-  const [color, setColor] = useState<string | undefined>(savedConfig?.color);
-  const [icon, setIconDraft] = useState<IconAppearanceValue>(savedIcon ?? {});
+  const [color, setColor] = useState<string | undefined>(
+    savedConfig?.color ?? prefill?.color,
+  );
+  const [icon, setIconDraft] = useState<IconAppearanceValue>(
+    savedIcon ?? prefill?.icon ?? {},
+  );
   const [error, setError] = useState("");
 
   // Prefill the server-owned fields once the saved profile loads.
@@ -162,6 +182,7 @@ export function AgentProfileModal({
         summary?.id ??
         (await AgentProfilesService.getProfile(trimmed)).profile.id;
       if (profileId) setIcon(agentIconKey(profileId), icon);
+      if (!editing) onCreated?.(trimmed);
       onClose();
     } catch {
       setError(t(I18nKey.AGENTS$CREATE_FAILED));

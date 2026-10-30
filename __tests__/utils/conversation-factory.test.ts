@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
+import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
 import { ALL_FEED_FILTER, matchesFeedFilter } from "#/utils/feed-filters";
 import {
   getConversationFactory,
@@ -51,6 +52,82 @@ describe("getConversationFactory", () => {
 
     useFeedFactoriesStore.getState().removeAgent("f1", "scout");
     expect(getConversationFactory(conv("c1", "p1"), names)).toBeUndefined();
+  });
+});
+
+describe("a conversation started from a factory inbox", () => {
+  it("is in the factory by its saved tag when this browser holds no placement", () => {
+    const tagged = {
+      ...conv("c9"),
+      tags: { openhandsfactory: "f1" },
+    } as AppConversation;
+
+    expect(getConversationFactory(tagged, names)?.id).toBe("f1");
+  });
+
+  it("is placed by the inbox log when an earlier build logged it without a placement", async () => {
+    localStorage.setItem(
+      "feed-factories",
+      JSON.stringify({
+        version: 2,
+        state: {
+          custom: [{ id: "f1", name: "Web", description: "", ownerId: "you" }],
+          assignments: { kept: { factoryId: "f1", agentName: "Atlas" } },
+        },
+      }),
+    );
+    localStorage.setItem(
+      "factory-inbox",
+      JSON.stringify({
+        version: 0,
+        state: {
+          items: [
+            {
+              factoryId: "f1",
+              kind: "new",
+              status: "sent",
+              agentName: "OpenHands",
+              conversationId: "hi-conv",
+            },
+            {
+              factoryId: "f1",
+              kind: "new",
+              status: "failed",
+              agentName: "OpenHands",
+              conversationId: null,
+            },
+            {
+              factoryId: "f1",
+              kind: "new",
+              status: "sent",
+              agentName: "Other",
+              conversationId: "kept",
+            },
+          ],
+        },
+      }),
+    );
+
+    await useFeedFactoriesStore.persist.rehydrate();
+
+    expect(getConversationFactory(conv("hi-conv"), names)?.id).toBe("f1");
+    // A placement already saved is never overwritten by the log.
+    expect(useFeedFactoriesStore.getState().assignments.kept.agentName).toBe(
+      "Atlas",
+    );
+    useFactoryInboxStore.setState({ items: [] });
+  });
+
+  it("moves a Cloud launch's placement from its task id to the conversation id", () => {
+    const store = useFeedFactoriesStore.getState();
+    store.assignConversation("task-7", { factoryId: "f1", agentName: "x" });
+
+    store.replaceConversationId("task-7", "real-7");
+
+    expect(getConversationFactory(conv("real-7"), names)?.id).toBe("f1");
+    expect(useFeedFactoriesStore.getState().assignments["task-7"]).toBe(
+      undefined,
+    );
   });
 });
 

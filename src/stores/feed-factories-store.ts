@@ -69,6 +69,11 @@ interface FeedFactoriesActions {
     conversationId: string,
     assignment: ConversationAssignment,
   ) => void;
+  /**
+   * Moves a placement from the temporary id of a Cloud launch to the
+   * conversation's real id.
+   */
+  replaceConversationId: (fromId: string, toId: string) => void;
   setTemplate: (factoryId: string, templateId: string) => void;
   addAgent: (factoryId: string, agentName: string) => void;
   removeAgent: (factoryId: string, agentName: string) => void;
@@ -143,6 +148,53 @@ const withMember = (
   const current = list ?? [];
   if (current.includes(value) === present) return current;
   return present ? [...current, value] : current.filter((v) => v !== value);
+};
+
+interface LoggedInboxItem {
+  factoryId?: unknown;
+  kind?: unknown;
+  status?: unknown;
+  agentName?: unknown;
+  conversationId?: unknown;
+}
+
+/** Reads the factory inbox log straight from storage; it is another store's. */
+const readInboxLog = (): LoggedInboxItem[] => {
+  try {
+    const raw = localStorage.getItem("factory-inbox");
+    const items = raw ? JSON.parse(raw)?.state?.items : null;
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Places every conversation the inbox log says a factory started and that has
+ * no placement yet. A placement already saved is never overwritten.
+ */
+export const backfillFromInboxLog = (
+  saved: FeedFactoriesState,
+  log: LoggedInboxItem[] = readInboxLog(),
+): FeedFactoriesState => {
+  const assignments = { ...(saved?.assignments ?? {}) };
+  log.forEach((item) => {
+    if (
+      item.kind !== "new" ||
+      item.status !== "sent" ||
+      typeof item.conversationId !== "string" ||
+      typeof item.factoryId !== "string" ||
+      typeof item.agentName !== "string" ||
+      assignments[item.conversationId]
+    ) {
+      return;
+    }
+    assignments[item.conversationId] = {
+      factoryId: item.factoryId,
+      agentName: item.agentName,
+    };
+  });
+  return { ...saved, assignments };
 };
 
 /** Owns the factories people add; every factory list reads from here. */
@@ -330,13 +382,29 @@ export const useFeedFactoriesStore = create<
         set((state) => ({
           assignments: { ...state.assignments, [conversationId]: assignment },
         })),
+      replaceConversationId: (fromId, toId) =>
+        set((state) => {
+          const placement = state.assignments[fromId];
+          if (!placement) return state;
+          return {
+            assignments: {
+              ...withoutKey(state.assignments, fromId),
+              [toId]: placement,
+            },
+          };
+        }),
     }),
     {
       name: "feed-factories",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       // Every earlier shape is a subset of this one; `merge` fills the rest.
-      migrate: (persisted) => persisted as FeedFactoriesState,
+      // Version 3 places the conversations the factory inbox log says it
+      // started, which earlier builds could leave unplaced.
+      migrate: (persisted, version) => {
+        const saved = persisted as FeedFactoriesState;
+        return version < 3 ? backfillFromInboxLog(saved) : saved;
+      },
       // Fill the maps older saves lack so every reader sees a complete state.
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<FeedFactoriesState>;

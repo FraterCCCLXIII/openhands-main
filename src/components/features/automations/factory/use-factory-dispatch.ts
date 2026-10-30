@@ -8,6 +8,7 @@ import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { getApiErrorMessage } from "#/utils/api-error-message";
+import { buildFactoryTags } from "#/utils/factory-placement";
 import type { RouteDecision } from "#/utils/factory-routing";
 import { sendMessageWithAttachments } from "#/utils/send-message-with-attachments";
 
@@ -73,6 +74,9 @@ export function useFactoryDispatch() {
           const created = await createConversation({
             query: `${text}\n\nSent to the ${factoryName} factory inbox and assigned to ${decision.agentName}.`,
             entryPoint: ENTRY_POINT,
+            // Persisted with the conversation so the placement outlives this
+            // browser's storage.
+            tags: buildFactoryTags(factoryId),
             // A real agent profile launches as itself; a simulated persona has
             // none, so the active profile runs it.
             agentProfileId: knownAgents.find(

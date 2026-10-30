@@ -443,6 +443,8 @@ export interface CreateConversationOptions {
   initialUserMsg?: string;
   automationSetup?: boolean;
   automationSetupTags?: Record<string, string>;
+  /** Extra tags persisted with the conversation, such as its factory. */
+  tags?: Record<string, string>;
   conversationInstructions?: string;
   plugins?: PluginSpec[];
   metadata?: ConversationMetadata | null;
@@ -530,6 +532,7 @@ class AgentServerConversationService {
       initialUserMsg,
       automationSetup,
       automationSetupTags,
+      tags: extraTags,
       conversationInstructions,
       plugins,
       metadata,
@@ -587,8 +590,15 @@ class AgentServerConversationService {
             }
           : {}),
         trigger: "gui",
-        ...(automationSetup
-          ? { tags: buildAutomationSetupModeTags(automationSetupTags) }
+        ...(automationSetup || extraTags
+          ? {
+              tags: {
+                ...(extraTags ?? {}),
+                ...(automationSetup
+                  ? buildAutomationSetupModeTags(automationSetupTags)
+                  : {}),
+              },
+            }
           : {}),
         ...(automationSetup && agentProfileKind !== "acp"
           ? {
@@ -655,7 +665,10 @@ class AgentServerConversationService {
     // sidebar grouping survives on another browser, device, or after cleared
     // localStorage (#17386). localStorage below stays the warm cache for the
     // creating client.
-    const workspaceTags = buildWorkspaceTags(workingDirOverride);
+    const workspaceTags = {
+      ...buildWorkspaceTags(workingDirOverride),
+      ...(extraTags ?? {}),
+    };
     if (Object.keys(workspaceTags).length > 0) {
       const existingTags =
         payload.tags && typeof payload.tags === "object"

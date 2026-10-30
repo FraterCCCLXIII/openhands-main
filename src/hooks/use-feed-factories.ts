@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
+import { useResolveTaskPlacements } from "#/hooks/use-resolve-task-placements";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import {
   FEED_FACTORIES,
@@ -29,6 +30,7 @@ export function useFeedFactories(): FeedFactory[] {
  * lists that depend on it re-filter.
  */
 export function useFactoryResolver(): FactoryResolver {
+  useResolveTaskPlacements();
   const { data } = useAgentProfiles();
   const custom = useFeedFactoriesStore((state) => state.custom);
   const assignments = useFeedFactoriesStore((state) => state.assignments);

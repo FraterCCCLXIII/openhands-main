@@ -24,6 +24,8 @@ export interface CreateConversationVariables {
   query?: string;
   automationSetup?: boolean;
   automationSetupTags?: Record<string, string>;
+  /** Extra server-side tags for the conversation, such as its factory. */
+  tags?: Record<string, string>;
   repository?: {
     name: string;
     gitProvider: Provider;
@@ -95,6 +97,7 @@ export const useCreateConversation = ({
         query,
         automationSetup,
         automationSetupTags,
+        tags,
         conversationInstructions,
         plugins,
         repository,
@@ -121,6 +124,7 @@ export const useCreateConversation = ({
           initialUserMsg: query,
           automationSetup,
           ...(automationSetupTags ? { automationSetupTags } : {}),
+          ...(tags ? { tags } : {}),
           conversationInstructions,
           plugins,
           metadata: repository

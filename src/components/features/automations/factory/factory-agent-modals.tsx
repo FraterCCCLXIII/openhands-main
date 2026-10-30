@@ -28,7 +28,14 @@ import { cn } from "#/utils/utils";
 import { IconAppearancePanel } from "#/ui/icon-appearance-picker";
 import { useKnownFeedAgents } from "#/hooks/use-known-feed-agents";
 import { agentIconKey } from "#/utils/feed-icon-keys";
+import { AgentProfileModal } from "#/components/features/agents/new-agent-modal";
+import type { AgentOrchestrationTemplate } from "#/constants/agent-orchestration-templates";
 import type { Roster, RosterAgent } from "./factory-routing-context";
+import {
+  OrchestrationTemplatesPanel,
+  type UseTemplateRequest,
+} from "./orchestration-templates-panel";
+import { SuggestedTeamModal } from "./suggested-team-modal";
 
 interface AddAgentModalProps {
   factoryId: string;
@@ -36,7 +43,16 @@ interface AddAgentModalProps {
   onClose: () => void;
 }
 
-/** Picks personas that are not yet in the factory and adds them to its roster. */
+type AddView =
+  | { kind: "list" }
+  | { kind: "team" }
+  | ({ kind: "profile" } & UseTemplateRequest);
+
+/**
+ * Picks personas that are not yet in the factory and adds them to its roster.
+ * The orchestration templates are always listed below them, so the dialog is
+ * never a dead end when every existing agent is already a member.
+ */
 export function FactoryAddAgentModal({
   factoryId,
   roster,
@@ -44,6 +60,8 @@ export function FactoryAddAgentModal({
 }: AddAgentModalProps) {
   const { t } = useTranslation("openhands");
   const addAgent = useFeedFactoriesStore((state) => state.addAgent);
+  const setCoordinator = useFeedFactoriesStore((state) => state.setCoordinator);
+  const [view, setView] = useState<AddView>({ kind: "list" });
   const taken = new Set([
     roster.coordinator.agent.name,
     ...roster.others.map(({ agent }) => agent.name),
@@ -51,40 +69,95 @@ export function FactoryAddAgentModal({
   const known = useKnownFeedAgents();
   const available = known.filter(({ name }) => !taken.has(name));
 
+  if (view.kind === "team") {
+    return (
+      <SuggestedTeamModal
+        factoryId={factoryId}
+        onClose={() => {
+          setView({ kind: "list" });
+          onClose();
+        }}
+      />
+    );
+  }
+
+  if (view.kind === "profile") {
+    const { template } = view;
+    return (
+      <AgentProfileModal
+        prefill={{
+          name: view.name,
+          llmRef: view.llmRef,
+          instructions: template.instructions,
+          role: template.role,
+          description: template.purpose,
+          color: template.color,
+          icon: { lucide_icon: template.icon },
+        }}
+        onCreated={(name) => {
+          useFeedAgentConfigStore
+            .getState()
+            .setConfig(name, { tier: template.tier });
+          addAgent(factoryId, name);
+          if (view.asConductor) setCoordinator(factoryId, name);
+          onClose();
+        }}
+        onClose={() => setView({ kind: "list" })}
+      />
+    );
+  }
+
+  const addExisting = (template: AgentOrchestrationTemplate) => {
+    const configs = useFeedAgentConfigStore.getState();
+    if (!configs.configs[template.name]) {
+      configs.setConfig(template.name, {
+        role: template.role,
+        tier: template.tier,
+      });
+    }
+    addAgent(factoryId, template.name);
+    onClose();
+  };
+
   return (
     <ModalBackdrop onClose={onClose}>
       <ModalBody
         testID="factory-add-agent-modal"
+        width="xl"
         className="max-h-[85vh] items-start border border-border"
       >
         <BaseModalTitle title={t(I18nKey.FACTORY$ADD_AGENT)} />
-        <div className="custom-scrollbar flex max-h-80 w-full flex-col gap-1 overflow-y-auto">
-          {available.length === 0 ? (
-            <p className="text-sm text-muted">
-              {t(I18nKey.FACTORY$NO_AGENTS_TO_ADD)}
-            </p>
-          ) : (
-            available.map((agent) => (
-              <button
-                key={agent.name}
-                type="button"
-                data-testid="factory-add-agent-option"
-                data-agent={agent.name}
-                onClick={() => {
-                  addAgent(factoryId, agent.name);
-                  onClose();
-                }}
-                className="flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-raised"
-              >
-                <span className="size-8 shrink-0">
-                  <FeedIconTile className={agent.className}>
-                    <agent.Icon size={16} />
-                  </FeedIconTile>
-                </span>
-                <span className="text-sm text-foreground">{agent.name}</span>
-              </button>
-            ))
-          )}
+        <div className="custom-scrollbar flex min-h-0 w-full flex-col gap-4 overflow-y-auto">
+          {available.length > 0 ? (
+            <div className="flex w-full flex-col gap-1">
+              {available.map((agent) => (
+                <button
+                  key={agent.name}
+                  type="button"
+                  data-testid="factory-add-agent-option"
+                  data-agent={agent.name}
+                  onClick={() => {
+                    addAgent(factoryId, agent.name);
+                    onClose();
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-raised"
+                >
+                  <span className="size-8 shrink-0">
+                    <FeedIconTile className={agent.className}>
+                      <agent.Icon size={16} />
+                    </FeedIconTile>
+                  </span>
+                  <span className="text-sm text-foreground">{agent.name}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <OrchestrationTemplatesPanel
+            memberNames={taken}
+            onUse={(request) => setView({ kind: "profile", ...request })}
+            onAddExisting={addExisting}
+            onSuggestTeam={() => setView({ kind: "team" })}
+          />
         </div>
         <div className="flex w-full justify-end">
           <BrandButton
