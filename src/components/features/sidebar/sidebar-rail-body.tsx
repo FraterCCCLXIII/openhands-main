@@ -11,6 +11,7 @@ import {
   Server,
   Settings,
 } from "lucide-react";
+import { CanvasExtensionNavMenu } from "./canvas-extension-nav-menu";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { getLockedCloudHost } from "#/api/agent-server-config";
@@ -292,19 +293,24 @@ export function SidebarRailBody({
           />
         )}
         {canvasExtensionPages.map((page) => (
-          <SidebarNavLink
+          <CanvasExtensionNavMenu
             key={`${page.extension.name}:${page.contribution.id}`}
-            to={page.href}
+            extensionName={page.extension.name}
             label={page.contribution.nav_label || page.contribution.title}
-            testId={`sidebar-canvas-extension-${page.extension.name}-${page.contribution.id}`}
-            collapsed={collapsed}
-            icon={
-              <CanvasExtensionIcon
-                extension={page.extension}
-                size={EXTENSION_ICON_SIZE}
-              />
-            }
-          />
+          >
+            <SidebarNavLink
+              to={page.href}
+              label={page.contribution.nav_label || page.contribution.title}
+              testId={`sidebar-canvas-extension-${page.extension.name}-${page.contribution.id}`}
+              collapsed={collapsed}
+              icon={
+                <CanvasExtensionIcon
+                  extension={page.extension}
+                  size={EXTENSION_ICON_SIZE}
+                />
+              }
+            />
+          </CanvasExtensionNavMenu>
         ))}
       </nav>
 

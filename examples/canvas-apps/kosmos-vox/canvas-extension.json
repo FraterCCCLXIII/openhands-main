@@ -8,7 +8,16 @@
   "icon": "icon.svg",
   "contributes": {
     "pages": [
-      { "id": "kosmos-vox", "title": "Kosmos Vox", "path": "/kosmos-vox", "nav_label": "Vox", "description": "Voice for your agents." }
+      {
+        "id": "kosmos-vox",
+        "title": "Kosmos Vox",
+        "path": "/kosmos-vox",
+        "nav_label": "Vox",
+        "description": "Voice for your agents."
+      }
     ]
+  },
+  "icon_appearance": {
+    "background": "purple"
   }
 }

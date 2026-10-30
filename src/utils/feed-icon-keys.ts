@@ -4,3 +4,5 @@ export const factoryIconKey = (factoryId: string): string =>
   `factory:${factoryId}`;
 export const personIconKey = (personId: string): string => `person:${personId}`;
 export const agentIconKey = (agentId: string): string => `agent:${agentId}`;
+export const canvasExtensionIconKey = (name: string): string =>
+  `canvas-extension:${name}`;

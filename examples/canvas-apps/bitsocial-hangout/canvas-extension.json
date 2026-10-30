@@ -16,5 +16,8 @@
         "description": "Chat in Bitsocial communities."
       }
     ]
+  },
+  "icon_appearance": {
+    "background": "indigo"
   }
 }

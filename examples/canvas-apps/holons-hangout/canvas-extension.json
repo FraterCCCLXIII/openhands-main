@@ -16,5 +16,8 @@
         "description": "Hangout-style chat for Holons: feeds, courses and members, with a demo mode."
       }
     ]
+  },
+  "icon_appearance": {
+    "background": "emerald"
   }
 }

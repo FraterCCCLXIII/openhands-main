@@ -16,5 +16,8 @@
         "description": "Chat with your agents."
       }
     ]
+  },
+  "icon_appearance": {
+    "background": "violet"
   }
 }
