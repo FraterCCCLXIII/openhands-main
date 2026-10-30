@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "name": "kosmos-vox",
+  "display_name": "Kosmos Vox",
+  "version": "0.1.0",
+  "description": "Talk to your agents: voice capture, speech recognition, an agent reply and spoken playback with an animated mouth. A Modern Telepathy product.",
+  "entrypoint": "extension.js",
+  "icon": "icon.svg",
+  "contributes": {
+    "pages": [
+      { "id": "kosmos-vox", "title": "Kosmos Vox", "path": "/kosmos-vox", "nav_label": "Vox", "description": "Voice for your agents." }
+    ]
+  }
+}
