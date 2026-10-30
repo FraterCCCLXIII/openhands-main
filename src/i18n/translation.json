@@ -57401,6 +57401,24 @@
     "ca": "Elimina {{name}}",
     "id": "Hapus {{name}}"
   },
+  "CHAT_INTERFACE$AGENT_NOTIFICATIONS_SAVE_FOR_LATER": {
+    "en": "Save {{name}} for later",
+    "ja": "{{name}} を後で使うために保存",
+    "zh-CN": "稍后使用 {{name}}",
+    "zh-TW": "稍後使用 {{name}}",
+    "ko-KR": "{{name}} 나중에 사용하도록 저장",
+    "no": "Lagre {{name}} til senere",
+    "it": "Salva {{name}} per dopo",
+    "pt": "Salvar {{name}} para depois",
+    "es": "Guardar {{name}} para después",
+    "ar": "حفظ {{name}} لوقت لاحق",
+    "fr": "Enregistrer {{name}} pour plus tard",
+    "tr": "{{name}} öğesini sonra için kaydet",
+    "de": "{{name}} für später speichern",
+    "uk": "Зберегти {{name}} на потім",
+    "ca": "Desa {{name}} per més tard",
+    "id": "Simpan {{name}} untuk nanti"
+  },
   "CHAT_INTERFACE$AGENT_NOTIFICATIONS_AUTOMATION_TYPE_PILL": {
     "en": "Automation · {{type}}",
     "ja": "自動化 · {{type}}",

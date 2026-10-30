@@ -124,6 +124,7 @@ export function InteractiveChatBox({
           onCreateAll={agentNotifications.createAll}
           onDismiss={agentNotifications.dismiss}
           onRemove={agentNotifications.remove}
+          onSaveForLater={agentNotifications.saveForLater}
           disabled={isDisabled}
           isCreating={agentNotifications.isCreating}
         />

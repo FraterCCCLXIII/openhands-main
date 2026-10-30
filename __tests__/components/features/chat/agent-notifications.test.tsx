@@ -27,6 +27,7 @@ describe("AgentNotifications", () => {
   const onCreateAll = vi.fn();
   const onDismiss = vi.fn();
   const onRemove = vi.fn();
+  const onSaveForLater = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -39,6 +40,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -69,6 +71,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -89,6 +92,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -141,6 +145,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -167,6 +172,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -198,6 +204,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -216,6 +223,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
@@ -234,6 +242,7 @@ describe("AgentNotifications", () => {
         onCreateAll={onCreateAll}
         onDismiss={onDismiss}
         onRemove={onRemove}
+        onSaveForLater={onSaveForLater}
       />,
     );
 
