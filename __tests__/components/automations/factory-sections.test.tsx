@@ -228,3 +228,141 @@ vitestDemoOn.beforeEach(() =>
   window.history.pushState({}, "", "/?demoTeam=on"),
 );
 vitestDemoOn.afterEach(() => window.history.pushState({}, "", "/"));
+
+describe("factory team section", () => {
+  const openTemplate = async (
+    user: ReturnType<typeof userEvent.setup>,
+    id: string,
+  ) => {
+    await user.click(screen.getByTestId(`team-template-use-${id}`));
+    return screen.getByTestId("team-template-modal");
+  };
+
+  beforeEach(() => {
+    useFeedFactoriesStore.setState({ humanAssignments: {} });
+  });
+
+  it("puts Team after Agents and before Projects in the section nav", () => {
+    renderSection();
+
+    const ids = Array.from(
+      document.querySelectorAll('[data-testid^="factory-navigation-"]'),
+    ).map((node) =>
+      node.getAttribute("data-testid")?.replace("factory-navigation-", ""),
+    );
+    const unique = [...new Set(ids)];
+    expect(unique.indexOf("team")).toBe(unique.indexOf("agents") + 1);
+    expect(unique.indexOf("projects")).toBe(unique.indexOf("team") + 1);
+  });
+
+  it("shows an honest empty state and zero coverage with no invitees", () => {
+    renderSection("team");
+
+    expect(screen.getByTestId("factory-team-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("factory-team-member")).toBeNull();
+    expect(
+      within(screen.getByTestId("team-template-design-review")).getAllByRole(
+        "listitem",
+      ).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByTestId("team-template-coverage-design-review"),
+    ).toHaveTextContent("FACTORY$HUMAN_ROLES_FILLED");
+    expect(screen.getByTestId("factory-team-summary")).toHaveTextContent(
+      "FACTORY$TEAM_SUMMARY",
+    );
+  });
+
+  it("saves template invites that persist across rehydration and raise coverage", async () => {
+    const user = userEvent.setup();
+    renderSection("team");
+
+    await openTemplate(user, "design-review");
+    expect(screen.getByTestId("team-template-save")).toBeDisabled();
+    await user.type(
+      screen.getByTestId("team-template-email-designer"),
+      "dana@example.com",
+    );
+    await user.click(screen.getByTestId("team-template-save"));
+    await user.click(screen.getByTestId("team-template-done"));
+
+    const member = screen.getByTestId("factory-team-member");
+    expect(member).toHaveTextContent("dana@example.com");
+    expect(member).toHaveTextContent("FACTORY$HUMAN_ROLE_PENDING");
+    expect(
+      screen
+        .getByTestId("team-template-design-review-role-designer")
+        .getAttribute("data-filled"),
+    ).toBe("true");
+
+    // Simulate a reload: memory is lost, storage keeps what was written.
+    const written = localStorage.getItem("feed-factories") ?? "";
+    useFeedFactoriesStore.setState({ humanAssignments: {} });
+    localStorage.setItem("feed-factories", written);
+    await useFeedFactoriesStore.persist.rehydrate();
+    expect(await screen.findByTestId("factory-team-member")).toHaveTextContent(
+      "dana@example.com",
+    );
+  });
+
+  it("skips roles that are already filled and rejects a bad email", async () => {
+    const user = userEvent.setup();
+    useFeedFactoriesStore.setState({
+      humanAssignments: {
+        [FACTORY_ID]: {
+          "team:designer": [
+            {
+              id: "email:dana@example.com",
+              status: "pending",
+              name: "dana@example.com",
+              email: "dana@example.com",
+            },
+          ],
+        },
+      },
+    });
+    renderSection("team");
+
+    const modal = await openTemplate(user, "design-review");
+    expect(
+      within(modal).queryByTestId("team-template-row-designer"),
+    ).toBeNull();
+    expect(
+      within(modal).getByTestId("team-template-row-reviewer"),
+    ).toBeInTheDocument();
+    await user.type(
+      screen.getByTestId("team-template-email-reviewer"),
+      "not-an-email",
+    );
+    expect(screen.getByTestId("team-template-save")).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "FACTORY$INVITE_EMAIL_INVALID",
+    );
+  });
+
+  it("removes a member from the team", async () => {
+    const user = userEvent.setup();
+    useFeedFactoriesStore.setState({
+      humanAssignments: {
+        [FACTORY_ID]: {
+          "team:member": [
+            {
+              id: "email:lee@example.com",
+              status: "pending",
+              name: "Lee",
+              email: "lee@example.com",
+            },
+          ],
+        },
+      },
+    });
+    renderSection("team");
+
+    await user.click(
+      screen.getByRole("button", { name: "FACTORY$TEAM_REMOVE" }),
+    );
+
+    expect(screen.queryByTestId("factory-team-member")).toBeNull();
+    expect(screen.getByTestId("factory-team-empty")).toBeInTheDocument();
+  });
+});

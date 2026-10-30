@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateConversation } from "#/hooks/mutation/use-create-conversation";
 import { FEED_QUERY_KEYS } from "#/hooks/query/query-keys";
+import { useKnownFeedAgents } from "#/hooks/use-known-feed-agents";
 import { useFactoryInboxStore } from "#/stores/factory-inbox-store";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
@@ -33,6 +34,7 @@ export function useFactoryDispatch() {
   const { mutateAsync: createConversation } = useCreateConversation({
     disableToast: true,
   });
+  const knownAgents = useKnownFeedAgents();
   const addItem = useFactoryInboxStore((state) => state.addItem);
   const assignConversation = useFeedFactoriesStore(
     (state) => state.assignConversation,
@@ -71,6 +73,11 @@ export function useFactoryDispatch() {
           const created = await createConversation({
             query: `${text}\n\nSent to the ${factoryName} factory inbox and assigned to ${decision.agentName}.`,
             entryPoint: ENTRY_POINT,
+            // A real agent profile launches as itself; a simulated persona has
+            // none, so the active profile runs it.
+            agentProfileId: knownAgents.find(
+              (agent) => agent.name === decision.agentName,
+            )?.profileId,
           });
           conversationId = created.conversation_id;
           // Place it before it reaches the lists, so it lands in this factory.
@@ -90,6 +97,13 @@ export function useFactoryDispatch() {
         log("failed", null);
       }
     },
-    [addItem, assignConversation, createConversation, queryClient, t],
+    [
+      addItem,
+      assignConversation,
+      createConversation,
+      knownAgents,
+      queryClient,
+      t,
+    ],
   );
 }

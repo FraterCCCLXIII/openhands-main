@@ -6,7 +6,7 @@ Voice for your agents, a Canvas App by Modern Telepathy. A voice workbench for t
 
 Two panes that fill the page height (a grip between them is draggable and remembered); one column under 720 px.
 
-**Engines (left).** One row per engine with a status pill (Running, Installed, Missing, or Not checked), a description, version and voice info, the port, Start and Stop buttons where they are safe, and an Install disclosure with the exact commands. Nothing is installed or started for you: Start runs only the command shown, when you press it, through the Agent Server, and the output appears in the Command log.
+**Engines (left).** One row per engine with a status pill (Running, Installed, Missing, or Not checked), a description, version and voice info, the port, Start and Stop buttons where they are safe, and an Install disclosure with the exact commands. Engines that are Missing or Not checked get a prominent Install button that only reveals numbered steps, copyable command blocks (Copy confirms with "Copied") and links to the official sources; it never runs anything. After running the commands, press Refresh. Nothing is installed or started for you: Start runs only the command shown, when you press it, through the Agent Server, and the output appears in the Command log.
 
 | Engine | Port | Running means | Installed means | Start |
 |---|---|---|---|---|

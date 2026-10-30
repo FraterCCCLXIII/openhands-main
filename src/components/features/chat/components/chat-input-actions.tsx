@@ -51,6 +51,7 @@ interface ChatInputActionsProps {
   /** Tracks the text field's editability, not submit availability. */
   isDictationDisabled?: boolean;
   toolbarLeading?: React.ReactNode;
+  hideProfilePickers?: boolean;
 }
 
 export function ChatInputActions({
@@ -64,6 +65,7 @@ export function ChatInputActions({
   onDictationTranscript,
   isDictationDisabled = false,
   toolbarLeading,
+  hideProfilePickers = false,
 }: ChatInputActionsProps) {
   const { t } = useTranslation("openhands");
   const isComposerDockedMinimal = useComposerDockedMinimal();
@@ -80,7 +82,8 @@ export function ChatInputActions({
   // not possible (see ChatInputAgentProfilePicker). Previously the pill shared
   // the "+" menu's pre-start gate, so it vanished once a conversation started.
   const agentProfiles = useAgentProfiles();
-  const showAgentProfilePill = (agentProfiles.data?.profiles?.length ?? 0) > 0;
+  const showAgentProfilePill =
+    !hideProfilePickers && (agentProfiles.data?.profiles?.length ?? 0) > 0;
   // The "+" tools menu offers its own agent-profile entry (OSS-5735) only
   // while the conversation hasn't started. The gate is computed here (not in
   // the menu) so ToolsContextMenu only mounts the profile submenu when it can
@@ -236,7 +239,9 @@ export function ChatInputActions({
         (!llmProfileState.canSwitchProfile &&
           Boolean(llmProfileState.currentProfileName));
   const showOverflowModel =
-    !showModelInline && (getLockedCloudHost() === null || hasModelMenuRows);
+    !hideProfilePickers &&
+    !showModelInline &&
+    (getLockedCloudHost() === null || hasModelMenuRows);
 
   const hasOverflowItems = !showAddFileInline || showOverflowModel;
 
@@ -420,7 +425,10 @@ export function ChatInputActions({
           <div
             ref={modelRef}
             data-testid="chat-input-model-pill"
-            className={cn("min-w-0", !showModelInline && "hidden")}
+            className={cn(
+              "min-w-0",
+              (!showModelInline || hideProfilePickers) && "hidden",
+            )}
           >
             {/* Picker depends on backend + ACP context; see the
                 `pickerKind` cases above. */}

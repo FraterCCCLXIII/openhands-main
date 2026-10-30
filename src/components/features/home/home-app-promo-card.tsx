@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { Smartphone, X } from "lucide-react";
+import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensions/canvas-extensions-runtime";
 import { I18nKey } from "#/i18n/declaration";
 import {
   HOME_APP_PROMO_DISMISSED_STORAGE_KEY,
-  HOME_APP_PROMO_DOWNLOAD_URL,
+  HOME_APP_PROMO_EXTENSION_NAME,
 } from "./home-app-promo.constants";
 
 function readDismissed(): boolean {
@@ -30,7 +32,7 @@ function writeDismissed(): void {
  * Floating promo for the phone app, pinned to the bottom-left of the home
  * screen. Dismissal is remembered per browser.
  */
-export function HomeAppPromoCard() {
+function HomeAppPromo({ href }: { href: string }) {
   const { t } = useTranslation("openhands");
   const [isDismissed, setIsDismissed] = useState(readDismissed);
 
@@ -67,15 +69,28 @@ export function HomeAppPromoCard() {
             <X className="size-4" aria-hidden />
           </button>
         </div>
-        <a
-          href={HOME_APP_PROMO_DOWNLOAD_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to={href}
           className="inline-flex w-fit items-center rounded-md bg-interactive-hover px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-border"
         >
           {t(I18nKey.HOME$PHONE_APP_GET_APP)}
-        </a>
+        </Link>
       </div>
     </aside>
   );
+}
+
+/**
+ * Shown only while the Mobile app extension page is registered in the
+ * extension runtime (installed, enabled and activated). The runtime exposes
+ * no pages while the extension list loads or on backends without extensions,
+ * so the card stays hidden and no dismissal state is read until it can show.
+ */
+export function HomeAppPromoCard() {
+  const { pages } = useCanvasExtensionsRuntime();
+  const page = pages.find(
+    (entry) => entry.extension.name === HOME_APP_PROMO_EXTENSION_NAME,
+  );
+  if (!page) return null;
+  return <HomeAppPromo href={page.href} />;
 }

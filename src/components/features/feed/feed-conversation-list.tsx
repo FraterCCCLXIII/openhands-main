@@ -5,9 +5,12 @@ import type { AppConversation } from "#/api/conversation-service/agent-server-co
 import type { Provider } from "#/types/settings";
 import { ConversationCard } from "#/components/features/conversation-panel/conversation-card/conversation-card";
 import { NavigationLink } from "#/components/shared/navigation-link";
-import { useNavigation } from "#/context/navigation-context";
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useBackendScopedPath } from "#/hooks/use-backend-scoped-path";
+import {
+  feedConversationPath,
+  useOpenFeedConversation,
+} from "#/hooks/use-open-feed-conversation";
 import { useFactoryResolver } from "#/hooks/use-feed-factories";
 import { I18nKey } from "#/i18n/declaration";
 import { useArchivedConversationsStore } from "#/stores/archived-conversations-store";
@@ -27,6 +30,7 @@ interface FeedConversationListProps {
  * The conversations behind the feed's current factory, project and agent
  * filters, as the same rows the main sidebar shows (status dot, title, time,
  * line totals), with a search box. Archived conversations are left out.
+ * Picking a row opens that conversation inside Tower (`/feed?conversation=`).
  */
 export function FeedConversationList({
   conversations,
@@ -36,7 +40,7 @@ export function FeedConversationList({
   const [query, setQuery] = useState("");
   const resolveFactory = useFactoryResolver();
   const backendScopedPath = useBackendScopedPath();
-  const { conversationId: currentId } = useNavigation();
+  const { openConversationId: currentId } = useOpenFeedConversation();
   const { backend } = useActiveBackend();
   const archivedIds = useArchivedConversationsStore(
     (state) => state.archivesByBackendId[backend.id],
@@ -90,7 +94,10 @@ export function FeedConversationList({
           {rows.map((conversation) => (
             <li key={conversation.id} data-testid="feed-conversation-row">
               <NavigationLink
-                to={backendScopedPath(`/conversations/${conversation.id}`)}
+                to={backendScopedPath(feedConversationPath(conversation.id))}
+                aria-current={
+                  conversation.id === currentId ? "true" : undefined
+                }
                 className={cn(
                   "block rounded-md transition-colors hover:bg-surface",
                   conversation.id === currentId && "bg-surface",

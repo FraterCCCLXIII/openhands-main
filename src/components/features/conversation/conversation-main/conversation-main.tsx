@@ -316,7 +316,16 @@ export function ConversationMain() {
               </div>
             </div>
           ) : null}
-          <div className="flex-1 min-h-0 flex flex-col">
+          <div className="relative flex-1 min-h-0 flex flex-col">
+            {/* Soft fade where messages scroll up under the header; mirrors the
+                feed's top fade. Decorative: never intercepts clicks. */}
+            {!isAutomationSetupMode ? (
+              <div
+                data-testid="chat-pane-header-fade"
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-canvas-base to-transparent"
+              />
+            ) : null}
             <ChatInterfaceWrapper
               isRightPanelShown={!isMobile && isRightPanelShown}
               showGitControlBar={!isAutomationSetupMode}

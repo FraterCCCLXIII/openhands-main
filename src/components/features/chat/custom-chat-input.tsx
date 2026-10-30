@@ -26,6 +26,12 @@ export interface CustomChatInputProps {
   persistDraft?: boolean;
   /** Extra controls rendered first in the toolbar, before the add-file button. */
   toolbarLeading?: React.ReactNode;
+  /**
+   * Hides the built-in agent-profile and model pills, for composers that
+   * supply their own because those pills would change the global active
+   * profile rather than this one launch.
+   */
+  hideProfilePickers?: boolean;
   onSubmit: (message: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
@@ -45,6 +51,7 @@ export function CustomChatInput({
   placeholder,
   persistDraft = true,
   toolbarLeading,
+  hideProfilePickers = false,
   onSubmit,
   onFocus,
   onBlur,
@@ -196,6 +203,7 @@ export function CustomChatInput({
           chatInputRef={chatInputRef}
           placeholder={placeholder}
           toolbarLeading={toolbarLeading}
+          hideProfilePickers={hideProfilePickers}
           handleFileIconClick={handleFileIconClick}
           handleSubmit={handleSubmitAndSync}
           onDragOver={handleDragOver}

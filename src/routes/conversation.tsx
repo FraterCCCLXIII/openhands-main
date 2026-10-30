@@ -33,7 +33,16 @@ import { useErrorMessageStore } from "#/stores/error-message-store";
 import { I18nKey } from "#/i18n/declaration";
 import { useCloudSandboxAutoResume } from "#/hooks/mutation/use-cloud-sandbox-auto-resume";
 
-function AppContent() {
+interface ConversationViewProps {
+  /**
+   * Set when the view is embedded in another page (Tower's feed). A
+   * conversation that cannot be found is then reported here instead of
+   * toasting and navigating the whole page away to /conversations.
+   */
+  onMissing?: () => void;
+}
+
+function AppContent({ onMissing }: ConversationViewProps) {
   const { t } = useTranslation("openhands");
   const { conversationId } = useConversationId();
   const showsMobilePanelPage = useConversationPanelRoute(conversationId);
@@ -147,7 +156,7 @@ function AppContent() {
     if (!ownerLookupMissed) return;
     if (shouldProbeShared) {
       if (!isSharedProbeFetched) return;
-      if (sharedConversation) {
+      if (sharedConversation && !onMissing) {
         navigate(`/shared/conversations/${conversationId}`, { replace: true });
         return;
       }
@@ -155,6 +164,10 @@ function AppContent() {
     // Clear the per-backend "last selected" slot so the next switch
     // to this backend doesn't try to revisit a stale id.
     clearLastConversationId(active.backend.id, active.orgId);
+    if (onMissing) {
+      onMissing();
+      return;
+    }
     displayErrorToast(t(I18nKey.CONVERSATION$NOT_EXIST_OR_NO_PERMISSION));
     navigate("/conversations");
   }, [
@@ -167,6 +180,7 @@ function AppContent() {
     t,
     active.backend.id,
     active.orgId,
+    onMissing,
   ]);
 
   // Remember the most recently selected conversation for the current
@@ -228,8 +242,8 @@ function AppContent() {
   );
 }
 
-export function ConversationView() {
-  return <AppContent />;
+export function ConversationView(props: ConversationViewProps) {
+  return <AppContent {...props} />;
 }
 
 export default ConversationView;

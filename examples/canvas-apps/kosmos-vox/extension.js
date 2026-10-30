@@ -524,6 +524,15 @@ const CSS = `
 .kv .erow .top { display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:600; }
 .kv .erow .acts { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
 .kv .erow .meta, .kv .erow .desc { font-size:12px; color:var(--mut); margin:0; overflow-wrap:anywhere; }
+.kv .ipanel { border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; gap:6px; }
+.kv .ipanel ol { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px; }
+.kv .ipanel li { font-size:12px; color:var(--fg); }
+.kv .ipanel .code { display:flex; flex-direction:column; gap:4px; align-items:flex-start; margin-top:4px; }
+.kv .ipanel .code pre { align-self:stretch; margin:0; }
+.kv .ipanel a { color:var(--fg); text-decoration:underline; overflow-wrap:anywhere; }
+.kv .ipanel ul { margin:0; padding-left:18px; font-size:12px; }
+.kv .ipanel .btn { font-size:12px; padding:3px 10px; }
+.kv .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .kv details { color:var(--mut); }
 .kv details summary { cursor:pointer; font-size:12px; }
 .kv pre { margin:6px 0 0; padding:8px; border-radius:8px; background:var(--bg); color:var(--fg); border:1px solid var(--line); font:11px/1.4 ui-monospace,Menlo,monospace; white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; user-select:text; }
@@ -723,6 +732,68 @@ const HELP = {
     "whisper-server --port 8080     # serves /inference, not the OpenAI route",
   ].join("\n"),
   arco: ["cd ~/Kosmos/voice-server", "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt", ".venv/bin/python bot.py --host localhost --port 4630"].join("\n"),
+};
+
+const LINKS = {
+  kamijiDocs: ["Kamiji voice server README (kamiji repo, tools/voice-server/README.md)", "https://github.com/FraterCCCLXIII/kamiji/blob/HEAD/tools/voice-server/README.md"],
+  kamijiRepo: ["Kamiji repository", "https://github.com/FraterCCCLXIII/kamiji"],
+  qwenModel: ["Qwen3-TTS model on Hugging Face (mlx-community/Qwen3-TTS-12Hz-1.7B-Base-4bit)", "https://huggingface.co/mlx-community/Qwen3-TTS-12Hz-1.7B-Base-4bit"],
+  kokoroModel: ["Kokoro ONNX model on Hugging Face (speaches-ai/Kokoro-82M-v1.0-ONNX)", "https://huggingface.co/speaches-ai/Kokoro-82M-v1.0-ONNX"],
+  yakopopRepo: ["yakopop repository (tools/stt/server.py)", "https://github.com/Modern-Telepathy/yakopop"],
+  whisperModel: ["Whisper model on Hugging Face (deepdml/faster-whisper-large-v3-turbo-ct2)", "https://huggingface.co/deepdml/faster-whisper-large-v3-turbo-ct2"],
+  kosmosRepo: ["Kosmos repository (voice-server/README.md)", "https://github.com/Kosmos-computer/Kosmos"],
+  whisperCpp: ["whisper.cpp project", "https://github.com/ggml-org/whisper.cpp"],
+  whisperCppModels: ["whisper.cpp ggml models on Hugging Face", "https://huggingface.co/ggerganov/whisper.cpp"],
+};
+
+/** Install helpers for engines that are not installed. Only text that already exists in this app, the Kamiji, yakopop and Kosmos READMEs or the git remotes. Shown, never run. */
+const INSTALL = {
+  kamiji: {
+    prereq: "macOS on Apple silicon (the Qwen3-TTS voices use MLX), uv, Homebrew. Model sizes from the Kamiji verification notes: Qwen3-TTS about 1.65 GB, Kokoro about 337 MB, downloaded from Hugging Face on first use (public, no login). Qwen peaks near 15 GB of memory while generating.",
+    steps: [
+      ["Create the Python 3.12 environment the server runs from.", ["uv venv -p 3.12 ~/.kamiji-voice/venv"]],
+      ["Install the voice packages into it.", [
+        'uv pip install -p ~/.kamiji-voice/venv/bin/python mlx-audio==0.5.8 pyworld "setuptools<81" numpy kokoro-onnx==0.5.0 onnxruntime onnx huggingface_hub',
+        "uv pip install -p ~/.kamiji-voice/venv/bin/python --no-deps misaki==0.9.4 pyopenjtalk==0.4.1 fugashi==1.5.2 jaconv==0.5.0 addict==2.4.0 mojimoji==0.0.13"]],
+      ["Install ffmpeg.", ["brew install ffmpeg"]],
+      ["Start the server from the Kamiji repo (or use the Start button above once the Kamiji folder is set in Settings).", ["tools/voice-server/run.sh start     # also: stop, status"]],
+    ],
+    links: [LINKS.kamijiDocs, LINKS.kamijiRepo, LINKS.kokoroModel, LINKS.qwenModel],
+  },
+  stt: {
+    prereq: "Python 3.11+ and the Kosmos voice-server venv at ~/Kosmos/voice-server/.venv (step 1), plus the yakopop repo (folder set under Settings). The server loads its model from the Hugging Face cache only and never downloads it, so deepdml/faster-whisper-large-v3-turbo-ct2 must already be cached; no download command for it is documented in these repos.",
+    steps: [
+      ["Create the venv if you do not have it (from the Kosmos repo, voice-server/README.md).", ["cd ~/Kosmos/voice-server", "python3 -m venv .venv"]],
+      ["Install faster-whisper into it.", ["~/Kosmos/voice-server/.venv/bin/pip install faster-whisper huggingface_hub"]],
+      ["Start the server from the yakopop repo (or use Start above).", ["~/Kosmos/voice-server/.venv/bin/python tools/stt/server.py --port 4640"]],
+    ],
+    links: [LINKS.yakopopRepo, LINKS.kosmosRepo, LINKS.whisperModel],
+  },
+  "whisper-cpp": {
+    prereq: "Homebrew. The base.en model file is downloaded by the second command from Hugging Face (size not recorded in these repos). This page does not use whisper.cpp yet (detected only).",
+    steps: [
+      ["Install whisper.cpp.", ["brew install whisper-cpp"]],
+      ["Download the base.en model.", ["mkdir -p ~/.cache/whisper && curl -L -o ~/.cache/whisper/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"]],
+      ["Optional: run the server (serves /inference, not the OpenAI route).", ["whisper-server --port 8080"]],
+    ],
+    links: [LINKS.whisperCpp, LINKS.whisperCppModels],
+  },
+  arco: {
+    prereq: "Python 3.11+ and the Kosmos repo checked out at ~/Kosmos (voice-server/ folder). The first run downloads about 1 to 2 GB of models (Whisper, Kokoro, Silero, Smart Turn v3) into ~/.cache, per its README.",
+    steps: [
+      ["Create the venv and install the requirements.", ["cd ~/Kosmos/voice-server", "python3 -m venv .venv", ".venv/bin/pip install -r requirements.txt"]],
+      ["Run it.", [".venv/bin/python bot.py --host localhost --port 4630"]],
+    ],
+    links: [LINKS.kosmosRepo],
+  },
+  system: {
+    prereq: "Only ffmpeg has an install command in these repos. say ships with macOS. No verified route for espeak-ng is recorded here.",
+    steps: [["Install ffmpeg.", ["brew install ffmpeg"]]],
+    links: [],
+  },
+  "browser-tts": { note: "Built into the browser, so there is nothing to install here. This browser exposes no speechSynthesis; try another browser or the Kamiji voice server.", steps: [], links: [] },
+  "browser-stt": { note: "Built into the browser, so there is nothing to install here. This browser exposes no SpeechRecognition; use the Whisper server or typed input.", steps: [], links: [] },
+  piper: { note: "No install route is recorded in these repos, and this page does not wire Piper. The Arco README only says Piper needs its own server.", steps: [], links: [LINKS.kosmosRepo] },
 };
 
 export function activate(host) {
@@ -957,6 +1028,7 @@ function mount(container, host, deps = {}) {
 
   // ---- Engines panel ----
   const openHelp = new Set();
+  const openInstall = new Set();
   function rows() {
     const voiceCount = browserVoices().length;
     const defVoice = browserVoices().find((v) => v.default)?.name;
@@ -989,6 +1061,74 @@ function mount(container, host, deps = {}) {
     ];
   }
 
+  /** Copies text to the clipboard; falls back to a hidden textarea and execCommand. Resolves true when it worked. */
+  async function copyText(text) {
+    try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return true; } } catch { /* fall through to the old way */ }
+    try {
+      const t = document.createElement("textarea");
+      t.value = text; t.setAttribute("readonly", ""); t.style.cssText = "position:fixed;left:-9999px;top:0";
+      document.body.append(t); t.select();
+      const ok = document.execCommand?.("copy") === true;
+      t.remove();
+      return ok;
+    } catch { return false; }
+  }
+
+  /** A prominent Install button that only reveals instructions. Nothing here runs a command. */
+  function installHelper(id, name, inst) {
+    const wrap = el("div");
+    wrap.dataset.install = id;
+    const panel = el("div", "ipanel");
+    panel.id = `kv-install-${id}`;
+    panel.hidden = !openInstall.has(id);
+    const toggle = btn(`Install ${name}`, "pri", () => {
+      const open = panel.hidden;
+      panel.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      if (open) openInstall.add(id); else openInstall.delete(id);
+    });
+    toggle.dataset.action = `${id}:install`;
+    toggle.setAttribute("aria-expanded", String(!panel.hidden));
+    toggle.setAttribute("aria-controls", panel.id);
+    toggle.title = "Shows the steps and commands. Nothing is run.";
+    const live = el("span", "sr");
+    live.setAttribute("role", "status"); live.setAttribute("aria-live", "polite");
+    if (inst.prereq) panel.append(el("p", "note", `Before you start: ${inst.prereq}`));
+    if (inst.note) panel.append(el("p", "note", inst.note));
+    if (inst.steps.length) {
+      const ol = el("ol");
+      inst.steps.forEach(([text, cmds]) => {
+        const li = el("li", "", text);
+        cmds.forEach((cmd) => {
+          const code = el("div", "code");
+          const pre = el("pre", "", cmd);
+          const copy = btn("Copy", "", async () => {
+            const ok = await copyText(cmd);
+            copy.textContent = ok ? "Copied" : "Copy failed";
+            live.textContent = ok ? "Copied to clipboard" : "Copy failed. Select the command and copy it by hand.";
+            setTimeout(() => { copy.textContent = "Copy"; }, 2000);
+          });
+          copy.setAttribute("aria-label", `Copy command: ${cmd.slice(0, 80)}`);
+          code.append(pre, copy);
+          li.append(code);
+        });
+        ol.append(li);
+      });
+      panel.append(ol, el("p", "note", "After running the commands, press Refresh."));
+    }
+    if (inst.links.length) {
+      const ul = el("ul");
+      inst.links.forEach(([label, url]) => {
+        const a = el("a", "", label); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+        const li = el("li"); li.append(a); ul.append(li);
+      });
+      panel.append(el("p", "note", "Official sources"), ul);
+    }
+    panel.append(live);
+    wrap.append(toggle, panel);
+    return wrap;
+  }
+
   function renderEngines() {
     eRows.replaceChildren();
     eDetect.textContent = s.detectState === "unavailable" ? "Detection needs the Agent Server. Running engines are still found over HTTP."
@@ -1017,7 +1157,10 @@ function mount(container, host, deps = {}) {
         row.append(acts);
         if (r.needs) row.append(el("p", "meta", r.needs));
       }
-      if (r.help) {
+      const inst = INSTALL[r.id];
+      const needsInstall = Boolean(inst) && (r.status === "missing" || r.status === "unknown");
+      if (needsInstall) row.append(installHelper(r.id, r.name, inst));
+      if (r.help && !needsInstall) {
         const d = el("details");
         d.open = openHelp.has(r.id);
         d.addEventListener("toggle", () => { if (d.open) openHelp.add(r.id); else openHelp.delete(r.id); });

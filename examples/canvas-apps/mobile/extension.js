@@ -1,53 +1,72 @@
-/* Mobile — a Canvas App that is a landing page for the OpenHands mobile app.
+/* Mobile — a Canvas App that is a product page for the OpenHands mobile app.
  *
  * Everything on the page is taken from the openhands-mobile repository (its
- * README, app.json and src/). There are no store links, ratings or download
- * counts because none exist: the app is an Expo project you build and run from
- * source. The phone pictures are drawn with CSS and labelled as illustrations;
- * the repository has no screenshots. The only embedded image is the app's own
- * icon (assets/icon.png scaled to 96px).
+ * README, app.json, eas.json, package.json and ios/). There are no store
+ * badges, ratings or download counts because none exist: no prebuilt app,
+ * tag or release is published, so "Download" links to the source repository
+ * and the page shows the documented build-from-source commands. The phone
+ * pictures are drawn with CSS and labelled as illustrations; the repository
+ * has no screenshots. The only embedded image is the OpenHands logo
+ * (public/favicon.svg, inlined as an SVG data URL).
  *
  * Browser-only, dependency-free ESM. Styles are scoped under `.mb`. Text is
- * always set with textContent; icons are SVG data-URL masks.
+ * always set with textContent; icons are SVG data-URL masks. No network
+ * resources are loaded. Motion (reveal, float, parallax) is skipped under
+ * prefers-reduced-motion and when IntersectionObserver is missing.
  */
 
 export const PAIR_ROUTE = "/settings/mobile";
 export const SETUP_ROUTE = "/settings/app";
 export const REPO_NAME = "OpenHands/openhands-mobile";
+export const REPO_URL = "https://github.com/OpenHands/openhands-mobile";
+export const CLONE_COMMAND = "git clone https://github.com/OpenHands/openhands-mobile.git\ncd openhands-mobile\nnpm install";
 
-const APP_ICON = "data:image/png;base64,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";
+const LOGO_URL = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4gPHN2ZyBpZD0iQXBwX0ljb25fU2hhcGUiIGRhdGEtbmFtZT0iQXBwIEljb24gU2hhcGUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPiA8ZGVmcz4gPHN0eWxlPiAuY2xzLTEgeyBmaWxsOiB1cmwoI2xpbmVhci1ncmFkaWVudCk7IH0gLmNscy0yIHsgZmlsbDogI2ZmZjsgfSA8L3N0eWxlPiA8bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudCIgeDE9IjUxMiIgeTE9IjQ2NC43NyIgeDI9IjUxMiIgeTI9Ii0xMTA5LjgzIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+IDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwMCIvPiA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZmYiLz4gPC9saW5lYXJHcmFkaWVudD4gPC9kZWZzPiA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMDI0LDY1MWMwLDE0LjI0LDAsMjguNDgtLjA4LDQyLjczLS4wNywxMi0uMjEsMjMuOTktLjUzLDM1Ljk4LS43MSwyNi4xMy0yLjI1LDUyLjQ5LTYuODksNzguMzQtNC43MSwyNi4yMi0xMi40LDUwLjYyLTI0LjUzLDc0LjQ0LTExLjkyLDIzLjQxLTI3LjQ5LDQ0Ljg0LTQ2LjA3LDYzLjQxLTE4LjU4LDE4LjU4LTQwLDM0LjE1LTYzLjQxLDQ2LjA3LTIzLjgyLDEyLjEyLTQ4LjIyLDE5LjgyLTc0LjQ0LDI0LjUzLTI1Ljg0LDQuNjUtNTIuMiw2LjE4LTc4LjM0LDYuODktMTEuOTkuMzMtMjMuOTkuNDYtMzUuOTguNTMtMTQuMjQuMDktMjguNDguMDgtNDIuNzMuMDhoLTI3OGMtMTQuMjQsMC0yOC40OCwwLTQyLjczLS4wOC0xMi0uMDctMjMuOTktLjIxLTM1Ljk4LS41My0yNi4xMy0uNzEtNTIuNDktMi4yNS03OC4zNC02Ljg5LTI2LjIyLTQuNzEtNTAuNjItMTIuNC03NC40NC0yNC41My0yMy40MS0xMS45Mi00NC44NC0yNy40OS02My40MS00Ni4wNy0xOC41OC0xOC41OC0zNC4xNS00MC00Ni4wNy02My40MS0xMi4xMi0yMy44Mi0xOS44Mi00OC4yMi0yNC41My03NC40NC00LjY1LTI1Ljg0LTYuMTgtNTIuMi02Ljg5LTc4LjM0LS4zMy0xMS45OS0uNDYtMjMuOTktLjUzLTM1Ljk4QzAsNjc5LjQ4LDAsNjY1LjI0LDAsNjUxdi0yNzhDMCwzNTguNzYsMCwzNDQuNTIuMDgsMzMwLjI3Yy4wNy0xMiwuMjEtMjMuOTkuNTMtMzUuOTguNzEtMjYuMTMsMi4yNS01Mi40OSw2Ljg5LTc4LjM0LDQuNzEtMjYuMjIsMTIuNC01MC42MiwyNC41My03NC40NCwxMS45Mi0yMy40MSwyNy40OS00NC44NCw0Ni4wNy02My40MSwxOC41OC0xOC41OCw0MC0zNC4xNSw2My40MS00Ni4wNywyMy44Mi0xMi4xMiw0OC4yMi0xOS44Miw3NC40NC0yNC41MywyNS44NC00LjY1LDUyLjItNi4xOCw3OC4zNC02Ljg5LDExLjk5LS4zMywyMy45OS0uNDYsMzUuOTgtLjUzQzM0NC41MiwwLDM1OC43NiwwLDM3MywwaDI3OGMxNC4yNCwwLDI4LjQ4LDAsNDIuNzMuMDgsMTIsLjA3LDIzLjk5LjIxLDM1Ljk4LjUzLDI2LjEzLjcxLDUyLjQ5LDIuMjUsNzguMzQsNi44OSwyNi4yMiw0LjcxLDUwLjYyLDEyLjQsNzQuNDQsMjQuNTMsMjMuNDEsMTEuOTIsNDQuODQsMjcuNDksNjMuNDEsNDYuMDcsMTguNTgsMTguNTgsMzQuMTUsNDAsNDYuMDcsNjMuNDEsMTIuMTIsMjMuODIsMTkuODIsNDguMjIsMjQuNTMsNzQuNDQsNC42NSwyNS44NCw2LjE4LDUyLjIsNi44OSw3OC4zNC4zMywxMS45OS40NiwyMy45OS41MywzNS45OC4wOSwxNC4yNC4wOCwyOC40OC4wOCw0Mi43M3YyNzhaIi8+IDxnPiA8cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik01MDAuNzMsMzI2LjAzdi03My42MWMwLTYuMSw0Ljk1LTExLjA0LDExLjA0LTExLjA0czExLjA0LDQuOTQsMTEuMDQsMTEuMDR2NzMuNjFjMCw2LjEtNC45NCwxMS4wNC0xMS4wNCwxMS4wNHMtMTEuMDQtNC45NC0xMS4wNC0xMS4wNFoiLz4gPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNTU3LjgyLDMzN2wzNi44LTYzLjc1YzMuMDUtNS4yOCw5LjgtNy4wOSwxNS4wOC00LjA0LDUuMjgsMy4wNSw3LjA5LDkuOCw0LjA0LDE1LjA4bC0zNi44LDYzLjc1Yy0zLjA1LDUuMjgtOS44LDcuMDktMTUuMDgsNC4wNC01LjI4LTMuMDUtNy4wOS05LjgtNC4wNC0xNS4wOFoiLz4gPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNNDY1LjcyLDMzN2wtMzYuOC02My43NWMtMy4wNS01LjI4LTkuOC03LjA5LTE1LjA4LTQuMDQtNS4yOCwzLjA1LTcuMDksOS44LTQuMDQsMTUuMDhsMzYuOCw2My43NWMzLjA1LDUuMjgsOS44LDcuMDksMTUuMDgsNC4wNCw1LjI4LTMuMDUsNy4wOS05LjgsNC4wNC0xNS4wOFoiLz4gPHBhdGggY2xhc3M9ImNscy0yIiBkPSJNODY1LjYzLDU2NS40YzAtMTkuMTksNS4xOC03Ni4wOCw2LjgtOTQuODUsMS4xLTEyLjY5LS40My0xOS42NS0yLjQ3LTIzLjItMS41LTIuNjEtMy44NC00LjQ1LTkuNDktNC44My00LjA4LS4yNy04LjUyLjg5LTExLjgzLDMuODgtMy4xMSwyLjgtNi41OCw4LjQ0LTYuNTgsMTkuODNsLS4wMi42NC01LjA3LDg2LjQ5Yy0uMTgsMy4xMS0xLjY3LDYuMDEtNC4xLDcuOTYtMi40MywxLjk1LTUuNTYsMi43OS04LjY0LDIuM2wtNTMuMTUtOC40MS01Ny4zMi03LjYxYy01LjI5LS43LTkuMzMtNS4xLTkuNTctMTAuNDNsLTMuMTYtNjguMzUtLjAzLS41OGMtMS40MS0yNy4yMS0yLjc1LTUyLjA0LTIuNzUtNTkuNzIsMC0yMS40Mi0zLjYzLTMwLjQ2LTYuNzktMzQuMjYtMi41My0zLjAzLTYuMTYtNC4zNi0xMy45NC00LjM2LTIuNzksMC00Ljc2LjU3LTYuMjQsMS40NC0xLjQ1Ljg1LTMuMTEsMi4zNy00LjY5LDUuMzUtMy4zOSw2LjM5LTUuODUsMTguMzktNC45MywzOS4zNiwxLjE5LDI3LjIsMy4wNCw0Ny41Miw0Ljg2LDY1Ljg0LDEuODEsMTguMjksMy42MiwzNC45LDQuNjMsNTQuMTksMS41NywzMC4yMSwxLjQzLDUxLjAzLjIsNjUuMTYtLjYyLDcuMDYtMS41MywxMi43Ni0yLjc3LDE3LjI3LTEuMTcsNC4yNy0yLjkzLDguNjItNS45NywxMS44Ni0zLjY5LDMuOTMtOC45NSw1LjgxLTE0LjQxLDQuNDktNC4zMy0xLjA0LTcuMzgtMy43OS05LjA0LTUuNTQtMy40OC0zLjY2LTUuOTQtOC4zOC02LjktMTAuODEtNS42MS0xNC4xNS0yMi45Ni00Ny4wMS00Ni40Ni02NS41Ni02Ljg1LTUuNDEtMTEuODUtNi45Ny0xNC45OS03LjIxLTIuOTYtLjIyLTUuMTEuNjUtNi44LDEuOTktMS44NiwxLjQ4LTMuMjUsMy42My0zLjk0LDUuNjYtLjI0LjcyLS4zNSwxLjIzLS4zOSwxLjU2LDYuMzcsMTAuNzUsMzEuNjMsNTAuMTYsNDMuNTQsOTAuMTUsOC44OCwyOS44MSwzMC4yOCw2MC4xOSw0Ni4yNyw3My4yLDE1LjQ4LDEyLjYsNDMuMjksMjAuNDEsNzQuNjIsMjEuOTUsMzEuMDQsMS41Miw2My0zLjIzLDg1LjUtMTMuMzIsNDMuNDYtMTkuNDgsNTIuMzEtNjIuMzgsNTYuMjctODAuOTgsMy4wOC0xNC40MywzLjE0LTI5Ljg0LDIuMzEtNDQuMTQtLjQxLTcuMTMtMS4wMi0xMy44LTEuNTYtMTkuOTUtLjUyLTUuOTctLjk5LTExLjc0LS45OS0xNi40N1pNNzYxLjY1LDM4MC4yNmMwLTYuNy0xLjc5LTEyLjY3LTQuNzUtMTYuNjYtMi42OC0zLjYxLTYuNjItNi4xMS0xMi45NS02LjExLTUuMTgsMC04LjY3LjY0LTExLjEzLDEuNjktMi4yLjk0LTQuMDUsMi40LTUuNzQsNS4xMi0zLjg4LDYuMjctNi43NCwxOC44OC02Ljc1LDQzLjk5bDIuNzUsNTkuNDVjMS4wMywxOS44MywyLjEsNDEuMzIsMi44LDU5LjE5bDM1Ljc3LDQuNzV2LTE1MS40MlpNNzgzLjczLDUzNC44NmwzMS45LDUuMDUsNC4zNS03My45NHYtNTcuMDJjMC03LjgzLTMuMTktMTIuNjItNi45Ni0xNS42OC00LjIxLTMuNDItOS4xMi00LjY0LTExLjQ0LTQuNjQtNC4yMiwwLTguNTkuNjYtMTEuNzMsMi44OS0yLjQyLDEuNzItNi4xMSw1Ljc4LTYuMTEsMTcuNDR2MTI1LjkxWk04NDIuMDYsNDI0LjQyYzYuNjEtMy4yOSwxMy42OC00LjM0LDE5Ljg5LTMuOTMsMTEuMjYuNzUsMjEuMTksNS40NywyNy4xNiwxNS44NSw1LjQyLDkuNDQsNi41NSwyMS45Miw1LjMyLDM2LjEyLTEuNywxOS42Mi02LjczLDc1LjAxLTYuNzMsOTIuOTQsMCwzLjYuMzgsOC4zOS45MSwxNC41Ni41Miw2LDEuMTcsMTMuMDUsMS42MSwyMC41OS44NywxNS4wNC45MywzMi43NC0yLjc2LDUwLjAyLTMuODQsMTgtMTQuMjQsNzIuMDQtNjguODQsOTYuNTItMjYuNTQsMTEuODktNjIuMiwxNi44Ny05NS42MiwxNS4yMy0zMy4xMy0xLjYzLTY2LjYxLTkuODgtODcuNDktMjYuODgtMTkuNjUtMTYtNDMuNDMtNTAuMjUtNTMuNDktODQuMDItMTEuMzYtMzguMTQtMzUuOTYtNzUuNzYtNDIuMS04Ni40Mi0zLjYyLTYuMjgtMi40OC0xMy43My0uOC0xOC43LDEuOS01LjYsNS41OC0xMS40NiwxMS4xMi0xNS44Niw1LjcxLTQuNTMsMTMuMjgtNy40LDIyLjItNi43Myw4Ljc0LjY2LDE3LjgsNC42NCwyNy4wMSwxMS45LDIzLjY5LDE4LjcxLDQxLjA4LDQ4LjIyLDQ5LjYsNjYuMzEuMDktLjgzLjE5LTEuNy4yNy0yLjYxLDEuMTEtMTIuNjUsMS4zLTMyLjMtLjI1LTYyLjEtLjk3LTE4LjY1LTIuNzEtMzQuNjItNC41NS01My4xNi0xLjg0LTE4LjUxLTMuNzQtMzkuMjgtNC45NS02Ny4wNi0uOTctMjIuMTYsMS4zLTM5LDcuNDgtNTAuNjYsMy4yLTYuMDUsNy41NC0xMC44NiwxMy4wNS0xNC4wOCw1LjQ5LTMuMjEsMTEuNDctNC40NSwxNy4zOC00LjQ1LDguNzQsMCwxOS42MywxLjIzLDI4LjI5LDkuNTEuNzctMS42NCwxLjYtMy4xOSwyLjUxLTQuNjUsNC02LjQ3LDkuMzMtMTEuMDMsMTUuODUtMTMuODEsNi4yNy0yLjY3LDEzLjA3LTMuNDYsMTkuNzktMy40NiwxMy41MSwwLDIzLjk1LDUuOTYsMzAuNjgsMTUuMDQsNC4zNiw1Ljg3LDYuOTcsMTIuNzcsOC4yMSwxOS43Nyw3LjE3LTMuMjQsMTQuMzQtMy42NiwxOC43My0zLjY2LDcuNDksMCwxNy4zLDMuMDMsMjUuMzYsOS41OSw4LjUsNi45LDE1LjEzLDE3LjgsMTUuMTMsMzIuODJ2MTUuNDdaIi8+IDxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTE1OC4zNyw1NjUuNGMwLTE5LjE5LTUuMTgtNzYuMDgtNi44LTk0Ljg1LTEuMS0xMi42OS40My0xOS42NSwyLjQ3LTIzLjIsMS41LTIuNjEsMy44NC00LjQ1LDkuNDgtNC44Myw0LjA4LS4yNyw4LjUyLjg5LDExLjg0LDMuODgsMy4xMSwyLjgsNi41OCw4LjQ0LDYuNTgsMTkuODNsLjAyLjY0LDUuMDcsODYuNDljLjE4LDMuMTEsMS42Nyw2LjAxLDQuMSw3Ljk2LDIuNDMsMS45NSw1LjU3LDIuNzksOC42NSwyLjNsNTMuMTUtOC40MSw1Ny4zMi03LjYxYzUuMy0uNyw5LjMzLTUuMSw5LjU3LTEwLjQzbDMuMTYtNjguMzUuMDMtLjU4YzEuNDEtMjcuMjEsMi43NC01Mi4wNCwyLjc0LTU5LjcyLDAtMjEuNDIsMy42My0zMC40Niw2LjgtMzQuMjYsMi41My0zLjAzLDYuMTYtNC4zNiwxMy45NC00LjM2LDIuNzksMCw0Ljc2LjU3LDYuMjQsMS40NCwxLjQ1Ljg1LDMuMTEsMi4zNyw0LjY5LDUuMzUsMy4zOCw2LjM5LDUuODUsMTguMzksNC45MywzOS4zNi0xLjE5LDI3LjItMy4wNCw0Ny41Mi00Ljg2LDY1Ljg0LTEuODEsMTguMjktMy42MiwzNC45LTQuNjMsNTQuMTktMS41NywzMC4yMS0xLjQzLDUxLjAzLS4yLDY1LjE2LjYyLDcuMDYsMS41MywxMi43NiwyLjc2LDE3LjI3LDEuMTcsNC4yNywyLjkyLDguNjIsNS45NywxMS44NiwzLjY5LDMuOTMsOC45NSw1LjgxLDE0LjQxLDQuNDksNC4zMy0xLjA0LDcuMzgtMy43OSw5LjA0LTUuNTQsMy40OC0zLjY2LDUuOTQtOC4zOCw2LjktMTAuODEsNS42MS0xNC4xNSwyMi45Ni00Ny4wMSw0Ni40Ni02NS41Niw2Ljg1LTUuNDEsMTEuODUtNi45NywxNC45OS03LjIxLDIuOTYtLjIyLDUuMTEuNjUsNi44LDEuOTksMS44NiwxLjQ4LDMuMjUsMy42MywzLjk0LDUuNjYuMjQuNzIuMzUsMS4yMy4zOSwxLjU2LTYuMzcsMTAuNzUtMzEuNjMsNTAuMTYtNDMuNTQsOTAuMTUtOC44OCwyOS44MS0zMC4yOCw2MC4xOS00Ni4yNyw3My4yLTE1LjQ4LDEyLjYtNDMuMjksMjAuNDEtNzQuNjIsMjEuOTUtMzEuMDMsMS41Mi02My0zLjIzLTg1LjUtMTMuMzItNDMuNDYtMTkuNDgtNTIuMzEtNjIuMzgtNTYuMjgtODAuOTgtMy4wOC0xNC40My0zLjE0LTI5Ljg0LTIuMzEtNDQuMTQuNDEtNy4xMywxLjAyLTEzLjgsMS41Ni0xOS45NS41Mi01Ljk3Ljk5LTExLjc0Ljk5LTE2LjQ3Wk0yNjIuMzUsMzgwLjI2YzAtNi43LDEuNzktMTIuNjcsNC43NS0xNi42NiwyLjY4LTMuNjEsNi42Mi02LjExLDEyLjk1LTYuMTEsNS4xOCwwLDguNjcuNjQsMTEuMTMsMS42OSwyLjIxLjk0LDQuMDYsMi40LDUuNzQsNS4xMiwzLjg5LDYuMjcsNi43NCwxOC44OCw2Ljc1LDQzLjk5bC0yLjc1LDU5LjQ1Yy0xLjAzLDE5LjgzLTIuMSw0MS4zMi0yLjgsNTkuMTlsLTM1Ljc3LDQuNzV2LTE1MS40MlpNMjQwLjI3LDUzNC44NmwtMzEuOSw1LjA1LTQuMzUtNzMuOTR2LTU3LjAyYzAtNy44MywzLjE5LTEyLjYyLDYuOTctMTUuNjgsNC4yMS0zLjQyLDkuMTItNC42NCwxMS40NC00LjY0LDQuMjMsMCw4LjU5LjY2LDExLjczLDIuODksMi40MiwxLjcyLDYuMTEsNS43OCw2LjExLDE3LjQ0djEyNS45MVpNMTgxLjk0LDQyNC40MmMtNi42MS0zLjI5LTEzLjY4LTQuMzQtMTkuODktMy45My0xMS4yNi43NS0yMS4xOSw1LjQ3LTI3LjE2LDE1Ljg1LTUuNDIsOS40NC02LjU1LDIxLjkyLTUuMzIsMzYuMTIsMS43LDE5LjYyLDYuNzMsNzUuMDEsNi43Myw5Mi45NCwwLDMuNi0uMzcsOC4zOS0uOTEsMTQuNTYtLjUyLDYtMS4xNywxMy4wNS0xLjYxLDIwLjU5LS44NywxNS4wNC0uOTMsMzIuNzQsMi43Niw1MC4wMiwzLjg0LDE4LDE0LjIzLDcyLjA0LDY4Ljg0LDk2LjUyLDI2LjUzLDExLjg5LDYyLjIsMTYuODcsOTUuNjIsMTUuMjMsMzMuMTMtMS42Myw2Ni42MS05Ljg4LDg3LjQ4LTI2Ljg4LDE5LjY1LTE2LDQzLjQzLTUwLjI1LDUzLjQ5LTg0LjAyLDExLjM2LTM4LjE0LDM1Ljk2LTc1Ljc2LDQyLjEtODYuNDIsMy42Mi02LjI4LDIuNDgtMTMuNzMuOC0xOC43LTEuOS01LjYtNS41OC0xMS40Ni0xMS4xMi0xNS44Ni01LjcxLTQuNTMtMTMuMjgtNy40LTIyLjItNi43My04Ljc0LjY2LTE3LjgsNC42NC0yNy4wMSwxMS45LTIzLjY5LDE4LjcxLTQxLjA4LDQ4LjIyLTQ5LjYsNjYuMzEtLjA5LS44My0uMTktMS43LS4yNy0yLjYxLTEuMTEtMTIuNjUtMS4zLTMyLjMuMjUtNjIuMS45Ny0xOC42NSwyLjcxLTM0LjYyLDQuNTUtNTMuMTYsMS44My0xOC41MSwzLjczLTM5LjI4LDQuOTUtNjcuMDYuOTctMjIuMTYtMS4zMS0zOS03LjQ4LTUwLjY2LTMuMi02LjA1LTcuNTQtMTAuODYtMTMuMDUtMTQuMDgtNS40OS0zLjIxLTExLjQ3LTQuNDUtMTcuMzgtNC40NS04Ljc0LDAtMTkuNjIsMS4yMy0yOC4yOSw5LjUxLS43Ni0xLjY0LTEuNi0zLjE5LTIuNS00LjY1LTQtNi40Ny05LjMzLTExLjAzLTE1Ljg1LTEzLjgxLTYuMjctMi42Ny0xMy4wNy0zLjQ2LTE5Ljc5LTMuNDYtMTMuNTEsMC0yMy45NSw1Ljk2LTMwLjY4LDE1LjA0LTQuMzYsNS44Ny02Ljk3LDEyLjc3LTguMjIsMTkuNzctNy4xNy0zLjI0LTE0LjM0LTMuNjYtMTguNzMtMy42Ni03LjQ5LDAtMTcuMywzLjAzLTI1LjM2LDkuNTktOC41LDYuOS0xNS4xMywxNy44LTE1LjEzLDMyLjgydjE1LjQ3WiIvPiA8L2c+IDwvc3ZnPgo=";
 
 /** Fallback colours behind the --mb-* aliases; tests check their contrast. */
 export const FALLBACKS = {
-  bg: "#0B0E14", panel: "#21252F", text: "#EEF2F7", muted: "#A3B0C4", contrast: "#FFFFFF", onContrast: "#000000",
+  bg: "#0B0E14", panel: "#2B3037", text: "#EEF2F7", muted: "#B4BBC6", contrast: "#FFFFFF", onContrast: "#000000",
   accent: "#C9B974", onAccent: "#0B0E14", phoneBg: "#181818", phoneText: "#EEF2F7", phoneMuted: "#A3B0C4", phoneRaised: "#2A2A2A",
+  stageBg: "#05070B", stageText: "#F5F7FA", stageMuted: "#BAC1CB", btnFill: "#FFFFFF", onBtnFill: "#000000",
+  grad1: "#1C1F24", grad2: "#2B3037", grad3: "#3A4048", glow: "#5C6572",
 };
 
 export const FEATURES = [
   {
     id: "pairing",
-    title: "Pair by scanning a QR code",
+    kicker: "Pairing",
+    title: "Scan once. Connected.",
     body: "Open Settings → Mobile in Agent Canvas on your laptop and scan the code with the phone camera, or photograph it and let the app read it from the picture. The phone can be on any network. If you prefer, type a name, host and session API key yourself.",
     mock: "connect",
   },
   {
     id: "conversations",
-    title: "Your conversations, live",
+    kicker: "Conversations",
+    title: "Your threads, live.",
     body: "See the conversations on the paired agent server, open one to load recent history, and watch new events stream in. Send messages into an existing thread or start a new chat. The chat shows Live while the event socket is up. Wide screens get a list and chat side by side. Dictate a message with the microphone in the composer.",
     mock: "chat",
   },
   {
     id: "customize",
-    title: "Customize from the phone",
+    kicker: "Customize",
+    title: "Tune it from the couch.",
     body: "A Customize screen lists the laptop’s MCP servers, skills and plugins, so you can look at them and change them from the phone. Changes go to the same OpenHands backend the laptop uses.",
     mock: "customize",
   },
   {
     id: "automations",
-    title: "Automations and templates",
+    kicker: "Automations",
+    title: "Put work on a schedule.",
     body: "An Automations screen has a Dashboard and a Templates tab. Open an automation to see its trigger, last run and prompt, switch it on or off, or run it now. Recommended templates, such as GitHub code review, AGENTS.md Maintainer and Daily news digest, start a chat that sets them up. Create an automation starts that same kind of chat from scratch.",
     mock: "automations",
   },
+];
+
+export const SPECS = [
+  { value: "Expo 57", label: "React Native 0.86 with the new architecture. One app for iPhone, Android, iPad and tablets." },
+  { value: "iOS project", label: "A native Xcode project is checked in, bundle id dev.openhands.mobile. Android build config is there too." },
+  { value: "0.1.0", label: "An early MVP. Expect rough edges." },
+  { value: "Any network", label: "QR pairing carries a short-lived public link, so phone and laptop need not share Wi‑Fi." },
 ];
 
 export const STEPS = [
@@ -57,10 +76,26 @@ export const STEPS = [
   { title: "Work from anywhere", body: "Your conversations, Customize and Automations appear on the phone, backed by the laptop’s OpenHands. If the laptop sleeps or OpenHands quits, the phone shows Offline." },
 ];
 
-export const STATUS = [
-  "Early MVP (version 0.1.0)",
-  "Expo app: build and run it from source",
-  "No store listing or TestFlight build is described in the repository",
+export const INSTALL_BLOCKS = [
+  {
+    id: "source",
+    title: "Get the source",
+    body: "Needs Node.js 20 or newer. Do not use Expo Go: build a development client.",
+    commands: CLONE_COMMAND,
+  },
+  {
+    id: "ios",
+    title: "Run on your iPhone",
+    body: "Needs macOS, Xcode, an Apple Developer team and a registered device. Plug the phone in, run this, and on the first build choose your Development Team for bundle id dev.openhands.mobile. Trust the developer certificate on the device if iOS asks.",
+    commands: "npm run ios:device",
+  },
+  {
+    id: "android",
+    title: "Or run on Android",
+    body: "Enable USB debugging and plug in the phone (or start an emulator). For an APK that needs no USB or Metro after install, build it with EAS; eas.json also has a preview profile for an internal APK.",
+    commands: "npm run android:device",
+    extra: { label: "APK via EAS", commands: "npx eas build -p android --profile development" },
+  },
 ];
 
 // ─── Icons (SVG data-URL masks) ────────────────────────────────────────────
@@ -73,79 +108,164 @@ const ICON_PATHS = {
   phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
   arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5M4 20h16"/>',
+  plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11"/>',
+  puzzle: '<path d="M10 4h4v3a2 2 0 1 0 0 4h3v4h-3a2 2 0 1 0 0 4v1h-4v-3a2 2 0 1 0-4 0v-1H4v-4h3a2 2 0 1 0 0-4H4V4z"/>',
 };
 export function maskUrl(name) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name] || ""}</svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-// ─── View ─────────────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const F = FALLBACKS;
 const STYLE = `
-.mb { --mb-bg: var(--oh-color-base, ${F.bg}); --mb-panel: var(--oh-color-base-secondary, ${F.panel}); --mb-text: var(--oh-foreground, ${F.text});
+/* Graphite palette: change these four tokens to re-hue every gradient, band and glow on the page. */
+.mb { --mb-grad-1: ${F.grad1}; --mb-grad-2: ${F.grad2}; --mb-grad-3: ${F.grad3}; --mb-glow: ${F.glow};
+  --mb-bg: var(--oh-color-base, ${F.bg}); --mb-panel: var(--oh-color-base-secondary, ${F.panel}); --mb-text: var(--oh-foreground, ${F.text});
   --mb-muted: var(--oh-muted, ${F.muted}); --mb-border: var(--oh-border-subtle, #383F50); --mb-contrast: var(--oh-contrast, ${F.contrast});
   --mb-on-contrast: var(--oh-contrast-foreground, ${F.onContrast}); --mb-accent: var(--oh-accent, ${F.accent}); --mb-on-accent: var(--oh-accent-foreground, ${F.onAccent});
+  --mb-s-bg: ${F.stageBg}; --mb-s-text: ${F.stageText}; --mb-s-muted: ${F.stageMuted}; --mb-s-line: #4A5468;
   --mb-phone-bg: ${F.phoneBg}; --mb-phone-text: ${F.phoneText}; --mb-phone-muted: ${F.phoneMuted}; --mb-phone-raised: ${F.phoneRaised};
-  box-sizing: border-box; height: 100%; min-height: 480px; overflow: auto; background: var(--mb-bg); color: var(--mb-text); font: 15px/1.5 system-ui, sans-serif; }
+  box-sizing: border-box; height: 100%; min-height: 480px; overflow-y: auto; overflow-x: hidden; container-type: inline-size; position: relative;
+  background: var(--mb-bg); color: var(--mb-text); font: 16px/1.5 -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
 .mb[hidden] { display: none; }
 .mb *, .mb *::before, .mb *::after { box-sizing: border-box; }
-.mb .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 24px 64px; display: flex; flex-direction: column; gap: 56px; }
-.mb h1, .mb h2, .mb h3, .mb p, .mb ol, .mb ul { margin: 0; }
-.mb h1 { font-size: 34px; line-height: 1.15; font-weight: 500; color: var(--mb-contrast); }
-.mb h2 { font-size: 22px; font-weight: 500; color: var(--mb-contrast); }
-.mb h3 { font-size: 17px; font-weight: 600; color: var(--mb-contrast); }
+.mb h1, .mb h2, .mb h3, .mb p, .mb ol, .mb ul, .mb figure, .mb pre { margin: 0; }
+.mb section { position: relative; }
+.mb .in { max-width: 1120px; margin: 0 auto; padding: 72px 24px; }
+.mb .st { background: var(--mb-bg); color: var(--mb-s-text); overflow: hidden; }
+.mb .st h1, .mb .st h2, .mb .st h3 { color: var(--mb-s-text); }
+.mb .st .muted { color: var(--mb-s-muted); }
+.mb .hs { background: var(--mb-bg); background: linear-gradient(180deg, color-mix(in srgb, var(--mb-bg) 92%, var(--mb-grad-3)), var(--mb-bg)); color: var(--mb-text); }
+/* Stage bands start and end on the host base so they meet the app with no seam; the graphite sits behind the text. */
+.mb .hero { background: linear-gradient(180deg, var(--mb-bg) 0, var(--mb-grad-3) 112px, var(--mb-grad-2) calc(100% - 96px), var(--mb-bg) 100%); }
+.mb .fx { background: linear-gradient(180deg, var(--mb-bg) 0, var(--mb-grad-2) 88px, var(--mb-grad-1) calc(100% - 88px), var(--mb-bg) 100%); }
+.mb .cta { background: linear-gradient(180deg, var(--mb-bg) 0, var(--mb-grad-2) 112px, var(--mb-grad-1) calc(100% - 96px), var(--mb-bg) 100%); }
+.mb .hs h2, .mb .hs h3 { color: var(--mb-contrast); }
 .mb .muted { color: var(--mb-muted); }
-.mb .hero { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
-.mb .hero-text { flex: 1 1 320px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.mb .brand { display: flex; align-items: center; gap: 14px; }
-.mb .brand img { width: 64px; height: 64px; border-radius: 14px; border: 1px solid var(--mb-border); }
-.mb .pitch { font-size: 18px; color: var(--mb-text); }
-.mb .status { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }
-.mb .status li { padding: 3px 10px; border: 1px solid var(--mb-border); border-radius: 999px; background: var(--mb-panel); color: var(--mb-text); font-size: 13px; }
-.mb .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.mb button.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--mb-border); background: transparent; color: var(--mb-text); font: inherit; font-weight: 600; cursor: pointer; }
-.mb button.btn:hover { border-color: var(--mb-contrast); }
-.mb button.btn.primary { background: var(--mb-contrast); color: var(--mb-on-contrast); border-color: var(--mb-contrast); }
-.mb button.btn.primary:hover { opacity: 0.9; }
-.mb button:focus-visible { outline: 2px solid var(--mb-accent); outline-offset: 2px; }
+.mb h1, .mb h2 { font-weight: 400; letter-spacing: -0.02em; line-height: 1.04; overflow-wrap: anywhere; }
+.mb h1 { font-size: clamp(40px, 7vw, 88px); font-size: clamp(40px, 7cqw, 88px); line-height: 1; letter-spacing: -0.03em; }
+.mb h2 { font-size: clamp(32px, 5vw, 64px); font-size: clamp(32px, 5.2cqw, 64px); }
+.mb h3 { font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
+.mb .eyebrow { font-size: 14px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
+.mb .lede { font-size: clamp(18px, 2.4vw, 26px); font-size: clamp(18px, 2.6cqw, 26px); font-weight: 400; line-height: 1.3; letter-spacing: -0.01em; max-width: 34ch; }
+.mb .fine { font-size: 14px; max-width: 52ch; }
+/* hero */
+.mb .hero .in { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 20px; padding-top: 112px; padding-bottom: 0; }
+.mb .hero::before { content: ""; position: absolute; left: 50%; top: -20%; width: 120%; max-width: 1400px; aspect-ratio: 1; transform: translateX(-50%); background: radial-gradient(closest-side, var(--mb-glow), transparent 70%); opacity: 0.3; pointer-events: none; }
+.mb .hero .in > * { position: relative; }
+.mb .brand img { display: block; width: 72px; height: 72px; border-radius: 18px; box-shadow: 0 0 0 1px var(--mb-grad-3), 0 12px 40px rgba(92, 101, 114, 0.35); }
+.mb .hero h1 { background: linear-gradient(180deg, #FFFFFF 30%, #AEB5C0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #FFFFFF; padding-bottom: 0.08em; }
+.mb .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.mb .hero .stagewrap { margin-top: 32px; padding-bottom: 0; }
+.mb .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 999px; border: 1px solid var(--mb-border); background: transparent; color: var(--mb-text); font: inherit; font-size: 16px; font-weight: 500; cursor: pointer; text-decoration: none; transition: opacity 0.2s, border-color 0.2s; }
+.mb .btn:hover { border-color: currentColor; }
+.mb .st .btn { border-color: var(--mb-s-line); color: var(--mb-s-text); }
+.mb .st .btn.primary { background: #FFFFFF; color: #000000; border-color: #FFFFFF; }
+.mb .hs .btn.primary { background: var(--mb-contrast); color: var(--mb-on-contrast); border-color: var(--mb-contrast); }
+.mb .btn.primary:hover { opacity: 0.88; }
+.mb :is(button, a):focus-visible { outline: 3px solid var(--mb-accent); outline-offset: 3px; }
+.mb .st :is(button, a):focus-visible { outline-color: #E9D98A; }
 .mb .ico { display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; -webkit-mask: var(--mb-mask) center / contain no-repeat; mask: var(--mb-mask) center / contain no-repeat; }
-.mb .repo { font-size: 14px; color: var(--mb-muted); }
-.mb code { padding: 1px 6px; border-radius: 4px; background: var(--mb-panel); color: var(--mb-text); font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
-.mb .feature { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
-.mb .feature:nth-child(even) { flex-direction: row-reverse; }
-.mb .feature .copy { flex: 1 1 300px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.mb .feature .kicker { display: flex; align-items: center; gap: 8px; color: var(--mb-muted); font-size: 13px; }
-.mb .features { display: flex; flex-direction: column; gap: 56px; }
-.mb .mockwrap { flex: 0 1 240px; display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0 auto; }
-.mb figure { margin: 0; }
-.mb figcaption { font-size: 12px; color: var(--mb-muted); text-align: center; }
-.mb .phone { width: 220px; height: 440px; padding: 10px; border-radius: 30px; border: 2px solid var(--mb-border); background: #000; }
-.mb .screen { height: 100%; border-radius: 22px; overflow: hidden; background: var(--mb-phone-bg); color: var(--mb-phone-text); padding: 16px 12px; display: flex; flex-direction: column; gap: 10px; font-size: 12px; line-height: 1.35; }
-.mb .screen .st { font-size: 14px; font-weight: 600; color: var(--mb-phone-text); }
-.mb .screen .sm { color: var(--mb-phone-muted); }
-.mb .screen .row { padding: 9px 10px; border-radius: 8px; background: var(--mb-phone-raised); color: var(--mb-phone-text); display: flex; justify-content: space-between; gap: 6px; }
-.mb .screen .row .sm { font-size: 11px; }
-.mb .screen .pill { padding: 8px 10px; border-radius: 8px; text-align: center; font-weight: 600; background: #FFFFFF; color: #000000; }
-.mb .screen .pill.alt { background: transparent; color: var(--mb-phone-text); border: 1px solid #555; }
-.mb .screen .tabs { display: flex; gap: 6px; }
-.mb .screen .tabs span { padding: 4px 10px; border-radius: 999px; border: 1px solid #555; color: var(--mb-phone-text); }
+.mb code { padding: 1px 6px; border-radius: 4px; background: var(--mb-panel); color: var(--mb-text); font: 13px ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; }
+/* features */
+.mb .fx .in { display: grid; gap: 48px; align-items: center; padding-top: 88px; padding-bottom: 88px; }
+.mb .fx .copy { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.mb .fx .kicker { display: flex; align-items: center; gap: 8px; color: var(--mb-s-muted); }
+.mb .fx .copy p.muted { font-size: 18px; font-weight: 400; line-height: 1.5; max-width: 46ch; }
+@container (min-width: 760px) {
+  .mb .fx .in { grid-template-columns: 1fr 1fr; gap: 72px; }
+  .mb .fx.flip .mockwrap { order: -1; }
+}
+/* phone mockup */
+.mb .mockwrap { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: 14px; justify-self: center; }
+.mb .mockwrap::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 42%; width: 130%; aspect-ratio: 1; transform: translate(-50%, -50%); background: radial-gradient(closest-side, var(--mb-glow), transparent 70%); opacity: 0.45; pointer-events: none; }
+.mb figcaption { font-size: 12px; color: var(--mb-s-muted); text-align: center; }
+.mb .phone { --pw: clamp(208px, 60cqw, 280px); position: relative; width: var(--pw); height: calc(var(--pw) * 2.06); font-size: calc(var(--pw) / 21); padding: 0.5em; border-radius: 3.4em;
+  background: linear-gradient(145deg, #4B5262, #10131A 35%, #2A303C 70%, #0C0E13); box-shadow: 0 0 0 1px #05070B, inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 3em 6em -1.5em rgba(0, 0, 0, 0.75); }
+.mb .hero .phone { --pw: clamp(228px, 66cqw, 320px); animation: mb-float 7s ease-in-out infinite; }
+@keyframes mb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.mb .screen { position: relative; height: 100%; border-radius: 2.9em; overflow: hidden; background: var(--mb-phone-bg); color: var(--mb-phone-text); padding: 3.7em 1.1em 2em; display: flex; flex-direction: column; gap: 0.7em; line-height: 1.3; text-align: left; }
+.mb .island { position: absolute; top: 0.85em; left: 50%; transform: translateX(-50%); width: 6.4em; height: 1.9em; border-radius: 999px; background: #000000; }
+.mb .sbar { position: absolute; top: 1em; left: 1.8em; right: 1.8em; display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; font-weight: 400; color: var(--mb-phone-text); }
+.mb .batt { width: 1.9em; height: 0.9em; border-radius: 0.3em; border: 1px solid var(--mb-phone-muted); padding: 1px; }
+.mb .batt::after { content: ""; display: block; width: 75%; height: 100%; border-radius: 0.15em; background: var(--mb-phone-text); }
+.mb .home { position: absolute; bottom: 0.6em; left: 50%; transform: translateX(-50%); width: 7em; height: 0.34em; border-radius: 9px; background: var(--mb-phone-text); opacity: 0.85; }
+.mb .screen .sm { color: var(--mb-phone-muted); font-size: 0.85em; }
+.mb .screen .st2 { font-size: 1.5em; font-weight: 400; letter-spacing: -0.02em; color: var(--mb-phone-text); line-height: 1.1; }
+.mb .screen .live { display: inline-flex; align-items: center; gap: 0.4em; color: var(--mb-phone-text); font-size: 0.85em; }
+.mb .screen .live::before { content: ""; width: 0.6em; height: 0.6em; border-radius: 50%; background: #3DDC84; }
+.mb .screen .row { display: flex; align-items: center; gap: 0.7em; padding: 0.75em 0.8em; border-radius: 1em; background: var(--mb-phone-raised); color: var(--mb-phone-text); }
+.mb .screen .row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mb .screen .row b { font-weight: 400; }
+.mb .screen .tile { width: 2.1em; height: 2.1em; flex: none; display: grid; place-items: center; border-radius: 0.6em; background: #3A4150; color: var(--mb-phone-text); }
+.mb .screen .tile .ico { width: 1.2em; height: 1.2em; }
+.mb .screen .sw { width: 2.1em; height: 1.2em; flex: none; border-radius: 999px; background: #3DDC84; position: relative; }
+.mb .screen .sw::after { content: ""; position: absolute; top: 0.15em; right: 0.15em; width: 0.9em; height: 0.9em; border-radius: 50%; background: #FFFFFF; }
+.mb .screen .sw.off { background: #555B66; }
+.mb .screen .sw.off::after { right: auto; left: 0.15em; }
+.mb .screen .pill { padding: 0.8em 0.9em; border-radius: 999px; text-align: center; font-weight: 400; background: #FFFFFF; color: #000000; }
+.mb .screen .pill.alt { background: transparent; color: var(--mb-phone-text); border: 1px solid #5A6070; }
+.mb .screen .tabs { display: flex; gap: 0.5em; }
+.mb .screen .tabs span { padding: 0.4em 0.9em; border-radius: 999px; border: 1px solid #5A6070; color: var(--mb-phone-text); }
 .mb .screen .tabs span.on { background: #FFFFFF; color: #000000; border-color: #FFFFFF; }
-.mb .screen .bubble { padding: 8px 10px; border-radius: 10px; background: var(--mb-phone-raised); color: var(--mb-phone-text); }
+.mb .screen .bubble { padding: 0.7em 0.9em; border-radius: 1.1em; background: var(--mb-phone-raised); color: var(--mb-phone-text); max-width: 88%; }
 .mb .screen .bubble.me { align-self: flex-end; background: #FFFFFF; color: #000000; }
-.mb .screen .grow { flex: 1; }
-.mb .screen .field { padding: 7px 9px; border-radius: 8px; border: 1px solid #555; color: var(--mb-phone-muted); }
-.mb .screen .composer { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 999px; border: 1px solid #555; color: var(--mb-phone-muted); }
-.mb .qrbox { align-self: center; width: 64px; height: 64px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 4px; background: #FFFFFF; border-radius: 6px; }
+.mb .screen .chip { align-self: flex-start; padding: 0.35em 0.8em; border-radius: 999px; border: 1px solid #5A6070; color: var(--mb-phone-muted); font-size: 0.85em; }
+.mb .screen .grow2 { flex: 1; }
+.mb .screen .composer { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; padding: 0.4em 0.4em 0.4em 1em; border-radius: 999px; border: 1px solid #5A6070; color: var(--mb-phone-text); margin-bottom: 0.4em; }
+.mb .screen .wave { display: flex; align-items: center; gap: 0.2em; height: 1.6em; flex: 1; }
+.mb .screen .wave i { width: 0.22em; border-radius: 9px; background: #3DDC84; }
+.mb .screen .micbtn { width: 2.3em; height: 2.3em; border-radius: 50%; display: grid; place-items: center; background: #FFFFFF; color: #000000; }
+.mb .screen .micbtn .ico { width: 1.2em; height: 1.2em; }
+.mb .screen .field { padding: 0.65em 0.9em; border-radius: 0.9em; border: 1px solid #5A6070; color: var(--mb-phone-muted); }
+.mb .qrbox { align-self: center; width: 9.6em; height: 9.6em; display: grid; grid-template-columns: repeat(11, 1fr); padding: 0.7em; background: #FFFFFF; border-radius: 1em; margin: 0.4em 0; }
 .mb .qrbox i { background: #000000; }
 .mb .qrbox i.o { background: #FFFFFF; }
+/* specs + steps */
+.mb .specs-sec .in { display: flex; flex-direction: column; gap: 40px; }
+.mb .specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 32px; padding: 0; list-style: none; }
+.mb .specs li { display: flex; flex-direction: column; gap: 8px; padding-top: 20px; border-top: 1px solid var(--mb-border); }
+.mb .specs .val { font-size: clamp(28px, 4vw, 44px); font-size: clamp(28px, 4.2cqw, 44px); font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; color: var(--mb-contrast); }
 .mb .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; padding: 0; list-style: none; counter-reset: step; }
-.mb .steps li { counter-increment: step; display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--mb-border); border-radius: 12px; background: var(--mb-panel); }
-.mb .steps li::before { content: counter(step); width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--mb-accent); color: var(--mb-on-accent); font-weight: 700; }
-.mb .section { display: flex; flex-direction: column; gap: 16px; }
-.mb .note { padding: 14px 16px; border: 1px solid var(--mb-border); border-radius: 12px; background: var(--mb-panel); color: var(--mb-text); }
-@media (max-width: 520px) { .mb .wrap { padding: 20px 16px 48px; gap: 40px; } .mb h1 { font-size: 28px; } .mb .feature:nth-child(even) { flex-direction: row; } }
+.mb .steps li { counter-increment: step; display: flex; flex-direction: column; gap: 8px; padding: 20px; border: 1px solid var(--mb-border); border-radius: 20px; background: var(--mb-panel); }
+.mb .steps li::before { content: counter(step); width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--mb-accent); color: var(--mb-on-accent); font-weight: 400; }
+.mb .block .in { display: flex; flex-direction: column; gap: 28px; }
+.mb .hs + .hs { border-top: 1px solid var(--mb-border); }
+/* download */
+.mb .dl .in { display: flex; flex-direction: column; gap: 32px; }
+.mb .dl .head { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.mb .dl .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.mb .dl .card { display: flex; flex-direction: column; gap: 14px; padding: 22px; border: 1px solid var(--mb-border); border-radius: 22px; background: var(--mb-panel); min-width: 0; }
+.mb .dl .card .num { font-size: 13px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mb-muted); }
+.mb .dl .card p { font-size: 15px; }
+.mb .codeblock { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mb .codeblock .cl { font-size: 13px; color: var(--mb-muted); }
+.mb .cb { display: flex; flex-direction: column; border: 1px solid var(--mb-border); border-radius: 12px; background: var(--mb-bg); padding: 6px 6px 0; min-width: 0; position: relative; }
+.mb .cb pre { min-width: 0; overflow-x: auto; padding: 6px 8px 12px; font: 13px/1.6 ui-monospace, "SF Mono", Menlo, monospace; color: var(--mb-text); }
+.mb .cb pre code { padding: 0; background: none; font: inherit; overflow-wrap: normal; }
+.mb button.copy { order: -1; align-self: flex-end; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--mb-border); background: var(--mb-panel); color: var(--mb-text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.mb button.copy:hover { border-color: var(--mb-text); }
+.mb .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* closing */
+.mb .cta .in { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px; padding-top: 112px; padding-bottom: 96px; }
+.mb .cta::before { content: ""; position: absolute; left: 50%; bottom: -60%; width: 120%; max-width: 1400px; aspect-ratio: 1; transform: translateX(-50%); background: radial-gradient(closest-side, var(--mb-glow), transparent 70%); opacity: 0.3; pointer-events: none; }
+.mb .cta .in > * { position: relative; }
+.mb .cta .fine { max-width: 62ch; }
+/* motion */
+.mb.js .rv { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.mb.js .rv.in2 { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .mb .hero .phone { animation: none; }
+  .mb.js .rv { opacity: 1; transform: none; transition: none; }
+}
+@media (max-width: 520px) { .mb .in { padding-left: 16px; padding-right: 16px; } .mb .fx .in { padding-top: 64px; padding-bottom: 64px; gap: 40px; } .mb .btn { padding: 12px 20px; } }
 `;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -159,137 +279,298 @@ function icon(name) {
   node.style.setProperty("--mb-mask", maskUrl(name));
   return node;
 }
-function row(label, sub) {
+function section(className, labelId) {
+  const s = el("section", className);
+  if (labelId) s.setAttribute("aria-labelledby", labelId);
+  const inner = el("div", "in");
+  s.append(inner);
+  return { s, inner };
+}
+function heading(tag, id, text, className) {
+  const h = el(tag, className || "", text);
+  if (id) h.id = id;
+  return h;
+}
+function actionButton(label, iconName, action, handler, primary = true) {
+  const b = el("button", primary ? "btn primary" : "btn");
+  b.type = "button";
+  b.dataset.action = action;
+  b.append(icon(iconName), el("span", "", label));
+  b.addEventListener("click", handler);
+  return b;
+}
+
+/** Clipboard write with an execCommand fallback; resolves to true when copied. */
+export async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fall through to the textarea fallback */ }
+  try {
+    const ta = el("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.append(ta);
+    ta.select();
+    const ok = typeof document.execCommand === "function" && document.execCommand("copy");
+    ta.remove();
+    return !!ok;
+  } catch {
+    return false;
+  }
+}
+
+function codeBlock(label, commands, timers) {
+  const wrap = el("div", "codeblock");
+  if (label) wrap.append(el("div", "cl", label));
+  const box = el("div", "cb");
+  const pre = el("pre");
+  pre.tabIndex = 0;
+  pre.append(el("code", "", commands));
+  const btn = el("button", "copy", "Copy");
+  btn.type = "button";
+  btn.setAttribute("aria-label", `Copy ${commands.split("\n")[0]}${commands.includes("\n") ? " and the next commands" : ""}`);
+  const live = el("span", "sr");
+  live.setAttribute("role", "status");
+  live.setAttribute("aria-live", "polite");
+  btn.addEventListener("click", async () => {
+    const ok = await copyText(commands);
+    btn.textContent = ok ? "Copied" : "Copy failed";
+    live.textContent = ok ? "Copied" : "Copy failed. Select the text and copy it.";
+    timers.push(setTimeout(() => { btn.textContent = "Copy"; live.textContent = ""; }, 2000));
+  });
+  box.append(pre, btn, live);
+  wrap.append(box);
+  return wrap;
+}
+
+// ─── Phone mockups ────────────────────────────────────────────────────────────
+
+/** 11x11 QR-like pattern: three finder squares plus deterministic noise. */
+export function qrCells() {
+  const n = 11;
+  const cells = [];
+  let seed = 7;
+  const finder = (dx, dy) => dx === 0 || dx === 6 || dy === 0 || dy === 6 || (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      let on;
+      if (x < 7 && y < 7) on = finder(x, y);
+      else if (x >= n - 7 && y < 7) on = finder(x - (n - 7), y);
+      else if (x < 7 && y >= n - 7) on = finder(x, y - (n - 7));
+      else { seed = (seed * 48271) % 2147483647; on = seed % 2 === 0; }
+      cells.push(on);
+    }
+  }
+  return cells;
+}
+
+function listRow(iconName, title, sub, tail) {
   const r = el("div", "row");
-  r.append(el("span", "", label));
-  if (sub) r.append(el("span", "sm", sub));
+  if (iconName) { const t = el("span", "tile"); t.append(icon(iconName)); r.append(t); }
+  const g = el("span", "grow");
+  g.append(el("b", "", title));
+  if (sub) g.append(el("span", "sm", sub));
+  r.append(g);
+  if (tail) r.append(tail);
   return r;
 }
 
 function mockScreen(kind) {
   const s = el("div", "screen");
+  const island = el("div", "island");
+  island.setAttribute("aria-hidden", "true");
+  const sbar = el("div", "sbar");
+  const batt = el("span", "batt");
+  batt.setAttribute("aria-hidden", "true");
+  sbar.append(el("span", "", "9:41"), batt);
+  s.append(island, sbar, el("div", "home"));
   if (kind === "connect") {
-    s.append(el("div", "sm", "OpenHands Mobile"), el("div", "st", "Connect to a running agent server"));
+    s.append(el("div", "sm", "OpenHands Mobile"), el("div", "st2", "Pair with Agent Canvas"));
     const qr = el("div", "qrbox");
     qr.setAttribute("aria-hidden", "true");
-    "1110111011010111101001011".split("").forEach((c) => qr.append(el("i", c === "1" ? "" : "o")));
-    s.append(qr, el("div", "pill", "Take photo of QR"), el("div", "pill alt", "Open camera scanner"));
-    for (const label of ["Name", "Host", "Session API key"]) s.append(el("div", "field", label));
+    qrCells().forEach((on) => qr.append(el("i", on ? "" : "o")));
+    s.append(qr, el("div", "pill", "Open camera scanner"), el("div", "pill alt", "Take photo of QR"), el("div", "field", "Or enter host and session key"));
   } else if (kind === "chat") {
-    s.append(el("div", "st", "Conversation"), el("div", "sm", "Live"));
-    s.append(el("div", "bubble me", "Add tests for the parser"), el("div", "bubble", "Working on it. Reading the existing tests first."), el("div", "grow"));
+    s.append(el("div", "st2", "Conversation"), el("div", "live", "Live"));
+    s.append(el("div", "bubble me", "Add tests for the parser"), el("div", "bubble", "On it. Reading the existing tests first."), el("div", "chip", "Reading tests/test_parser.py"), el("div", "grow2"));
     const c = el("div", "composer");
-    c.append(el("span", "", "Message"), icon("mic"));
+    const wave = el("span", "wave");
+    wave.setAttribute("aria-hidden", "true");
+    [40, 70, 100, 55, 85, 35, 60].forEach((h) => { const i = el("i"); i.style.height = `${h}%`; wave.append(i); });
+    const mic = el("span", "micbtn");
+    mic.append(icon("mic"));
+    c.append(el("span", "", "Dictating"), wave, mic);
     s.append(c);
   } else if (kind === "customize") {
-    s.append(el("div", "st", "Customize"), el("div", "sm", "Skills, MCP servers, and plugins from the laptop."));
-    for (const label of ["MCP Servers", "Skills", "Plugins"]) s.append(row(label, "›"));
+    s.append(el("div", "st2", "Customize"), el("div", "sm", "Skills, MCP servers, and plugins from the laptop."));
+    const sw = (off) => el("span", off ? "sw off" : "sw");
+    s.append(listRow("plug", "MCP Servers", "Tools the agent can call", sw(false)), listRow("book", "Skills", "Reusable instructions", sw(false)), listRow("puzzle", "Plugins", "Bundles of both", sw(true)));
+  } else if (kind === "list") {
+    s.append(el("div", "st2", "Conversations"), el("div", "live", "Live"));
+    s.append(listRow("chat", "Add tests for the parser", "Running"), listRow("chat", "Update AGENTS.md", "Finished"), listRow("chat", "Triage new issues", "Finished"), listRow("chat", "Daily news digest", "Finished"), listRow("chat", "Review open pull requests", "Finished"), el("div", "grow2"), el("div", "pill", "New chat"));
   } else {
-    s.append(el("div", "st", "Automations"));
+    s.append(el("div", "st2", "Automations"));
     const tabs = el("div", "tabs");
     tabs.append(el("span", "", "Dashboard"), el("span", "on", "Templates"));
     s.append(tabs);
-    for (const [name, cat] of [["GitHub code review", "Code review"], ["AGENTS.md Maintainer", "Documentation"], ["Daily news digest", "Research"]]) s.append(row(name, cat));
-    s.append(el("div", "grow"), el("div", "pill", "Create an automation"));
+    for (const [name, cat] of [["GitHub code review", "Code review"], ["AGENTS.md Maintainer", "Documentation"], ["Daily news digest", "Research"]]) s.append(listRow("clock", name, cat));
+    s.append(el("div", "grow2"), el("div", "pill", "Create an automation"));
   }
   return s;
 }
-function phone(kind, label) {
-  const wrap = el("figure", "mockwrap");
+
+function phone(kind, label, opts = {}) {
+  const wrap = el("figure", "mockwrap rv");
+  const par = el("div", "par");
+  par.dataset.par = String(opts.speed ?? 0.06);
   const p = el("div", "phone");
   p.setAttribute("role", "img");
   p.setAttribute("aria-label", `Illustration of the ${label} screen`);
   p.append(mockScreen(kind));
-  wrap.append(p, el("figcaption", "", "Illustration, not a screenshot"));
+  par.append(p);
+  wrap.append(par, el("figcaption", "", "Illustration, not a screenshot"));
   return wrap;
 }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function mountPage(container, host) {
   const root = el("div", "mb");
   root.append(el("style", "", STYLE));
-  const wrap = el("div", "wrap");
-  root.append(wrap);
+  const timers = [];
+  const reduced = !!(typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)")?.matches);
+  const go = (route) => () => host.navigate(route);
+  let downloadSection = null;
+  const scrollToDownload = () => {
+    if (!downloadSection) return;
+    downloadSection.scrollIntoView?.({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    downloadSection.querySelector("h2")?.focus?.({ preventScroll: true });
+  };
 
   // Hero
-  const hero = el("section", "hero");
-  hero.setAttribute("aria-labelledby", "mb-title");
-  const text = el("div", "hero-text");
-  const brand = el("div", "brand");
+  const hero = section("hero st", "mb-title");
+  const brand = el("div", "brand rv");
   const logo = el("img");
-  logo.src = APP_ICON;
-  logo.alt = "OpenHands app icon";
-  const h1 = el("h1", "", "OpenHands Mobile");
-  h1.id = "mb-title";
-  brand.append(logo, h1);
-  const status = el("ul", "status");
-  status.setAttribute("aria-label", "Status");
-  STATUS.forEach((s) => status.append(el("li", "", s)));
-  const actions = el("div", "actions");
-  const pair = el("button", "btn primary");
-  pair.type = "button";
-  pair.dataset.action = "pair";
-  pair.append(icon("qr"), el("span", "", "Pair your phone"));
-  pair.addEventListener("click", () => host.navigate(PAIR_ROUTE));
-  const setup = el("button", "btn");
-  setup.type = "button";
-  setup.dataset.action = "setup";
-  setup.append(icon("phone"), el("span", "", "Mobile app setup"));
-  setup.addEventListener("click", () => host.navigate(SETUP_ROUTE));
-  actions.append(pair, setup);
-  const repo = el("p", "repo");
-  repo.append("Source and build instructions: the ", el("code", "", REPO_NAME), " repository, README.md, “Sideload on a device”.");
-  text.append(brand, el("p", "pitch", "A second screen for the OpenHands that is already running on your laptop. Pair by QR code, then follow conversations and manage Customize and Automations from your phone."), status, actions, repo);
-  hero.append(text, phone("connect", "pairing"));
-  wrap.append(hero);
+  logo.src = LOGO_URL;
+  logo.alt = "OpenHands logo";
+  brand.append(logo);
+  const h1 = heading("h1", "mb-title", "OpenHands in your pocket.", "rv");
+  const lede = el("p", "lede muted rv", "A second screen for the OpenHands already running on your laptop. Pair by QR code, then follow your conversations from anywhere.");
+  const actions = el("div", "actions rv");
+  actions.append(
+    actionButton("Download", "download", "download", scrollToDownload),
+    actionButton("Pair your phone", "qr", "pair", go(PAIR_ROUTE), false),
+  );
+  const fine = el("p", "fine muted rv", "Early MVP, version 0.1.0. Not in any app store yet: build it from source.");
+  const heroPhone = phone("list", "conversations", { speed: 0.12 });
+  heroPhone.classList.add("stagewrap");
+  hero.inner.append(brand, el("p", "eyebrow muted rv", "OpenHands Mobile"), h1, lede, actions, fine, heroPhone);
 
-  // Features
-  const features = el("section", "section");
-  features.setAttribute("aria-labelledby", "mb-features");
-  const fh = el("h2", "", "What it does today");
-  fh.id = "mb-features";
-  const list = el("div", "features");
-  const ICONS = { pairing: "qr", conversations: "chat", customize: "sliders", automations: "clock" };
-  FEATURES.forEach((f) => {
-    const art = el("article", "feature");
-    art.dataset.feature = f.id;
-    const copy = el("div", "copy");
-    const k = el("div", "kicker");
-    k.append(icon(ICONS[f.id]));
-    copy.append(k, el("h3", "", f.title), el("p", "muted", f.body));
-    art.append(copy, phone(f.mock, f.title));
-    list.append(art);
+  // Feature sections
+  const featureSections = FEATURES.map((f, i) => {
+    const { s, inner } = section(`fx st${i % 2 ? " flip" : ""}`, `mb-${f.id}`);
+    s.dataset.feature = f.id;
+    const copy = el("div", "copy rv");
+    const k = el("div", "kicker eyebrow");
+    k.append(icon({ pairing: "qr", conversations: "chat", customize: "sliders", automations: "clock" }[f.id]), el("span", "", f.kicker));
+    copy.append(k, heading("h2", `mb-${f.id}`, f.title), el("p", "muted", f.body));
+    inner.append(copy, phone(f.mock, f.kicker.toLowerCase()));
+    return s;
   });
-  features.append(fh, list);
-  wrap.append(features);
+
+  // Specs strip
+  const specs = section("specs-sec hs", "mb-specs");
+  const sh = heading("h2", "mb-specs", "The facts.", "rv");
+  const sl = el("ul", "specs rv");
+  SPECS.forEach((x) => { const li = el("li"); li.append(el("span", "val", x.value), el("span", "muted", x.label)); sl.append(li); });
+  specs.inner.append(sh, sl);
 
   // Pairing steps
-  const how = el("section", "section");
-  how.setAttribute("aria-labelledby", "mb-how");
-  const hh = el("h2", "", "How pairing works");
-  hh.id = "mb-how";
-  const ol = el("ol", "steps");
-  STEPS.forEach((s) => {
-    const li = el("li");
-    li.append(el("h3", "", s.title), el("p", "muted", s.body));
-    ol.append(li);
-  });
-  how.append(hh, ol);
-  wrap.append(how);
+  const how = section("block hs", "mb-how");
+  const hh = heading("h2", "mb-how", "How pairing works", "rv");
+  const ol = el("ol", "steps rv");
+  STEPS.forEach((st) => { const li = el("li"); li.append(el("h3", "", st.title), el("p", "muted", st.body)); ol.append(li); });
+  how.inner.append(hh, ol);
 
-  // Honest limits
-  const limits = el("section", "section");
-  limits.setAttribute("aria-labelledby", "mb-limits");
-  const lh = el("h2", "", "Good to know");
-  lh.id = "mb-limits";
-  limits.append(lh, el("p", "note", "The app does not choose a model or store LLM provider keys; the laptop keeps its backend and active LLM. Files, Terminal, Browser and OpenHands Cloud login are not part of it yet. The phone cannot use localhost, so it needs a host it can reach: the laptop’s LAN address, Tailscale, or a tunnel URL. The QR code from Canvas carries a short-lived public link, so pairing works from any network."));
-  wrap.append(limits);
+  // Download
+  const dl = section("dl hs", "mb-download-title");
+  dl.s.id = "download";
+  downloadSection = dl.s;
+  const dh = el("div", "head rv");
+  const dt = heading("h2", "mb-download-title", "Download");
+  dt.tabIndex = -1;
+  const dlede = el("p", "lede muted", "No prebuilt app is published yet. Build it from source in about 3 steps.");
+  const link = el("a", "btn primary");
+  link.href = REPO_URL;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.dataset.action = "repo";
+  link.append(icon("download"), el("span", "", "Download from GitHub"));
+  const note = el("p", "fine muted");
+  note.append("Opens ", el("code", "", REPO_NAME), " on GitHub: the source code. There is no installer, App Store, Google Play or TestFlight build, and no release or tag to download.");
+  dh.append(dt, dlede, link, note);
+  const cards = el("div", "cards rv");
+  INSTALL_BLOCKS.forEach((b, i) => {
+    const card = el("article", "card");
+    card.dataset.install = b.id;
+    card.append(el("div", "num", `Step ${i + 1}`), el("h3", "", b.title), el("p", "muted", b.body), codeBlock("", b.commands, timers));
+    if (b.extra) card.append(codeBlock(b.extra.label, b.extra.commands, timers));
+    cards.append(card);
+  });
+  const after = el("p", "fine muted rv", "Then open Settings → Mobile in Agent Canvas and scan the code. Source: README.md, “Sideload on a device”.");
+  dl.inner.append(dh, cards, after);
+
+  // Closing call to action
+  const cta = section("cta st", "mb-cta");
+  const ch = heading("h2", "mb-cta", "Pair your phone.", "rv");
+  const cactions = el("div", "actions rv");
+  cactions.append(actionButton("Pair your phone", "qr", "pair", go(PAIR_ROUTE)), actionButton("Mobile app setup", "phone", "setup", go(SETUP_ROUTE), false));
+  const limits = el("p", "fine muted rv", "The app does not choose a model or store LLM provider keys; the laptop keeps its backend and active LLM. Files, Terminal, Browser and OpenHands Cloud login are not part of it yet. The phone cannot use localhost, so it needs a host it can reach: the laptop’s LAN address, Tailscale, or a tunnel URL.");
+  cta.inner.append(ch, cactions, limits);
+
+  root.append(hero.s, ...featureSections, specs.s, how.s, dl.s, cta.s);
+
+  // Motion: reveal on scroll and parallax; everything stays visible without it.
+  let io = null;
+  let raf = 0;
+  const par = [...root.querySelectorAll(".par")];
+  function parallax() {
+    raf = 0;
+    const rr = root.getBoundingClientRect();
+    par.forEach((n) => {
+      const r = n.getBoundingClientRect();
+      const delta = r.top + r.height / 2 - (rr.top + rr.height / 2);
+      const y = Math.max(-36, Math.min(36, -delta * Number(n.dataset.par)));
+      n.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0)`;
+    });
+  }
+  const onScroll = () => { if (!raf && typeof requestAnimationFrame === "function") raf = requestAnimationFrame(parallax); };
+  if (!reduced) {
+    if (typeof IntersectionObserver === "function") {
+      try {
+        io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in2"); io?.unobserve(e.target); } });
+        }, { root, threshold: 0.1 });
+        root.classList.add("js");
+        root.querySelectorAll(".rv").forEach((n) => io.observe(n));
+      } catch {
+        io = null;
+        root.classList.remove("js");
+      }
+    }
+    root.addEventListener("scroll", onScroll, { passive: true });
+  }
 
   // Full-height fit.
   function fit() {
     const top = Math.max(0, root.getBoundingClientRect().top);
     root.style.height = `${Math.max(480, (window.innerHeight || 800) - top)}px`;
   }
-  const onResize = () => fit();
+  const onResize = () => { fit(); if (!reduced) onScroll(); };
   window.addEventListener("resize", onResize);
   let ro = null;
   if (typeof ResizeObserver === "function") {
@@ -298,8 +579,13 @@ export function mountPage(container, host) {
   }
   container.replaceChildren(root);
   fit();
+  if (!reduced) parallax();
   return () => {
     window.removeEventListener("resize", onResize);
+    root.removeEventListener("scroll", onScroll);
+    if (raf && typeof cancelAnimationFrame === "function") cancelAnimationFrame(raf);
+    timers.forEach(clearTimeout);
+    io?.disconnect();
     ro?.disconnect();
     container.replaceChildren();
   };

@@ -13,6 +13,7 @@ import {
   Activity,
   Sparkles,
   Timer,
+  UsersRound,
   Workflow,
 } from "lucide-react";
 import type { AppConversation } from "#/api/conversation-service/agent-server-conversation-service.types";
@@ -53,6 +54,7 @@ import { FactoryAutomations } from "./factory-automations";
 import { FactoryGantt } from "./factory-gantt";
 import { FactoryIncoming } from "./factory-incoming";
 import { FactorySkills } from "./factory-skills";
+import { FactoryTeam } from "./factory-team";
 import { FactoryVault } from "./factory-vault";
 import { useFactoryRoster } from "#/hooks/use-factory-roster";
 import { useFeedFactoriesStore } from "#/stores/feed-factories-store";
@@ -69,6 +71,7 @@ type FactorySection =
   | "schedule"
   | "conversations"
   | "agents"
+  | "team"
   | "projects"
   | "skills"
   | "automations"
@@ -81,6 +84,7 @@ const SECTIONS: FactorySection[] = [
   "schedule",
   "conversations",
   "agents",
+  "team",
   "projects",
   "skills",
   "automations",
@@ -302,6 +306,7 @@ export function FactoryPage() {
       Icon: MessagesSquare,
     },
     agents: { label: t(I18nKey.FEED$AGENTS), Icon: Bot },
+    team: { label: t(I18nKey.FACTORY$TEAM), Icon: UsersRound },
     projects: { label: t(I18nKey.FEED$PROJECTS), Icon: FolderGit2 },
     skills: { label: t(I18nKey.SIDEBAR$SKILLS), Icon: Sparkles },
     automations: {
@@ -424,6 +429,17 @@ export function FactoryPage() {
             </section>
           ) : section === "pipeline" ? (
             <PipelinePage factory={factory} data={data} />
+          ) : section === "team" ? (
+            <section data-testid="factory-section-team">
+              <h2 className="mb-3 text-base font-semibold text-foreground">
+                {rail.team.label}
+              </h2>
+              <FactoryTeam
+                factory={factory}
+                roster={roster}
+                removableAgents={addedNames ?? []}
+              />
+            </section>
           ) : section === "skills" ||
             section === "automations" ||
             section === "vault" ? (

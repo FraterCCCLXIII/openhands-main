@@ -21,6 +21,7 @@ interface ChatInputContainerProps {
   chatInputRef: React.RefObject<HTMLDivElement | null>;
   placeholder?: string;
   toolbarLeading?: React.ReactNode;
+  hideProfilePickers?: boolean;
   handleFileIconClick: (isDisabled: boolean) => void;
   handleSubmit: () => void;
   onDragOver: (e: React.DragEvent, isDisabled: boolean) => void;
@@ -49,6 +50,7 @@ export function ChatInputContainer({
   chatInputRef,
   placeholder,
   toolbarLeading,
+  hideProfilePickers,
   handleFileIconClick,
   handleSubmit,
   onDragOver,
@@ -120,6 +122,7 @@ export function ChatInputContainer({
         }
         isDictationDisabled={isNewConversationPending}
         toolbarLeading={toolbarLeading}
+        hideProfilePickers={hideProfilePickers}
       />
     </div>
   );

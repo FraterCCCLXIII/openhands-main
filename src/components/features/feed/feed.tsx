@@ -1,4 +1,12 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useFeedConversations } from "#/hooks/use-feed-conversations";
 import { I18nKey } from "#/i18n/declaration";
@@ -13,6 +21,7 @@ import { cn } from "#/utils/utils";
 import { getFeedAgent } from "#/utils/feed-agent";
 import { isFeedDemoAgentsEnabled } from "#/utils/feed-demo-agents";
 import { groupConsecutive } from "#/utils/feed-stacks";
+import { useOpenFeedConversation } from "#/hooks/use-open-feed-conversation";
 import { FeedStack } from "./feed-stack";
 import { FeedCard } from "./feed-card";
 import { FeedNotificationCard } from "./feed-notification-card";
@@ -32,8 +41,14 @@ import {
   type FeedSort,
 } from "#/utils/feed-sort";
 
+// Loaded on first open so the conversation page stays out of Tower's bundle.
+const FeedEmbeddedConversation = lazy(
+  () => import("./feed-embedded-conversation"),
+);
+
 export function Feed() {
   const { t } = useTranslation("openhands");
+  const { openConversationId, close } = useOpenFeedConversation();
   const filter = useFeedFilterStore((state) => state.filter);
   const [view, setView] = useState<FeedView>("feed");
   const [sort, setSort] = useState<FeedSort>(DEFAULT_FEED_SORT);
@@ -147,6 +162,20 @@ export function Feed() {
       setFilter({ ...filter, factoryId: null });
     }
   }, [filter, factory, setFilter]);
+
+  if (openConversationId) {
+    return (
+      <FeedColumns conversationOpen>
+        <Suspense fallback={null}>
+          <FeedEmbeddedConversation
+            key={openConversationId}
+            conversationId={openConversationId}
+            onClose={close}
+          />
+        </Suspense>
+      </FeedColumns>
+    );
+  }
 
   return (
     <FeedColumns

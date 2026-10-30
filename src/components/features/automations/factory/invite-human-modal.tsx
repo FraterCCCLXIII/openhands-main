@@ -40,7 +40,10 @@ const fieldClassName =
 interface InviteHumanModalProps {
   factory: FeedFactory;
   stageKey: string;
-  step: PipelineStep;
+  /** The stage the person joins; only its title and role kind are read. */
+  step: Pick<PipelineStep, "title" | "humanRoleKind">;
+  /** Names the role when it is not one of the pipeline gate kinds. */
+  roleLabel?: string;
   /** People already at this stage, to leave out and de-duplicate against. */
   assignments: HumanAssignment[];
   onClose: () => void;
@@ -55,6 +58,7 @@ export function InviteHumanModal({
   factory,
   stageKey,
   step,
+  roleLabel,
   assignments,
   onClose,
 }: InviteHumanModalProps) {
@@ -70,7 +74,8 @@ export function InviteHumanModal({
   const [savedEmail, setSavedEmail] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const role = t(HUMAN_ROLE_LABEL[step.humanRoleKind ?? "reviewer"]);
+  const role =
+    roleLabel ?? t(HUMAN_ROLE_LABEL[step.humanRoleKind ?? "reviewer"]);
   const taken = useMemo(
     () => new Set(assignments.map((assignment) => assignment.id)),
     [assignments],
