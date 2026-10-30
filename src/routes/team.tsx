@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -388,10 +392,8 @@ function TeamPage() {
       <main className={cn(settingsLikeMainScrollClassName, "h-full flex-1")}>
         <div className="mx-auto flex w-full min-w-0 max-w-275 flex-col gap-6 p-6">
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold leading-6 text-foreground">
-              {t(I18nKey.TEAM$TITLE)}
-            </h2>
-            <p className="text-sm text-tertiary-light max-w-2xl">
+            <h1 className={PAGE_TITLE_CLASS_NAME}>{t(I18nKey.TEAM$TITLE)}</h1>
+            <p className={PAGE_SUBTITLE_CLASS_NAME}>
               {t(I18nKey.TEAM$DESCRIPTION)}
             </p>
           </div>

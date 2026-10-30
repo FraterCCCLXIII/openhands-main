@@ -5,9 +5,8 @@ import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalBody } from "#/components/shared/modals/modal-body";
 import { I18nKey } from "#/i18n/declaration";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
-import { canvasExtensionBannerUrl } from "#/utils/canvas-extension-banner";
+import { AppBanner } from "./app-banner";
 import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
-import { CanvasExtensionIcon } from "./canvas-extension-icon";
 
 const CANVAS_EXTENSIONS_DOCS_URL =
   "https://docs.openhands.dev/openhands/usage/agent-canvas/canvas-extensions";
@@ -90,30 +89,22 @@ export function CanvasExtensionDetailsModal({
         width="xl"
         className="max-h-[90vh] w-full max-w-3xl items-stretch gap-0 overflow-hidden p-0"
       >
-        <div
-          className="relative flex h-36 shrink-0 items-end bg-(image:--banner-url) bg-cover bg-center px-6 pb-4"
-          style={
-            {
-              "--banner-url": `url("${canvasExtensionBannerUrl(extension.name)}")`,
-            } as React.CSSProperties
-          }
+        <AppBanner
+          name={extension.name}
+          displayName={displayName}
+          manifest={manifest}
+          className="h-36 shrink-0 gap-4 px-6"
         >
-          <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 to-black/10" />
-          <div className="relative flex items-end gap-4">
-            <div className="flex size-16 items-center justify-center rounded-2xl bg-linear-to-b from-white/20 to-white/5 inset-shadow-xs inset-shadow-white/40 shadow-md shadow-black/20 ring-1 ring-white/10">
-              <CanvasExtensionIcon extension={extension} size={36} />
-            </div>
-            <div className="min-w-0 pb-1">
-              <h3 className="truncate text-xl font-semibold text-white">
-                {displayName}
-              </h3>
-              <p className="text-xs text-white/70">
-                v{extension.version}
-                {manifest?.author ? ` · ${manifest.author}` : ""}
-              </p>
-            </div>
+          <div className="min-w-0 pb-1">
+            <h3 className="truncate text-xl font-semibold text-white">
+              {displayName}
+            </h3>
+            <p className="text-xs text-white/80">
+              v{extension.version}
+              {manifest?.author ? ` · ${manifest.author}` : ""}
+            </p>
           </div>
-        </div>
+        </AppBanner>
 
         <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
           <div className="flex flex-wrap gap-1.5">

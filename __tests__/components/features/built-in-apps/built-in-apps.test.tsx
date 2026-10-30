@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -137,7 +137,7 @@ describe("built-in app switches", () => {
 
       expect(screen.queryByTestId("real-page")).not.toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: "Tower is turned off" }),
+        screen.getByRole("heading", { name: /^Tower\S* is turned off$/ }),
       ).toBeInTheDocument();
       expect(
         screen.getByText("Turn it on in Customize > Apps."),
@@ -210,6 +210,25 @@ describe("built-in app switches", () => {
       await userEvent.click(screen.getByTestId("built-in-app-switch-factory"));
       expect(automations).toBeEnabled();
     });
+
+    it.each(["tower", "factory", "automations", "commons"] as const)(
+      "shows a decorative icon before the name on the %s row",
+      (id) => {
+        renderAt("/apps", <BuiltInAppsSection />);
+
+        const row = screen.getByTestId(`built-in-app-row-${id}`);
+        const icon = within(row).getByTestId(`built-in-app-icon-${id}`);
+        const switchInput = within(row).getByTestId(
+          `built-in-app-switch-${id}`,
+        );
+
+        expect(icon).toHaveAttribute("aria-hidden", "true");
+        expect(
+          icon.compareDocumentPosition(switchInput) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      },
+    );
 
     it("locks Factory while Automations is off", async () => {
       turnOff("factory", "automations");

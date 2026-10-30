@@ -35,7 +35,7 @@ describe("arcade", () => {
     expect(frame.getAttribute("src")).toBe("/kamiji-experiments/kamiji-game/index.html");
     expect(frame.getAttribute("sandbox")).toBe(SANDBOX);
     expect(frame.getAttribute("allow")).toBe(ALLOW);
-    expect(frame.getAttribute("title")).toBe("Kamiji pet game");
+    expect(frame.getAttribute("title")).toMatch(/^Kamiji.? pet game$/);
 
     const open = container.querySelector('[data-action="open"]');
     expect(open.getAttribute("href")).toBe("/kamiji-experiments/kamiji-game/index.html");

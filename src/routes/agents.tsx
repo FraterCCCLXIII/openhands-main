@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
@@ -102,12 +106,10 @@ export default function AgentsScreen() {
     <div data-testid="agents-screen" className="flex h-full">
       <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
         <div className="mx-auto flex w-full max-w-200 flex-col gap-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 space-y-1">
-              <h2 className="text-xl font-semibold leading-6 tracking-tight text-foreground">
-                {t(I18nKey.NAV$AGENTS)}
-              </h2>
-              <p className="max-w-2xl text-sm leading-5 text-tertiary-light">
+              <h1 className={PAGE_TITLE_CLASS_NAME}>{t(I18nKey.NAV$AGENTS)}</h1>
+              <p className={PAGE_SUBTITLE_CLASS_NAME}>
                 {t(I18nKey.NAV$AGENTS_DESCRIPTION)}
               </p>
             </div>

@@ -12,7 +12,7 @@ const STORAGE_KEY = "canvas-extension-arcade:v1";
 export const GAMES = [
   {
     id: "kamiji-pet",
-    title: "Kamiji pet game",
+    title: "Kamiji™ pet game",
     description: "A Tamagotchi-style pet game with an RPG map. An early Kamiji prototype.",
     url: "/kamiji-experiments/kamiji-game/index.html",
     kind: "local",
@@ -21,7 +21,7 @@ export const GAMES = [
   },
   {
     id: "yakopop",
-    title: "Yakopop",
+    title: "Yakopop™",
     description: "Word-synced bilingual subtitles and lessons for language learners.",
     url: "https://yakopop.com",
     kind: "remote",
@@ -30,7 +30,7 @@ export const GAMES = [
   },
   {
     id: "kamikin",
-    title: "Kamikin",
+    title: "Kamikin™",
     description: "A cute mochi world for young kids that teaches Japanese words.",
     url: "",
     kind: "local",
@@ -39,7 +39,7 @@ export const GAMES = [
   },
   {
     id: "kosmica",
-    title: "Kosmica",
+    title: "Kosmica™",
     description: "The Kosmos engine game world; Yakopop's learning layer runs inside it.",
     url: "",
     kind: "remote",

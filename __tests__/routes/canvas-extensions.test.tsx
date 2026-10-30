@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CanvasExtensionsScreen from "#/routes/canvas-extensions";
 import CanvasExtensionsService from "#/api/canvas-extensions-service";
@@ -15,10 +16,30 @@ import { MOCK_DEFAULT_USER_SETTINGS } from "#/mocks/handlers";
 import { ActiveBackendProvider } from "#/contexts/active-backend-context";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
 
+// Render the real English copy so the tests read like the UI.
+vi.mock("react-i18next", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-i18next")>();
+  const translations = (await import("#/i18n/translation.json"))
+    .default as Record<string, { en: string }>;
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string, vars?: Record<string, string>) =>
+        (translations[key]?.en ?? key).replace(
+          /\{\{(\w+)\}\}/g,
+          (_m, name) => vars?.[name] ?? "",
+        ),
+      i18n: { language: "en", exists: () => true },
+    }),
+  };
+});
+
+const navigateMock = vi.hoisted(() => vi.fn());
+const mockPath = "/apps";
 vi.mock("#/context/navigation-context", () => ({
   useNavigation: () => ({
-    navigate: vi.fn(),
-    currentPath: "/apps",
+    navigate: navigateMock,
+    currentPath: mockPath,
     conversationId: null,
     isNavigating: false,
   }),
@@ -48,16 +69,60 @@ function buildExtension(
   };
 }
 
-function renderAppsScreen() {
+const KNOWN_APPS = {
+  apps: [
+    {
+      name: "free-game",
+      display_name: "Free Game",
+      kind: "canvas-app",
+      category: "games",
+      license: "MIT",
+      pricing: { model: "free" },
+      description: "A free game",
+    },
+    {
+      name: "paid-docs",
+      display_name: "Paid Docs",
+      kind: "canvas-app",
+      category: "docs",
+      license: "LicenseRef-Proprietary",
+      pricing: {
+        model: "subscription",
+        amount: 10,
+        period: "month",
+        sample: true,
+      },
+    },
+    {
+      name: "once-chat",
+      display_name: "Once Chat",
+      kind: "canvas-app",
+      category: "social",
+      license: "GPL-3.0-only",
+      pricing: { model: "one-time", amount: 5, sample: true },
+    },
+    {
+      name: "mystery",
+      display_name: "Mystery",
+      kind: "canvas-app",
+      category: "docs",
+    },
+    { name: "a-product", display_name: "A Product", kind: "product" },
+  ],
+};
+
+function renderAppsScreen(initialEntry = "/apps") {
   return render(<CanvasExtensionsScreen />, {
     wrapper: ({ children }) => (
-      <QueryClientProvider
-        client={
-          new QueryClient({ defaultOptions: { queries: { retry: false } } })
-        }
-      >
-        <ActiveBackendProvider>{children}</ActiveBackendProvider>
-      </QueryClientProvider>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <QueryClientProvider
+          client={
+            new QueryClient({ defaultOptions: { queries: { retry: false } } })
+          }
+        >
+          <ActiveBackendProvider>{children}</ActiveBackendProvider>
+        </QueryClientProvider>
+      </MemoryRouter>
     ),
   });
 }
@@ -94,6 +159,10 @@ describe("CanvasExtensionsScreen", () => {
     __resetActiveStoreForTests();
     setRegisteredBackends([localBackend]);
     setActiveSelection({ backendId: localBackend.id });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify(KNOWN_APPS))),
+    );
     vi.spyOn(SettingsService, "getSettings").mockResolvedValue(
       MOCK_DEFAULT_USER_SETTINGS,
     );
@@ -148,7 +217,13 @@ describe("CanvasExtensionsScreen", () => {
     expect(screen.getByTestId("confirmation-modal")).toBeInTheDocument();
   });
 
-  it("sorts apps by name, enabled first, or newest", async () => {
+  const cardOrder = (prefix: string) =>
+    screen
+      .getAllByRole("heading", { level: 3 })
+      .map((h) => h.textContent)
+      .filter((n) => n?.startsWith(prefix));
+
+  it("sorts, filters by status and searches the installed apps from the rail", async () => {
     const user = userEvent.setup();
     vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([
       buildExtension({
@@ -168,28 +243,162 @@ describe("CanvasExtensionsScreen", () => {
       }),
     ]);
     renderAppsScreen();
-
-    const order = () =>
-      screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
     await screen.findByText("alpha");
-    expect(
-      order().filter((n) => ["alpha", "bravo", "charlie"].includes(n ?? "")),
-    ).toEqual(["alpha", "bravo", "charlie"]);
+    const names = () =>
+      cardOrder("").filter((n) =>
+        ["alpha", "bravo", "charlie"].includes(n ?? ""),
+      );
+    expect(names()).toEqual(["alpha", "bravo", "charlie"]);
 
-    await user.selectOptions(
-      screen.getByTestId("canvas-extensions-sort"),
-      "enabled",
+    await user.click(screen.getByLabelText("Enabled first"));
+    expect(names()).toEqual(["charlie", "alpha", "bravo"]);
+    await user.click(screen.getByLabelText("Newest first"));
+    expect(names()).toEqual(["charlie", "bravo", "alpha"]);
+
+    const status = screen.getByRole("group", { name: "Status" });
+    expect(
+      within(status)
+        .getByLabelText(/^Enabled/)
+        .closest("label"),
+    ).toHaveTextContent("1");
+    expect(
+      within(status)
+        .getByLabelText(/^Disabled/)
+        .closest("label"),
+    ).toHaveTextContent("2");
+    await user.click(within(status).getByLabelText(/^Disabled/));
+    expect(names()).toEqual(["bravo", "alpha"]);
+    expect(
+      within(status).getByText("1", { selector: "span" }),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByTestId("apps-search"), "alp");
+    expect(names()).toEqual(["alpha"]);
+    await user.click(screen.getByTestId("apps-clear-filters"));
+    expect(names()).toEqual(["alpha", "bravo", "charlie"]);
+  });
+
+  it("restores sort and filters from the URL", async () => {
+    vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([
+      buildExtension({ name: "alpha", enabled: false }),
+      buildExtension({ name: "bravo", enabled: true }),
+    ]);
+    renderAppsScreen("/apps?status=enabled&sort=newest&q=br");
+    await screen.findByText("bravo");
+    expect(screen.queryByText("alpha")).not.toBeInTheDocument();
+    expect(screen.getByTestId("apps-search")).toHaveValue("br");
+    expect(screen.getByLabelText("Newest first")).toBeChecked();
+  });
+
+  it("lists not-installed catalog apps in the App Store and filters by category, price and license with counts", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([
+      buildExtension({ name: "free-game" }),
+    ]);
+    renderAppsScreen("/apps?view=store");
+    await screen.findByTestId("app-store-card-paid-docs");
+    expect(
+      screen.queryByTestId("app-store-card-a-product"),
+    ).not.toBeInTheDocument();
+    const notInstalled = screen.getByLabelText(/^Not installed/);
+    expect(notInstalled.closest("label")).toHaveTextContent("3");
+
+    const category = screen.getByRole("group", { name: "Category" });
+    expect(
+      within(category.closest("fieldset") as HTMLElement)
+        .getByLabelText(/^Docs/)
+        .closest("label"),
+    ).toHaveTextContent("2");
+    await user.click(within(category).getByLabelText(/^Docs/));
+    expect(
+      screen.queryByTestId("app-store-card-free-game"),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      within(screen.getByRole("group", { name: "Price" })).getByLabelText(
+        /^Subscription/,
+      ),
+    );
+    expect(screen.getByTestId("app-store-card-paid-docs")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("app-store-card-mystery"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("apps-clear-filters"));
+    await user.click(
+      within(screen.getByRole("group", { name: "License" })).getByLabelText(
+        /^Free \/ open source/,
+      ),
+    );
+    expect(screen.getByTestId("app-store-card-free-game")).toBeInTheDocument();
+    expect(screen.getByTestId("app-store-card-once-chat")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("app-store-card-paid-docs"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("sorts by price with free first and unknown prices last in both directions", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([]);
+    renderAppsScreen("/apps?view=store&sort=price-asc");
+    await screen.findByTestId("app-store-card-paid-docs");
+    const names = () =>
+      cardOrder("").filter((n) =>
+        ["Free Game", "Once Chat", "Paid Docs", "Mystery"].includes(n ?? ""),
+      );
+    expect(names()).toEqual(["Free Game", "Once Chat", "Paid Docs", "Mystery"]);
+    await user.click(screen.getByLabelText("Price: high to low"));
+    expect(names()).toEqual(["Paid Docs", "Once Chat", "Free Game", "Mystery"]);
+  });
+
+  it("installs free catalog apps but keeps paid apps disabled with an explanation and a sample label", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([]);
+    const install = vi
+      .spyOn(CanvasExtensionsService, "install")
+      .mockResolvedValue(buildExtension({ name: "free-game" }));
+    renderAppsScreen("/apps?view=store");
+    await screen.findByTestId("app-store-card-paid-docs");
+
+    const paid = screen.getByTestId("app-store-card-paid-docs-get");
+    expect(paid).toBeDisabled();
+    expect(paid).toHaveTextContent("Get for $10/month");
+    expect(paid.parentElement).toHaveAttribute(
+      "title",
+      expect.stringContaining("payments are not set up"),
     );
     expect(
-      order().filter((n) => ["alpha", "bravo", "charlie"].includes(n ?? "")),
-    ).toEqual(["charlie", "alpha", "bravo"]);
+      screen.getByTestId("app-store-card-paid-docs-sample-pricing"),
+    ).toBeVisible();
+    expect(
+      screen.queryByTestId("app-store-card-free-game-sample-pricing"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Contact the publisher")).not.toBeInTheDocument();
 
-    await user.selectOptions(
-      screen.getByTestId("canvas-extensions-sort"),
-      "newest",
+    await user.click(screen.getByTestId("app-store-card-free-game-install"));
+    expect(install).toHaveBeenCalledWith(
+      expect.objectContaining({ source: "github:" }),
+    );
+    expect(install).toHaveBeenCalledTimes(1);
+  });
+
+  it("links the bottom Manage group to Skills, Plugins and MCP servers", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(CanvasExtensionsService, "listInstalled").mockResolvedValue([]);
+    renderAppsScreen();
+    const nav = screen.getByRole("navigation", { name: "Manage" });
+    expect(within(nav).getByRole("link", { name: "Skills" })).toHaveAttribute(
+      "href",
+      "/skills",
+    );
+    expect(within(nav).getByRole("link", { name: "Plugins" })).toHaveAttribute(
+      "href",
+      "/plugins",
     );
     expect(
-      order().filter((n) => ["alpha", "bravo", "charlie"].includes(n ?? "")),
-    ).toEqual(["charlie", "bravo", "alpha"]);
+      within(nav).getByRole("link", { name: "MCP servers" }),
+    ).toHaveAttribute("href", "/mcp");
+    await user.click(within(nav).getByRole("link", { name: "Skills" }));
+    expect(navigateMock).toHaveBeenCalledWith("/skills");
   });
 });

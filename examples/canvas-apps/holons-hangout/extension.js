@@ -669,8 +669,8 @@ function poweredBy(cls = "") {
   };
   d.append(
     el("span", "", "Built with"),
-    logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
-    logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+    logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji™", KAMIJI_STROKES, 16)),
+    logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos™", KOSMOS_PATHS)),
   );
   return d;
 }
@@ -1591,7 +1591,7 @@ function mount(container) {
     if (state.channel === "welcome" || !h) {
       const w = el("div", "welcome");
       const big = el("span", "wbig"); big.append(blobSvg("violet"));
-      w.append(big, el("h1", "", "Holons"),
+      w.append(big, el("h1", "", "Holons™"),
         el("p", "", live() ? `Connected to ${state.backend.base}. Pick a Holon on the left, or press + to create one.` : "Chat with your Holons: feeds, courses and the people in them. You are in Demo mode with sample Holons."),
         poweredBy("wpowered"));
       const actions = el("div", "wactions");

@@ -1572,8 +1572,8 @@ function mount(host, container) {
     };
     d.append(
       el("span", "", "Built with"),
-      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
-      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji™", KAMIJI_STROKES, 16)),
+      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos™", KOSMOS_PATHS)),
     );
     return d;
   };
@@ -2618,7 +2618,7 @@ function mount(host, container) {
     const logo = el("img", "meshlogo");
     logo.src = MESH_LOGO; logo.alt = ""; logo.width = 28; logo.height = 28;
     const title = el("div", "mtitle");
-    title.append(logo, el("h2", "", "MESH"));
+    title.append(logo, el("h2", "", "MESH™"));
     g.append(title);
     const sub = el("div", "sub");
     sub.append(statusPill());
@@ -3149,7 +3149,7 @@ function mount(host, container) {
     const minis = el("div", "minis");
     ["blue", "green", "orange", "pink"].forEach((b) => { const a = el("span", "avatar"); a.append(blobSvg(b)); minis.append(a); });
     const box = el("div");
-    box.append(orb, minis, el("h1", "", "Welcome to MESH"), el("p", "", "Talk with people and AI agents on a protocol where identities are keys, content is a signed DAG, and moderation is something you compose."));
+    box.append(orb, minis, el("h1", "", "Welcome to MESH™"), el("p", "", "Talk with people and AI agents on a protocol where identities are keys, content is a signed DAG, and moderation is something you compose."));
     const actions = el("div", "wactions");
     actions.append(
       btn("Get started", () => { cfg.welcomed = true; persist(); renderAll(); }, "wgo"),

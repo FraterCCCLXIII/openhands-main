@@ -1,15 +1,15 @@
-import type React from "react";
 import { useTranslation } from "react-i18next";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { ToggleSwitch } from "#/ui/toggle-switch";
 import { I18nKey } from "#/i18n/declaration";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
-import { CanvasExtensionIcon } from "./canvas-extension-icon";
+import { AppBanner } from "./app-banner";
 import { Check, RefreshCw, Trash2 } from "lucide-react";
 import { KebabMenu } from "#/components/features/automations/kebab-menu";
 import { useDockedAppsStore } from "#/stores/docked-apps-store";
 import { useNavigation } from "#/context/navigation-context";
-import { canvasExtensionBannerUrl } from "#/utils/canvas-extension-banner";
+import type { AppPricing } from "#/utils/canvas-app-catalog";
+import { AppPriceChips } from "./app-price-chips";
 import { extensionModuleCardPillClassName } from "#/utils/extension-module-card-classes";
 
 interface CanvasExtensionCardProps {
@@ -21,6 +21,8 @@ interface CanvasExtensionCardProps {
   onDetails: () => void;
   /** Where the app lives; absent while the app is off or has no page. */
   openHref?: string | null;
+  pricing?: AppPricing | null;
+  license?: string | null;
 }
 
 export function CanvasExtensionCard({
@@ -31,6 +33,8 @@ export function CanvasExtensionCard({
   onUninstall,
   onDetails,
   openHref,
+  pricing = null,
+  license = null,
 }: CanvasExtensionCardProps) {
   const { t } = useTranslation("openhands");
   const { navigate } = useNavigation();
@@ -53,27 +57,12 @@ export function CanvasExtensionCard({
         navigate(openHref);
       }}
     >
-      <div
-        className="relative flex h-36 items-end bg-(image:--banner-url) bg-cover bg-center px-4 pb-4"
-        style={
-          {
-            "--banner-url": `url("${canvasExtensionBannerUrl(extension.name)}")`,
-          } as React.CSSProperties
-        }
+      <AppBanner
+        name={extension.name}
+        displayName={displayName}
+        manifest={extension.manifest}
+        className="h-36"
       >
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 to-black/10" />
-        <div className="relative flex size-16 items-center justify-center overflow-hidden rounded-2xl shadow-md shadow-black/20 ring-1 ring-white/10">
-          <CanvasExtensionIcon
-            extension={extension}
-            size={64}
-            fallbackSize={36}
-          />
-          {/* The tile's glass shading sits over the icon so its colour inherits it. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-b from-white/20 to-white/5 inset-shadow-xs inset-shadow-white/40"
-          />
-        </div>
         <ToggleSwitch
           enabled={extension.enabled}
           label={t(
@@ -83,7 +72,7 @@ export function CanvasExtensionCard({
           disabled={isBusy}
           className={`absolute top-3 right-3 ${isBusy ? "pointer-events-none opacity-50" : ""}`}
         />
-      </div>
+      </AppBanner>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-4">
         <h3 className="truncate text-base font-semibold text-contrast">
@@ -106,6 +95,11 @@ export function CanvasExtensionCard({
               version: extension.version,
             })}
           </span>
+          <AppPriceChips
+            pricing={pricing}
+            license={license}
+            testId={`canvas-extension-card-${extension.name}`}
+          />
           {pages.length ? (
             <span className={extensionModuleCardPillClassName}>
               {t(I18nKey.SETTINGS$APPS_PAGES)}: {pages.length}

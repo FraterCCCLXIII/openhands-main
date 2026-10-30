@@ -284,7 +284,7 @@ function mount(container) {
   const main = el("main", "col main");
   const lhead = el("div", "lhead");
   const mk = el("span", "mark"); mk.append(markSvg());
-  const brand = el("h1", "brand"); brand.append(mk, document.createTextNode("Murmur"));
+  const brand = el("h1", "brand"); brand.append(mk, document.createTextNode("Murmur™"));
   lhead.append(brand);
   const newBtn = el("button", "pbtn"); newBtn.type = "button"; newBtn.append(icon("plus"), document.createTextNode("New room"));
   newBtn.addEventListener("click", () => open({ kind: "name", value: randomRoomName() }));

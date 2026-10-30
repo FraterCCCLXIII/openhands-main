@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -691,10 +695,10 @@ export default function AutomationsList() {
   if (isHealthLoading) {
     return renderShell(
       <div>
-        <h1 className="font-inter text-[22px] font-normal text-content">
-          {interfaceCopy.listTitle}
-        </h1>
-        <p className="mt-1 text-sm text-muted">{interfaceCopy.listSubtitle}</p>
+        <h1 className={PAGE_TITLE_CLASS_NAME}>{interfaceCopy.listTitle}</h1>
+        <p className={cn("mt-1", PAGE_SUBTITLE_CLASS_NAME)}>
+          {interfaceCopy.listSubtitle}
+        </p>
         <div className="mt-6 flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <AutomationCardSkeleton key={`skeleton-${String(i)}`} />
@@ -708,10 +712,10 @@ export default function AutomationsList() {
   if (!isBackendHealthy) {
     return renderShell(
       <div>
-        <h1 className="font-inter text-[22px] font-normal text-content">
-          {interfaceCopy.listTitle}
-        </h1>
-        <p className="mt-1 text-sm text-muted">{interfaceCopy.listSubtitle}</p>
+        <h1 className={PAGE_TITLE_CLASS_NAME}>{interfaceCopy.listTitle}</h1>
+        <p className={cn("mt-1", PAGE_SUBTITLE_CLASS_NAME)}>
+          {interfaceCopy.listSubtitle}
+        </p>
         <BackendNotConfigured onRetry={refetchHealth} />
       </div>,
     );
@@ -722,10 +726,8 @@ export default function AutomationsList() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 basis-64">
-          <h1 className="font-inter text-[22px] font-normal text-content">
-            {interfaceCopy.listTitle}
-          </h1>
-          <p className="mt-1 text-sm text-muted">
+          <h1 className={PAGE_TITLE_CLASS_NAME}>{interfaceCopy.listTitle}</h1>
+          <p className={cn("mt-1", PAGE_SUBTITLE_CLASS_NAME)}>
             {interfaceCopy.listSubtitle}
           </p>
         </div>

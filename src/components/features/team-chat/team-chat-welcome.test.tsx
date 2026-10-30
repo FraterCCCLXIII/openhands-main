@@ -38,12 +38,12 @@ describe("TeamChatWelcome built-with row", () => {
     render(<TeamChatWelcome onStart={vi.fn()} onExplore={vi.fn()} />);
 
     const row = screen.getByRole("group", { name: "TEAM_CHAT$BUILT_WITH" });
-    const kamiji = within(row).getByRole("link", { name: "Kamiji" });
-    const kosmos = within(row).getByRole("link", { name: "Kosmos" });
+    const kamiji = within(row).getByRole("link", { name: /^Kamiji/ });
+    const kosmos = within(row).getByRole("link", { name: /^Kosmos/ });
 
-    expect(within(kamiji).getByRole("img", { name: "Kamiji" })).toBeVisible();
+    expect(within(kamiji).getByRole("img", { name: /^Kamiji/ })).toBeVisible();
     expect(new URL(kamiji.getAttribute("href")!).hostname).toBe("github.com");
-    expect(within(kosmos).getByRole("img", { name: "Kosmos" })).toBeVisible();
+    expect(within(kosmos).getByRole("img", { name: /^Kosmos/ })).toBeVisible();
     expect(new URL(kosmos.getAttribute("href")!).hostname).toBe(
       "kosmos.computer",
     );

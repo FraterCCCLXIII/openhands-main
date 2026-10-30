@@ -1,3 +1,8 @@
+import { cn } from "#/utils/utils";
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
@@ -198,10 +203,10 @@ export default function AutomationGitSync() {
         <div className="flex flex-col gap-4">
           <BackLink />
           <div>
-            <h1 className="font-inter text-[22px] font-normal text-content">
+            <h1 className={PAGE_TITLE_CLASS_NAME}>
               {t(I18nKey.AUTOMATIONS$GIT_SYNC$TITLE)}
             </h1>
-            <p className="mt-1 text-sm text-muted">
+            <p className={cn("mt-1", PAGE_SUBTITLE_CLASS_NAME)}>
               {t(I18nKey.AUTOMATIONS$GIT_SYNC$SUBTITLE)}
             </p>
           </div>

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ProfileActionsMenu } from "./profile-actions-menu";
+import { ProfilePrice } from "./profile-price";
 import { ProfileInfo } from "#/api/profiles-service/profiles-service.api";
 import { I18nKey } from "#/i18n/declaration";
 import { EllipsisButton } from "#/components/features/conversation-panel/ellipsis-button";
@@ -50,9 +51,12 @@ export function ProfileRow({
   return (
     <div
       data-testid="profile-row"
-      className={cn(settingsListRowClassName, "justify-between gap-3")}
+      className={cn(
+        settingsListRowClassName,
+        "h-auto flex-wrap justify-between gap-x-3 gap-y-1 py-2",
+      )}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-48 flex-1 items-center gap-3">
         <span
           className="min-w-0 max-w-full truncate text-sm font-medium text-contrast"
           title={profile.name}
@@ -89,6 +93,10 @@ export function ProfileRow({
           </span>
         )}
         {isModelUnlisted && <ModelCatalogWarning />}
+      </div>
+      {/* Wraps under the model id on narrow widths; the menu stays on line one. */}
+      <div className="order-last flex w-full justify-end sm:order-none sm:w-auto">
+        <ProfilePrice model={profile.model} />
       </div>
       {canManage && (
         <div className="relative shrink-0">

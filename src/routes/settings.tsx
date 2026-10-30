@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import { useMemo, useState } from "react";
 import {
   Navigate,
@@ -13,7 +17,6 @@ import { queryClient } from "#/query-client-config";
 import { SettingsLayout } from "#/components/features/settings";
 import { WebClientConfig } from "#/api/option-service/option.types";
 import { QUERY_KEYS, CONFIG_CACHE_OPTIONS } from "#/hooks/query/query-keys";
-import { Typography } from "#/ui/typography";
 import {
   SETTINGS_COMPACT_MAX_WIDTH,
   useBreakpoint,
@@ -117,11 +120,13 @@ function SettingsScreen() {
           <div className="flex flex-col gap-6 pb-8">
             {!shouldHideTitle && (
               <header className="space-y-1">
-                <Typography.H2>{t(currentSectionTitle)}</Typography.H2>
+                <h1 className={PAGE_TITLE_CLASS_NAME}>
+                  {t(currentSectionTitle)}
+                </h1>
                 {currentSectionSubtitle ? (
                   <p
                     data-testid="settings-page-subtitle"
-                    className="text-sm leading-5 text-tertiary-light"
+                    className={PAGE_SUBTITLE_CLASS_NAME}
                   >
                     {t(currentSectionSubtitle)}
                   </p>

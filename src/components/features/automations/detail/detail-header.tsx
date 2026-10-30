@@ -1,3 +1,5 @@
+import { cn } from "#/utils/utils";
+import { PAGE_TITLE_CLASS_NAME } from "#/components/shared/page-title";
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
 import type { Automation } from "#/types/automation";
@@ -92,7 +94,7 @@ export function DetailHeader({
     <div className="flex flex-col gap-4">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <h1 className="font-inter min-w-0 break-words text-[22px] font-normal text-content">
+          <h1 className={cn("min-w-0 break-words", PAGE_TITLE_CLASS_NAME)}>
             {automation.name}
           </h1>
           <ActiveStatusBadge automation={automation} />

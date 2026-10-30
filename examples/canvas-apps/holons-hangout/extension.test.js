@@ -106,7 +106,7 @@ describe("rendering", () => {
     expect(container.querySelector(".member .avatar svg")).not.toBeNull();
     const built = container.querySelector(".lpowered");
     expect(built.firstElementChild.textContent).toBe("Built with");
-    expect([...built.querySelectorAll("a.plogo")].map((a) => [a.getAttribute("aria-label"), a.href, a.rel, a.target])).toEqual([
+    expect([...built.querySelectorAll("a.plogo")].map((a) => [a.getAttribute("aria-label").replace(/™/g, ""), a.href, a.rel, a.target])).toEqual([
       ["Kamiji", "https://github.com/FraterCCCLXIII/kamiji", "noopener noreferrer", "_blank"],
       ["Kosmos", "https://kosmos.computer/", "noopener noreferrer", "_blank"],
     ]);

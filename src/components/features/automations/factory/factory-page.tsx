@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
@@ -161,13 +165,12 @@ function FactoryHeader({ factory }: { factory: FeedFactory }) {
         />
       </span>
       <div className="min-w-0">
-        <h1
-          data-testid="factory-page-name"
-          className="font-inter text-[22px] font-normal text-content"
-        >
+        <h1 data-testid="factory-page-name" className={PAGE_TITLE_CLASS_NAME}>
           {factory.name}
         </h1>
-        <p className="mt-1 text-sm text-muted">{factory.description}</p>
+        <p className={cn("mt-1", PAGE_SUBTITLE_CLASS_NAME)}>
+          {factory.description}
+        </p>
         {owner && !owner.isMe ? (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
             {t(I18nKey.FEED$FACTORY_OWNER)}

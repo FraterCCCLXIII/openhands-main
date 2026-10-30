@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "kamiji",
-  "display_name": "Kamiji",
+  "display_name": "Kamiji™",
   "version": "0.1.0",
   "description": "Build a Kamiji creature: pick a body plan, swap ears, tails, horns and wings, tune the shape and colours, and save it to a roster or export it as character JSON.",
   "entrypoint": "extension.js",
@@ -10,7 +10,7 @@
     "pages": [
       {
         "id": "creature-builder",
-        "title": "Kamiji creature builder",
+        "title": "Kamiji™ creature builder",
         "path": "/builder",
         "nav_label": "Kamiji",
         "description": "Design a creature and keep a roster of them."

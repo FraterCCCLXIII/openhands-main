@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ExternalLink, ShieldAlert, ShieldCheck, X } from "lucide-react";
@@ -21,6 +25,15 @@ import {
   useSetCanvasExtensionEnabled,
   useUninstallCanvasExtension,
 } from "#/hooks/mutation/use-manage-canvas-extensions";
+import { AppsFilterRail } from "#/components/features/canvas-extensions/apps-filter-rail";
+import { AppStoreCard } from "#/components/features/canvas-extensions/app-store-card";
+import { useAppsFilters } from "#/hooks/use-apps-filters";
+import { useKnownApps } from "#/hooks/query/use-known-apps";
+import {
+  applyFilters,
+  buildEntries,
+  facetCounts,
+} from "#/utils/canvas-app-catalog";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { settingsLikeMainScrollClassName } from "#/utils/settings-like-page-layout-classes";
@@ -29,29 +42,6 @@ import {
   extensionModuleEmptyStateClassName,
 } from "#/utils/extension-module-card-classes";
 import type { InstalledCanvasExtensionInfo } from "#/types/canvas-extension";
-
-type AppSort = "name" | "enabled" | "newest";
-
-const sortApps = (
-  list: InstalledCanvasExtensionInfo[],
-  sort: AppSort,
-): InstalledCanvasExtensionInfo[] => {
-  const label = (e: InstalledCanvasExtensionInfo) =>
-    e.manifest?.display_name || e.name;
-  const byName = (
-    a: InstalledCanvasExtensionInfo,
-    b: InstalledCanvasExtensionInfo,
-  ) => label(a).localeCompare(label(b));
-  return [...list].sort((a, b) => {
-    if (sort === "enabled" && a.enabled !== b.enabled)
-      return a.enabled ? -1 : 1;
-    if (sort === "newest") {
-      const diff = Date.parse(b.installed_at) - Date.parse(a.installed_at);
-      if (diff) return diff;
-    }
-    return byName(a, b);
-  });
-};
 
 type PendingAction =
   | { type: "enable"; extension: InstalledCanvasExtensionInfo }
@@ -70,7 +60,8 @@ export default function CanvasExtensionsScreen() {
   const [detailsFor, setDetailsFor] =
     React.useState<InstalledCanvasExtensionInfo | null>(null);
   const { navigate } = useNavigation();
-  const [sort, setSort] = React.useState<AppSort>("name");
+  const appsFilters = useAppsFilters();
+  const knownApps = useKnownApps();
   const [pendingAction, setPendingAction] =
     React.useState<PendingAction | null>(null);
   const query = useCanvasExtensions();
@@ -86,6 +77,15 @@ export default function CanvasExtensionsScreen() {
     isCanvasExtensionsUnsupportedError(query.error);
   const isBusy =
     setEnabled.isPending || uninstall.isPending || refresh.isPending;
+
+  const isStore = appsFilters.view === "store";
+  const entries = React.useMemo(
+    () =>
+      buildEntries(appsFilters.view, query.data ?? [], knownApps.data ?? []),
+    [appsFilters.view, query.data, knownApps.data],
+  );
+  const counts = facetCounts(entries, appsFilters.filters);
+  const visible = applyFilters(entries, appsFilters.filters);
 
   const confirmAction = () => {
     if (!pendingAction) return;
@@ -120,13 +120,13 @@ export default function CanvasExtensionsScreen() {
       className="flex h-full gap-4 md:gap-6 md:pl-8 lg:gap-10 lg:pl-10"
     >
       <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
-        <div className="mx-auto flex w-full min-w-0 max-w-200 flex-col gap-6">
-          <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="mx-auto flex w-full min-w-0 max-w-250 flex-col gap-6">
+          <div className="flex min-w-0 items-center justify-between gap-4">
             <div className="min-w-0 space-y-1">
-              <h2 className="text-xl font-semibold leading-6 text-foreground">
+              <h1 className={PAGE_TITLE_CLASS_NAME}>
                 {t(I18nKey.SETTINGS$APPS_PAGE_TITLE)}
-              </h2>
-              <p className="max-w-2xl text-sm text-tertiary-light">
+              </h1>
+              <p className={PAGE_SUBTITLE_CLASS_NAME}>
                 {t(I18nKey.SETTINGS$APPS_PAGE_DESCRIPTION)}
               </p>
             </div>
@@ -177,109 +177,130 @@ export default function CanvasExtensionsScreen() {
 
           <BuiltInAppsSection />
 
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="text-lg font-bold text-contrast">
-              {t(I18nKey.SETTINGS$APPS_INSTALLED)}
-            </h3>
-            <label className="flex items-center gap-2 text-sm text-tertiary-light">
-              {t(I18nKey.SETTINGS$APPS_SORT_LABEL)}
-              <select
-                data-testid="canvas-extensions-sort"
-                value={sort}
-                onChange={(e) => setSort(e.target.value as AppSort)}
-                className="rounded-md border border-border bg-base-secondary px-2 py-1 text-sm text-contrast"
-              >
-                <option value="name">
-                  {t(I18nKey.SETTINGS$APPS_SORT_NAME)}
-                </option>
-                <option value="enabled">
-                  {t(I18nKey.SETTINGS$APPS_SORT_ENABLED)}
-                </option>
-                <option value="newest">
-                  {t(I18nKey.SETTINGS$APPS_SORT_NEWEST)}
-                </option>
-              </select>
-            </label>
-          </div>
-
-          {unsupported ? (
-            <div className={extensionModuleEmptyStateClassName}>
-              <h3 className="text-sm font-semibold text-contrast">
-                {t(I18nKey.SETUP$UNAVAILABLE_TITLE)}
+          <div className="flex flex-col gap-6 md:flex-row md:items-start">
+            <AppsFilterRail state={appsFilters} counts={counts} />
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              <h3 className="text-lg font-bold text-contrast">
+                {t(
+                  isStore
+                    ? I18nKey.SETTINGS$APPS_STORE
+                    : I18nKey.SETTINGS$APPS_INSTALLED,
+                )}
               </h3>
-              <p className="mt-2 text-sm text-tertiary-light">
-                {isCanvasExtensionsUnsupportedError(query.error)
-                  ? query.error.message
-                  : backend.kind === "cloud"
-                    ? new CanvasExtensionsUnsupportedError("cloud-backend")
-                        .message
-                    : new CanvasExtensionsUnsupportedError("no-backend")
-                        .message}
-              </p>
+              {isStore ? (
+                knownApps.isLoading ? (
+                  <div className="h-40 animate-pulse rounded-xl bg-base-secondary" />
+                ) : visible.length ? (
+                  <div className={extensionModuleCardGridContainerClassName}>
+                    <div className="grid min-w-0 grid-cols-1 gap-5 @min-[560px]:grid-cols-2">
+                      {visible.map((entry) => (
+                        <AppStoreCard key={entry.name} entry={entry} />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={extensionModuleEmptyStateClassName}>
+                    <p className="text-sm text-tertiary-light">
+                      {t(
+                        entries.length
+                          ? I18nKey.SETTINGS$APPS_NO_MATCH
+                          : I18nKey.SETTINGS$APPS_STORE_EMPTY,
+                      )}
+                    </p>
+                  </div>
+                )
+              ) : unsupported ? (
+                <div className={extensionModuleEmptyStateClassName}>
+                  <h3 className="text-sm font-semibold text-contrast">
+                    {t(I18nKey.SETUP$UNAVAILABLE_TITLE)}
+                  </h3>
+                  <p className="mt-2 text-sm text-tertiary-light">
+                    {isCanvasExtensionsUnsupportedError(query.error)
+                      ? query.error.message
+                      : backend.kind === "cloud"
+                        ? new CanvasExtensionsUnsupportedError("cloud-backend")
+                            .message
+                        : new CanvasExtensionsUnsupportedError("no-backend")
+                            .message}
+                  </p>
+                </div>
+              ) : query.isLoading ? (
+                <div className="flex flex-col gap-4">
+                  {[1, 2].map((index) => (
+                    <div
+                      key={index}
+                      className="h-40 animate-pulse rounded-xl bg-base-secondary"
+                    />
+                  ))}
+                </div>
+              ) : query.isError ? (
+                <div className={extensionModuleEmptyStateClassName}>
+                  <p className="text-sm text-tertiary-light">
+                    {query.error instanceof Error
+                      ? query.error.message
+                      : t(I18nKey.ERROR$GENERIC)}
+                  </p>
+                  <BrandButton
+                    type="button"
+                    variant="secondary"
+                    className="mt-4"
+                    onClick={() => void query.refetch()}
+                  >
+                    {t(I18nKey.AUTOMATIONS$ERROR_RETRY)}
+                  </BrandButton>
+                </div>
+              ) : query.data?.length && !visible.length ? (
+                <div className={extensionModuleEmptyStateClassName}>
+                  <p className="text-sm text-tertiary-light">
+                    {t(I18nKey.SETTINGS$APPS_NO_MATCH)}
+                  </p>
+                </div>
+              ) : query.data?.length ? (
+                <div className={extensionModuleCardGridContainerClassName}>
+                  <div className="grid min-w-0 grid-cols-1 gap-5 @min-[560px]:grid-cols-2">
+                    {visible.map(
+                      ({ installed: extension, pricing, license }) =>
+                        extension && (
+                          <CanvasExtensionCard
+                            key={extension.name}
+                            extension={extension}
+                            pricing={pricing}
+                            license={license}
+                            openHref={
+                              appPages.find(
+                                (p) => p.extension.name === extension.name,
+                              )?.href ?? null
+                            }
+                            isBusy={isBusy}
+                            onToggle={() => {
+                              if (extension.enabled) {
+                                setEnabled.mutate({
+                                  name: extension.name,
+                                  enabled: false,
+                                });
+                              } else {
+                                setPendingAction({ type: "enable", extension });
+                              }
+                            }}
+                            onDetails={() => setDetailsFor(extension)}
+                            onRefresh={() => refresh.mutate(extension)}
+                            onUninstall={() =>
+                              setPendingAction({ type: "uninstall", extension })
+                            }
+                          />
+                        ),
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className={extensionModuleEmptyStateClassName}>
+                  <p className="text-sm text-tertiary-light">
+                    {t(I18nKey.SETTINGS$APPS_EMPTY)}
+                  </p>
+                </div>
+              )}
             </div>
-          ) : query.isLoading ? (
-            <div className="flex flex-col gap-4">
-              {[1, 2].map((index) => (
-                <div
-                  key={index}
-                  className="h-40 animate-pulse rounded-xl bg-base-secondary"
-                />
-              ))}
-            </div>
-          ) : query.isError ? (
-            <div className={extensionModuleEmptyStateClassName}>
-              <p className="text-sm text-tertiary-light">
-                {query.error instanceof Error
-                  ? query.error.message
-                  : t(I18nKey.ERROR$GENERIC)}
-              </p>
-              <BrandButton
-                type="button"
-                variant="secondary"
-                className="mt-4"
-                onClick={() => void query.refetch()}
-              >
-                {t(I18nKey.AUTOMATIONS$ERROR_RETRY)}
-              </BrandButton>
-            </div>
-          ) : query.data?.length ? (
-            <div className={extensionModuleCardGridContainerClassName}>
-              <div className="grid min-w-0 grid-cols-1 gap-5 @min-[560px]:grid-cols-2">
-                {sortApps(query.data, sort).map((extension) => (
-                  <CanvasExtensionCard
-                    key={extension.name}
-                    extension={extension}
-                    openHref={
-                      appPages.find((p) => p.extension.name === extension.name)
-                        ?.href ?? null
-                    }
-                    isBusy={isBusy}
-                    onToggle={() => {
-                      if (extension.enabled) {
-                        setEnabled.mutate({
-                          name: extension.name,
-                          enabled: false,
-                        });
-                      } else {
-                        setPendingAction({ type: "enable", extension });
-                      }
-                    }}
-                    onDetails={() => setDetailsFor(extension)}
-                    onRefresh={() => refresh.mutate(extension)}
-                    onUninstall={() =>
-                      setPendingAction({ type: "uninstall", extension })
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className={extensionModuleEmptyStateClassName}>
-              <p className="text-sm text-tertiary-light">
-                {t(I18nKey.SETTINGS$APPS_EMPTY)}
-              </p>
-            </div>
-          )}
+          </div>
         </div>
       </main>
 

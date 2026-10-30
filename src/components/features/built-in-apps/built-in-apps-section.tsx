@@ -1,5 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { BUILT_IN_APPS, getBuiltInApp } from "#/built-in-apps/registry";
+import {
+  BUILT_IN_APPS,
+  type BuiltInApp,
+  getBuiltInApp,
+} from "#/built-in-apps/registry";
 import { SettingsSwitch } from "#/components/features/settings/settings-switch";
 import { I18nKey } from "#/i18n/declaration";
 import {
@@ -8,6 +12,40 @@ import {
   useBuiltInAppsBackendId,
   useBuiltInAppsStore,
 } from "#/stores/built-in-apps-store";
+import { StyledIcon } from "#/ui/styled-icon";
+import { cn } from "#/utils/utils";
+
+const TILE_SIZE = 40;
+const GLYPH_SIZE = 22;
+
+/**
+ * The app's tile, drawn as in the sidebar: a coloured tile with a white glyph,
+ * or a neutral tile whose glyph takes the text colour (muted when locked).
+ */
+function BuiltInAppTile({ app, muted }: { app: BuiltInApp; muted: boolean }) {
+  const Icon = app.icon;
+  if (app.tileBackground) {
+    return (
+      <StyledIcon
+        size={TILE_SIZE}
+        borderRadius={8}
+        background={app.tileBackground}
+      >
+        <Icon width={GLYPH_SIZE} height={GLYPH_SIZE} />
+      </StyledIcon>
+    );
+  }
+  return (
+    <span
+      className={cn(
+        "inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-raised",
+        muted ? "text-muted" : "text-contrast",
+      )}
+    >
+      <Icon width={GLYPH_SIZE} height={GLYPH_SIZE} />
+    </span>
+  );
+}
 
 /**
  * Customize > Apps: one switch per built-in app. A switch only hides the app's
@@ -61,28 +99,37 @@ export function BuiltInAppsSection() {
             <li
               key={app.id}
               data-testid={`built-in-app-row-${app.id}`}
-              className="flex flex-col gap-1 px-4 py-3"
+              className="flex items-center gap-3 px-4 py-3"
             >
-              <SettingsSwitch
-                testId={`built-in-app-switch-${app.id}`}
-                togglePosition="right"
-                isToggled={enabled}
-                isDisabled={lockReason !== null}
-                onToggle={(value) => setEnabled(backendId, app.id, value)}
+              <span
+                data-testid={`built-in-app-icon-${app.id}`}
+                aria-hidden="true"
+                className="shrink-0"
               >
-                <span className="font-medium text-contrast">{name}</span>
-              </SettingsSwitch>
-              <p className="text-xs text-tertiary-light">
-                {t(app.descriptionKey)}
-              </p>
-              {lockReason ? (
-                <p
-                  data-testid={`built-in-app-lock-${app.id}`}
-                  className="text-xs text-muted"
+                <BuiltInAppTile app={app} muted={lockReason !== null} />
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <SettingsSwitch
+                  testId={`built-in-app-switch-${app.id}`}
+                  togglePosition="right"
+                  isToggled={enabled}
+                  isDisabled={lockReason !== null}
+                  onToggle={(value) => setEnabled(backendId, app.id, value)}
                 >
-                  {lockReason}
+                  <span className="font-medium text-contrast">{name}</span>
+                </SettingsSwitch>
+                <p className="text-xs text-tertiary-light">
+                  {t(app.descriptionKey)}
                 </p>
-              ) : null}
+                {lockReason ? (
+                  <p
+                    data-testid={`built-in-app-lock-${app.id}`}
+                    className="text-xs text-muted"
+                  >
+                    {lockReason}
+                  </p>
+                ) : null}
+              </div>
             </li>
           );
         })}

@@ -868,7 +868,7 @@ function mount(container, host, deps = {}) {
 
   // Main: header, stage
   const mHead = el("div");
-  const title = el("h1", "", BRAND.product);
+  const title = el("h1", "", BRAND.product.replace(/^Kosmos/, "Kosmos™"));
   const using = el("div", "using");
   const state = el("div", "state", s.status);
   state.setAttribute("aria-live", "polite");

@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import React from "react";
 import { AxiosError } from "axios";
 import {
@@ -118,12 +122,12 @@ export default function MCPPage() {
         <div className="mx-auto flex w-full min-w-0 max-w-200 flex-col gap-6">
           <ExtensionsCompactNavigation />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-0 flex-1 basis-64 space-y-1">
-                <h2 className="text-xl font-medium leading-6 text-foreground">
+                <h1 className={PAGE_TITLE_CLASS_NAME}>
                   {t(I18nKey.SETTINGS$MCP_TITLE)}
-                </h2>
-                <div className="max-w-2xl text-sm text-tertiary-light">
+                </h1>
+                <div className={PAGE_SUBTITLE_CLASS_NAME}>
                   {t(I18nKey.MCP$PAGE_DESCRIPTION)}
                 </div>
               </div>

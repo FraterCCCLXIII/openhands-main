@@ -44,6 +44,15 @@ export interface CanvasExtensionManifest {
   support_url?: string | null;
   /** SPDX identifier or name of the licence. */
   license?: string | null;
+  /** Listing price shown in the App Store. Display only; no payment is processed. */
+  pricing?: {
+    model: "free" | "one-time" | "subscription";
+    /** USD. */
+    amount?: number;
+    period?: "month" | "year";
+    /** True when the price is demo data, not a real offer. */
+    sample?: boolean;
+  } | null;
 }
 
 export interface InstalledCanvasExtensionInfo {

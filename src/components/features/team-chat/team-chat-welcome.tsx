@@ -12,8 +12,8 @@ import {
 } from "#/utils/team-chat-sprites";
 import { primaryButtonClassName } from "./team-chat-ui";
 
-const KAMIJI_NAME = "Kamiji";
-const KOSMOS_NAME = "Kosmos";
+const KAMIJI_NAME = "Kamiji™";
+const KOSMOS_NAME = "Kosmos™";
 const CELL = 4;
 const PERSON = [
   "...XXXXXX...",

@@ -1,3 +1,4 @@
+import { PAGE_TITLE_CLASS_NAME } from "#/components/shared/page-title";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { I18nKey } from "#/i18n/declaration";
@@ -144,9 +145,7 @@ export function KanbanBoard() {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
-      <h1 className="font-inter text-[22px] font-normal text-content">
-        {t(I18nKey.KANBAN$TITLE)}
-      </h1>
+      <h1 className={PAGE_TITLE_CLASS_NAME}>{t(I18nKey.KANBAN$TITLE)}</h1>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {KANBAN_COLUMNS.map((columnId) => (
           <KanbanColumn

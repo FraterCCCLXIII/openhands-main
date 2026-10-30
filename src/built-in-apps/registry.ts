@@ -1,5 +1,8 @@
+import type { ComponentType, SVGProps } from "react";
 import { matchPath } from "react-router";
+import { Factory, MessagesSquare, Newspaper } from "lucide-react";
 import { I18nKey } from "#/i18n/declaration";
+import AutomationsIcon from "#/icons/automations.svg?react";
 
 /**
  * The core registry of built-in apps that a person can switch on and off
@@ -21,6 +24,13 @@ export interface BuiltInApp {
   routesExcluded?: readonly string[];
   /** The app's main page, for links. */
   navPath: string;
+  /** The app's glyph, shared by the sidebar and Customize > Apps. */
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  /**
+   * Preset key (see `ICON_BACKGROUND_PRESETS`) for the app's rounded tile, or
+   * null for a neutral tile.
+   */
+  tileBackground: string | null;
   /**
    * Apps this one cannot run without. While a required app is off, this one
    * is effectively off too, and the required app's switch is locked.
@@ -37,6 +47,8 @@ export const BUILT_IN_APPS: readonly BuiltInApp[] = [
     descriptionKey: I18nKey.BUILT_IN_APPS$TOWER_DESCRIPTION,
     routes: ["/feed"],
     navPath: "/feed",
+    icon: Newspaper,
+    tileBackground: "orange",
     defaultEnabled: true,
   },
   {
@@ -47,6 +59,8 @@ export const BUILT_IN_APPS: readonly BuiltInApp[] = [
     // requires Automations rather than quietly linking to a turned-off page.
     routes: ["/factory", "/automations/factories"],
     navPath: "/factory",
+    icon: Factory,
+    tileBackground: null,
     requires: ["automations"],
     defaultEnabled: true,
   },
@@ -57,6 +71,8 @@ export const BUILT_IN_APPS: readonly BuiltInApp[] = [
     routes: ["/automations"],
     routesExcluded: ["/automations/factories"],
     navPath: "/automations",
+    icon: AutomationsIcon,
+    tileBackground: null,
     defaultEnabled: true,
   },
   {
@@ -65,6 +81,8 @@ export const BUILT_IN_APPS: readonly BuiltInApp[] = [
     descriptionKey: I18nKey.BUILT_IN_APPS$COMMONS_DESCRIPTION,
     routes: ["/team-chat"],
     navPath: "/team-chat",
+    icon: MessagesSquare,
+    tileBackground: "emerald",
     defaultEnabled: true,
   },
 ];

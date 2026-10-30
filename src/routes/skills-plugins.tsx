@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -132,14 +136,14 @@ export default function SkillsPluginsScreen() {
       <main className={cn(settingsLikeMainScrollClassName, "h-full")}>
         <div className="mx-auto flex w-full min-w-0 max-w-200 flex-col gap-6">
           <ExtensionsCompactNavigation />
-          <div className="flex min-w-0 items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center justify-between gap-4">
             <div className="min-w-0 space-y-1">
-              <h2 className="text-xl font-semibold leading-6 text-foreground">
+              <h1 className={PAGE_TITLE_CLASS_NAME}>
                 {t(I18nKey.SETTINGS$PLUGINS_TITLE)}
-              </h2>
+              </h1>
               <div
                 data-testid="plugins-settings-description"
-                className="max-w-2xl text-sm text-tertiary-light"
+                className={PAGE_SUBTITLE_CLASS_NAME}
               >
                 {t(I18nKey.SETTINGS$PLUGINS_PAGE_DESCRIPTION)}
               </div>

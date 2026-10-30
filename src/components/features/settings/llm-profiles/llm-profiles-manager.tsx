@@ -26,6 +26,8 @@ import {
   displaySuccessToast,
 } from "#/utils/custom-toast-handlers";
 import { I18nKey } from "#/i18n/declaration";
+import { MODEL_PRICES_LEGEND_SOURCE } from "#/constants/model-prices";
+import { sortByModelPrice, type ModelPriceSort } from "#/utils/model-price";
 import { mapProvider } from "#/utils/map-provider";
 import {
   ALL_MODEL_FAMILIES_KEY,
@@ -159,17 +161,21 @@ export function LlmProfilesManager({
   )
     ? selectedFamilyKey
     : ALL_MODEL_FAMILIES_KEY;
-  const visibleProfiles = useMemo(
-    () =>
+  const [priceSort, setPriceSort] = useState<ModelPriceSort>("name");
+  const visibleProfiles = useMemo(() => {
+    const inFamily =
       activeFamilyKey === ALL_MODEL_FAMILIES_KEY
         ? profiles
         : profiles.filter(
             (profile) =>
               getProfileModelFamily(profile, connectionsById) ===
               activeFamilyKey,
-          ),
-    [profiles, connectionsById, activeFamilyKey],
-  );
+          );
+    // "Name" keeps the server order; price sorts put unpriced models last.
+    return priceSort === "name"
+      ? inFamily
+      : sortByModelPrice(inFamily, (profile) => profile.model, priceSort);
+  }, [profiles, connectionsById, activeFamilyKey, priceSort]);
 
   const handleActivate = async (name: string) => {
     try {
@@ -266,11 +272,34 @@ export function LlmProfilesManager({
             ) : null}
             <div className="flex min-w-0 flex-1 flex-col gap-4">
               {profiles.length > 0 ? (
-                <ProfileModelFamilyFilter
-                  items={modelFamilyItems}
-                  selectedId={activeFamilyKey}
-                  onSelect={setSelectedFamilyKey}
-                />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <ProfileModelFamilyFilter
+                    items={modelFamilyItems}
+                    selectedId={activeFamilyKey}
+                    onSelect={setSelectedFamilyKey}
+                  />
+                  <label className="flex items-center gap-2 text-sm text-muted">
+                    {t(I18nKey.SETTINGS$MODEL_PRICE_SORT_LABEL)}
+                    <select
+                      data-testid="profile-price-sort"
+                      value={priceSort}
+                      onChange={(event) =>
+                        setPriceSort(event.target.value as ModelPriceSort)
+                      }
+                      className="h-8 rounded-lg border border-border-input bg-base-secondary px-2 text-sm text-contrast dark:border-border"
+                    >
+                      <option value="name">
+                        {t(I18nKey.SETTINGS$MODEL_PRICE_SORT_NAME)}
+                      </option>
+                      <option value="input">
+                        {t(I18nKey.SETTINGS$MODEL_PRICE_SORT_INPUT)}
+                      </option>
+                      <option value="output">
+                        {t(I18nKey.SETTINGS$MODEL_PRICE_SORT_OUTPUT)}
+                      </option>
+                    </select>
+                  </label>
+                </div>
               ) : null}
               <ProfilesBody
                 isLoading={isLoading}
@@ -287,6 +316,16 @@ export function LlmProfilesManager({
                 isActivating={activateProfile.isPending}
                 isModelUnlisted={isModelUnlisted}
               />
+              {profiles.length > 0 ? (
+                <p
+                  data-testid="profile-price-legend"
+                  className="text-xs text-muted"
+                >
+                  {t(I18nKey.SETTINGS$MODEL_PRICE_LEGEND, {
+                    source: MODEL_PRICES_LEGEND_SOURCE,
+                  })}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

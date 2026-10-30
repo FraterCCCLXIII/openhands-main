@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "murmur",
-  "display_name": "Murmur",
+  "display_name": "Murmur™",
   "version": "0.1.0",
   "description": "Peer-to-peer social, no server in the middle: like a flock of starlings, everyone follows their neighbours. Chat rooms on OrbitDB.",
   "entrypoint": "extension.js",
@@ -10,7 +10,7 @@
     "pages": [
       {
         "id": "murmur",
-        "title": "Murmur",
+        "title": "Murmur™",
         "path": "/murmur",
         "nav_label": "Murmur",
         "description": "Peer-to-peer rooms, no server in the middle."

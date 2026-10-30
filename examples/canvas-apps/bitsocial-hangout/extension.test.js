@@ -128,8 +128,8 @@ describe("rendering and demo mode", () => {
     const built = container.querySelector(".powered");
     expect(built.textContent).toContain("Built with");
     expect(built.textContent).not.toContain("Powered by");
-    const kamiji = built.querySelector('a[aria-label="Kamiji"]');
-    const kosmos = built.querySelector('a[aria-label="Kosmos"]');
+    const kamiji = built.querySelector('a[aria-label^="Kamiji"]');
+    const kosmos = built.querySelector('a[aria-label^="Kosmos"]');
     expect(kamiji.getAttribute("href")).toBe("https://github.com/FraterCCCLXIII/kamiji");
     expect(kosmos.getAttribute("href")).toBe("https://kosmos.computer");
     expect(kamiji.querySelector("svg")).not.toBeNull();

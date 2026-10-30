@@ -350,6 +350,21 @@ Router so `VITE_BASE_PATH` continues to work.
 - [x] An app another app needs is locked on (Automations while Factory is on);
       a dependent is off whenever its requirement is off.
 
+### CE-012: App Store rail, price and licence metadata
+
+- [x] `/apps` has a left rail (Installed apps | App Store) with search, sort,
+      and status, category, price and licence filters with counts. State lives
+      in the URL (`view`, `sort`, `status`, `category`, `price`, `license`, `q`).
+- [x] Additive optional metadata, host API stays v1: manifest and
+      `known-apps.json` entries may carry `license` (SPDX id) and
+      `pricing: { model: free|one-time|subscription, amount (USD), period?:
+      month|year, sample?: boolean }`; catalog entries may add `category` and
+      `contact_url`. Missing pricing shows "Price not listed" and sorts last.
+- [x] No payment is processed. A paid app's Get button is disabled with an
+      explanation; `sample: true` prices are labelled "Sample pricing".
+- [x] The rail's bottom group links to the existing Skills, Plugins and MCP
+      servers pages.
+
 ## Delivery plan
 
 ### Slice 1: contract and management

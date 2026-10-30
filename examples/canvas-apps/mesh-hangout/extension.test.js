@@ -218,7 +218,7 @@ describe("the page", () => {
     expect(container.querySelector(".status").textContent).toContain("Demo");
     expect(container.querySelector(".notice.warn").textContent).toContain("Cannot reach http://localhost:12000");
     await waitFor(() => container.querySelectorAll(".thread .msg").length > 0);
-    expect(container.querySelector(".powered").textContent).toBe("Built withKamijiKosmos");
+    expect(container.querySelector(".powered").textContent.replace(/™/g, "")).toBe("Built withKamijiKosmos");
     expect(container.querySelector(".avatar svg[data-style='orb']")).not.toBeNull();
     expect([...container.querySelectorAll(".list .row .name")].map((n) => n.textContent)).toEqual(expect.arrayContaining(["Following", "Global feed"]));
     expect(container.querySelector(".members").textContent).toContain("Atlas");
@@ -276,10 +276,10 @@ describe("the page", () => {
   it("shows the welcome page first with the Built with footer", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("down"); }));
     const { container } = mountApp({ welcomed: false });
-    expect(container.querySelector(".welcome h1").textContent).toBe("Welcome to MESH");
+    expect(container.querySelector(".welcome h1").textContent.replace(/™/g, "")).toBe("Welcome to MESH");
     const links = [...container.querySelectorAll(".welcome .wpowered a")];
     expect(container.querySelector(".welcome .wpowered").textContent).toContain("Built with");
-    expect(links.map((a) => [a.getAttribute("aria-label"), a.href, !!a.querySelector("svg")])).toEqual([
+    expect(links.map((a) => [a.getAttribute("aria-label").replace(/™/g, ""), a.href, !!a.querySelector("svg")])).toEqual([
       ["Kamiji", "https://github.com/FraterCCCLXIII/kamiji", true],
       ["Kosmos", "https://kosmos.computer/", true],
     ]);

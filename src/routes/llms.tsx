@@ -1,3 +1,7 @@
+import {
+  PAGE_TITLE_CLASS_NAME,
+  PAGE_SUBTITLE_CLASS_NAME,
+} from "#/components/shared/page-title";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LlmSettingsLocalView } from "#/components/features/settings/llm-profiles";
@@ -22,10 +26,8 @@ export default function LlmsScreen() {
         <div className="mx-auto flex w-full min-w-0 max-w-200 flex-col gap-6">
           {!hideSectionHeader && (
             <header className="min-w-0 space-y-1">
-              <h2 className="text-xl font-semibold leading-6 tracking-tight text-foreground">
-                {t(I18nKey.NAV$LLMS)}
-              </h2>
-              <p className="max-w-2xl text-sm leading-5 text-tertiary-light">
+              <h1 className={PAGE_TITLE_CLASS_NAME}>{t(I18nKey.NAV$LLMS)}</h1>
+              <p className={PAGE_SUBTITLE_CLASS_NAME}>
                 {t(I18nKey.SETTINGS$PAGE_LLM_SUBLINE)}
               </p>
             </header>

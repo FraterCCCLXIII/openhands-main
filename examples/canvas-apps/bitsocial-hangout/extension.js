@@ -2855,8 +2855,8 @@ function mount(container, options, navigateHost) {
     };
     d.append(
       el("span", "", "Built with"),
-      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji", KAMIJI_STROKES, 16)),
-      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos", KOSMOS_PATHS)),
+      logo("https://github.com/FraterCCCLXIII/kamiji", logoSvg("0 0 276 118", "Kamiji™", KAMIJI_STROKES, 16)),
+      logo("https://kosmos.computer", logoSvg("0 0 405.3 82.71", "Kosmos™", KOSMOS_PATHS)),
     );
     return d;
   };
@@ -2870,7 +2870,7 @@ function mount(container, options, navigateHost) {
   function renderSide() {
     side.replaceChildren();
     const brand = el("div", "brand");
-    brand.append(avatar("bitsocial", ""), el("h1", "", "Bitkin"));
+    brand.append(avatar("bitsocial", ""), el("h1", "", "Bitkin™"));
     const status = el("div", "status", statusText());
     status.dataset.state = state.status;
     status.setAttribute("role", "status");
