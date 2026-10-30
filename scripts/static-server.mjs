@@ -37,6 +37,14 @@ import sirv from "sirv";
 import { applySessionKeyPolicy, DEFAULT_BIND_HOST } from "./bind-host.mjs";
 import { mountMarsWebBridge } from "./mars-web-bridge.mjs";
 import {
+  isConnectHostsRequest,
+  writeConnectHostsResponse,
+} from "./connect-hosts.mjs";
+import {
+  isConnectTunnelRequest,
+  writeConnectTunnelResponse,
+} from "./connect-tunnel.mjs";
+import {
   createProxyHandlers,
   createRouter,
   isServerInfoRequest,
@@ -693,6 +701,15 @@ export function startStaticServer(config) {
   });
 
   const server = createServer((req, res) => {
+    if (isConnectHostsRequest(req)) {
+      writeConnectHostsResponse(res, config.port);
+      return;
+    }
+    if (isConnectTunnelRequest(req)) {
+      void writeConnectTunnelResponse(req, res, `http://127.0.0.1:${config.port}`);
+      return;
+    }
+
     const url = req.url ?? "/";
     if (marsWeb?.handleHttp(req, res)) return;
     const backend = route(url);
