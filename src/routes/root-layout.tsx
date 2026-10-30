@@ -1,3 +1,4 @@
+import { BuiltInAppRouteGuard } from "#/components/features/built-in-apps/built-in-app-route-guard";
 import React from "react";
 import {
   useRouteError,
@@ -216,7 +217,9 @@ function MainAppContent() {
                 id="root-outlet"
                 className="relative flex-1 overflow-auto px-0 custom-scrollbar"
               >
-                <Outlet />
+                <BuiltInAppRouteGuard>
+                  <Outlet />
+                </BuiltInAppRouteGuard>
               </div>
             </div>
           </div>

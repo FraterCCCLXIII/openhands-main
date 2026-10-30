@@ -7,6 +7,7 @@ import { useCanvasExtensionsRuntime } from "#/components/features/canvas-extensi
 import { useNavigation } from "#/context/navigation-context";
 import { I18nKey } from "#/i18n/declaration";
 import { useDockedAppsStore } from "#/stores/docked-apps-store";
+import { useBuiltInAppEnabled } from "#/stores/built-in-apps-store";
 import { useSidebarAppsStore } from "#/stores/sidebar-apps-store";
 import { cn } from "#/utils/utils";
 import { BuiltInAppNavLink } from "./built-in-app-nav-link";
@@ -50,40 +51,44 @@ export function SidebarAppsList({ collapsed }: { collapsed: boolean }) {
   };
   React.useEffect(() => () => window.clearTimeout(holdTimer.current), []);
   const undocked = useDockedAppsStore((s) => s.undocked);
+  const towerEnabled = useBuiltInAppEnabled("tower");
+  const commonsEnabled = useBuiltInAppEnabled("commons");
 
+  const towerApp: AppEntry = {
+    key: "feed",
+    href: FEED_PATH,
+    node: (
+      <BuiltInAppNavLink
+        appName="feed"
+        to={FEED_PATH}
+        label={t(I18nKey.FEED$TITLE)}
+        testId="sidebar-feed-link"
+        collapsed={collapsed}
+        defaultBackground="orange"
+        size={ICON_SIZE}
+        glyph={<Newspaper width={14} height={14} />}
+      />
+    ),
+  };
+  const commonsApp: AppEntry = {
+    key: "team-chat",
+    href: TEAM_CHAT_PATH,
+    node: (
+      <BuiltInAppNavLink
+        appName="team-chat"
+        to={TEAM_CHAT_PATH}
+        label={t(I18nKey.TEAM_CHAT$NAV_LABEL)}
+        testId="sidebar-team-chat-link"
+        collapsed={collapsed}
+        defaultBackground="emerald"
+        size={ICON_SIZE}
+        glyph={<MessagesSquare width={14} height={14} />}
+      />
+    ),
+  };
   const apps: AppEntry[] = [
-    {
-      key: "feed",
-      href: FEED_PATH,
-      node: (
-        <BuiltInAppNavLink
-          appName="feed"
-          to={FEED_PATH}
-          label={t(I18nKey.FEED$TITLE)}
-          testId="sidebar-feed-link"
-          collapsed={collapsed}
-          defaultBackground="orange"
-          size={ICON_SIZE}
-          glyph={<Newspaper width={14} height={14} />}
-        />
-      ),
-    },
-    {
-      key: "team-chat",
-      href: TEAM_CHAT_PATH,
-      node: (
-        <BuiltInAppNavLink
-          appName="team-chat"
-          to={TEAM_CHAT_PATH}
-          label={t(I18nKey.TEAM_CHAT$NAV_LABEL)}
-          testId="sidebar-team-chat-link"
-          collapsed={collapsed}
-          defaultBackground="emerald"
-          size={ICON_SIZE}
-          glyph={<MessagesSquare width={14} height={14} />}
-        />
-      ),
-    },
+    ...(towerEnabled ? [towerApp] : []),
+    ...(commonsEnabled ? [commonsApp] : []),
     ...pages
       .filter((page) => !undocked[page.extension.name])
       .map((page) => {

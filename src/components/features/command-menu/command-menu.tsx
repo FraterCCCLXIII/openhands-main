@@ -10,6 +10,7 @@ import { useConversationSearch } from "#/hooks/query/use-conversation-search";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { HighlightSearchMatch } from "#/components/features/conversation-panel/highlight-search-match";
 import { useCommandMenuStore } from "#/stores/command-menu-store";
+import { useBuiltInAppEnabled } from "#/stores/built-in-apps-store";
 import { useSidebarStore } from "#/stores/sidebar-store";
 import { formatTimeDelta } from "#/utils/format-time-delta";
 import { matchesPrimaryModifierShortcut } from "#/utils/keyboard-shortcut";
@@ -167,12 +168,14 @@ export function CommandMenu() {
     };
   }, [isOpen]);
 
+  const automationsEnabled = useBuiltInAppEnabled("automations");
   const items = React.useMemo(
     () =>
       createCommandMenuItems({
         toggleSidebar: () => useSidebarStore.getState().toggleCollapsed(),
+        automationsEnabled,
       }),
-    [],
+    [automationsEnabled],
   );
 
   const filteredItems = React.useMemo(

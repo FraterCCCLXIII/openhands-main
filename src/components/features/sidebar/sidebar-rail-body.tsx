@@ -56,6 +56,7 @@ import {
 import type { Backend } from "#/api/backend-registry/types";
 import { isDesktopShell, isMacDesktopShell } from "#/utils/desktop-shell";
 import { useDesktopFullScreen } from "#/hooks/use-desktop-full-screen";
+import { useBuiltInAppEnabled } from "#/stores/built-in-apps-store";
 import { useBackendTileViewStore } from "#/stores/backend-tile-view-store";
 
 const APPS_PATH = "/apps";
@@ -136,6 +137,8 @@ export function SidebarRailBody({
   }, [activeBackend.id]);
 
   const isCloudBackend = activeBackend.kind === "cloud";
+  const factoryEnabled = useBuiltInAppEnabled("factory");
+  const automationsEnabled = useBuiltInAppEnabled("automations");
   // `org` is consumed by the cloud settings loader so the page opens on the
   // org that is active here instead of the cloud's last-used org.
   const cloudSettingsOrgQuery = activeOrgId
@@ -268,17 +271,19 @@ export function SidebarRailBody({
             icon={<Blocks width={ICON_SIZE} height={ICON_SIZE} />}
           />
         )}
-        <SidebarNavLink
-          to={FACTORY_PATH}
-          label={t(I18nKey.NAV$FACTORY)}
-          testId="sidebar-factory-link"
-          collapsed={collapsed}
-          forceActive={
-            currentPath === FACTORY_PATH ||
-            currentPath.startsWith("/automations/factories")
-          }
-          icon={<Factory width={ICON_SIZE} height={ICON_SIZE} />}
-        />
+        {factoryEnabled && (
+          <SidebarNavLink
+            to={FACTORY_PATH}
+            label={t(I18nKey.NAV$FACTORY)}
+            testId="sidebar-factory-link"
+            collapsed={collapsed}
+            forceActive={
+              currentPath === FACTORY_PATH ||
+              currentPath.startsWith("/automations/factories")
+            }
+            icon={<Factory width={ICON_SIZE} height={ICON_SIZE} />}
+          />
+        )}
         <SidebarNavLink
           to={AGENTS_PATH}
           label={t(I18nKey.NAV$AGENTS)}
@@ -288,7 +293,7 @@ export function SidebarRailBody({
         />
         {/* The interface manifest owns this entry's label, so an absent
             manifest leaves the rail without it rather than with host copy. */}
-        {hasAutomationInterface() && (
+        {automationsEnabled && hasAutomationInterface() && (
           <SidebarNavLink
             to={automationListPath()}
             label={getInterfaceCopy().sidebarLabel}

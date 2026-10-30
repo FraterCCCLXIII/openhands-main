@@ -116,8 +116,11 @@ export const COMMAND_MENU_GROUP_ORDER_WITH_CONVERSATIONS: CommandMenuGroupId[] =
 
 export const createCommandMenuItems = ({
   toggleSidebar,
+  automationsEnabled = true,
 }: {
   toggleSidebar: () => void;
+  /** False while the Automations built-in app is switched off. */
+  automationsEnabled?: boolean;
 }): CommandMenuItemDefinition[] => {
   const items: CommandMenuItemDefinition[] = [
     {
@@ -140,7 +143,7 @@ export const createCommandMenuItems = ({
     },
     // The automation interface owns this entry's copy, so an absent manifest
     // leaves the command menu without it rather than with host copy.
-    ...(hasAutomationInterface()
+    ...(automationsEnabled && hasAutomationInterface()
       ? [
           {
             id: "automations" as const,
