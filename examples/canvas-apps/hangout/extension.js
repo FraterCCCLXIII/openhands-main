@@ -72,56 +72,148 @@ const mixHex = (hex, other, t) => {
   return `#${[16, 8, 0].map((sh) => ch(sh).toString(16).padStart(2, "0")).join("")}`;
 };
 
-// Fingers as fat round-capped strokes: [x1, y1, x2, y2, width], pinky to thumb.
-const FINGERS = [[17, 40, 8.5, 23.5, 8.4], [24.5, 34, 21.5, 13, 9], [32, 32, 32, 8.5, 9.6], [39.5, 34, 43, 13.5, 9], [47, 44, 57.5, 33, 9.4]];
-const PALM = "M14.5 41C14.5 32 21 29.5 32 29.5S49.5 32 49.5 41C49.5 53 42 59 32 59S14.5 53 14.5 41Z";
+// The hand as a 16 by 16 grid of cubes: pinky, ring, middle, index, and the thumb off to the right.
+const HAND_VOXELS = [
+  ".......XX.......",
+  ".......XX.......",
+  "....XX.XX.XX....",
+  "....XX.XX.XX....",
+  "....XX.XX.XX....",
+  ".XX.XX.XX.XX....",
+  ".XX.XX.XX.XX....",
+  ".XX.XXXXXXXX....",
+  ".XXXXXXXXXXXXX..",
+  ".XXXXXXXXXXXXXX.",
+  ".XXXXXXXXXXXXXXX",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "...XXXXXXXXXX...",
+  "....XXXXXXXX....",
+  "................",
+];
+// The face: the mouth is cells of the same grid, a smile one row below the eyes.
+const HAND_FACE = [[5, 12, "M"], [6, 13, "M"], [7, 13, "M"], [8, 13, "M"], [9, 13, "M"], [10, 12, "M"]];
+// The eyes are tall rounded pills, like the welcome blob's, laid over the cubes: [x, y, width, height] in cells.
+const HAND_EYES = [[5.15, 8.5, 1.15, 3], [9.7, 8.5, 1.15, 3]];
+const GHOST_EYES = [[5.15, 5.2, 1.15, 3.2], [9.7, 5.2, 1.15, 3.2]];
+const GHOST_MOUTH = [[7, 10], [8, 10]];
 
-/** Draws the Kamiji hand into an svg: one smooth glossy piece with a shaded rim and highlights, like the 3D model. */
+// The ghost: a rounded body with a wavy hem, on the same 16 by 16 grid.
+const GHOST_VOXELS = [
+  "................",
+  "....XXXXXXXX....",
+  "...XXXXXXXXXX...",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XXXXXXXXXXXX..",
+  "..XX.XXXX.XXXX..",
+  "..X...XX...XX...",
+];
+
+/** Draws a voxel figure into an svg: one cube per cell, lit on top and shaded underneath. */
+function drawVoxels(svg, rows, color, shift = [0, 0]) {
+  const dark = mixHex(color, "#000000", 0.35);
+  const light = mixHex(color, "#ffffff", 0.4);
+  const g = document.createElementNS(SVG_NS, "g");
+  g.setAttribute("transform", `scale(4) translate(${shift[0]} ${shift[1]})`);
+  g.setAttribute("shape-rendering", "crispEdges");
+  const cube = (x, y) => {
+    const add = (attrs) => {
+      const r = document.createElementNS(SVG_NS, "rect");
+      Object.entries(attrs).forEach(([k, v]) => r.setAttribute(k, String(v)));
+      g.append(r);
+    };
+    add({ x: x + 0.04, y: y + 0.04, width: 0.92, height: 0.92, fill: color });
+    add({ x: x + 0.04, y: y + 0.04, width: 0.92, height: 0.26, fill: light, opacity: 0.5 });
+    add({ x: x + 0.04, y: y + 0.7, width: 0.92, height: 0.26, fill: dark, opacity: 0.4 });
+  };
+  rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === "X") cube(x, y); }));
+  svg.append(g);
+  return g;
+}
+
+/** Draws the Kamiji hand into an svg as voxels. */
 function drawHand(svg, color) {
-  const dark = mixHex(color, "#000000", 0.3);
-  const light = mixHex(color, "#ffffff", 0.45);
+  return drawVoxels(svg, HAND_VOXELS, color, [-0.5, 0.5]);
+}
+
+export const AVATAR_STYLES = [["orb", "Orb"], ["hand", "Hand"], ["ghost", "Ghost"]];
+
+// Slightly different outlines for the orb, so a column of them does not look stamped.
+const ORB_PATHS = [
+  "M32 6C45 5 58 15 58 31C58 47 46 58 31 58C17 58 6 47 6 32C6 17 18 7 32 6Z",
+  "M30 5C44 4 59 17 58 33C57 48 44 59 30 58C16 57 5 46 6 31C7 17 17 6 30 5Z",
+  "M34 6C47 8 58 19 57 34C56 49 43 58 29 57C15 56 6 44 7 29C8 15 21 4 34 6Z",
+];
+
+/** The front-page orb as an avatar: one flat blob that wobbles, with two pill eyes that glance around and blink. */
+function orbSvg(blob, index) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 64 64");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("data-style", "orb");
+  const delay = `${-((index * 7 + 3) % 53) / 10}s`;
   const add = (parent, tag, attrs) => {
     const n = document.createElementNS(SVG_NS, tag);
     Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
     parent.append(n);
     return n;
   };
-  const layer = (fill, attrs = {}) => {
-    const g = add(svg, "g", { fill, stroke: fill, "stroke-linecap": "round", "stroke-linejoin": "round", ...attrs });
-    add(g, "path", { d: PALM, stroke: "none" });
-    FINGERS.forEach(([x1, y1, x2, y2, w]) => add(g, "line", { x1, y1, x2, y2, "stroke-width": w }));
-    return g;
-  };
-  layer(dark, { transform: "translate(.9 1.2)" });
-  layer(color);
-  const hi = add(svg, "g", { stroke: light, "stroke-linecap": "round", opacity: 0.3, fill: "none" });
-  FINGERS.forEach(([x1, y1, x2, y2, w]) => {
-    const dx = (x2 - x1) * 0.8, dy = (y2 - y1) * 0.8;
-    add(hi, "line", { x1: x1 + (x2 - x1) * 0.18 - w * 0.2, y1: y1 + (y2 - y1) * 0.18 - w * 0.1, x2: x1 + dx - w * 0.2, y2: y1 + dy - w * 0.1, "stroke-width": 2.2 });
-  });
-  add(svg, "ellipse", { cx: 25.5, cy: 36, rx: 6.5, ry: 3.4, fill: light, opacity: 0.18, transform: "rotate(-24 25.5 36)" });
+  const halo = add(svg, "circle", { cx: 32, cy: 33, r: 31, fill: blob.fill, opacity: 0.16 });
+  halo.setAttribute("class", "orb-halo");
+  const body = add(svg, "g", { class: "orb-body" });
+  body.style.animationDelay = delay;
+  add(body, "path", { d: ORB_PATHS[index % ORB_PATHS.length], fill: blob.fill });
+  const look = add(body, "g", { class: "orb-look" });
+  look.style.animationDelay = delay;
+  const blink = add(look, "g", { class: "orb-blink" });
+  blink.style.animationDelay = delay;
+  [21, 36].forEach((x) => add(blink, "rect", { class: "pill-eye", x, y: 23, width: 7, height: 19, rx: 3.5, fill: "#1a0f33" }));
+  return svg;
 }
 
-/** The Kamiji hand avatar tinted per agent: glossy, chunky fingers and the friendly face of the 3D model. */
-export function blobSvg(blobId) {
+/** The avatar for an agent, tinted per agent: a voxel Kamiji hand or a voxel ghost, both with pill eyes. */
+export function blobSvg(blobId, style = "orb") {
   const blob = BLOBS.find((b) => b.id === blobId) || BLOBS[0];
+  if (style === "orb") return orbSvg(blob, BLOBS.indexOf(blob));
+  const ghost = style === "ghost";
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 64 64");
   svg.setAttribute("aria-hidden", "true");
-  drawHand(svg, blob.fill);
-  const add = (tag, attrs) => {
-    const n = document.createElementNS(SVG_NS, tag);
-    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
-    svg.append(n);
+  svg.setAttribute("data-style", ghost ? "ghost" : "hand");
+  const g = ghost ? drawVoxels(svg, GHOST_VOXELS, blob.fill, [0, -0.5]) : drawHand(svg, blob.fill);
+  const ink = "#1a0f33";
+  const cell = (x, y) => {
+    const r = document.createElementNS(SVG_NS, "rect");
+    r.setAttribute("x", String(x + 0.04)); r.setAttribute("y", String(y + 0.04));
+    r.setAttribute("width", "0.92"); r.setAttribute("height", "0.92");
+    r.setAttribute("fill", ink);
+    g.append(r);
   };
-  [[26.2, 43], [37.8, 43]].forEach(([cx, cy]) => {
-    add("ellipse", { cx, cy, rx: 3.5, ry: 4.3, fill: "#eceff1", stroke: "rgba(0,0,0,.25)", "stroke-width": 0.5 });
-    add("ellipse", { cx: cx + 0.2, cy: cy + 0.4, rx: 1.9, ry: 2.8, fill: "#15171a" });
-    add("circle", { cx: cx + 0.9, cy: cy - 0.6, r: 0.75, fill: "#fff" });
-  });
-  [[26, 36.4, -5], [38, 36.4, 5]].forEach(([x, y, r]) => add("path", { d: `M${x - 3} ${y}H${x + 3}`, stroke: "rgba(60,30,20,.75)", "stroke-width": 1.1, "stroke-linecap": "round", transform: `rotate(${r} ${x} ${y})` }));
-  add("path", { d: "M25.4 49.4Q32 58.4 38.6 49.4Q32 51.3 25.4 49.4Z", fill: "#3a1b1d" });
-  add("ellipse", { cx: 32, cy: 53.2, rx: 3, ry: 1.5, fill: "#e58aa0" });
+  const pill = (x, y, w, h) => {
+    const r = document.createElementNS(SVG_NS, "rect");
+    r.setAttribute("class", "pill-eye");
+    r.setAttribute("x", String(x)); r.setAttribute("y", String(y));
+    r.setAttribute("width", String(w)); r.setAttribute("height", String(h));
+    r.setAttribute("rx", String(w / 2));
+    r.setAttribute("fill", ink);
+    g.append(r);
+  };
+  if (ghost) {
+    GHOST_MOUTH.forEach(([x, y]) => cell(x, y));
+    GHOST_EYES.forEach(([x, y, w, h]) => pill(x, y, w, h));
+  } else {
+    HAND_FACE.forEach(([x, y]) => cell(x, y));
+    HAND_EYES.forEach(([x, y, w, h]) => pill(x, y, w, h));
+  }
   return svg;
 }
 
@@ -1609,11 +1701,10 @@ const CSS = `
 .hg .seg button[aria-pressed="true"] { background: var(--hg-primary); color: var(--hg-on-primary); border-color: var(--hg-primary); }
 .hg .rows { flex: 1; min-height: 0; overflow: auto; padding: 6px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
 .hg .group { margin: 10px 4px 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--hg-muted); display: flex; justify-content: space-between; }
-.hg .twist.empty { visibility: hidden; }
 .hg .row, .hg .frow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 8px; border: 0; border-radius: 12px; background: transparent; text-align: left; cursor: pointer; }
 .hg .row:hover, .hg .frow:hover { background: var(--hg-panel); }
 .hg .row[aria-current="true"], .hg .frow[aria-current="true"] { background: var(--hg-raised); }
-.hg .twist { flex: none; width: 14px; height: 18px; margin-right: -4px; text-align: center; border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; padding: 0; }
+.hg .twist { flex: none; width: 16px; height: 18px; text-align: center; border: 0; background: transparent; color: var(--hg-muted); cursor: pointer; padding: 0; }
 .hg .avatar { flex: none; width: 40px; height: 40px; }
 .hg .avatar svg { width: 100%; height: 100%; display: block; }
 .hg .avatar.sm { width: 28px; height: 28px; }
@@ -1784,6 +1875,13 @@ const CSS = `
 .hg .welcome .wcanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hg .welcome .wbox { position: relative; display: grid; justify-items: center; }
 .hg .welcome h1, .hg .welcome p { color: #fff; text-shadow: none; }
+.hg .orb-body { transform-box: view-box; transform-origin: 32px 34px; animation: hgOrb 5s ease-in-out infinite alternate; }
+.hg .orb-look { animation: hgLook 8s ease-in-out infinite; }
+.hg .orb-blink { transform-box: view-box; transform-origin: 32px 33px; animation: hgBlink 6s infinite; }
+@keyframes hgOrb { 0% { transform: scale(1, 1) rotate(0deg); } 100% { transform: scale(1.05, .95) rotate(-3deg); } }
+@keyframes hgLook { 0%, 38% { transform: translateX(0); } 46%, 66% { transform: translateX(3px); } 76%, 92% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
+@keyframes hgBlink { 0%, 91%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.1); } }
+@media (prefers-reduced-motion: reduce) { .hg .orb-body, .hg .orb-look, .hg .orb-blink { animation: none; } }
 .hg .welcome .wcorner { position: absolute; left: 18px; bottom: 18px; display: grid; justify-items: start; gap: 10px; text-align: left; }
 .hg .welcome .wshapes { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: rgba(255,255,255,.07); }
 .hg .welcome .wshape { width: 26px; height: 26px; padding: 4px; border: 0; border-radius: 8px; background: transparent; color: rgba(255,255,255,.55); cursor: pointer; display: grid; place-items: center; }
@@ -1817,9 +1915,9 @@ function el(tag, cls, content) {
   return node;
 }
 
-function avatar(blobId, small, look) {
+function avatar(blobId, small, look, style = "orb") {
   const wrap = el("span", `avatar${small ? " sm" : ""}`);
-  wrap.append(look ? kamijiFace(look) : blobSvg(blobId));
+  wrap.append(look ? kamijiFace(look) : blobSvg(blobId, style));
   return wrap;
 }
 
@@ -1979,6 +2077,7 @@ function mount(host, container) {
     pane: "list",
     welcomed: Boolean(saved.welcomed),
     welcomeStyle: saved.welcomeStyle === "voxel" ? "voxel" : "smooth",
+    avatarStyle: ["hand", "ghost"].includes(saved.avatarStyle) ? saved.avatarStyle : "orb",
     welcomeShape: BLOB_SHAPES.some((x) => x.id === saved.welcomeShape) ? saved.welcomeShape : "blob",
     welcomeVariant: BLOB_VARIANTS.some((v) => v.id === saved.welcomeVariant) ? saved.welcomeVariant : "solid",
     looks: saved.looks || {},
@@ -1990,7 +2089,7 @@ function mount(host, container) {
   };
   const persist = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, welcomeShape: state.welcomeShape, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ selected: state.selected, threads: state.threads, prefs: state.prefs, collapsed: state.collapsed, tab: state.tab, tabv: 2, cardState: state.cardState, models: state.models, view: state.view, welcomed: state.welcomed, welcomeStyle: state.welcomeStyle, welcomeVariant: state.welcomeVariant, welcomeShape: state.welcomeShape, avatarStyle: state.avatarStyle, drawerOpen: state.drawerOpen, looks: state.looks, factoryView: state.factoryView }));
     } catch { /* storage unavailable */ }
   };
 
@@ -2006,7 +2105,7 @@ function mount(host, container) {
     d.append(el("span", "", "Powered by"), hand, el("b", "", "Kamiji"), el("span", "", "and"), el("b", "kosmos", "Kosmos"));
     return d;
   };
-  const avatarFor = (agent, small) => avatar(agent.blob, small, state.looks[agent.id]);
+  const avatarFor = (agent, small) => avatar(agent.blob, small, state.looks[agent.id], state.avatarStyle);
   const modelOfAgent = (agent) => state.models[agent.id] || agent.model || "No model";
 
   async function loadLive() {
@@ -2092,6 +2191,16 @@ function mount(host, container) {
       });
       menu.append(seg);
     }
+    menu.append(el("h4", "", "Avatars"));
+    const avatarSeg = el("div", "seg");
+    AVATAR_STYLES.forEach(([id, label]) => {
+      const b = el("button", "", label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.avatarStyle === id));
+      b.addEventListener("click", () => { state.avatarStyle = id; persist(); render(); });
+      avatarSeg.append(b);
+    });
+    menu.append(avatarSeg);
     const reset = el("button", "abtn", "Reset view");
     reset.type = "button";
     reset.style.marginTop = "10px";
@@ -2244,19 +2353,19 @@ function mount(host, container) {
       group.rows.forEach(({ agent, depth, hasChildren, collapsed }) => {
         const btn = el("button", "row");
         btn.type = "button";
-        btn.style.paddingLeft = `${8 + depth * 16}px`;
+        btn.style.paddingLeft = `${6 + depth * 16}px`;
         btn.setAttribute("aria-current", String(agent.id === current().id));
-        if (!hasChildren) btn.append(el("span", "twist empty"));
+        const text = el("span", "rowtext");
+        const topLine = el("span", "rowtop");
+        const right = el("span", "rowright");
+        // The expand arrow sits on the right, so every avatar lines up flush with the row's left edge.
         if (hasChildren) {
           const tw = el("span", "twist", collapsed ? "▸" : "▾");
           tw.setAttribute("role", "button");
           tw.setAttribute("aria-label", collapsed ? "Expand subagents" : "Collapse subagents");
           tw.addEventListener("click", (ev) => { ev.stopPropagation(); state.collapsed = { ...state.collapsed, [agent.id]: !collapsed }; persist(); render(); });
-          btn.append(tw);
+          right.append(tw);
         }
-        const text = el("span", "rowtext");
-        const topLine = el("span", "rowtop");
-        const right = el("span", "rowright");
         if (agent.live) { const live = el("span", "dot live"); live.title = "Live conversation"; right.append(live); }
         if (agent.unread) right.append(el("span", "dot"));
         right.append(el("span", "time", agent.time));
@@ -2674,9 +2783,9 @@ function mount(host, container) {
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       } catch { exp.textContent = "Export failed"; }
     });
-    const reset = el("button", "sreset", "Use the hand");
+    const reset = el("button", "sreset", "Use the avatar");
     reset.type = "button";
-    reset.title = "Go back to the Kamiji hand avatar";
+    reset.title = "Go back to the standard avatar";
     reset.addEventListener("click", () => { const next = { ...state.looks }; delete next[agent.id]; state.looks = next; persist(); render(); });
     const actions = el("div", "sactions");
     actions.append(exp, reset);

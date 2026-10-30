@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, BLOB_SHAPES, setBlobShape, shapeIcon, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
+  activate, activityOf, createBlobScene, stepBlobScene, blobField, seededRandom, eyesOf, eyeOutline, blobColorAt, BLOB_VARIANTS, setBlobVariant, variantColorAt, sphereCoords, BLOB_SHAPES, setBlobShape, shapeIcon, blobSvg, TEAM_HUMANS, humansOnAgent, teamAgents, ownerOf, renderMarkdown, unwrapMessage, plainText, factoriesOf, factoryName, factoryIcon, factoryIconKey, kamijiFace, LOOK_EYES, LOOK_TOGGLES, LOOK_SHAPES, LOOK_EXPRESSIONS, LOOK_COLORS, stateNear, workOf, workLine, DEFAULT_PREFS, extractBlocks, liveAgent, messageText, modelOf, organizeAgents, renderBlock, sampleAgents, shortTime, validateBlock,
 } from "./extension.js";
 
 function mountWith(request) {
@@ -248,6 +248,118 @@ describe("blob eyes", () => {
     s.eyes.pointer = { x: s.fx + 400, y: s.fy, at: s.t };
     for (let t = 0; t < 1; t += 0.02) stepBlobScene(s, 0.02);
     expect(s.eyes.yaw).toBeGreaterThan(0.3);
+  });
+});
+
+const BLOBS_FOR_TEST = ["violet", "blue", "green", "teal", "brown", "orange", "red", "pink", "indigo"];
+
+describe("voxel hands", () => {
+  it("builds the hand from cubes inside the grid, with a blocky face, tinted per agent", () => {
+    const svg = blobSvg("violet", "hand");
+    const cubes = [...svg.querySelectorAll("rect")];
+    expect(cubes.length).toBeGreaterThan(150);
+    cubes.forEach((r) => {
+      const x = Number(r.getAttribute("x")), y = Number(r.getAttribute("y"));
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x + Number(r.getAttribute("width"))).toBeLessThanOrEqual(16);
+      expect(y + Number(r.getAttribute("height"))).toBeLessThanOrEqual(16);
+    });
+    expect(svg.querySelector("g").getAttribute("shape-rendering")).toBe("crispEdges");
+    expect(svg.querySelectorAll("path, ellipse, circle, line").length).toBe(0);
+    const eyes = [...svg.querySelectorAll("rect.pill-eye")];
+    expect(eyes).toHaveLength(2);
+    eyes.forEach((e) => {
+      expect(Number(e.getAttribute("height"))).toBeGreaterThan(Number(e.getAttribute("width")) * 2);
+      expect(Number(e.getAttribute("rx"))).toBeCloseTo(Number(e.getAttribute("width")) / 2, 5);
+    });
+    expect(blobSvg("red", "hand").innerHTML).not.toBe(svg.innerHTML);
+  });
+
+  it("is still the hand for the Hand shape in the Studio", () => {
+    const hand = kamijiFace({ shape: "hand", expression: "happy", color: "#3b82f6" });
+    expect(hand.querySelectorAll("rect").length).toBeGreaterThan(100);
+  });
+});
+
+describe("avatar alignment", () => {
+  it("puts every avatar first in its row, with the expand arrow on the right", async () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    container.querySelector(".wgo").click();
+    const rows = [...container.querySelectorAll(".rows .row")];
+    expect(rows.length).toBeGreaterThan(5);
+    rows.forEach((r) => expect(r.firstElementChild.classList.contains("avatar")).toBe(true));
+    const withArrow = rows.filter((r) => r.querySelector(".twist"));
+    expect(withArrow.length).toBeGreaterThan(0);
+    withArrow.forEach((r) => expect(r.querySelector(".rowright .twist")).toBeTruthy());
+    dispose();
+  });
+});
+
+describe("orb avatars", () => {
+  it("is the default avatar: a flat blob with two pill eyes that glance and blink", () => {
+    const orb = blobSvg("violet");
+    expect(orb.getAttribute("data-style")).toBe("orb");
+    expect(orb.querySelectorAll("rect.pill-eye")).toHaveLength(2);
+    expect(orb.querySelector("path").getAttribute("fill").toLowerCase()).toBe("#8b5cf6");
+    expect(orb.querySelector(".orb-body .orb-look .orb-blink")).toBeTruthy();
+    expect(orb.querySelectorAll("rect:not(.pill-eye)")).toHaveLength(0);
+    expect(blobSvg("pink").querySelector("path").getAttribute("fill").toLowerCase()).not.toBe("#8b5cf6");
+  });
+
+  it("is out of step with the others, so a column of them does not move as one", () => {
+    const delays = BLOBS_FOR_TEST.map((id) => blobSvg(id).querySelector(".orb-body").style.animationDelay);
+    expect(new Set(delays).size).toBeGreaterThan(5);
+  });
+
+  it("uses the orb for every avatar, including the ones in the list", async () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    container.querySelector(".wgo").click();
+    const avatars = [...container.querySelectorAll(".row .avatar svg")];
+    expect(avatars.length).toBeGreaterThan(5);
+    expect(avatars.every((s) => s.getAttribute("data-style") === "orb")).toBe(true);
+    dispose();
+  });
+});
+
+describe("ghost avatars", () => {
+  it("draws a voxel ghost with pill eyes, different from the hand and tinted per agent", () => {
+    const ghost = blobSvg("blue", "ghost");
+    expect(ghost.getAttribute("data-style")).toBe("ghost");
+    expect(ghost.querySelectorAll("rect").length).toBeGreaterThan(150);
+    expect(ghost.querySelectorAll("rect.pill-eye")).toHaveLength(2);
+    expect(ghost.innerHTML).not.toBe(blobSvg("blue", "hand").innerHTML);
+    expect(blobSvg("pink", "ghost").innerHTML).not.toBe(ghost.innerHTML);
+    expect(blobSvg("blue").getAttribute("data-style")).toBe("orb");
+  });
+
+  it("switches every avatar between hand and ghost from the View menu, and remembers it", async () => {
+    localStorage.clear();
+    let mountFn;
+    const host = { apiVersion: "1", navigate: vi.fn(), agentServer: { request: vi.fn().mockRejectedValue(new Error("offline")) }, registerPage: (_id, fn) => { mountFn = fn; return () => {}; } };
+    activate(host);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const dispose = mountFn({ container });
+    container.querySelector(".wgo").click();
+    expect(container.querySelector(".row .avatar svg").getAttribute("data-style")).toBe("orb");
+    container.querySelector(".iconbtn").click();
+    const heading = [...container.querySelectorAll(".menu h4")].find((h) => h.textContent === "Avatars");
+    [...heading.nextSibling.querySelectorAll("button")].find((b) => b.textContent === "Ghost").click();
+    expect([...container.querySelectorAll(".row .avatar svg")].every((s) => s.getAttribute("data-style") === "ghost")).toBe(true);
+    expect(JSON.parse(localStorage.getItem("hangout:v1")).avatarStyle).toBe("ghost");
+    dispose();
   });
 });
 
