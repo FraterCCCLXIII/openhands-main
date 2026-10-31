@@ -10,6 +10,7 @@ import { CanvasExtensionDetailsModal } from "#/components/features/canvas-extens
 import { useNavigation } from "#/context/navigation-context";
 import { BuiltInAppsSection } from "#/components/features/built-in-apps/built-in-apps-section";
 import { CanvasExtensionCard } from "#/components/features/canvas-extensions/canvas-extension-card";
+import { BrandNotice } from "#/components/shared/brand-notice";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { ConfirmationModal } from "#/components/shared/modals/confirmation-modal";
 import {
@@ -301,6 +302,7 @@ export default function CanvasExtensionsScreen() {
               )}
             </div>
           </div>
+          <BrandNotice className="mt-10 border-t border-border pt-4" />
         </div>
       </main>
 

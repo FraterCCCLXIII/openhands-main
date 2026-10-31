@@ -18,7 +18,7 @@ const opt = (name) => {
 const manifest = {
   schema_version: 1,
   name: "kosmos-roadmap",
-  display_name: "Kosmos Roadmap",
+  display_name: "Kosmos™ Roadmap",
   version: "0.1.0",
   description:
     "Schedule, board, pipeline, agents and history for kosmos-engine, from tools/pm/refresh.mjs.",
@@ -28,16 +28,16 @@ const manifest = {
     pages: [
       {
         id: "roadmap",
-        title: "Kosmos Roadmap",
+        title: "Kosmos™ Roadmap",
         path: "/roadmap",
-        nav_label: "Kosmos Roadmap",
+        nav_label: "Kosmos™ Roadmap",
       },
     ],
   },
 };
 const config = {
   pageId: "roadmap",
-  title: "Kosmos Roadmap",
+  title: "Kosmos™ Roadmap",
   dataDir: resolve(opt("--data-dir") ?? DEFAULT_DATA_DIR),
   pollMs: Number(opt("--poll-ms") ?? 30000),
 };

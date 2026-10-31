@@ -58,7 +58,7 @@ const RAIL_APPS: readonly RailApp[] = [
   {
     id: "kosmos-roadmap",
     extensionName: "kosmos-roadmap",
-    fallbackLabel: "Kosmos Roadmap",
+    fallbackLabel: "Kosmos™ Roadmap",
     fallbackIcon: KanbanSquare,
   },
   {
